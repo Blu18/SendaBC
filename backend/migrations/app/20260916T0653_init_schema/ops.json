@@ -1,0 +1,1189 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.activities",
+    "label": "Create table \"activities\"",
+    "summary": "Creates table \"activities\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "activities"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"activities\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"activities\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"activities\"",
+        "sql": "CREATE TABLE \"public\".\"activities\" (\n  \"clientGeneratedId\" uuid,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"distanceMeters\" float8,\n  \"durationSeconds\" int4,\n  \"elevationGainMeters\" float8,\n  \"elevationLossMeters\" float8,\n  \"endedAt\" timestamptz,\n  \"id\" uuid NOT NULL,\n  \"isPublished\" bool DEFAULT false NOT NULL,\n  \"path\" geometry(Geometry,4326),\n  \"startedAt\" timestamptz NOT NULL,\n  \"status\" text DEFAULT 'RECORDING' NOT NULL,\n  \"type\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"activities_status_check_28d5dc6a\" CHECK (\"status\" IN ('RECORDING', 'PENDING_SYNC', 'SYNCED')),\n  CONSTRAINT \"activities_type_check_ccc9be64\" CHECK (\"type\" IN ('HIKING', 'TRAIL_RUNNING', 'CYCLING'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"activities\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"activities\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.activity_points",
+    "label": "Create table \"activity_points\"",
+    "summary": "Creates table \"activity_points\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "activity_points"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"activity_points\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"activity_points\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"activity_points\"",
+        "sql": "CREATE TABLE \"public\".\"activity_points\" (\n  \"accuracyMeters\" float8,\n  \"activityId\" uuid NOT NULL,\n  \"altitudeMeters\" float8,\n  \"id\" BIGSERIAL NOT NULL,\n  \"location\" geometry(Geometry,4326) NOT NULL,\n  \"recordedAt\" timestamptz NOT NULL,\n  \"sequence\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"activity_points\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"activity_points\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.devices",
+    "label": "Create table \"devices\"",
+    "summary": "Creates table \"devices\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "devices"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"devices\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"devices\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"devices\"",
+        "sql": "CREATE TABLE \"public\".\"devices\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"expoPushToken\" text NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"platform\" text NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"devices_platform_check_120bc35e\" CHECK (\"platform\" IN ('IOS', 'ANDROID'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"devices\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"devices\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.emergency_alerts",
+    "label": "Create table \"emergency_alerts\"",
+    "summary": "Creates table \"emergency_alerts\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "emergency_alerts"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"emergency_alerts\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emergency_alerts\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"emergency_alerts\"",
+        "sql": "CREATE TABLE \"public\".\"emergency_alerts\" (\n  \"activityId\" uuid NOT NULL,\n  \"contactName\" text,\n  \"contactPhone\" text,\n  \"id\" uuid NOT NULL,\n  \"notifiedAt\" timestamptz,\n  \"reason\" text NOT NULL,\n  \"resolvedAt\" timestamptz,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"triggeredAt\" timestamptz DEFAULT (now()) NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"emergency_alerts_reason_check_706d44f8\" CHECK (\"reason\" IN ('INACTIVITY_TIMEOUT', 'MANUAL_SOS')),\n  CONSTRAINT \"emergency_alerts_status_check_1e8eabef\" CHECK (\"status\" IN ('PENDING', 'NOTIFIED', 'ACKNOWLEDGED', 'RESOLVED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"emergency_alerts\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emergency_alerts\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.route_favorites",
+    "label": "Create table \"route_favorites\"",
+    "summary": "Creates table \"route_favorites\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "route_favorites"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"route_favorites\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"route_favorites\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"route_favorites\"",
+        "sql": "CREATE TABLE \"public\".\"route_favorites\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"routeId\" uuid NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"userId\", \"routeId\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"route_favorites\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"route_favorites\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.routes",
+    "label": "Create table \"routes\"",
+    "summary": "Creates table \"routes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "routes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"routes\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"routes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"routes\"",
+        "sql": "CREATE TABLE \"public\".\"routes\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdByUserId\" uuid NOT NULL,\n  \"description\" text,\n  \"difficulty\" text,\n  \"distanceMeters\" float8,\n  \"elevationGainMeters\" float8,\n  \"id\" uuid NOT NULL,\n  \"name\" text NOT NULL,\n  \"path\" geometry(Geometry,4326),\n  \"region\" text,\n  \"sourceActivityId\" uuid,\n  \"startPoint\" geometry(Geometry,4326),\n  \"status\" text DEFAULT 'DRAFT' NOT NULL,\n  \"type\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"routes_difficulty_check_bd1ae86e\" CHECK (\"difficulty\" IN ('EASY', 'MODERATE', 'HARD', 'EXTREME')),\n  CONSTRAINT \"routes_status_check_bc64f66b\" CHECK (\"status\" IN ('DRAFT', 'PUBLISHED', 'ARCHIVED')),\n  CONSTRAINT \"routes_type_check_ccc9be64\" CHECK (\"type\" IN ('HIKING', 'TRAIL_RUNNING', 'CYCLING'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"routes\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"routes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.users",
+    "label": "Create table \"users\"",
+    "summary": "Creates table \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"users\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"users\"",
+        "sql": "CREATE TABLE \"public\".\"users\" (\n  \"authUserId\" uuid,\n  \"avatarUrl\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"displayName\" text NOT NULL,\n  \"email\" text NOT NULL,\n  \"emergencyContactName\" text,\n  \"emergencyContactPhone\" text,\n  \"id\" uuid NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"users\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.activities.activities_clientGeneratedId_key",
+    "label": "Add unique constraint on \"activities\" (clientGeneratedId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "activities_clientGeneratedId_key",
+        "table": "activities"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"activities_clientGeneratedId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "activities_clientGeneratedId_key",
+          "public",
+          "\"public\".\"activities\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"activities_clientGeneratedId_key\"",
+        "sql": "ALTER TABLE \"public\".\"activities\" ADD CONSTRAINT \"activities_clientGeneratedId_key\" UNIQUE (\"clientGeneratedId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"activities_clientGeneratedId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "activities_clientGeneratedId_key",
+          "public",
+          "\"public\".\"activities\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.devices.devices_expoPushToken_key",
+    "label": "Add unique constraint on \"devices\" (expoPushToken)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "devices_expoPushToken_key",
+        "table": "devices"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"devices_expoPushToken_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "devices_expoPushToken_key",
+          "public",
+          "\"public\".\"devices\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"devices_expoPushToken_key\"",
+        "sql": "ALTER TABLE \"public\".\"devices\" ADD CONSTRAINT \"devices_expoPushToken_key\" UNIQUE (\"expoPushToken\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"devices_expoPushToken_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "devices_expoPushToken_key",
+          "public",
+          "\"public\".\"devices\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.routes.routes_sourceActivityId_key",
+    "label": "Add unique constraint on \"routes\" (sourceActivityId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "routes_sourceActivityId_key",
+        "table": "routes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"routes_sourceActivityId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "routes_sourceActivityId_key",
+          "public",
+          "\"public\".\"routes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"routes_sourceActivityId_key\"",
+        "sql": "ALTER TABLE \"public\".\"routes\" ADD CONSTRAINT \"routes_sourceActivityId_key\" UNIQUE (\"sourceActivityId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"routes_sourceActivityId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "routes_sourceActivityId_key",
+          "public",
+          "\"public\".\"routes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.users.users_authUserId_key",
+    "label": "Add unique constraint on \"users\" (authUserId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "users_authUserId_key",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"users_authUserId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_authUserId_key",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"users_authUserId_key\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD CONSTRAINT \"users_authUserId_key\" UNIQUE (\"authUserId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"users_authUserId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_authUserId_key",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.users.users_email_key",
+    "label": "Add unique constraint on \"users\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "users_email_key",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"users_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_email_key",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"users_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD CONSTRAINT \"users_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"users_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_email_key",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.activities.activities_userId_idx_a489d58a",
+    "label": "Create index \"activities_userId_idx_a489d58a\" on \"activities\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "activities_userId_idx_a489d58a",
+        "table": "activities"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"activities_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"activities_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"activities_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"activities_userId_idx_a489d58a\" ON \"public\".\"activities\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"activities_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"activities_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.activity_points.activity_points_activityId_idx_bf2a659e",
+    "label": "Create index \"activity_points_activityId_idx_bf2a659e\" on \"activity_points\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "activity_points_activityId_idx_bf2a659e",
+        "table": "activity_points"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"activity_points_activityId_idx_bf2a659e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"activity_points_activityId_idx_bf2a659e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"activity_points_activityId_idx_bf2a659e\"",
+        "sql": "CREATE INDEX \"activity_points_activityId_idx_bf2a659e\" ON \"public\".\"activity_points\" (\"activityId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"activity_points_activityId_idx_bf2a659e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"activity_points_activityId_idx_bf2a659e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.activity_points.activity_points_activityId_sequence_idx_0b074f75",
+    "label": "Create index \"activity_points_activityId_sequence_idx_0b074f75\" on \"activity_points\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "activity_points_activityId_sequence_idx_0b074f75",
+        "table": "activity_points"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"activity_points_activityId_sequence_idx_0b074f75\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"activity_points_activityId_sequence_idx_0b074f75\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"activity_points_activityId_sequence_idx_0b074f75\"",
+        "sql": "CREATE INDEX \"activity_points_activityId_sequence_idx_0b074f75\" ON \"public\".\"activity_points\" (\"activityId\", \"sequence\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"activity_points_activityId_sequence_idx_0b074f75\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"activity_points_activityId_sequence_idx_0b074f75\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.devices.devices_userId_idx_a489d58a",
+    "label": "Create index \"devices_userId_idx_a489d58a\" on \"devices\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "devices_userId_idx_a489d58a",
+        "table": "devices"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"devices_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"devices_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"devices_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"devices_userId_idx_a489d58a\" ON \"public\".\"devices\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"devices_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"devices_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.emergency_alerts.emergency_alerts_activityId_idx_bf2a659e",
+    "label": "Create index \"emergency_alerts_activityId_idx_bf2a659e\" on \"emergency_alerts\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "emergency_alerts_activityId_idx_bf2a659e",
+        "table": "emergency_alerts"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"emergency_alerts_activityId_idx_bf2a659e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emergency_alerts_activityId_idx_bf2a659e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"emergency_alerts_activityId_idx_bf2a659e\"",
+        "sql": "CREATE INDEX \"emergency_alerts_activityId_idx_bf2a659e\" ON \"public\".\"emergency_alerts\" (\"activityId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"emergency_alerts_activityId_idx_bf2a659e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emergency_alerts_activityId_idx_bf2a659e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.route_favorites.route_favorites_routeId_idx_91ae2fd6",
+    "label": "Create index \"route_favorites_routeId_idx_91ae2fd6\" on \"route_favorites\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "route_favorites_routeId_idx_91ae2fd6",
+        "table": "route_favorites"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"route_favorites_routeId_idx_91ae2fd6\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"route_favorites_routeId_idx_91ae2fd6\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"route_favorites_routeId_idx_91ae2fd6\"",
+        "sql": "CREATE INDEX \"route_favorites_routeId_idx_91ae2fd6\" ON \"public\".\"route_favorites\" (\"routeId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"route_favorites_routeId_idx_91ae2fd6\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"route_favorites_routeId_idx_91ae2fd6\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.route_favorites.route_favorites_userId_idx_a489d58a",
+    "label": "Create index \"route_favorites_userId_idx_a489d58a\" on \"route_favorites\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "route_favorites_userId_idx_a489d58a",
+        "table": "route_favorites"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"route_favorites_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"route_favorites_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"route_favorites_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"route_favorites_userId_idx_a489d58a\" ON \"public\".\"route_favorites\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"route_favorites_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"route_favorites_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.routes.routes_createdByUserId_idx_93e8a540",
+    "label": "Create index \"routes_createdByUserId_idx_93e8a540\" on \"routes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "routes_createdByUserId_idx_93e8a540",
+        "table": "routes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"routes_createdByUserId_idx_93e8a540\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"routes_createdByUserId_idx_93e8a540\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"routes_createdByUserId_idx_93e8a540\"",
+        "sql": "CREATE INDEX \"routes_createdByUserId_idx_93e8a540\" ON \"public\".\"routes\" (\"createdByUserId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"routes_createdByUserId_idx_93e8a540\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"routes_createdByUserId_idx_93e8a540\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.routes.routes_status_idx_e98638ab",
+    "label": "Create index \"routes_status_idx_e98638ab\" on \"routes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "routes_status_idx_e98638ab",
+        "table": "routes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"routes_status_idx_e98638ab\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"routes_status_idx_e98638ab\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"routes_status_idx_e98638ab\"",
+        "sql": "CREATE INDEX \"routes_status_idx_e98638ab\" ON \"public\".\"routes\" (\"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"routes_status_idx_e98638ab\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"routes_status_idx_e98638ab\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.activities.activities_userId_fkey",
+    "label": "Add foreign key \"activities_userId_fkey\" on \"activities\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "activities_userId_fkey",
+        "table": "activities"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"activities_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "activities_userId_fkey",
+          "public",
+          "\"public\".\"activities\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"activities_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"activities\"\nADD CONSTRAINT \"activities_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"users\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"activities_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "activities_userId_fkey",
+          "public",
+          "\"public\".\"activities\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.activity_points.activity_points_activityId_fkey",
+    "label": "Add foreign key \"activity_points_activityId_fkey\" on \"activity_points\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "activity_points_activityId_fkey",
+        "table": "activity_points"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"activity_points_activityId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "activity_points_activityId_fkey",
+          "public",
+          "\"public\".\"activity_points\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"activity_points_activityId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"activity_points\"\nADD CONSTRAINT \"activity_points_activityId_fkey\"\nFOREIGN KEY (\"activityId\")\nREFERENCES \"public\".\"activities\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"activity_points_activityId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "activity_points_activityId_fkey",
+          "public",
+          "\"public\".\"activity_points\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.devices.devices_userId_fkey",
+    "label": "Add foreign key \"devices_userId_fkey\" on \"devices\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "devices_userId_fkey",
+        "table": "devices"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"devices_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "devices_userId_fkey",
+          "public",
+          "\"public\".\"devices\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"devices_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"devices\"\nADD CONSTRAINT \"devices_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"users\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"devices_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "devices_userId_fkey",
+          "public",
+          "\"public\".\"devices\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.emergency_alerts.emergency_alerts_activityId_fkey",
+    "label": "Add foreign key \"emergency_alerts_activityId_fkey\" on \"emergency_alerts\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "emergency_alerts_activityId_fkey",
+        "table": "emergency_alerts"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"emergency_alerts_activityId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "emergency_alerts_activityId_fkey",
+          "public",
+          "\"public\".\"emergency_alerts\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"emergency_alerts_activityId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"emergency_alerts\"\nADD CONSTRAINT \"emergency_alerts_activityId_fkey\"\nFOREIGN KEY (\"activityId\")\nREFERENCES \"public\".\"activities\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"emergency_alerts_activityId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "emergency_alerts_activityId_fkey",
+          "public",
+          "\"public\".\"emergency_alerts\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.route_favorites.route_favorites_userId_fkey",
+    "label": "Add foreign key \"route_favorites_userId_fkey\" on \"route_favorites\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "route_favorites_userId_fkey",
+        "table": "route_favorites"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"route_favorites_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "route_favorites_userId_fkey",
+          "public",
+          "\"public\".\"route_favorites\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"route_favorites_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"route_favorites\"\nADD CONSTRAINT \"route_favorites_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"users\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"route_favorites_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "route_favorites_userId_fkey",
+          "public",
+          "\"public\".\"route_favorites\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.route_favorites.route_favorites_routeId_fkey",
+    "label": "Add foreign key \"route_favorites_routeId_fkey\" on \"route_favorites\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "route_favorites_routeId_fkey",
+        "table": "route_favorites"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"route_favorites_routeId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "route_favorites_routeId_fkey",
+          "public",
+          "\"public\".\"route_favorites\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"route_favorites_routeId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"route_favorites\"\nADD CONSTRAINT \"route_favorites_routeId_fkey\"\nFOREIGN KEY (\"routeId\")\nREFERENCES \"public\".\"routes\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"route_favorites_routeId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "route_favorites_routeId_fkey",
+          "public",
+          "\"public\".\"route_favorites\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.routes.routes_createdByUserId_fkey",
+    "label": "Add foreign key \"routes_createdByUserId_fkey\" on \"routes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "routes_createdByUserId_fkey",
+        "table": "routes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"routes_createdByUserId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "routes_createdByUserId_fkey",
+          "public",
+          "\"public\".\"routes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"routes_createdByUserId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"routes\"\nADD CONSTRAINT \"routes_createdByUserId_fkey\"\nFOREIGN KEY (\"createdByUserId\")\nREFERENCES \"public\".\"users\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"routes_createdByUserId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "routes_createdByUserId_fkey",
+          "public",
+          "\"public\".\"routes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.routes.routes_sourceActivityId_fkey",
+    "label": "Add foreign key \"routes_sourceActivityId_fkey\" on \"routes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "routes_sourceActivityId_fkey",
+        "table": "routes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"routes_sourceActivityId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "routes_sourceActivityId_fkey",
+          "public",
+          "\"public\".\"routes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"routes_sourceActivityId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"routes\"\nADD CONSTRAINT \"routes_sourceActivityId_fkey\"\nFOREIGN KEY (\"sourceActivityId\")\nREFERENCES \"public\".\"activities\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"routes_sourceActivityId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "routes_sourceActivityId_fkey",
+          "public",
+          "\"public\".\"routes\""
+        ]
+      }
+    ]
+  }
+]
