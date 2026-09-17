@@ -1,24 +1,45 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import type { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { PrismaService } from '../prisma.service.js';
-import type { Models } from '../prisma/schema.d.ts';
+
+type SafeUser = Omit<User, 'passwordHash'>;
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createUserDto: CreateUserDto): Promise<Models.public_User> {
-    const { passwordHash, ...rest } = createUserDto;
-    return this.prisma.db.orm.public.User.create({ ...rest, passwordHash: passwordHash });
+  async create(createUserDto: CreateUserDto): Promise<SafeUser> {
+    try {
+      const { passwordHash, ...safeUser } = await this.prisma.user.create({ data: createUserDto });
+      return safeUser;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('Ya existe un usuario con ese email');
+      }
+      throw error;
+    }
+  }
+
+  async findByEmail(email: string) {
+    return this.prisma.user.findFirst({
+      where: {
+        email: email
+      }
+    })
   }
 
   findAll() {
     return `This action returns all user`;
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string): Promise<SafeUser | null> {
+    return this.prisma.user.findFirst({
+      where: { id: id },
+      omit: { passwordHash: true },
+    });
   }
 
   update(id: string, updateUserDto: UpdateUserDto) {

@@ -1,0 +1,175 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [postgis, pgcrypto(schema: "extensions"), pg_stat_statements(schema: "extensions"), uuid_ossp(map: "uuid-ossp", schema: "extensions"), supabase_vault(schema: "vault")]
+}
+
+enum ActivityType {
+  HIKING
+  TRAIL_RUNNING
+  CYCLING
+}
+
+enum ActivityStatus {
+  RECORDING // grabándose en el dispositivo
+  PENDING_SYNC // terminada localmente, esperando subir
+  SYNCED // ya está en el backend
+}
+
+enum RouteStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum RouteDifficulty {
+  EASY
+  MODERATE
+  HARD
+  EXTREME
+}
+
+enum AlertReason {
+  INACTIVITY_TIMEOUT
+  MANUAL_SOS
+}
+
+enum AlertStatus {
+  PENDING
+  NOTIFIED
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum DevicePlatform {
+  IOS
+  ANDROID
+}
+
+model User {
+  avatarUrl             String?
+  createdAt             DateTime        @default(now()) @db.Timestamptz(6)
+  displayName           String
+  email                 String          @unique
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  id                    String          @id @default(uuid()) @db.Uuid
+  updatedAt             DateTime        @updatedAt @db.Timestamptz(6)
+  passwordHash          String
+  activities            Activity[]
+  devices               Device[]
+  favorites             RouteFavorite[]
+  routes                Route[]         @relation("RouteCreator")
+
+  @@map("users")
+}
+
+model Activity {
+  clientGeneratedId   String?                  @unique @db.Uuid
+  createdAt           DateTime                 @default(now()) @db.Timestamptz(6)
+  distanceMeters      Float?
+  durationSeconds     Int?
+  elevationGainMeters Float?
+  elevationLossMeters Float?
+  endedAt             DateTime?                @db.Timestamptz(6)
+  id                  String                   @id @default(uuid()) @db.Uuid
+  isPublished         Boolean                  @default(false)
+  path                Unsupported("geometry")?
+  startedAt           DateTime                 @db.Timestamptz(6)
+  status              ActivityStatus           @default(RECORDING)
+  type                ActivityType
+  updatedAt           DateTime                 @updatedAt @db.Timestamptz(6)
+  userId              String                   @db.Uuid
+  user                User                     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  points              ActivityPoint[]
+  alerts              EmergencyAlert[]
+  route               Route?
+
+  @@index([userId], map: "activities_userId_idx_a489d58a")
+  @@map("activities")
+}
+
+model ActivityPoint {
+  accuracyMeters Float?
+  activityId     String                  @db.Uuid
+  altitudeMeters Float?
+  id             BigInt                  @id @default(autoincrement())
+  location       Unsupported("geometry")
+  recordedAt     DateTime                @db.Timestamptz(6)
+  sequence       Int
+  activity       Activity                @relation(fields: [activityId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([activityId], map: "activity_points_activityId_idx_bf2a659e")
+  @@index([activityId, sequence], map: "activity_points_activityId_sequence_idx_0b074f75")
+  @@map("activity_points")
+}
+
+model Route {
+  createdAt           DateTime                 @default(now()) @db.Timestamptz(6)
+  createdByUserId     String                   @db.Uuid
+  description         String?
+  difficulty          RouteDifficulty?
+  distanceMeters      Float?
+  elevationGainMeters Float?
+  id                  String                   @id @default(uuid()) @db.Uuid
+  name                String
+  path                Unsupported("geometry")?
+  region              String?
+  sourceActivityId    String?                  @unique @db.Uuid
+  startPoint          Unsupported("geometry")?
+  status              RouteStatus              @default(DRAFT)
+  type                ActivityType
+  updatedAt           DateTime                 @updatedAt @db.Timestamptz(6)
+  favorites           RouteFavorite[]
+  createdBy           User                     @relation("RouteCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sourceActivity      Activity?                @relation(fields: [sourceActivityId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([createdByUserId], map: "routes_createdByUserId_idx_93e8a540")
+  @@index([status], map: "routes_status_idx_e98638ab")
+  @@map("routes")
+}
+
+model RouteFavorite {
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  routeId   String   @db.Uuid
+  userId    String   @db.Uuid
+  route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([userId, routeId])
+  @@index([routeId], map: "route_favorites_routeId_idx_91ae2fd6")
+  @@index([userId], map: "route_favorites_userId_idx_a489d58a")
+  @@map("route_favorites")
+}
+
+model EmergencyAlert {
+  activityId   String      @db.Uuid
+  contactName  String?
+  contactPhone String?
+  id           String      @id @default(uuid()) @db.Uuid
+  notifiedAt   DateTime?   @db.Timestamptz(6)
+  reason       AlertReason
+  resolvedAt   DateTime?   @db.Timestamptz(6)
+  status       AlertStatus @default(PENDING)
+  triggeredAt  DateTime    @default(now()) @db.Timestamptz(6)
+  activity     Activity    @relation(fields: [activityId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([activityId], map: "emergency_alerts_activityId_idx_bf2a659e")
+  @@map("emergency_alerts")
+}
+
+model Device {
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  expoPushToken String         @unique
+  id            String         @id @default(uuid()) @db.Uuid
+  platform      DevicePlatform
+  userId        String         @db.Uuid
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId], map: "devices_userId_idx_a489d58a")
+  @@map("devices")
+}

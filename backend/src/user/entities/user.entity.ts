@@ -3,11 +3,11 @@ import { IsDate, IsEmail, IsInt, IsOptional, IsPhoneNumber, IsString, IsUrl, IsU
 export class User {
     @IsOptional()
     @IsUrl()
-    avatarUrl?: string | null = ""
+    avatarUrl?: string | null
 
     @IsOptional()
     @IsDate()
-    createdAt?: Date | null = new Date
+    createdAt?: Date | null
 
     @IsString()
     displayName: string = ""
@@ -17,11 +17,11 @@ export class User {
 
     @IsOptional()
     @IsString()
-    emergencyContactName?: string = ""
+    emergencyContactName?: string
 
     @IsOptional()
     @IsPhoneNumber()
-    emergencyContactPhone?: string = ""
+    emergencyContactPhone?: string
 
     @IsUUID()
     id: string = ""

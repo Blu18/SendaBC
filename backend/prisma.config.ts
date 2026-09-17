@@ -1,16 +1,22 @@
 import 'dotenv/config';
-import { definePrismaConfig } from '@prisma/cli-engine';
-import postgis from '@prisma/orm-extension-postgis/control';
-import { defineConfig as ormConfig } from '@prisma/orm-postgres/config';
+import { readFileSync } from 'node:fs';
+import { defineConfig, env } from 'prisma/config';
 
-const config: ReturnType<typeof definePrismaConfig> = definePrismaConfig({
-  orm: ormConfig({
-    contract: "./src/prisma/schema.prisma",
-    db: {
-      connection: process.env['DIRECT_URL']!,
-    },
-    extensions: [postgis],
-  }),
+export default defineConfig({
+  experimental: {
+    extensions: true,
+    externalTables: true,
+  },
+  schema: 'prisma/schema.prisma',
+  migrations: {
+    path: 'prisma/migrations',
+    initShadowDb: readFileSync('prisma/init-shadow-db.sql', 'utf8'),
+  },
+  tables: {
+    // Tabla propia de la extensión PostGIS — Prisma no la gestiona.
+    external: ['public.spatial_ref_sys'],
+  },
+  datasource: {
+    url: env('DIRECT_URL'),
+  },
 });
-
-export default config;
