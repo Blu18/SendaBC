@@ -284,6 +284,7 @@
             "relations": {
               "user": {
                 "cardinality": "N:1",
+                "nullable": false,
                 "on": {
                   "localFields": [
                     "userId"
@@ -408,6 +409,7 @@
             "relations": {
               "activity": {
                 "cardinality": "N:1",
+                "nullable": false,
                 "on": {
                   "localFields": [
                     "activityId"
@@ -497,6 +499,7 @@
             "relations": {
               "user": {
                 "cardinality": "N:1",
+                "nullable": false,
                 "on": {
                   "localFields": [
                     "userId"
@@ -614,6 +617,7 @@
             "relations": {
               "activity": {
                 "cardinality": "N:1",
+                "nullable": false,
                 "on": {
                   "localFields": [
                     "activityId"
@@ -797,6 +801,7 @@
             "relations": {
               "createdBy": {
                 "cardinality": "N:1",
+                "nullable": false,
                 "on": {
                   "localFields": [
                     "createdByUserId"
@@ -812,6 +817,7 @@
               },
               "sourceActivity": {
                 "cardinality": "N:1",
+                "nullable": true,
                 "on": {
                   "localFields": [
                     "sourceActivityId"
@@ -905,6 +911,7 @@
             "relations": {
               "route": {
                 "cardinality": "N:1",
+                "nullable": false,
                 "on": {
                   "localFields": [
                     "routeId"
@@ -920,6 +927,7 @@
               },
               "user": {
                 "cardinality": "N:1",
+                "nullable": false,
                 "on": {
                   "localFields": [
                     "userId"
@@ -952,13 +960,6 @@
           },
           "User": {
             "fields": {
-              "authUserId": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/uuid@1",
-                  "kind": "scalar"
-                }
-              },
               "avatarUrl": {
                 "nullable": true,
                 "type": {
@@ -1008,6 +1009,13 @@
                   "kind": "scalar"
                 }
               },
+              "passwordHash": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "updatedAt": {
                 "nullable": false,
                 "type": {
@@ -1019,9 +1027,6 @@
             "relations": {},
             "storage": {
               "fields": {
-                "authUserId": {
-                  "column": "authUserId"
-                },
                 "avatarUrl": {
                   "column": "avatarUrl"
                 },
@@ -1042,6 +1047,9 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "passwordHash": {
+                  "column": "passwordHash"
                 },
                 "updatedAt": {
                   "column": "updatedAt"
@@ -1790,11 +1798,6 @@
             },
             "users": {
               "columns": {
-                "authUserId": {
-                  "codecId": "pg/uuid@1",
-                  "nativeType": "uuid",
-                  "nullable": true
-                },
                 "avatarUrl": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -1834,6 +1837,11 @@
                   "nativeType": "uuid",
                   "nullable": false
                 },
+                "passwordHash": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
                 "updatedAt": {
                   "codecId": "pg/timestamptz-temporal@1",
                   "nativeType": "timestamptz",
@@ -1848,11 +1856,6 @@
                 ]
               },
               "uniques": [
-                {
-                  "columns": [
-                    "authUserId"
-                  ]
-                },
                 {
                   "columns": [
                     "email"
@@ -1924,7 +1927,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "625810681f4245ee5978258c279d310077d40c9e75e8870dfa38f8494849573b"
+    "storageHash": "9ade05938aaebd2cd875fb3b8f5e765d75c03f790918814beab4e4e4dc4e493e"
   },
   "execution": {
     "executionHash": "4cda136831baaff7a753f7efc8871e5af4dd5384b286625ef704ef99871d1655",

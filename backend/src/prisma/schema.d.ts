@@ -27,6 +27,7 @@ import type {
 
 import type {
   ContractWithTypeMaps,
+  RelationKeys,
   TypeMaps as TypeMapsType,
 } from '@prisma/orm-postgres/family-contract/types';
 import type {
@@ -38,7 +39,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'625810681f4245ee5978258c279d310077d40c9e75e8870dfa38f8494849573b'>;
+  StorageHashBase<'9ade05938aaebd2cd875fb3b8f5e765d75c03f790918814beab4e4e4dc4e493e'>;
 export type ExecutionHash =
   ExecutionHashBase<'4cda136831baaff7a753f7efc8871e5af4dd5384b286625ef704ef99871d1655'>;
 export type ProfileHash =
@@ -315,8 +316,8 @@ export type FieldOutputTypes = {
     };
     readonly User: {
       readonly id: CodecTypes['pg/uuid@1']['output'];
-      readonly authUserId: CodecTypes['pg/uuid@1']['output'] | null;
       readonly email: CodecTypes['pg/text@1']['output'];
+      readonly passwordHash: CodecTypes['pg/text@1']['output'];
       readonly displayName: CodecTypes['pg/text@1']['output'];
       readonly avatarUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly emergencyContactName: CodecTypes['pg/text@1']['output'] | null;
@@ -396,8 +397,8 @@ export type FieldInputTypes = {
     };
     readonly User: {
       readonly id: CodecTypes['pg/uuid@1']['input'];
-      readonly authUserId: CodecTypes['pg/uuid@1']['input'] | null;
       readonly email: CodecTypes['pg/text@1']['input'];
+      readonly passwordHash: CodecTypes['pg/text@1']['input'];
       readonly displayName: CodecTypes['pg/text@1']['input'];
       readonly avatarUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly emergencyContactName: CodecTypes['pg/text@1']['input'] | null;
@@ -476,7 +477,6 @@ export type StorageColumnTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
     };
     readonly users: {
-      readonly authUserId: CodecTypes['pg/uuid@1']['output'] | null;
       readonly avatarUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
       readonly displayName: CodecTypes['pg/text@1']['output'];
@@ -484,6 +484,7 @@ export type StorageColumnTypes = {
       readonly emergencyContactName: CodecTypes['pg/text@1']['output'] | null;
       readonly emergencyContactPhone: CodecTypes['pg/text@1']['output'] | null;
       readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly passwordHash: CodecTypes['pg/text@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
     };
   };
@@ -557,7 +558,6 @@ export type StorageColumnInputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['input'];
     };
     readonly users: {
-      readonly authUserId: CodecTypes['pg/uuid@1']['input'] | null;
       readonly avatarUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-temporal@1']['input'];
       readonly displayName: CodecTypes['pg/text@1']['input'];
@@ -565,10 +565,119 @@ export type StorageColumnInputTypes = {
       readonly emergencyContactName: CodecTypes['pg/text@1']['input'] | null;
       readonly emergencyContactPhone: CodecTypes['pg/text@1']['input'] | null;
       readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly passwordHash: CodecTypes['pg/text@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['input'];
     };
   };
 };
+
+export namespace Models {
+  export type public_User = {
+    id: CodecTypes['pg/uuid@1']['output'];
+    email: CodecTypes['pg/text@1']['output'];
+    passwordHash: CodecTypes['pg/text@1']['output'];
+    displayName: CodecTypes['pg/text@1']['output'];
+    avatarUrl: CodecTypes['pg/text@1']['output'] | null;
+    emergencyContactName: CodecTypes['pg/text@1']['output'] | null;
+    emergencyContactPhone: CodecTypes['pg/text@1']['output'] | null;
+    createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    readonly [RelationKeys]?: never;
+  };
+  export type public_Activity = {
+    id: CodecTypes['pg/uuid@1']['output'];
+    userId: CodecTypes['pg/uuid@1']['output'];
+    clientGeneratedId: CodecTypes['pg/uuid@1']['output'] | null;
+    type: 'HIKING' | 'TRAIL_RUNNING' | 'CYCLING';
+    status: 'RECORDING' | 'PENDING_SYNC' | 'SYNCED';
+    startedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    endedAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+    distanceMeters: CodecTypes['pg/float8@1']['output'] | null;
+    durationSeconds: CodecTypes['pg/int4@1']['output'] | null;
+    elevationGainMeters: CodecTypes['pg/float8@1']['output'] | null;
+    elevationLossMeters: CodecTypes['pg/float8@1']['output'] | null;
+    path: Geometry<4326> | null;
+    isPublished: CodecTypes['pg/bool@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    user: public_User;
+    readonly [RelationKeys]?: 'user';
+  };
+  export type public_ActivityPoint = {
+    id: CodecTypes['pg/int8@1']['output'];
+    activityId: CodecTypes['pg/uuid@1']['output'];
+    sequence: CodecTypes['pg/int4@1']['output'];
+    location: Geometry<4326>;
+    altitudeMeters: CodecTypes['pg/float8@1']['output'] | null;
+    accuracyMeters: CodecTypes['pg/float8@1']['output'] | null;
+    recordedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    activity: public_Activity;
+    readonly [RelationKeys]?: 'activity';
+  };
+  export type public_Route = {
+    id: CodecTypes['pg/uuid@1']['output'];
+    createdByUserId: CodecTypes['pg/uuid@1']['output'];
+    sourceActivityId: CodecTypes['pg/uuid@1']['output'] | null;
+    name: CodecTypes['pg/text@1']['output'];
+    description: CodecTypes['pg/text@1']['output'] | null;
+    type: 'HIKING' | 'TRAIL_RUNNING' | 'CYCLING';
+    difficulty: 'EASY' | 'MODERATE' | 'HARD' | 'EXTREME' | null;
+    status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+    distanceMeters: CodecTypes['pg/float8@1']['output'] | null;
+    elevationGainMeters: CodecTypes['pg/float8@1']['output'] | null;
+    path: Geometry<4326> | null;
+    startPoint: Geometry<4326> | null;
+    region: CodecTypes['pg/text@1']['output'] | null;
+    createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    createdBy: public_User;
+    sourceActivity: public_Activity | null;
+    readonly [RelationKeys]?: 'createdBy' | 'sourceActivity';
+  };
+  export type public_RouteFavorite = {
+    userId: CodecTypes['pg/uuid@1']['output'];
+    routeId: CodecTypes['pg/uuid@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    route: public_Route;
+    user: public_User;
+    readonly [RelationKeys]?: 'route' | 'user';
+  };
+  export type public_EmergencyAlert = {
+    id: CodecTypes['pg/uuid@1']['output'];
+    activityId: CodecTypes['pg/uuid@1']['output'];
+    reason: 'INACTIVITY_TIMEOUT' | 'MANUAL_SOS';
+    status: 'PENDING' | 'NOTIFIED' | 'ACKNOWLEDGED' | 'RESOLVED';
+    contactName: CodecTypes['pg/text@1']['output'] | null;
+    contactPhone: CodecTypes['pg/text@1']['output'] | null;
+    triggeredAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    notifiedAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+    resolvedAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+    activity: public_Activity;
+    readonly [RelationKeys]?: 'activity';
+  };
+  export type public_Device = {
+    id: CodecTypes['pg/uuid@1']['output'];
+    userId: CodecTypes['pg/uuid@1']['output'];
+    expoPushToken: CodecTypes['pg/text@1']['output'];
+    platform: 'IOS' | 'ANDROID';
+    createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    user: public_User;
+    readonly [RelationKeys]?: 'user';
+  };
+}
+
+export declare const models: {
+  public: {
+    User: Models.public_User;
+    Activity: Models.public_Activity;
+    ActivityPoint: Models.public_ActivityPoint;
+    Route: Models.public_Route;
+    RouteFavorite: Models.public_RouteFavorite;
+    EmergencyAlert: Models.public_EmergencyAlert;
+    Device: Models.public_Device;
+  };
+};
+
 export type TypeMaps = TypeMapsType<
   CodecTypes,
   QueryOperationTypes,
@@ -1103,12 +1212,12 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/uuid@1';
                   readonly nullable: false;
                 };
-                readonly authUserId: {
-                  readonly nativeType: 'uuid';
-                  readonly codecId: 'pg/uuid@1';
-                  readonly nullable: true;
-                };
                 readonly email: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly passwordHash: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
@@ -1146,10 +1255,7 @@ type ContractBase = Omit<
                 };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [
-                { readonly columns: readonly ['authUserId'] },
-                { readonly columns: readonly ['email'] },
-              ];
+              uniques: readonly [{ readonly columns: readonly ['email'] }];
               indexes: readonly [];
               foreignKeys: readonly [];
             };
@@ -1298,6 +1404,7 @@ type ContractBase = Omit<
               readonly user: {
                 readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
                 readonly cardinality: 'N:1';
+                readonly nullable: false;
                 readonly on: {
                   readonly localFields: readonly ['userId'];
                   readonly targetFields: readonly ['id'];
@@ -1371,6 +1478,7 @@ type ContractBase = Omit<
                   readonly model: 'Activity';
                 };
                 readonly cardinality: 'N:1';
+                readonly nullable: false;
                 readonly on: {
                   readonly localFields: readonly ['activityId'];
                   readonly targetFields: readonly ['id'];
@@ -1421,6 +1529,7 @@ type ContractBase = Omit<
               readonly user: {
                 readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
                 readonly cardinality: 'N:1';
+                readonly nullable: false;
                 readonly on: {
                   readonly localFields: readonly ['userId'];
                   readonly targetFields: readonly ['id'];
@@ -1494,6 +1603,7 @@ type ContractBase = Omit<
                   readonly model: 'Activity';
                 };
                 readonly cardinality: 'N:1';
+                readonly nullable: false;
                 readonly on: {
                   readonly localFields: readonly ['activityId'];
                   readonly targetFields: readonly ['id'];
@@ -1597,6 +1707,7 @@ type ContractBase = Omit<
               readonly createdBy: {
                 readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
                 readonly cardinality: 'N:1';
+                readonly nullable: false;
                 readonly on: {
                   readonly localFields: readonly ['createdByUserId'];
                   readonly targetFields: readonly ['id'];
@@ -1608,6 +1719,7 @@ type ContractBase = Omit<
                   readonly model: 'Activity';
                 };
                 readonly cardinality: 'N:1';
+                readonly nullable: true;
                 readonly on: {
                   readonly localFields: readonly ['sourceActivityId'];
                   readonly targetFields: readonly ['id'];
@@ -1661,6 +1773,7 @@ type ContractBase = Omit<
                   readonly model: 'Route';
                 };
                 readonly cardinality: 'N:1';
+                readonly nullable: false;
                 readonly on: {
                   readonly localFields: readonly ['routeId'];
                   readonly targetFields: readonly ['id'];
@@ -1669,6 +1782,7 @@ type ContractBase = Omit<
               readonly user: {
                 readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
                 readonly cardinality: 'N:1';
+                readonly nullable: false;
                 readonly on: {
                   readonly localFields: readonly ['userId'];
                   readonly targetFields: readonly ['id'];
@@ -1691,11 +1805,11 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
               };
-              readonly authUserId: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
-              };
               readonly email: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly passwordHash: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
@@ -1736,8 +1850,8 @@ type ContractBase = Omit<
               readonly namespaceId: 'public';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
-                readonly authUserId: { readonly column: 'authUserId' };
                 readonly email: { readonly column: 'email' };
+                readonly passwordHash: { readonly column: 'passwordHash' };
                 readonly displayName: { readonly column: 'displayName' };
                 readonly avatarUrl: { readonly column: 'avatarUrl' };
                 readonly emergencyContactName: { readonly column: 'emergencyContactName' };

@@ -77,13 +77,10 @@ enum DevicePlatform {
 model User {
   id Uuid @id @default(uuid())
 
-  // Si usan Supabase Auth, este campo referencia auth.users.id y esta
-  // tabla queda como "perfil público" (patrón típico de Supabase). Si
-  // usan Passport + JWT propio, ignoren este campo.
-  authUserId Uuid?   @unique
-  email      String  @unique
-  displayName String
-  avatarUrl  String?
+  email        String  @unique
+  passwordHash String
+  displayName  String
+  avatarUrl    String?
 
   // Contacto de emergencia — módulo de seguridad
   emergencyContactName  String?
