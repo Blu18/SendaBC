@@ -27,7 +27,7 @@ export class User {
     id: string = ""
 
     @IsString()
-    passwordHash = ""
+    passwordHash: string = ""
 
     @IsOptional()
     @IsDate()
