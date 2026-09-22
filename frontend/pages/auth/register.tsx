@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { View, TextInput, StyleSheet, Text, Pressable } from "react-native";
 import { type RegistroFieldErrors, useRegistrar } from "../../hooks/auth/auth.hooks";
+import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
+import TextBtn from "../../components/ui/buttons/TextBtn";
+import { useNavigation } from "@react-navigation/native";
 
 type RegistroFieldError = Record<RegistroFieldErrors["field"], string>;
 
@@ -55,6 +58,7 @@ export default function Register() {
     const [fieldErrors, setFieldErrors] = useState<RegistroFieldError>(emptyFieldErrors);
 
     const registrar = useRegistrar();
+    const navigation = useNavigation();
 
     const handleSubmit = () => {
       const errors = validarCampos({ displayName, email, password, confirmPassword });
@@ -124,12 +128,8 @@ export default function Register() {
             </View>
           </View>
           <View style={styles.formFooter}>
-            <Pressable style={styles.btn} onPress={handleSubmit}>
-              <Text style={styles.btnTxt}>Registrarse</Text>
-            </Pressable>
-            <Pressable style={{}} onPress={() => {}}>
-              <Text style={{color: "#5C6B49", fontWeight: 'semibold', fontSize: 16}}>Ya tengo una cuenta</Text>
-            </Pressable>
+            <PrimaryButton text="Registrarse" onPress={handleSubmit}/>
+            <TextBtn text="Ya tengo una cuenta" onPress={() => navigation.navigate('Login')}/>
           </View>
         </View>
       </View>
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     headerFormText: {
       fontSize: 28,
       fontWeight: 'bold',
-      color: "#2B2A26x  "
+      color: "#2B2A26"
     },  
     inputContainer: {
       gap: 16,
@@ -190,16 +190,4 @@ const styles = StyleSheet.create({
       gap: 12,
       paddingVertical: 48
     },
-    btn: {
-      backgroundColor: "#5C6B49",
-      padding: 6,
-      borderRadius: 12,
-      width: '100%',
-      alignItems: 'center'
-    },
-    btnTxt: {
-      color: "#EDEAE1",
-      fontWeight: 'semibold',
-      fontSize: 16
-    }
 });
