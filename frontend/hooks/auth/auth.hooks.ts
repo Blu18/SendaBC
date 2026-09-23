@@ -1,5 +1,7 @@
 import { queryClient } from "../../App";
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { apiFetch } from "../../lib/api/client";
+import { useAuth } from "../../context/AuthContext";
 
 export interface Registrar {
     displayName: string;
@@ -22,16 +24,11 @@ export interface LoginFieldErrors {
     message: string;
 }
 
-export const URL = "http://192.168.1.81:3000/auth"
-
 export const useRegistrar  = () => {
     return useMutation({
         mutationFn: async(registrar: Registrar) => {
-            const response = await fetch(`http://192.168.1.81:3000/user`, {
+            const response = await apiFetch("/user", null, {
                 method: "POST",
-                headers: {
-                    "Content-type": "application/json",
-                },
                 body: JSON.stringify(registrar),
             })
 
@@ -52,11 +49,8 @@ export const useRegistrar  = () => {
 export const useLogin  = () => {
     return useMutation({
         mutationFn: async(login: Login) => {
-            const response = await fetch(`${URL}/login`, {
+            const response = await apiFetch("/auth/login", null, {
                 method: "POST",
-                headers: {
-                    "Content-type": "application/json",
-                },
                 body: JSON.stringify(login),
             })
 
@@ -71,5 +65,25 @@ export const useLogin  = () => {
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ["postLogin"]})
         }
+    })
+}
+
+export const useProfile = () => {
+    const { token } = useAuth();
+
+    return useQuery({
+        queryKey: ["profile", token],
+        enabled: !!token,
+        queryFn: async () => {
+            const response = await apiFetch("/user/profile", token)
+
+            const payload = await response.json().catch(() => null)
+
+            if (!response.ok) {
+                throw payload ?? { message: "Error al cargar el perfil" };
+            }
+
+            return payload
+        },
     })
 }

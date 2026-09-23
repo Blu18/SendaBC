@@ -1,10 +1,21 @@
+import { useEffect } from 'react'
 import { View, StyleSheet, Text } from 'react-native'
 import BgBtn from '../../components/ui/buttons/BgBtn'
 import TextBtn from '../../components/ui/buttons/TextBtn'
 import { useNavigation } from '@react-navigation/native'
+import { useAuth } from '../../context/AuthContext'
 
 export default function Index() {
     const navigation = useNavigation()
+    const { token } = useAuth()
+
+    useEffect(() => {
+        if (token) {
+            navigation.reset({ index: 0, routes: [{ name: 'MainPage' }] })
+        }
+    }, [token])
+
+    if (token) return null
 
     return(
         <View style={styles.container}>

@@ -4,6 +4,7 @@ import { LoginFieldErrors, useLogin } from "../../hooks/auth/auth.hooks";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import TextBtn from "../../components/ui/buttons/TextBtn";
 import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "../../context/AuthContext";
 
 type LoginFieldError = Record<LoginFieldErrors["field"], string>;
 
@@ -42,6 +43,7 @@ export default function Login() {
 
     const login = useLogin();
     const navigation = useNavigation();
+    const { login: guardarSesion } = useAuth();
 
     const handleSubmit = () => {
       const errors = validarCampos({ email, password });
@@ -53,7 +55,7 @@ export default function Login() {
       login.mutate(
         { email: email, password: password},
         {
-          onSuccess: () => navigation.navigate('MainPage'),
+          onSuccess: (payload) => guardarSesion(payload.token).then(() => navigation.navigate('MainPage')),
           onError: (error) => {console.log(error.message);}
         }
       )
