@@ -1,0 +1,24 @@
+# Roadmap SendaBC
+
+Duración: 10 semanas. Semana actual: **3**.
+
+Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. Las specs de semanas futuras se escriben al inicio de su semana (o antes, si hay tiempo), no todas de golpe.
+
+| Sem. | Objetivo | Spec | Estado |
+|---|---|---|---|
+| 1 | Configuración y arquitectura base (monorepo, Prisma, PostGIS) | — (previo a SDD) | Hecho |
+| 2 | Registro de usuario | [001-registro-usuario](001-registro-usuario/spec.md) | Implementada con pendientes |
+| 2 | Inicio de sesión y sesión persistente | [002-inicio-sesion](002-inicio-sesion/spec.md) | Implementada con pendientes |
+| 3 | Captura de GPS y guardado local | [003-captura-gps](003-captura-gps/spec.md) | En progreso |
+| 4 | Barómetro y métricas de actividad (distancia, tiempo, elevación, resumen) | 004-metricas-actividad | Por escribir |
+| 5 | Sincronización offline-first (cola local, endpoint batch, reintentos) | 005-sincronizacion | Por escribir |
+| 6 | Catálogo de rutas cercanas con PostGIS y mapa | 006-rutas-cercanas | Por escribir |
+| 7 | Publicar rutas, detalle y favoritas | 007-publicar-rutas | Por escribir |
+| 8 | Seguridad: contacto de emergencia, inactividad y alerta push/SMS | 008-alerta-inactividad | Por escribir |
+| 9 | Pulido, prueba de campo, pruebas unitarias, bugs | 009-estabilidad | Por escribir |
+| 10 | Cierre: README, manual, EAS Build, despliegue, demo | 010-entrega | Por escribir |
+
+## Notas
+
+- El modelo de datos de Prisma (semana 1) ya contempla actividades, puntos, rutas, favoritas, alertas y dispositivos. Las specs 004–008 deben partir de él y documentar en su `plan.md` cualquier cambio de esquema.
+- Las brechas de las specs 001 y 002 (ver sus `tasks.md`) conviene cerrarlas antes de la semana 5, porque la sincronización depende de que la autenticación funcione de punta a punta.
