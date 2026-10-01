@@ -7,6 +7,7 @@ import Login from './pages/auth/login';
 import {createStaticNavigation} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import MainPage from './pages/main/mainPage';
+import ActivityPage from './pages/activity/activityPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 export const queryClient = new QueryClient()
@@ -28,6 +29,9 @@ const RootStack = createNativeStackNavigator({
     },
     MainPage: {
       screen: MainPage
+    },
+    Activity: {
+      screen: ActivityPage
     }
   }
 })

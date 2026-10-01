@@ -3,13 +3,11 @@ import { useNavigation } from "@react-navigation/native";
 import { useProfile } from "../../hooks/auth/auth.hooks";
 import { useAuth } from "../../context/AuthContext";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
-import { useActivityTracker } from "../../hooks/activity/activityTracker.hook";
 
 export default function MainPage() {
     const navigation = useNavigation();
     const { logout } = useAuth();
     const profile = useProfile();
-    const { status, pointCount, start, stop } = useActivityTracker();
 
     const handleLogout = async () => {
         await logout();
@@ -26,10 +24,10 @@ export default function MainPage() {
                 <Text style={styles.subtitle}>Hola, {profile.data.displayName}</Text>
             )}
 
-            <Text>Estado: {status} - Puntos: {pointCount}</Text>
             <PrimaryButton
-              text={status === 'recording' ? 'Detener actividad' : 'Iniciar actividad'}
-              onPress={status === 'recording' ? stop : () => start('HIKING')}
+              text="Nueva actividad"
+              style={styles.activityBtn}
+              onPress={() => navigation.navigate('Activity')}
             />
 
             <PrimaryButton text="Cerrar sesión" style={styles.logoutBtn} onPress={handleLogout} />
@@ -56,6 +54,9 @@ const styles = StyleSheet.create({
     },
     error: {
         color: "#B3261E",
+    },
+    activityBtn: {
+        width: '60%',
     },
     logoutBtn: {
         width: '60%',

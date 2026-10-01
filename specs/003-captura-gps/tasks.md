@@ -31,10 +31,10 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 ### Pantalla
 
-- [ ] T8 — Crear `pages/activity/activityPage.tsx` con selector de tipo, cronómetro, contador y botón Iniciar/Detener; registrarla en `App.tsx`. (CA-1, CA-5)
-- [ ] T9 — Mensaje de permiso denegado y botón "Abrir ajustes" (`Linking.openSettings()`). (CA-3)
-- [ ] T10 — Mostrar "Actividad guardada: N puntos" leyendo `countPoints`. (CA-8)
-- [ ] T11 — En `MainPage`, reemplazar los controles de grabación por un botón "Nueva actividad". (CA-1)
+- [x] T8 — Crear `pages/activity/activityPage.tsx` con selector de tipo, cronómetro, contador y botón Iniciar/Detener; registrarla en `App.tsx`. (CA-1, CA-5)
+- [x] T9 — Mensaje de permiso denegado y botón "Abrir ajustes" (`Linking.openSettings()`). (CA-3)
+- [x] T10 — Mostrar "Actividad guardada: N puntos" leyendo `countPoints`. (CA-8)
+- [x] T11 — En `MainPage`, reemplazar los controles de grabación por un botón "Nueva actividad". (CA-1)
 
 ### Arranque
 
@@ -50,13 +50,13 @@ Todas manuales (aún no hay runner de pruebas en el frontend). Hacerlas en un di
 
 | CA | Caso | Estado |
 |---|---|---|
-| CA-1 | M1 | Pendiente |
+| CA-1 | M1 | Por verificar |
 | CA-2 | M2 | Cumple |
-| CA-3 | M3 | Pendiente |
+| CA-3 | M3 | Por verificar |
 | CA-4, CA-6 | M4 | Por verificar |
-| CA-5 | M1 | Parcial (falta cronómetro) |
+| CA-5 | M1 | Por verificar |
 | CA-7 | M5 | Por verificar |
-| CA-8 | M4 | Parcial (falta mensaje con N) |
+| CA-8 | M4 | Por verificar |
 | CA-9 | M6 | Por verificar |
 | CA-10 | M7 | Pendiente |
 | CA-11 | M8 | Pendiente |
