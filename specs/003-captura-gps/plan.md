@@ -59,6 +59,7 @@ Funciones nuevas en `frontend/lib/db/activities.ts`:
 - Mensaje de permiso denegado con `Linking.openSettings()` cuando `canAskAgain` es `false`.
 - Mensaje "Actividad guardada: N puntos" al detener.
 - Se registra en el stack de `App.tsx` como `Activity`; `MainPage` muestra un botón para abrirla en lugar de los controles actuales.
+- Colores de `frontend/lib/theme/colors.ts`: primario (Chaparral) para Iniciar, `data` (Azul Pacífico) para cronómetro y contador. `alert` queda reservado a la seguridad (spec 008); Detener usa `text` o `secondary`.
 
 ### Arranque
 
