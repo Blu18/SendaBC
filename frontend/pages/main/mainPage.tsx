@@ -29,7 +29,7 @@ export default function MainPage() {
             <Text>Estado: {status} - Puntos: {pointCount}</Text>
             <PrimaryButton
               text={status === 'recording' ? 'Detener actividad' : 'Iniciar actividad'}
-              onPress={status === 'recording' ? stop : start}
+              onPress={status === 'recording' ? stop : () => start('HIKING')}
             />
 
             <PrimaryButton text="Cerrar sesión" style={styles.logoutBtn} onPress={handleLogout} />

@@ -24,10 +24,10 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 ### Hook
 
-- [ ] T4 — `start(type)` recibe el tipo; guardar `user_id`. (CA-1, CA-4)
-- [ ] T5 — Exponer `startedAt`, `permissionError` (`denied` / `blocked`) y `savedPointCount` tras detener. (CA-3, CA-5, CA-8)
-- [ ] T6 — Al desmontar con grabación activa, cerrar la actividad además de quitar la suscripción. (CA-10)
-- [ ] T7 — Usar las funciones de `lib/db/activities.ts` en lugar de SQL en línea.
+- [x] T4 — `start(type)` recibe el tipo; guardar `user_id`. (CA-1, CA-4)
+- [x] T5 — Exponer `startedAt`, `permissionError` (`denied` / `blocked`) y `savedPointCount` tras detener. (CA-3, CA-5, CA-8)
+- [x] T6 — Al desmontar con grabación activa, cerrar la actividad además de quitar la suscripción. (CA-10)
+- [x] T7 — Usar las funciones de `lib/db/activities.ts` en lugar de SQL en línea.
 
 ### Pantalla
 
@@ -53,7 +53,7 @@ Todas manuales (aún no hay runner de pruebas en el frontend). Hacerlas en un di
 | CA-1 | M1 | Pendiente |
 | CA-2 | M2 | Cumple |
 | CA-3 | M3 | Pendiente |
-| CA-4, CA-6 | M4 | Parcial (falta tipo y `user_id`) |
+| CA-4, CA-6 | M4 | Por verificar |
 | CA-5 | M1 | Parcial (falta cronómetro) |
 | CA-7 | M5 | Por verificar |
 | CA-8 | M4 | Parcial (falta mensaje con N) |

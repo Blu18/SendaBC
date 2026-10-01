@@ -15,12 +15,16 @@ export type ActivityPointInput = {
 };
 
 // Crea la actividad en RECORDING y devuelve su local_id (CA-4).
-export async function createActivity(userId: string, type: ActivityType) {
+export async function createActivity(
+  userId: string,
+  type: ActivityType,
+  startedAt: string = new Date().toISOString()
+) {
   const db = await getDb();
   const result = await db.runAsync(
     `INSERT INTO activities (client_generated_id, user_id, type, status, startedAt)
      VALUES (?, ?, ?, 'RECORDING', ?)`,
-    [Crypto.randomUUID(), userId, type, new Date().toISOString()]
+    [Crypto.randomUUID(), userId, type, startedAt]
   );
   return result.lastInsertRowId;
 }

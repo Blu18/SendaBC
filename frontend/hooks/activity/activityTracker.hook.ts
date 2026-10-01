@@ -1,41 +1,59 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Location from 'expo-location';
-import * as Crypto from 'expo-crypto';
-import { getDb } from '../../lib/db/sqlite';
+import {
+  countPoints,
+  createActivity,
+  finishActivity,
+  insertPoint,
+  type ActivityType,
+} from '../../lib/db/activities';
+import { useAuth } from '../../context/AuthContext';
 import { useLocationPermission } from './locationPermission.hook';
 
 export type TrackerStatus = 'idle' | 'recording' | 'stopped';
+// denied: se puede volver a pedir · blocked: el sistema ya no pregunta, hay que ir a ajustes (CA-3)
+export type PermissionError = 'denied' | 'blocked';
 
 export function useActivityTracker() {
   const { request } = useLocationPermission();
+  const { userId } = useAuth();
 
   // ESTADO: cosas que la pantalla necesita mostrar (cambiarlas redibuja)
   const [status, setStatus] = useState<TrackerStatus>('idle');
   const [pointCount, setPointCount] = useState(0);
+  const [startedAt, setStartedAt] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<PermissionError | null>(null);
+  const [savedPointCount, setSavedPointCount] = useState<number | null>(null); // leído de SQLite al detener
 
   // REFS: cosas internas que NO se muestran (cambiarlas no redibuja)
   const subscription = useRef<Location.LocationSubscription | null>(null);
   const activityId = useRef<number | null>(null);
   const sequence = useRef(0);
   const busy = useRef(false); // evita doble toque en "Iniciar"
+  const mounted = useRef(true);
+  const startedAtRef = useRef<string | null>(null); // copia de startedAt legible desde la limpieza
+  const lastPointAt = useRef<string | null>(null); // recordedAt del último punto guardado
 
-  const start = useCallback(async () => {
-    if (busy.current || subscription.current) return;
+  const start = useCallback(async (type: ActivityType) => {
+    // Sin usuario de sesión no hay dueño para la actividad (RN-4)
+    if (busy.current || subscription.current || !userId) return;
     busy.current = true;
 
     try {
-      const permitido = await request();
-      if (!permitido) return;
+      const permiso = await request();
+      if (!permiso.granted) {
+        setPermissionError(permiso.canAskAgain ? 'denied' : 'blocked');
+        return;
+      }
+      setPermissionError(null);
+      setSavedPointCount(null);
 
-      const db = await getDb();
-
-      // 1. Crear la actividad y guardar su id local
-      const result = await db.runAsync(
-        `INSERT INTO activities (client_generated_id, type, status, startedAt)
-         VALUES (?, ?, ?, ?)`,
-        [Crypto.randomUUID(), 'HIKING', 'RECORDING', new Date().toISOString()]
-      );
-      activityId.current = result.lastInsertRowId;
+      // 1. Crear la actividad del usuario de la sesión y guardar su id local
+      const inicio = new Date().toISOString();
+      activityId.current = await createActivity(userId, type, inicio);
+      setStartedAt(inicio);
+      startedAtRef.current = inicio;
+      lastPointAt.current = null;
       sequence.current = 0;
       setPointCount(0);
 
@@ -51,21 +69,17 @@ export function useActivityTracker() {
             sequence.current += 1;
             const n = sequence.current;
             const { latitude, longitude, altitude, accuracy } = loc.coords;
+            const recordedAt = new Date(loc.timestamp).toISOString();
 
-            await db.runAsync(
-              `INSERT INTO activity_points
-               (activity_id, sequence, latitude, longitude, altitude, accuracy, recordedAt)
-               VALUES (?, ?, ?, ?, ?, ?, ?)`,
-              [
-                activityId.current,
-                n,
-                latitude,
-                longitude,
-                altitude,
-                accuracy,
-                new Date(loc.timestamp).toISOString(),
-              ]
-            );
+            await insertPoint(activityId.current!, {
+              sequence: n,
+              latitude,
+              longitude,
+              altitude,
+              accuracy,
+              recordedAt,
+            });
+            lastPointAt.current = recordedAt;
             setPointCount(n);
           } catch (e) {
             console.log('Error guardando punto GPS:', e);
@@ -73,11 +87,17 @@ export function useActivityTracker() {
         }
       );
 
+      // Si la pantalla se cerró mientras arrancaba el GPS, no dejar la suscripción viva (CA-10)
+      if (!mounted.current) {
+        closeOnUnmount();
+        return;
+      }
+
       setStatus('recording');
     } finally {
       busy.current = false;
     }
-  }, [request]);
+  }, [request, userId]);
 
   const stop = useCallback(async () => {
     if (!subscription.current) return;
@@ -87,22 +107,36 @@ export function useActivityTracker() {
     subscription.current = null;
 
     // 2. Cerrar la actividad
-    const db = await getDb();
-    await db.runAsync(
-      `UPDATE activities SET endedAt = ?, status = 'PENDING_SYNC' WHERE local_id = ?`,
-      [new Date().toISOString(), activityId.current]
-    );
+    await finishActivity(activityId.current!);
 
+    // 3. Contar lo que realmente quedó guardado (CA-8)
+    setSavedPointCount(await countPoints(activityId.current!));
     setStatus('stopped');
   }, []);
 
-  // Limpieza: si el usuario sale de la pantalla grabando, cerrar la suscripción
+  // Salir de la pantalla grabando: dejar de escuchar y cerrar la actividad con la hora
+  // de su último punto (o startedAt si no tiene), igual que closeOrphanActivities (CA-10)
+  const closeOnUnmount = () => {
+    if (!subscription.current) return;
+    subscription.current.remove();
+    subscription.current = null;
+
+    const id = activityId.current;
+    const endedAt = lastPointAt.current ?? startedAtRef.current;
+    if (id == null || !endedAt) return;
+    finishActivity(id, endedAt).catch((e) => {
+      // Si falla, closeOrphanActivities la cierra al volver a abrir la app (T12)
+      console.log('Error cerrando actividad al salir:', e);
+    });
+  };
+
   useEffect(() => {
+    mounted.current = true;
     return () => {
-      subscription.current?.remove();
-      subscription.current = null;
+      mounted.current = false;
+      closeOnUnmount();
     };
   }, []);
 
-  return { status, pointCount, start, stop };
+  return { status, pointCount, startedAt, permissionError, savedPointCount, start, stop };
 }
