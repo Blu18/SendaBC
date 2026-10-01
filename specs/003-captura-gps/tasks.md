@@ -16,9 +16,11 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 ### Datos y sesión
 
-- [ ] T1 — Versionar el esquema SQLite con `PRAGMA user_version` y migrar a v2 (`user_id` en `activities`). (RN-4)
-- [ ] T2 — Crear `frontend/lib/db/activities.ts` con `createActivity`, `insertPoint`, `finishActivity`, `countPoints`, `closeOrphanActivities`. (CA-4, CA-6, CA-8, CA-10)
-- [ ] T3 — Guardar y exponer `userId` en `AuthContext` (SecureStore) a partir de la respuesta de login. (RN-4)
+- [x] T1 — Versionar el esquema SQLite con `PRAGMA user_version` y migrar a v2 (`user_id` en `activities`). (RN-4)
+  - Las actividades grabadas antes de v2 quedan con `user_id = NULL`; la spec 005 debe decidir qué hacer con ellas al sincronizar.
+- [x] T2 — Crear `frontend/lib/db/activities.ts` con `createActivity`, `insertPoint`, `finishActivity`, `countPoints`, `closeOrphanActivities`. (CA-4, CA-6, CA-8, CA-10)
+- [x] T3 — Guardar y exponer `userId` en `AuthContext` (SecureStore) a partir de la respuesta de login. (RN-4)
+  - Una sesión guardada antes de este cambio (token sin `userId`) se cierra al arrancar y pide iniciar sesión de nuevo.
 
 ### Hook
 

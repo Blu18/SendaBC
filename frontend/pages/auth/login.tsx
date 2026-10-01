@@ -55,7 +55,7 @@ export default function Login() {
       login.mutate(
         { email: email, password: password},
         {
-          onSuccess: (payload) => guardarSesion(payload.token).then(() => navigation.navigate('MainPage')),
+          onSuccess: (payload) => guardarSesion(payload.token, payload.id).then(() => navigation.navigate('MainPage')),
           onError: (error) => {console.log(error.message);}
         }
       )

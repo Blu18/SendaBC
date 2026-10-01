@@ -14,6 +14,11 @@ export interface Login {
     password: string;
 }
 
+export interface LoginResponse {
+    id: string;
+    token: string;
+}
+
 export interface RegistroFieldErrors {
     field: "displayName" | "email" | "passwordHash" | "confirmPassword";
     message: string;
@@ -60,7 +65,7 @@ export const useLogin  = () => {
                 throw payload ?? { message: "Error al iniciar sesión" };
             }
 
-            return payload
+            return payload as LoginResponse
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ["postLogin"]})
