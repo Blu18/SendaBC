@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Location from 'expo-location';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import {
   countPoints,
   createActivity,
@@ -13,6 +14,15 @@ import { useLocationPermission } from './locationPermission.hook';
 export type TrackerStatus = 'idle' | 'recording' | 'stopped';
 // denied: se puede volver a pedir · blocked: el sistema ya no pregunta, hay que ir a ajustes (CA-3)
 export type PermissionError = 'denied' | 'blocked';
+
+// Tag propio para no interferir con otros usos de keep-awake (CA-11)
+const KEEP_AWAKE_TAG = 'sendabc-activity';
+
+// Un fallo de keep-awake no debe detener ni impedir la grabación
+const keepScreenOn = () =>
+  activateKeepAwakeAsync(KEEP_AWAKE_TAG).catch((e) => console.log('Error activando keep-awake:', e));
+const releaseScreen = () =>
+  deactivateKeepAwake(KEEP_AWAKE_TAG).catch((e) => console.log('Error desactivando keep-awake:', e));
 
 export function useActivityTracker() {
   const { request } = useLocationPermission();
@@ -93,6 +103,8 @@ export function useActivityTracker() {
         return;
       }
 
+      // Pantalla encendida solo mientras se graba (CA-11)
+      keepScreenOn();
       setStatus('recording');
     } finally {
       busy.current = false;
@@ -105,6 +117,7 @@ export function useActivityTracker() {
     // 1. Dejar de escuchar
     subscription.current.remove();
     subscription.current = null;
+    releaseScreen();
 
     // 2. Cerrar la actividad
     await finishActivity(activityId.current!);
@@ -120,6 +133,7 @@ export function useActivityTracker() {
     if (!subscription.current) return;
     subscription.current.remove();
     subscription.current = null;
+    releaseScreen();
 
     const id = activityId.current;
     const endedAt = lastPointAt.current ?? startedAtRef.current;
