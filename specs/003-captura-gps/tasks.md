@@ -38,11 +38,12 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 ### Arranque
 
-- [ ] T12 — Llamar `closeOrphanActivities()` al iniciar la app. (CA-10)
+- [x] T12 — Llamar `closeOrphanActivities()` al iniciar la app. (CA-10)
+  - Se llama en `Gate` (`App.tsx`) y la navegación espera a que termine, para que no se cruce con una grabación nueva.
 
 ### Pantalla encendida
 
-- [ ] T13 — Instalar `expo-keep-awake` (`npx expo install expo-keep-awake`); activarlo en `start` y desactivarlo en `stop` y al desmontar el hook. (CA-11)
+- [x] T13 — Instalar `expo-keep-awake` (`npx expo install expo-keep-awake`); activarlo en `start` y desactivarlo en `stop` y al desmontar el hook. (CA-11)
 
 ## Verificación
 
@@ -58,8 +59,8 @@ Todas manuales (aún no hay runner de pruebas en el frontend). Hacerlas en un di
 | CA-7 | M5 | Por verificar |
 | CA-8 | M4 | Por verificar |
 | CA-9 | M6 | Por verificar |
-| CA-10 | M7 | Pendiente |
-| CA-11 | M8 | Pendiente |
+| CA-10 | M7 | Por verificar |
+| CA-11 | M8 | Por verificar |
 
 ### Casos manuales
 

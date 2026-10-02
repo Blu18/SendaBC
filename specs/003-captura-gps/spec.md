@@ -56,5 +56,6 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 
 ## Historial
 
+- 2026-10-01 — Tareas T1–T13 implementadas. Falta la verificación manual en dispositivo (M1–M8 en `tasks.md`).
 - 2026-09-30 — Aprobada. Se resuelve la pregunta abierta: pantalla encendida durante la grabación (CA-11).
 - 2026-09-30 — Spec creada. Parte de la funcionalidad ya estaba implementada (permiso, inicio/detención y guardado en SQLite desde la pantalla principal).
