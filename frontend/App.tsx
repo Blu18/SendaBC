@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Register from './pages/auth/register';
@@ -9,6 +10,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import MainPage from './pages/main/mainPage';
 import ActivityPage from './pages/activity/activityPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { closeOrphanActivities } from './lib/db/activities';
 
 export const queryClient = new QueryClient()
 
@@ -46,8 +48,17 @@ const Navigation = createStaticNavigation(RootStack)
 
 function Gate({ children }: { children: React.ReactNode }) {
   const { isLoading } = useAuth();
+  const [orphansClosed, setOrphansClosed] = useState(false);
 
-  if (isLoading) {
+  // Al abrir la app, cerrar las actividades que quedaron en RECORDING (spec 003, CA-10).
+  // Se espera antes de mostrar la navegación para que no se cruce con una grabación nueva.
+  useEffect(() => {
+    closeOrphanActivities()
+      .catch((e) => console.log('Error cerrando actividades huérfanas:', e))
+      .finally(() => setOrphansClosed(true));
+  }, []);
+
+  if (isLoading || !orphansClosed) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#5C6B49" />
