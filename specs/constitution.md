@@ -1,6 +1,6 @@
 # Constitución de SendaBC
 
-Versión 1.2 · 2026-09-30 · **Aprobada**
+Versión 1.3 · 2026-10-05 · **Aprobada**
 
 Principios que toda spec, plan y línea de código debe respetar. Cambiar la constitución requiere acuerdo explícito del equipo y una entrada en el historial al final de este archivo.
 
@@ -47,7 +47,8 @@ Principios que toda spec, plan y línea de código debe respetar. Cambiar la con
 
 6.1. Cada criterio de aceptación (`CA-x`) de una spec tiene al menos una forma de verificarse, indicada en `tasks.md`:
 - **Backend:** prueba automatizada con Vitest (unitaria o e2e con supertest).
-- **Frontend:** caso de prueba manual con pasos y resultado esperado (hasta que se adopte un runner de pruebas en el frontend).
+- **Frontend, lógica pura** (`frontend/lib/` sin imports de React Native, p. ej. cálculos y formato): prueba automatizada con Vitest.
+- **Frontend, pantallas, sensores y comportamiento en dispositivo:** caso de prueba manual con pasos y resultado esperado.
 6.2. Una spec no pasa a `Implementada` con criterios sin verificar; si se cierra la semana así, queda como `Implementada con pendientes`.
 6.3. Se valida con la colección de Postman de la API antes de cerrar una spec que agregue endpoints.
 
@@ -64,7 +65,7 @@ Principios que toda spec, plan y línea de código debe respetar. Cambiar la con
 | Dispositivo | `expo-location`, `expo-sensors` (barómetro), `expo-sqlite`, `expo-secure-store`, `expo-keep-awake`, `expo-notifications`, `react-native-maps` |
 | Backend | NestJS 12, Passport (local + JWT), class-validator |
 | Datos | Prisma 7 con `@prisma/adapter-pg`, PostgreSQL + PostGIS en Supabase |
-| Calidad | Vitest + supertest (backend), oxlint, Prettier, Postman |
+| Calidad | Vitest + supertest (backend), Vitest para lógica pura (frontend), oxlint, Prettier, Postman |
 | Despliegue | Railway o Render (API), Supabase (BD), Expo EAS Build (app) |
 
 Diferencias respecto al plan original: se usa **Vitest** en lugar de Jest y **oxlint** en lugar de ESLint en el backend (ya venían configurados con la plantilla de NestJS 12).
@@ -82,3 +83,4 @@ Diferencias respecto al plan original: se usa **Vitest** en lugar de Jest y **ox
 - 2026-09-30 — v1.0. Adopción de Spec-Driven Development en la semana 3.
 - 2026-09-30 — v1.1. 3.1: el hash lo genera un trigger en Supabase, no el código de NestJS. 5.1: triggers y funciones de la base también van en migraciones.
 - 2026-09-30 — v1.2. Aprobada por el equipo. Se agrega `expo-keep-awake` al stack (spec 003).
+- 2026-10-05 — v1.3. 6.1 y stack: Vitest en el frontend para lógica pura (spec 004, decisión D1). Aprobada junto con el plan de la spec 004.
