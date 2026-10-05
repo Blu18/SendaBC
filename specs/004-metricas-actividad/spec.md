@@ -1,6 +1,6 @@
 # 004 — Métricas de actividad y resumen
 
-- **Estado:** Aprobada (2026-10-05)
+- **Estado:** En progreso (aprobada 2026-10-05)
 - **Semana:** 4
 - **Autor(es):**
 - **Fecha:** 2026-10-05
