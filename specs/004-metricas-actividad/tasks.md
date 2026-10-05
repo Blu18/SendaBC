@@ -22,9 +22,9 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Datos locales
 
-- [ ] T8 — Migración SQLite **v3** en `lib/db/sqlite.ts`: columnas de métricas y `elevation_source` en `activities`, tabla `barometer_readings` con índice. (CA-14, CA-18)
-- [ ] T9 — En `lib/db/activities.ts`: `createActivity` recibe la fuente de elevación; nuevas `insertBarometerReading`, `getActivity`, `getActivityPoints`, `getBarometerReadings`, `saveMetrics`, `listFinishedActivities(userId)`. (CA-14, CA-18, CA-20, CA-24, RN-6)
-- [ ] T10 — `lib/db/activityMetrics.ts`: `finalizeMetrics(localId)` y `computeMissingMetrics()`. (CA-18, CA-19, RN-4)
+- [x] T8 — Migración SQLite **v3** en `lib/db/sqlite.ts`: columnas de métricas y `elevation_source` en `activities`, tabla `barometer_readings` con índice. (CA-14, CA-18)
+- [x] T9 — En `lib/db/activities.ts`: `createActivity` recibe la fuente de elevación; nuevas `insertBarometerReading`, `getActivity`, `getActivityPoints`, `getBarometerReadings`, `saveMetrics`, `listFinishedActivities(userId)`. (CA-14, CA-18, CA-20, CA-24, RN-6)
+- [x] T10 — `lib/db/activityMetrics.ts`: `finalizeMetrics(localId)` y `computeMissingMetrics()` (con `listActivityIdsMissingMetrics()` en `activities.ts`; las actividades sin fuente, anteriores a v3, usan GPS). (CA-18, CA-19, RN-4)
 
 ## Sensores y grabación
 

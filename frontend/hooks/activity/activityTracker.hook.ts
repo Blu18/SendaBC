@@ -60,7 +60,8 @@ export function useActivityTracker() {
 
       // 1. Crear la actividad del usuario de la sesión y guardar su id local
       const inicio = new Date().toISOString();
-      activityId.current = await createActivity(userId, type, inicio);
+      // Fuente de elevación provisional: T12 (spec 004) la decide con prepareBarometer().
+      activityId.current = await createActivity(userId, type, 'GPS', inicio);
       setStartedAt(inicio);
       startedAtRef.current = inicio;
       lastPointAt.current = null;

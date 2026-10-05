@@ -114,7 +114,7 @@ En `activities.ts`, funciones nuevas:
 
 En `activityMetrics.ts` (nuevo):
 - `finalizeMetrics(localId)`: lee puntos y lecturas, llama a `computeActivityMetrics` y guarda el resultado.
-- `computeMissingMetrics()`: aplica `finalizeMetrics` a toda actividad terminada con `distance_meters IS NULL` (CA-19).
+- `computeMissingMetrics()`: aplica `finalizeMetrics` a toda actividad terminada con `distance_meters IS NULL` (CA-19), obtenidas con `listActivityIdsMissingMetrics()`. Las actividades sin `elevation_source` (anteriores a v3) se calculan con GPS. Si una falla, sigue con las demás para no bloquear el arranque.
 
 ### Hook `frontend/hooks/activity/activityTracker.hook.ts`
 
