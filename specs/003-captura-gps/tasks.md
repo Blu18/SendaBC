@@ -49,18 +49,27 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 Todas manuales (aún no hay runner de pruebas en el frontend). Hacerlas en un dispositivo físico.
 
+Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el comportamiento existe en el código; falta ejecutar el caso en un dispositivo.
+
 | CA | Caso | Estado |
 |---|---|---|
-| CA-1 | M1 | Por verificar |
+| CA-1 | M1 | Código ok · falta M1 |
 | CA-2 | M2 | Cumple |
-| CA-3 | M3 | Por verificar |
-| CA-4, CA-6 | M4 | Por verificar |
-| CA-5 | M1 | Por verificar |
-| CA-7 | M5 | Por verificar |
-| CA-8 | M4 | Por verificar |
-| CA-9 | M6 | Por verificar |
-| CA-10 | M7 | Por verificar |
-| CA-11 | M8 | Por verificar |
+| CA-3 | M3 | Código ok · falta M3 |
+| CA-4 | M4 | Código ok · falta M4 |
+| CA-5 | M1 | Código ok · falta M1 |
+| CA-6 | M4 | Código ok · falta M4 (ver observación O2) |
+| CA-7 | M5 | Código ok (sin red en la ruta de grabación) · falta M5 |
+| CA-8 | M4 | Código ok · falta M4 (ver observación O1) |
+| CA-9 | M6 | Código ok · falta M6 |
+| CA-10 | M7 | Código ok · falta M7 |
+| CA-11 | M8 | Código ok · falta M8 |
+
+### Observaciones de la revisión
+
+- **O1 (CA-8):** `stop()` quita la suscripción y cuenta los puntos, pero no espera a un `insertPoint` que siga en curso. Si llega un punto justo al detener, "Actividad guardada: N" puede mostrar uno menos que el contador, y ese punto se guarda en una actividad ya cerrada.
+- **O2 (CA-6):** la secuencia se incrementa antes de guardar. Si un `insertPoint` falla, queda un hueco (1, 2, 4...) y el contador en pantalla cuenta el punto que no se guardó.
+- **O3:** si `finishActivity` falla en `stop()`, el GPS ya se detuvo pero la pantalla sigue en "Detener actividad" y el botón no hace nada. La actividad se recupera al reabrir la app (CA-10).
 
 ### Casos manuales
 
@@ -98,3 +107,10 @@ Todas manuales (aún no hay runner de pruebas en el frontend). Hacerlas en un di
 1. Configurar el apagado automático del teléfono en 30 s. Iniciar una actividad y no tocar la pantalla 1 minuto.
 2. Detener la actividad y esperar 1 minuto.
 - **Esperado:** durante la grabación la pantalla sigue encendida y los puntos siguen llegando; después de detener, la pantalla se apaga sola.
+
+## Pendientes conocidos
+
+Para pasar la spec a *Implementada*:
+
+- [ ] Ejecutar en un dispositivo físico los casos M1, M3, M4, M5, M6, M7 y M8 y actualizar la tabla de verificación.
+- [ ] Decidir si se corrigen O1–O3 (ver "Observaciones de la revisión") o se aceptan como limitaciones conocidas.

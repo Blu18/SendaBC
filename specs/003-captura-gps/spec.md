@@ -1,6 +1,6 @@
 # 003 — Captura de GPS y guardado local
 
-- **Estado:** En progreso (aprobada 2026-09-30)
+- **Estado:** Implementada con pendientes (aprobada 2026-09-30)
 - **Semana:** 3
 - **Fecha:** 2026-09-30
 
@@ -56,6 +56,7 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 
 ## Historial
 
+- 2026-10-05 — Verificación de código: los 11 CA están implementados. Queda como *Implementada con pendientes* hasta ejecutar M1 y M3–M8 en un dispositivo; observaciones O1–O3 en `tasks.md`.
 - 2026-10-01 — Tareas T1–T13 implementadas. Falta la verificación manual en dispositivo (M1–M8 en `tasks.md`).
 - 2026-09-30 — Aprobada. Se resuelve la pregunta abierta: pantalla encendida durante la grabación (CA-11).
 - 2026-09-30 — Spec creada. Parte de la funcionalidad ya estaba implementada (permiso, inicio/detención y guardado en SQLite desde la pantalla principal).

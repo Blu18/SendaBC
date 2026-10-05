@@ -9,7 +9,7 @@ Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. L
 | 1 | Configuración y arquitectura base (monorepo, Prisma, PostGIS) | — (previo a SDD) | Hecho |
 | 2 | Registro de usuario | [001-registro-usuario](001-registro-usuario/spec.md) | Implementada con pendientes |
 | 2 | Inicio de sesión y sesión persistente | [002-inicio-sesion](002-inicio-sesion/spec.md) | Implementada con pendientes |
-| 3 | Captura de GPS y guardado local | [003-captura-gps](003-captura-gps/spec.md) | En progreso |
+| 3 | Captura de GPS y guardado local | [003-captura-gps](003-captura-gps/spec.md) | Implementada con pendientes (falta prueba en dispositivo) |
 | 4 | Barómetro y métricas de actividad (distancia, tiempo, elevación, resumen) | 004-metricas-actividad | Por escribir |
 | 5 | Sincronización offline-first (cola local, endpoint batch, reintentos) | 005-sincronizacion | Por escribir |
 | 6 | Catálogo de rutas cercanas con PostGIS y mapa | 006-rutas-cercanas | Por escribir |
