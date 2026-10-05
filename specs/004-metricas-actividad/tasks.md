@@ -6,19 +6,19 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Preparación
 
-- [ ] T1 — Instalar `expo-sensors` (`npx expo install expo-sensors`) y agregar su plugin a `app.json` con `motionPermission`: "SendaBC usa el sensor de presión para medir el desnivel de tus actividades." (CA-12, CA-13)
-- [ ] T2 — Agregar Vitest al frontend: dependencia de desarrollo, `vitest.config.ts` (entorno `node`, `include: ['lib/**/*.test.ts']`) y script `"test": "vitest run"`. Prueba mínima de `formatDuration` para confirmar que corre. (D1)
+- [x] T1 — Instalar `expo-sensors` (`npx expo install expo-sensors`) y agregar su plugin a `app.json` con `motionPermission`: "SendaBC usa el sensor de presión para medir el desnivel de tus actividades." (CA-12, CA-13)
+- [x] T2 — Agregar Vitest al frontend: dependencia de desarrollo, `vitest.config.ts` (entorno `node`, `include: ['lib/**/*.test.ts']`) y script `"test": "vitest run"`. Prueba mínima de `formatDuration` para confirmar que corre. (D1)
 
 ## Cálculo (funciones puras + pruebas)
 
-- [ ] T3 — `lib/metrics/constants.ts` (`MAX_ACCURACY_M = 20`, `BARO_NOISE_M = 3`, `GPS_NOISE_M = 10`) y `lib/metrics/geo.ts` con `haversineMeters`. Prueba: distancia entre dos coordenadas de referencia conocidas. (CA-7)
-- [ ] T4 — `lib/metrics/distance.ts`: `createDistanceAccumulator()` (filtro de precisión + ancla `max(5 m, accuracy)`) y `computeDistance(points)`. (CA-7, CA-8, CA-9, CA-17)
-  - Pruebas: recorrido sintético de distancia conocida (error ≤ 1 %); puntos con `accuracy > 20` ignorados; 150 puntos en 5 min oscilando alrededor de un sitio fijo dentro de su precisión → < 20 m; 0 y 1 punto → 0.
-- [ ] T5 — `lib/metrics/elevation.ts`: `pressureToAltitude(hPa)`, `createElevationAccumulator(threshold)` con histéresis y `computeElevation(altitudes, threshold)`. (CA-10, CA-11, CA-17)
-  - Pruebas: subida y bajada conocidas → ganancia y pérdida exactas; oscilaciones de ±2 m con umbral 3 → 0/0; oscilaciones de ±8 m con umbral 10 → 0/0; `pressureToAltitude(1013.25) = 0` y una diferencia de presión conocida → diferencia de altitud esperada; lista vacía → 0/0.
-- [ ] T6 — `lib/metrics/summary.ts`: `computeActivityMetrics(...)`, `averagePace` y `averageSpeed`. (CA-4, CA-5, CA-6, CA-12, CA-13, CA-16, CA-17, RN-3)
+- [x] T3 — `lib/metrics/constants.ts` (`MAX_ACCURACY_M = 20`, `BARO_NOISE_M = 3`, `GPS_NOISE_M = 10`) y `lib/metrics/geo.ts` con `haversineMeters`. Prueba: distancia entre dos coordenadas de referencia conocidas. (CA-7)
+- [x] T4 — `lib/metrics/distance.ts`: `createDistanceAccumulator()` (filtro de precisión + promedio móvil de 5 puntos + ancla `max(5 m, precisión del ancla + precisión del nuevo)`, ver D3) y `computeDistance(points)`. (CA-7, CA-8, CA-9, CA-17)
+  - Pruebas: recorridos sintéticos de 5 km de distancia conocida (error ≤ 1 %) y límite conocido en zigzag cerrado (< 7 %, ver Riesgos del plan); puntos con `accuracy > 20` ignorados; 150 puntos en 5 min con el teléfono quieto y ruido realista con semilla fija (gaussiano y deriva lenta, precisión 10 m) → < 20 m; 0 y 1 punto → 0.
+- [x] T5 — `lib/metrics/elevation.ts`: `pressureToAltitude(hPa)`, `createElevationAccumulator(threshold)` con promedio de 5 altitudes e histéresis hasta el extremo (ver D4) y `computeElevation(altitudes, threshold)`. (CA-10, CA-11, CA-17)
+  - Pruebas: subida y bajada en escalones conocidos → ganancia y pérdida exactas; rampa → exacta; subida con ruido GPS con semilla fija → cerca de la real; sierra y lomas → cerca de la real (límite conocido); oscilaciones de ±2 m con umbral 3 → 0/0; oscilaciones de ±8 m con umbral 10 → 0/0; `pressureToAltitude(1013.25) = 0` y una diferencia de presión conocida → diferencia de altitud esperada; lista vacía → 0/0.
+- [x] T6 — `lib/metrics/summary.ts`: `createLiveMetrics(source)`, `computeActivityMetrics(...)`, `averagePace` y `averageSpeed`. (CA-4, CA-5, CA-6, CA-12, CA-13, CA-16, CA-17, RN-3)
   - Pruebas: duración = `endedAt − startedAt`; fuente `BAROMETER` con lecturas que usa `relativeAltitude` si existe y la presión si no; menos de 2 lecturas → toda la actividad con `GPS`; ritmo y velocidad con valores conocidos; distancia 0 → `null`; el acumulador incremental da el mismo resultado que el cálculo sobre la lista completa (CA-16); 5 400 puntos + 10 800 lecturas se calculan en menos de 100 ms (requisito de rendimiento).
-- [ ] T7 — `lib/format/metrics.ts`: `formatDistance`, `formatElevation`, `formatPace`, `formatSpeed`, con `—` para `null`. Pruebas con los ejemplos de RN-1 (`640 m`, `3.42 km`, `312 m`, `12:30 /km`, `18.4 km/h`). (CA-5, CA-6, RN-1)
+- [x] T7 — `lib/format/metrics.ts`: `formatDistance`, `formatElevation`, `formatPace`, `formatSpeed`, con `—` para `null`. Pruebas con los ejemplos de RN-1 (`640 m`, `3.42 km`, `312 m`, `12:30 /km`, `18.4 km/h`). (CA-5, CA-6, RN-1)
 
 ## Datos locales
 
