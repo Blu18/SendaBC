@@ -1,0 +1,152 @@
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
+import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
+import { useActivitySummary } from "../../hooks/activity/activitySummary.hook";
+import {
+    ACTIVITY_TYPE_LABELS,
+    ELEVATION_SOURCE_LABELS,
+    formatStartedAt,
+    showsSpeed,
+} from "../../lib/format/activity";
+import { formatDuration } from "../../lib/format/duration";
+import { formatDistance, formatElevation, formatPace, formatSpeed } from "../../lib/format/metrics";
+import { averagePace, averageSpeed } from "../../lib/metrics/summary";
+import { colors } from "../../lib/theme/colors";
+
+// origin 'recording': se llega al detener y "Listo" regresa a la pantalla principal (CA-2).
+// origin 'history': se llega desde "Mis actividades" y atrás regresa a la lista (CA-21).
+type Props = StaticScreenProps<{ localId: number; origin: 'recording' | 'history' }>;
+
+function Stat({ value, label }: { value: string; label: string }) {
+    return (
+        <View style={styles.stat}>
+            <Text style={styles.statValue}>{value}</Text>
+            <Text style={styles.statLabel}>{label}</Text>
+        </View>
+    );
+}
+
+// Resumen de una actividad terminada, leído de SQLite (spec 004, CA-1, CA-3, RN-4)
+export default function ActivitySummaryPage({ route }: Props) {
+    const { localId, origin } = route.params;
+    const navigation = useNavigation();
+    const { activity, pointCount, loading } = useActivitySummary(localId);
+
+    if (loading) {
+        return (
+            <View style={styles.container}>
+                <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+        );
+    }
+
+    if (!activity) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.notice}>No se encontró la actividad.</Text>
+                <PrimaryButton text="Volver" style={styles.doneBtn} onPress={() => navigation.goBack()} />
+            </View>
+        );
+    }
+
+    const distance = activity.distanceMeters ?? 0;
+    const duration = activity.durationSeconds ?? 0;
+    // Ritmo o velocidad se derivan al mostrar, no se guardan (CA-5, CA-6, RN-5)
+    const speed = showsSpeed(activity.type);
+    const average = speed
+        ? formatSpeed(averageSpeed(distance, duration))
+        : formatPace(averagePace(distance, duration));
+
+    return (
+        <View style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.title}>{ACTIVITY_TYPE_LABELS[activity.type]}</Text>
+                <Text style={styles.subtitle}>{formatStartedAt(activity.startedAt)}</Text>
+            </View>
+
+            <View style={styles.stats}>
+                <Stat value={formatDuration(duration)} label="Duración" />
+                <Stat value={formatDistance(activity.distanceMeters)} label="Distancia" />
+                <Stat value={average} label={speed ? 'Velocidad promedio' : 'Ritmo promedio'} />
+            </View>
+
+            <View style={styles.stats}>
+                <Stat value={formatElevation(activity.elevationGainMeters)} label="Elevación ganada" />
+                <Stat value={formatElevation(activity.elevationLossMeters)} label="Elevación perdida" />
+            </View>
+
+            <View style={styles.details}>
+                {activity.elevationSource && (
+                    <Text style={styles.detail}>{ELEVATION_SOURCE_LABELS[activity.elevationSource]}</Text>
+                )}
+                <Text style={styles.detail}>
+                    {pointCount} {pointCount === 1 ? 'punto registrado' : 'puntos registrados'}
+                </Text>
+            </View>
+
+            {origin === 'recording' && (
+                <PrimaryButton text="Listo" style={styles.doneBtn} onPress={() => navigation.goBack()} />
+            )}
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 28,
+        padding: 24,
+        backgroundColor: colors.background,
+    },
+    header: {
+        alignItems: 'center',
+        gap: 4,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: colors.text,
+    },
+    subtitle: {
+        fontSize: 16,
+        color: colors.textMuted,
+    },
+    stats: {
+        flexDirection: 'row',
+        alignSelf: 'stretch',
+        justifyContent: 'space-around',
+    },
+    stat: {
+        flex: 1,
+        alignItems: 'center',
+        gap: 2,
+    },
+    statValue: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        color: colors.data,
+        fontVariant: ['tabular-nums'],
+    },
+    statLabel: {
+        fontSize: 13,
+        color: colors.textMuted,
+        textAlign: 'center',
+    },
+    details: {
+        alignItems: 'center',
+        gap: 4,
+    },
+    detail: {
+        fontSize: 14,
+        color: colors.textMuted,
+    },
+    notice: {
+        fontSize: 16,
+        color: colors.text,
+    },
+    doneBtn: {
+        paddingVertical: 14,
+    },
+});

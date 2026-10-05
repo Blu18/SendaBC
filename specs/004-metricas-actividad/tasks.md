@@ -35,10 +35,10 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Pantallas
 
-- [ ] T15 — `pages/activity/activitySummaryPage.tsx` y ruta `ActivitySummary` (`{ localId, origin }`): tipo, fecha y hora de inicio, duración, distancia, elevación ganada y perdida, ritmo o velocidad según el tipo, "N puntos registrados" y etiqueta de la fuente. Botón "Listo" (`goBack`) solo con `origin: 'recording'`. (CA-1, CA-2, CA-3, CA-5, CA-6, CA-12, CA-13, CA-17, CA-21)
-- [ ] T16 — `ActivityPage`: mostrar distancia y elevación en vivo; al detener, `navigation.replace('ActivitySummary', { localId, origin: 'recording' })`; quitar el mensaje "Actividad guardada". (CA-1, CA-2, CA-15)
-- [ ] T17 — `pages/activity/activityHistoryPage.tsx`, ruta `ActivityHistory` y botón "Mis actividades" en `MainPage`: lista con fecha, tipo, duración y distancia, más reciente primero; recarga con `useFocusEffect`; mensaje cuando está vacía; al tocar una fila, `ActivitySummary` con `origin: 'history'`. (CA-20, CA-21, CA-22, CA-23, CA-24)
-- [ ] T18 — `Gate` en `App.tsx`: llamar a `computeMissingMetrics()` después de `closeOrphanActivities()` antes de mostrar la navegación. (CA-19)
+- [x] T15 — `pages/activity/activitySummaryPage.tsx` y ruta `ActivitySummary` (`{ localId, origin }`): tipo, fecha y hora de inicio, duración, distancia, elevación ganada y perdida, ritmo o velocidad según el tipo, "N puntos registrados" y etiqueta de la fuente. Botón "Listo" (`goBack`) solo con `origin: 'recording'`. (CA-1, CA-2, CA-3, CA-5, CA-6, CA-12, CA-13, CA-17, CA-21)
+- [x] T16 — `ActivityPage`: mostrar distancia y elevación en vivo; al detener, `navigation.replace('ActivitySummary', { localId, origin: 'recording' })`; quitar el mensaje "Actividad guardada" (ya quitado en T14). (CA-1, CA-2, CA-15)
+- [x] T17 — `pages/activity/activityHistoryPage.tsx`, ruta `ActivityHistory` y botón "Mis actividades" en `MainPage`: lista con fecha, tipo, duración y distancia, más reciente primero; recarga con `useFocusEffect`; mensaje cuando está vacía; al tocar una fila, `ActivitySummary` con `origin: 'history'`. (CA-20, CA-21, CA-22, CA-23, CA-24)
+- [x] T18 — `Gate` en `App.tsx`: llamar a `computeMissingMetrics()` después de `closeOrphanActivities()` antes de mostrar la navegación. (CA-19)
 
 ## Documentación
 

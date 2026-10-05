@@ -9,8 +9,11 @@ import {createStaticNavigation} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import MainPage from './pages/main/mainPage';
 import ActivityPage from './pages/activity/activityPage';
+import ActivitySummaryPage from './pages/activity/activitySummaryPage';
+import ActivityHistoryPage from './pages/activity/activityHistoryPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { closeOrphanActivities } from './lib/db/activities';
+import { computeMissingMetrics } from './lib/db/activityMetrics';
 
 export const queryClient = new QueryClient()
 
@@ -34,6 +37,12 @@ const RootStack = createNativeStackNavigator({
     },
     Activity: {
       screen: ActivityPage
+    },
+    ActivitySummary: {
+      screen: ActivitySummaryPage
+    },
+    ActivityHistory: {
+      screen: ActivityHistoryPage
     }
   }
 })
@@ -48,17 +57,21 @@ const Navigation = createStaticNavigation(RootStack)
 
 function Gate({ children }: { children: React.ReactNode }) {
   const { isLoading } = useAuth();
-  const [orphansClosed, setOrphansClosed] = useState(false);
+  const [localDataReady, setLocalDataReady] = useState(false);
 
-  // Al abrir la app, cerrar las actividades que quedaron en RECORDING (spec 003, CA-10).
-  // Se espera antes de mostrar la navegación para que no se cruce con una grabación nueva.
+  // Al abrir la app, cerrar las actividades que quedaron en RECORDING (spec 003, CA-10) y
+  // calcular las métricas de las que no las tienen, incluidas esas (spec 004, CA-19).
+  // Se espera antes de mostrar la navegación para que no se cruce con una grabación nueva
+  // y para que el historial ya muestre sus métricas.
   useEffect(() => {
     closeOrphanActivities()
       .catch((e) => console.log('Error cerrando actividades huérfanas:', e))
-      .finally(() => setOrphansClosed(true));
+      .then(() => computeMissingMetrics())
+      .catch((e) => console.log('Error calculando métricas pendientes:', e))
+      .finally(() => setLocalDataReady(true));
   }, []);
 
-  if (isLoading || !orphansClosed) {
+  if (isLoading || !localDataReady) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#5C6B49" />

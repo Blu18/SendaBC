@@ -30,6 +30,12 @@ export default function MainPage() {
               onPress={() => navigation.navigate('Activity')}
             />
 
+            <PrimaryButton
+              text="Mis actividades"
+              style={styles.activityBtn}
+              onPress={() => navigation.navigate('ActivityHistory')}
+            />
+
             <PrimaryButton text="Cerrar sesión" style={styles.logoutBtn} onPress={handleLogout} />
         </View>
     )

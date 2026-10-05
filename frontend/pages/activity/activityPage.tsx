@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet, Linking } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import BgBtn from "../../components/ui/buttons/BgBtn";
 import { useActivityTracker } from "../../hooks/activity/activityTracker.hook";
 import type { ActivityType } from "../../lib/db/activities";
+import { ACTIVITY_TYPE_LABELS } from "../../lib/format/activity";
 import { formatDuration } from "../../lib/format/duration";
+import { formatDistance, formatElevation } from "../../lib/format/metrics";
 import { colors } from "../../lib/theme/colors";
 
-const TIPOS: { value: ActivityType; label: string }[] = [
-    { value: 'HIKING', label: 'Senderismo' },
-    { value: 'TRAIL_RUNNING', label: 'Trail running' },
-    { value: 'CYCLING', label: 'Ciclismo' },
-];
+const TIPOS = (Object.keys(ACTIVITY_TYPE_LABELS) as ActivityType[]).map((value) => ({
+    value,
+    label: ACTIVITY_TYPE_LABELS[value],
+}));
 
 // Segundos desde startedAt, actualizados cada segundo mientras se graba (CA-5)
 function useElapsedSeconds(startedAt: string | null, running: boolean) {
@@ -30,9 +33,33 @@ function useElapsedSeconds(startedAt: string | null, running: boolean) {
 
 export default function ActivityPage() {
     const [type, setType] = useState<ActivityType>('HIKING'); // por defecto Senderismo (CA-1)
-    const { status, pointCount, startedAt, permissionError, start, stop } = useActivityTracker();
+    // Navegación del stack raíz: replace solo existe en stacks
+    const navigation = useNavigation<NativeStackNavigationProp<ReactNavigation.RootParamList>>();
+    const {
+        status,
+        pointCount,
+        startedAt,
+        permissionError,
+        liveDistance,
+        liveElevationGain,
+        start,
+        stop,
+    } = useActivityTracker();
     const recording = status === 'recording';
     const elapsed = useElapsedSeconds(startedAt, recording);
+
+    // Al detener se abre el resumen. replace saca esta pantalla del stack, así que
+    // "Listo" y el botón atrás del resumen regresan a la pantalla principal (spec 004, CA-1, CA-2)
+    const handleStop = async () => {
+        try {
+            const localId = await stop();
+            if (localId !== null) {
+                navigation.replace('ActivitySummary', { localId, origin: 'recording' });
+            }
+        } catch (e) {
+            console.log('Error deteniendo la actividad:', e);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -60,10 +87,21 @@ export default function ActivityPage() {
                 })}
             </View>
 
+            {/* Métricas en vivo: mismos umbrales que el resumen (spec 004, CA-15, CA-16) */}
             <View style={styles.stats}>
                 <View style={styles.stat}>
                     <Text style={styles.statValue}>{formatDuration(elapsed)}</Text>
                     <Text style={styles.statLabel}>Tiempo</Text>
+                </View>
+                <View style={styles.stat}>
+                    <Text style={styles.statValue}>{formatDistance(liveDistance)}</Text>
+                    <Text style={styles.statLabel}>Distancia</Text>
+                </View>
+            </View>
+            <View style={styles.stats}>
+                <View style={styles.stat}>
+                    <Text style={styles.statValue}>{formatElevation(liveElevationGain)}</Text>
+                    <Text style={styles.statLabel}>Elevación ganada</Text>
                 </View>
                 <View style={styles.stat}>
                     <Text style={styles.statValue}>{pointCount}</Text>
@@ -86,7 +124,7 @@ export default function ActivityPage() {
 
             <PrimaryButton
                 text={recording ? 'Detener actividad' : 'Iniciar actividad'}
-                onPress={recording ? stop : () => start(type)}
+                onPress={recording ? handleStop : () => start(type)}
                 style={[styles.mainBtn, recording && styles.stopBtn]}
             />
         </View>
@@ -140,10 +178,11 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
     },
     stat: {
+        flex: 1,
         alignItems: 'center',
     },
     statValue: {
-        fontSize: 40,
+        fontSize: 32,
         fontWeight: 'bold',
         color: colors.data,
         fontVariant: ['tabular-nums'],
