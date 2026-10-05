@@ -100,8 +100,8 @@ CREATE INDEX idx_baro_activity_time ON barometer_readings(activity_id, recorded_
 
 ### Sensores: `frontend/lib/sensors/barometer.ts`
 
-- `prepareBarometer()`: revisa si hay barómetro y pide el permiso. Devuelve `'BAROMETER' | 'GPS'`.
-- `startBarometer(onReading)`: `Barometer.setUpdateInterval(1000)` y `addListener`. Devuelve la función para detenerlo.
+- `prepareBarometer()`: revisa si hay barómetro y pide el permiso. Devuelve `'BAROMETER' | 'GPS'`. En iOS, el módulo `Barometer` de `expo-sensors` 57 no pide ni reporta el permiso (su `requestPermissionsAsync` siempre responde "concedido"); el barómetro comparte el permiso de "Movimiento y forma física", así que se pide con `DeviceMotion.requestPermissionsAsync()`, del mismo paquete. Cualquier error (p. ej. en web) → `'GPS'`.
+- `startBarometer(onReading)`: `Barometer.setUpdateInterval(1000)` y `addListener`. Devuelve la función para detenerlo. iOS ignora `setUpdateInterval` y en Android es solo una sugerencia, así que se descartan en JS las lecturas que llegan a menos de 900 ms de la anterior.
 - La hora de cada lectura se toma con `Date.now()` al recibirla. El `timestamp` del sensor está en segundos desde un origen que cambia según la plataforma.
 
 ### Datos: `frontend/lib/db/`
@@ -175,7 +175,7 @@ El mensaje "Actividad guardada: N puntos" (003, CA-8) se reemplaza por la pantal
 - **Elevación con GPS en terreno ondulado y en paradas:** el promedio aplana un poco las cumbres; con GPS y lomas de 20 m, la ganancia queda ~10 % corta sin ruido. Y si la altitud GPS deriva despacio ±10 m con el teléfono quieto, esa deriva se cuenta completa (~90 m en 30 min en simulación); el barómetro no lo sufre. `elevation.test.ts` fija los límites; se mide con datos reales en la 009.
 - **Deriva del clima:** en actividades largas, un cambio de presión atmosférica de 1–3 hPa equivale a 8–25 m de altitud falsa. La histéresis no lo corrige. Se mide en la prueba de campo (009).
 - **Ruido del GPS con mala señal:** puntos con precisión entre 10 y 20 m pasan el filtro. En la simulación con precisión 20 m y ruido gaussiano, el quieto de 5 min llega a ~45 m en el peor caso (mediana 0 m), y en curvas cerradas el umbral de hasta 40 m recorta un poco la distancia. CA-9 se valida con datos sintéticos aquí y con datos reales en la 009.
-- **Permiso de movimiento en iOS:** pedirlo justo después del de ubicación son dos diálogos seguidos. Si se niega, la actividad sigue con GPS (CA-13).
+- **Permiso de movimiento en iOS:** pedirlo justo después del de ubicación son dos diálogos seguidos. Si se niega, la actividad sigue con GPS (CA-13). Si se revoca después en Ajustes y no llegan lecturas, la actividad queda en GPS al terminar (menos de 2 lecturas); durante la grabación la elevación en vivo se queda en 0.
 - **Expo Go:** `expo-sensors` está incluido en Expo Go, pero el texto del permiso de movimiento solo aplica en un *development build*.
 - **Carga de la semana:** barómetro, métricas, vista en vivo, resumen e historial. El historial (CA-20 a CA-24) es lo más fácil de mover a otra semana si hace falta.
 

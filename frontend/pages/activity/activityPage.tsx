@@ -30,8 +30,7 @@ function useElapsedSeconds(startedAt: string | null, running: boolean) {
 
 export default function ActivityPage() {
     const [type, setType] = useState<ActivityType>('HIKING'); // por defecto Senderismo (CA-1)
-    const { status, pointCount, startedAt, permissionError, savedPointCount, start, stop } =
-        useActivityTracker();
+    const { status, pointCount, startedAt, permissionError, start, stop } = useActivityTracker();
     const recording = status === 'recording';
     const elapsed = useElapsedSeconds(startedAt, recording);
 
@@ -71,15 +70,6 @@ export default function ActivityPage() {
                     <Text style={styles.statLabel}>Puntos</Text>
                 </View>
             </View>
-
-            {/* N se lee de SQLite al detener, no del contador en pantalla (CA-8) */}
-            {status === 'stopped' && savedPointCount !== null && (
-                <View style={styles.saved}>
-                    <Text style={styles.savedText}>
-                        Actividad guardada: {savedPointCount} {savedPointCount === 1 ? 'punto' : 'puntos'}
-                    </Text>
-                </View>
-            )}
 
             {permissionError && (
                 <View style={styles.notice}>
@@ -164,19 +154,6 @@ const styles = StyleSheet.create({
     },
     mainBtn: {
         paddingVertical: 14,
-    },
-    saved: {
-        alignSelf: 'stretch',
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: colors.primary,
-        alignItems: 'center',
-    },
-    savedText: {
-        color: colors.primary,
-        fontSize: 16,
-        fontWeight: '600',
     },
     notice: {
         alignSelf: 'stretch',

@@ -28,10 +28,10 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Sensores y grabación
 
-- [ ] T11 — `lib/sensors/barometer.ts`: `prepareBarometer()` (disponibilidad + permiso en iOS → `'BAROMETER' | 'GPS'`) y `startBarometer(onReading)` a 1 lectura/s, con la hora tomada de `Date.now()`. (CA-12, CA-13)
-- [ ] T12 — Hook: en `start` llamar a `prepareBarometer`, guardar la fuente en la actividad y, si es `BAROMETER`, guardar cada lectura. Detener el barómetro en `stop` y en `closeOnUnmount`. (CA-12, CA-13, CA-14)
-- [ ] T13 — Hook: acumuladores en vivo; exponer `liveDistance` y `liveElevationGain`. (CA-15, CA-16)
-- [ ] T14 — Hook `stop()`: esperar a los guardados pendientes (corrige O1 de la spec 003), `finishActivity` → `finalizeMetrics` y devolver el `localId`. Quitar `savedPointCount`. (CA-1, CA-18)
+- [x] T11 — `lib/sensors/barometer.ts`: `prepareBarometer()` (disponibilidad + permiso en iOS con `DeviceMotion.requestPermissionsAsync()` → `'BAROMETER' | 'GPS'`) y `startBarometer(onReading)` a 1 lectura/s, con la hora tomada de `Date.now()`. (CA-12, CA-13)
+- [x] T12 — Hook: en `start` llamar a `prepareBarometer`, guardar la fuente en la actividad y, si es `BAROMETER`, guardar cada lectura. Detener el barómetro en `stop` y en `closeOnUnmount`. (CA-12, CA-13, CA-14)
+- [x] T13 — Hook: acumuladores en vivo; exponer `liveDistance` y `liveElevationGain`. (CA-15, CA-16)
+- [x] T14 — Hook `stop()`: esperar a los guardados pendientes (corrige O1 de la spec 003), `finishActivity` → `finalizeMetrics` y devolver el `localId`. Quitar `savedPointCount`. (CA-1, CA-18) — Al quitar `savedPointCount` también se quitó de `ActivityPage` el mensaje "Actividad guardada" (parte de T16) para que la app siga compilando; hasta T16, al detener no se muestra nada.
 
 ## Pantallas
 
