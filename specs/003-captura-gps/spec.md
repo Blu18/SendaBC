@@ -24,7 +24,7 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 - **CA-5 (HU-2):** Mientras grabo, la pantalla muestra el tiempo transcurrido (mm:ss o hh:mm:ss) y el número de puntos capturados, actualizados en vivo.
 - **CA-6 (HU-3):** Cada punto recibido se guarda en SQLite con latitud, longitud, altitud, precisión, hora del GPS y número de secuencia consecutivo empezando en 1.
 - **CA-7 (HU-3):** Con el teléfono en modo avión durante toda la actividad, los puntos se siguen guardando.
-- **CA-8 (HU-3):** Al presionar "Detener actividad", se deja de escuchar el GPS, la actividad queda con `endedAt` y estado `PENDING_SYNC`, y la app muestra "Actividad guardada: N puntos", donde N se lee de SQLite.
+- **CA-8 (HU-3):** Al presionar "Detener actividad", se deja de escuchar el GPS, la actividad queda con `endedAt` y estado `PENDING_SYNC`, y la app muestra el resumen de la actividad (spec 004) con "N puntos registrados", donde N se lee de SQLite.
 - **CA-9 (HU-1):** Un doble toque en "Iniciar" no crea dos actividades.
 - **CA-10 (HU-3):** Si la app se cerró (o se salió de la pantalla) con una actividad en `RECORDING`, al volver a abrir la app esa actividad se cierra con `endedAt` igual a la hora de su último punto (o `startedAt` si no tiene puntos) y queda en `PENDING_SYNC`. Nunca quedan actividades huérfanas en `RECORDING`.
 - **CA-11 (HU-2):** Mientras grabo, la pantalla no se apaga sola. Al detener la actividad (o salir de la pantalla), el teléfono vuelve a su comportamiento normal de apagado.
@@ -56,6 +56,7 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 
 ## Historial
 
+- 2026-10-05 — Spec 004: el mensaje "Actividad guardada: N puntos" de CA-8 se reemplaza por la pantalla de resumen, que muestra el mismo N ("N puntos registrados"). La observación O1 queda corregida: `stop()` espera los guardados en curso antes de cerrar la actividad (004, T14).
 - 2026-10-05 — Verificación de código: los 11 CA están implementados. Queda como *Implementada con pendientes* hasta ejecutar M1 y M3–M8 en un dispositivo; observaciones O1–O3 en `tasks.md`.
 - 2026-10-01 — Tareas T1–T13 implementadas. Falta la verificación manual en dispositivo (M1–M8 en `tasks.md`).
 - 2026-09-30 — Aprobada. Se resuelve la pregunta abierta: pantalla encendida durante la grabación (CA-11).

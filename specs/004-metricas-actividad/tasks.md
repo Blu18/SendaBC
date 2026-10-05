@@ -42,7 +42,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Documentación
 
-- [ ] T19 — Spec 003: anotar en su historial que el mensaje de CA-8 se reemplaza por el resumen (que muestra el mismo N) y que O1 quedó corregida por T14; actualizar sus observaciones en `tasks.md`.
+- [x] T19 — Spec 003: anotar en su historial que el mensaje de CA-8 se reemplaza por el resumen (que muestra el mismo N) y que O1 quedó corregida por T14; actualizar sus observaciones en `tasks.md`.
 
 ## Cobertura
 

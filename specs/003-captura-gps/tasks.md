@@ -60,16 +60,16 @@ Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el
 | CA-5 | M1 | Código ok · falta M1 |
 | CA-6 | M4 | Código ok · falta M4 (ver observación O2) |
 | CA-7 | M5 | Código ok (sin red en la ruta de grabación) · falta M5 |
-| CA-8 | M4 | Código ok · falta M4 (ver observación O1) |
+| CA-8 | M4 | Código ok · falta M4 (O1 corregida en la spec 004) |
 | CA-9 | M6 | Código ok · falta M6 |
 | CA-10 | M7 | Código ok · falta M7 |
 | CA-11 | M8 | Código ok · falta M8 |
 
 ### Observaciones de la revisión
 
-- **O1 (CA-8):** `stop()` quita la suscripción y cuenta los puntos, pero no espera a un `insertPoint` que siga en curso. Si llega un punto justo al detener, "Actividad guardada: N" puede mostrar uno menos que el contador, y ese punto se guarda en una actividad ya cerrada.
+- ~~**O1 (CA-8):** `stop()` quita la suscripción y cuenta los puntos, pero no espera a un `insertPoint` que siga en curso. Si llega un punto justo al detener, "Actividad guardada: N" puede mostrar uno menos que el contador, y ese punto se guarda en una actividad ya cerrada.~~ **Corregida** en la spec 004 (T14): `stop()` espera los guardados de puntos y lecturas en curso antes de cerrar la actividad.
 - **O2 (CA-6):** la secuencia se incrementa antes de guardar. Si un `insertPoint` falla, queda un hueco (1, 2, 4...) y el contador en pantalla cuenta el punto que no se guardó.
-- **O3:** si `finishActivity` falla en `stop()`, el GPS ya se detuvo pero la pantalla sigue en "Detener actividad" y el botón no hace nada. La actividad se recupera al reabrir la app (CA-10).
+- **O3:** si `finishActivity` falla en `stop()`, el GPS ya se detuvo pero la pantalla sigue en "Detener actividad" y el botón no hace nada. La actividad se recupera al reabrir la app (CA-10). Sigue aplicando tras la spec 004: el error ahora se registra, pero la pantalla no cambia.
 
 ### Casos manuales
 
@@ -88,7 +88,7 @@ Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el
 
 **M4 — Guardado**
 1. Grabar, detener.
-- **Esperado:** "Actividad guardada: N puntos" con N igual al contador mostrado durante la grabación. La actividad tiene estado `PENDING_SYNC`, `endedAt`, tipo y `user_id` correctos.
+- **Esperado:** se abre el resumen (spec 004) con "N puntos registrados", N igual al contador mostrado durante la grabación. La actividad tiene estado `PENDING_SYNC`, `endedAt`, tipo y `user_id` correctos.
 
 **M5 — Sin conexión**
 1. Activar modo avión, grabar ~2 minutos caminando, detener.
@@ -113,4 +113,4 @@ Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el
 Para pasar la spec a *Implementada*:
 
 - [ ] Ejecutar en un dispositivo físico los casos M1, M3, M4, M5, M6, M7 y M8 y actualizar la tabla de verificación.
-- [ ] Decidir si se corrigen O1–O3 (ver "Observaciones de la revisión") o se aceptan como limitaciones conocidas.
+- [ ] Decidir si se corrigen O2 y O3 (ver "Observaciones de la revisión") o se aceptan como limitaciones conocidas. O1 quedó corregida en la spec 004.
