@@ -1,4 +1,4 @@
-import { queryClient } from "../../App";
+import { queryClient } from "../../lib/api/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { apiFetch } from "../../lib/api/client";
 import { type ApiError, parseApiError } from "../../lib/api/errors";
