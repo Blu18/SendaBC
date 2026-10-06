@@ -61,11 +61,14 @@ const styles = StyleSheet.create({
     error: {
         color: "#B3261E",
     },
+    // PrimaryButton trae alignSelf: 'stretch'; con ancho fijo eso lo pega a la izquierda
     activityBtn: {
         width: '60%',
+        alignSelf: 'center',
     },
     logoutBtn: {
         width: '60%',
+        alignSelf: 'center',
         marginTop: 24,
     },
 });
