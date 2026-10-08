@@ -33,16 +33,18 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
 | CA-1 | T5 + T6 (`user.service.spec.ts`, `test/user.e2e-spec.ts`) | Automatizada | Cumple |
-| CA-2 | T6 (registro → login) + caso M3 | Ambas | Cumple en API; falta M3 en dispositivo |
+| CA-2 | T6 (registro → login) + caso M3 | Ambas | Cumple |
 | CA-3 | T6 (el hash empieza con `$2`) | Automatizada | Cumple |
-| CA-4 | T5 + T6 + `lib/api/errors.test.ts` + caso M2 | Ambas | Cumple en API; falta M2 en dispositivo |
-| CA-5 | Caso M1 | Manual | Cumple; repetir M1 por RN-4 (nombre ≥ 5) |
+| CA-4 | T5 + T6 + `lib/api/errors.test.ts`, `lib/api/client.test.ts` + casos M2 y M4 | Ambas | Cumple |
+| CA-5 | Caso M1 (incluye RN-4) | Manual | Cumple |
 | CA-6 | T6 + `create-user.dto.spec.ts` + `validation.pipe.spec.ts` | Automatizada | Cumple |
-| CA-7 | Caso M3 | Manual | Implementado; falta M3 en dispositivo |
+| CA-7 | Caso M3 | Manual | Cumple |
 
 En `frontend/`, `npm test` corre `lib/api/errors.test.ts` (lectura del error de la API) y `lib/api/client.test.ts` (tiempo límite de la petición). En `backend/`, `npm test` corre las unitarias; `npm run test:e2e` corre T6 contra la base de `DATABASE_URL` (crea un usuario `e2e-<uuid>@senda.bc` y lo borra al terminar).
 
 ### Casos manuales
+
+M1–M4 ejecutados en dispositivo el 2026-10-08: todos pasan.
 
 **M1 — Validación en cliente**
 1. Abrir Registro, dejar campos vacíos y presionar "Registrarse".

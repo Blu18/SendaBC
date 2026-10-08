@@ -1,6 +1,6 @@
 # 001 — Registro de usuario
 
-- **Estado:** Implementada con pendientes
+- **Estado:** Implementada
 - **Semana:** 2
 - **Fecha:** 2026-09-30 (retro-spec: documenta lo construido antes de adoptar SDD)
 
@@ -48,3 +48,4 @@ Para guardar actividades, publicar rutas y configurar un contacto de emergencia,
 - 2026-10-08 — Tareas de frontend T7–T9 completadas: la app envía `password`, muestra los errores del servidor y, tras registrarse, pasa a Login con confirmación. Quedan pendientes los casos manuales M2–M4 en dispositivo.
 - 2026-10-08 — Sin conexión, el registro espera como máximo 10 s y muestra "Error al registrar usuario. Inténtalo más tarde." (también ante un error 5xx), en lugar de "No se pudo conectar con el servidor", que tardaba mucho en aparecer.
 - 2026-10-08 — Se agrega RN-4: el nombre visible debe tener al menos 5 caracteres (antes solo no vacío). Se ajustan CA-1, CA-5 y CA-6.
+- 2026-10-08 — Casos manuales M1–M4 aprobados en dispositivo. Todos los CA verificados; la spec pasa a Implementada.
