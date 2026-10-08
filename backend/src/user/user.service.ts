@@ -4,6 +4,7 @@ import type { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { PrismaService } from '../prisma.service.js';
+import { normalizarEmail } from './normalizar-email.js';
 
 type SafeUser = Omit<User, 'passwordHash'>;
 
@@ -15,7 +16,7 @@ export class UserService {
     try {
       // El trigger hash_password_trigger reemplaza la contraseña por su hash bcrypt al insertar.
       const { passwordHash, ...safeUser } = await this.prisma.user.create({
-        data: { email, displayName, passwordHash: password },
+        data: { email: normalizarEmail(email), displayName, passwordHash: password },
       });
       return safeUser;
     } catch (error) {
@@ -28,10 +29,8 @@ export class UserService {
 
   async findByEmail(email: string) {
     return this.prisma.user.findFirst({
-      where: {
-        email: email
-      }
-    })
+      where: { email: normalizarEmail(email) },
+    });
   }
 
   findAll() {

@@ -17,7 +17,7 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 - [x] T1 — Crear `CreateUserDto` propio con `email` (`@IsEmail`), `displayName` (`@IsNotEmpty`), `password` (`@MinLength(8)`) y dejar de heredar de la entidad. El servicio mapea `password` → `passwordHash` al crear para que el trigger lo hashee. (CA-6, RN-2, RN-3)
 - [x] T2 — Versionar el trigger de hash en `prisma/migrations/20260930000000_hash_password_trigger` (función `public.hash_password`, trigger `hash_password_trigger`, idempotente). (CA-3, constitución 5.1)
 - [x] T2b — Migración aplicada en Supabase (`prisma migrate deploy`, 2026-09-30). Verificado con un INSERT revertido: un solo trigger, hash `$2a$`, `bcrypt.compare` de Node → `true`.
-- [ ] T3 — Normalizar email (trim + minúsculas) al crear y en `findByEmail`. (RN-1)
+- [x] T3 — Normalizar email (trim + minúsculas) al crear y en `findByEmail`. (RN-1)
 - [ ] T4 — `ValidationPipe`: responder `400` con los mensajes por campo (en español) en lugar de "Validation failed"; activar `whitelist` para descartar campos no declarados. (CA-6)
 - [ ] T5 — Pruebas Vitest de `UserService.create`: omite `passwordHash` y lanza `ConflictException` en `P2002`. (CA-1, CA-4)
 - [ ] T6 — Prueba e2e contra una base con migraciones aplicadas: `POST /user` → `201`; el `passwordHash` guardado empieza con `$2`; repetido → `409`; body inválido → `400`; luego `POST /auth/login` con esas credenciales → `200`. (CA-1, CA-2, CA-3, CA-4, CA-6)

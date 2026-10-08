@@ -29,4 +29,10 @@ describe('CreateUserDto (spec 001, CA-6)', () => {
   it('rechaza un body sin campos', async () => {
     expect((await erroresDe({})).sort()).toEqual(['displayName', 'email', 'password']);
   });
+
+  it('normaliza el correo antes de validarlo (RN-1)', async () => {
+    const dto = plainToInstance(CreateUserDto, { ...valido, email: '  Prueba@Senda.BC ' });
+    expect(await validate(dto)).toEqual([]);
+    expect(dto.email).toBe('prueba@senda.bc');
+  });
 });
