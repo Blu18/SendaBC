@@ -24,23 +24,23 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 ### Frontend
 
-- [ ] T7 — Enviar `password` en lugar de `passwordHash` en `useRegistrar` y en el tipo `Registrar`. (depende de T1)
-- [ ] T8 — Mostrar el error del servidor en pantalla (p. ej. el `409`) en vez de solo `console.log`; deshabilitar el botón mientras `isPending`. (CA-4)
-- [ ] T9 — Tras registro exitoso: mensaje de confirmación y navegación a Login. (CA-7)
+- [x] T7 — Enviar `password` en lugar de `passwordHash` en `useRegistrar` y en el tipo `Registrar`. (depende de T1)
+- [x] T8 — Mostrar el error del servidor en pantalla (p. ej. el `409`) en vez de solo `console.log`; deshabilitar el botón mientras `isPending`. (CA-4)
+- [x] T9 — Tras registro exitoso: mensaje de confirmación y navegación a Login. (CA-7)
 
 ## Verificación
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
 | CA-1 | T5 + T6 (`user.service.spec.ts`, `test/user.e2e-spec.ts`) | Automatizada | Cumple |
-| CA-2 | T6 (registro → login) + caso M3 | Ambas | Cumple en API; falta M3 (depende de T7) |
+| CA-2 | T6 (registro → login) + caso M3 | Ambas | Cumple en API; falta M3 en dispositivo |
 | CA-3 | T6 (el hash empieza con `$2`) | Automatizada | Cumple |
-| CA-4 | T5 + T6 + caso M2 | Ambas | Parcial (API ok, UI no muestra el error: T8) |
+| CA-4 | T5 + T6 + `lib/api/errors.test.ts` + caso M2 | Ambas | Cumple en API; falta M2 en dispositivo |
 | CA-5 | Caso M1 | Manual | Cumple |
 | CA-6 | T6 + `create-user.dto.spec.ts` + `validation.pipe.spec.ts` | Automatizada | Cumple |
-| CA-7 | Caso M3 | Manual | Pendiente (T9) |
+| CA-7 | Caso M3 | Manual | Implementado; falta M3 en dispositivo |
 
-`npm test` corre las unitarias; `npm run test:e2e` corre T6 contra la base de `DATABASE_URL` (crea un usuario `e2e-<uuid>@senda.bc` y lo borra al terminar).
+En `frontend/`, `npm test` corre `lib/api/errors.test.ts` (lectura del error de la API). En `backend/`, `npm test` corre las unitarias; `npm run test:e2e` corre T6 contra la base de `DATABASE_URL` (crea un usuario `e2e-<uuid>@senda.bc` y lo borra al terminar).
 
 ### Casos manuales
 
@@ -51,8 +51,12 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 **M2 — Correo duplicado**
 1. Registrar `prueba@senda.bc`. 2. Volver a registrar el mismo correo.
-- **Esperado:** mensaje "Ya existe un usuario con ese email" visible en pantalla.
+- **Esperado:** mensaje "Ya existe un usuario con ese email" visible en pantalla. Mientras la petición está en curso el botón dice "Registrando..." y no responde a toques.
 
 **M3 — Registro exitoso**
 1. Registrar un correo nuevo con datos válidos.
-- **Esperado:** confirmación visible y la app navega a Login; iniciar sesión con esos datos funciona.
+- **Esperado:** la app pasa a Login con el correo ya escrito y el mensaje "Tu cuenta se creó correctamente…"; el botón atrás no regresa al formulario; iniciar sesión con esos datos funciona.
+
+**M4 — Sin conexión**
+1. Apagar el backend (o el wifi) y enviar un registro válido.
+- **Esperado:** mensaje "No se pudo conectar con el servidor" y el botón vuelve a habilitarse.
