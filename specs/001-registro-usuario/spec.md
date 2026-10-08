@@ -1,6 +1,6 @@
 # 001 — Registro de usuario
 
-- **Estado:** Implementada con pendientes
+- **Estado:** En progreso
 - **Semana:** 2
 - **Fecha:** 2026-09-30 (retro-spec: documenta lo construido antes de adoptar SDD)
 

@@ -22,13 +22,13 @@ Endpoint público `POST /user` en NestJS que valida el body con class-validator 
 |---|---|---|---|---|---|
 | POST | `/user` | Pública | `{ email, displayName, password }` | `201 { id, email, displayName, avatarUrl, emergencyContactName, emergencyContactPhone, createdAt, updatedAt }` | `400` validación, `409` email duplicado |
 
-> Contrato **objetivo**. Hoy el campo se llama `passwordHash` en el request (ver T1).
+> El request usa `password`; el servicio lo guarda en `passwordHash` y el trigger lo hashea (T1).
 
 ### Archivos
 
 - `backend/src/user/user.controller.ts` — `POST /user`.
 - `backend/src/user/user.service.ts` — `create()`: captura `P2002` → `ConflictException` (409).
-- `backend/src/user/dto/create-user.dto.ts` — hoy hereda de la entidad `User` con `OmitType`. Pasará a ser un DTO propio con `email`, `displayName`, `password`.
+- `backend/src/user/dto/create-user.dto.ts` — DTO propio con `email`, `displayName`, `password` (mensajes en español).
 - `backend/src/validation/validation.pipe.ts` — pipe global de validación.
 
 ### Esquema

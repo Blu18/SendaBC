@@ -14,7 +14,7 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 ### Backend
 
-- [ ] T1 — Crear `CreateUserDto` propio con `email` (`@IsEmail`), `displayName` (`@IsNotEmpty`), `password` (`@MinLength(8)`) y dejar de heredar de la entidad. El servicio mapea `password` → `passwordHash` al crear para que el trigger lo hashee. (CA-6, RN-2, RN-3)
+- [x] T1 — Crear `CreateUserDto` propio con `email` (`@IsEmail`), `displayName` (`@IsNotEmpty`), `password` (`@MinLength(8)`) y dejar de heredar de la entidad. El servicio mapea `password` → `passwordHash` al crear para que el trigger lo hashee. (CA-6, RN-2, RN-3)
 - [x] T2 — Versionar el trigger de hash en `prisma/migrations/20260930000000_hash_password_trigger` (función `public.hash_password`, trigger `hash_password_trigger`, idempotente). (CA-3, constitución 5.1)
 - [x] T2b — Migración aplicada en Supabase (`prisma migrate deploy`, 2026-09-30). Verificado con un INSERT revertido: un solo trigger, hash `$2a$`, `bcrypt.compare` de Node → `true`.
 - [ ] T3 — Normalizar email (trim + minúsculas) al crear y en `findByEmail`. (RN-1)

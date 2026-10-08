@@ -11,9 +11,12 @@ type SafeUser = Omit<User, 'passwordHash'>;
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createUserDto: CreateUserDto): Promise<SafeUser> {
+  async create({ email, displayName, password }: CreateUserDto): Promise<SafeUser> {
     try {
-      const { passwordHash, ...safeUser } = await this.prisma.user.create({ data: createUserDto });
+      // El trigger hash_password_trigger reemplaza la contraseña por su hash bcrypt al insertar.
+      const { passwordHash, ...safeUser } = await this.prisma.user.create({
+        data: { email, displayName, passwordHash: password },
+      });
       return safeUser;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
