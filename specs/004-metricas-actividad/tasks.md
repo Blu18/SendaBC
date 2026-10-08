@@ -151,4 +151,11 @@ Hacerlos en un dispositivo físico (el barómetro no existe en emuladores y en w
 
 ## Pendientes conocidos
 
-Ninguno por ahora.
+Para pasar la spec a *Implementada*, ejecutar en un dispositivo físico:
+
+- [ ] M2 — Sin conexión (CA-3, CA-23).
+- [ ] M3 — Elevación con barómetro (CA-12, CA-14).
+- [ ] M4 — Elevación con GPS (CA-13).
+- [ ] M5 — Quieto 5 minutos (CA-9).
+- [ ] M7, paso 1 — Historial vacío con una cuenta sin actividades (CA-22).
+- [ ] M8 — Otro usuario en el mismo teléfono (CA-24).

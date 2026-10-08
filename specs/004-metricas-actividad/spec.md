@@ -1,6 +1,6 @@
 # 004 — Métricas de actividad y resumen
 
-- **Estado:** En progreso (aprobada 2026-10-05)
+- **Estado:** Implementada con pendientes (aprobada 2026-10-05)
 - **Semana:** 4
 - **Autor(es):**
 - **Fecha:** 2026-10-05
@@ -64,6 +64,7 @@ Estas métricas corresponden a los campos de actividad del modelo de datos del s
 
 ### Historial
 
+- 2026-10-08 — Implementada con pendientes: T1–T20 hechas, 71 pruebas Vitest pasan y la mayoría de los CA se verificaron en el emulador. Faltan los casos M2, M3, M4, M5, M7 (paso 1) y M8 (ver `tasks.md`).
 - 2026-10-06 — Se agrega CA-25 (saltos de ubicación imposibles), hallado al probar en el emulador: el primer punto fue la ubicación por defecto del emulador y la distancia sumó ~789 km. Aprobado por el usuario.
 - **CA-20 (HU-6):** Desde la pantalla principal puedo abrir "Mis actividades": una lista de las actividades terminadas del usuario de la sesión, de la más reciente a la más antigua, con fecha, tipo, duración y distancia.
 - **CA-21 (HU-6):** Cuando toco una actividad de la lista, veo su resumen con los mismos datos que en CA-1; el botón atrás me regresa a la lista.
