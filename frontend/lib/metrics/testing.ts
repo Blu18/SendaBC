@@ -8,26 +8,40 @@ const ORIGIN = { latitude: 31.87, longitude: -116.6 };
 const M_PER_DEG_LAT = (Math.PI * EARTH_RADIUS_M) / 180;
 const M_PER_DEG_LON = M_PER_DEG_LAT * Math.cos((ORIGIN.latitude * Math.PI) / 180);
 
-export function at(east: number, north: number, accuracy: number | null = 5): DistancePoint {
+const START_MS = Date.parse('2026-10-05T15:00:00.000Z');
+
+// Punto a `east`/`north` metros del origen, registrado `seconds` después del inicio.
+export function at(
+  east: number,
+  north: number,
+  accuracy: number | null = 5,
+  seconds = 0
+): DistancePoint {
   return {
     latitude: ORIGIN.latitude + north / M_PER_DEG_LAT,
     longitude: ORIGIN.longitude + east / M_PER_DEG_LON,
     accuracy,
+    recordedAt: new Date(START_MS + seconds * 1000).toISOString(),
   };
 }
 
 export type Vertex = [east: number, north: number];
 
-// Recorrido por los vértices dados, con un punto cada `step` metros.
-export function path(vertices: Vertex[], step: number, accuracy = 5) {
+// Recorrido por los vértices dados, con un punto cada `step` metros a `speed` m/s
+// (por defecto caminando).
+export function path(vertices: Vertex[], step: number, accuracy = 5, speed = 1.3) {
   const points: DistancePoint[] = [at(...vertices[0], accuracy)];
+  let meters = 0;
   for (let i = 1; i < vertices.length; i++) {
     const [x0, y0] = vertices[i - 1];
     const [x1, y1] = vertices[i];
-    const n = Math.round(Math.hypot(x1 - x0, y1 - y0) / step);
+    const length = Math.hypot(x1 - x0, y1 - y0);
+    const n = Math.round(length / step);
     for (let k = 1; k <= n; k++) {
-      points.push(at(x0 + ((x1 - x0) * k) / n, y0 + ((y1 - y0) * k) / n, accuracy));
+      const seconds = (meters + (length * k) / n) / speed;
+      points.push(at(x0 + ((x1 - x0) * k) / n, y0 + ((y1 - y0) * k) / n, accuracy, seconds));
     }
+    meters += length;
   }
   return points;
 }

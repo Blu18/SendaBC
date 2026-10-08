@@ -41,6 +41,7 @@ Estas métricas corresponden a los campos de actividad del modelo de datos del s
 - **CA-7 (HU-1):** Dado un conjunto de puntos de prueba con distancia conocida, la distancia calculada coincide con la esperada con un error máximo de 1 %.
 - **CA-8 (HU-1):** Los puntos con precisión horizontal peor que **20 m** no cuentan para la distancia.
 - **CA-9 (HU-1):** Dado que permanezco quieto 5 minutos con la actividad grabando, la distancia aumenta **menos de 20 m**.
+- **CA-25 (HU-1):** Un salto de ubicación imposible no suma a la distancia: si un punto implica una velocidad mayor a **50 m/s (180 km/h)** respecto al punto anterior (p. ej. el GPS entrega primero una ubicación guardada de otro lugar, o un brinco aislado de cientos de metros), ese tramo no cuenta y el recorrido continúa desde el punto nuevo.
 
 ### Elevación
 
@@ -63,6 +64,7 @@ Estas métricas corresponden a los campos de actividad del modelo de datos del s
 
 ### Historial
 
+- 2026-10-06 — Se agrega CA-25 (saltos de ubicación imposibles), hallado al probar en el emulador: el primer punto fue la ubicación por defecto del emulador y la distancia sumó ~789 km. Aprobado por el usuario.
 - **CA-20 (HU-6):** Desde la pantalla principal puedo abrir "Mis actividades": una lista de las actividades terminadas del usuario de la sesión, de la más reciente a la más antigua, con fecha, tipo, duración y distancia.
 - **CA-21 (HU-6):** Cuando toco una actividad de la lista, veo su resumen con los mismos datos que en CA-1; el botón atrás me regresa a la lista.
 - **CA-22 (HU-6):** Si no tengo actividades terminadas, la lista muestra un mensaje que invita a iniciar una.

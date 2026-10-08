@@ -53,16 +53,16 @@ Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el
 
 | CA | Caso | Estado |
 |---|---|---|
-| CA-1 | M1 | Código ok · falta M1 |
+| CA-1 | M1 | Cumple (emulador, 2026-10-06) |
 | CA-2 | M2 | Cumple |
 | CA-3 | M3 | Código ok · falta M3 |
-| CA-4 | M4 | Código ok · falta M4 |
-| CA-5 | M1 | Código ok · falta M1 |
-| CA-6 | M4 | Código ok · falta M4 (ver observación O2) |
+| CA-4 | M4 | Cumple (emulador, 2026-10-06) |
+| CA-5 | M1 | Cumple (emulador, 2026-10-06) |
+| CA-6 | M4 | Cumple (emulador, 2026-10-06); O2 sigue abierta |
 | CA-7 | M5 | Código ok (sin red en la ruta de grabación) · falta M5 |
-| CA-8 | M4 | Código ok · falta M4 (O1 corregida en la spec 004) |
-| CA-9 | M6 | Código ok · falta M6 |
-| CA-10 | M7 | Código ok · falta M7 |
+| CA-8 | M4 | Cumple (emulador, 2026-10-06): el resumen muestra los mismos N puntos que el contador (O1 corregida en la spec 004) |
+| CA-9 | M6 | Cumple (emulador, 2026-10-06): doble toque en "Iniciar" crea una sola actividad |
+| CA-10 | M7 | Cumple (emulador, 2026-10-06): tras cerrar la app a la fuerza, la actividad aparece terminada con la duración hasta su último punto |
 | CA-11 | M8 | Código ok · falta M8 |
 
 ### Observaciones de la revisión

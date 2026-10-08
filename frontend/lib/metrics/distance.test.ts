@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeDistance, createDistanceAccumulator } from './distance';
+import { computeDistance, createDistanceAccumulator, DistancePoint } from './distance';
 import { at, gaussian, median, path, rng, seeds, Vertex } from './testing';
 
 const relativeError = (value: number, expected: number) => Math.abs(value - expected) / expected;
@@ -16,7 +16,7 @@ describe('computeDistance — recorrido conocido (CA-7)', () => {
   });
 
   it('línea recta de 5 km en bici (un punto cada 10 m): error ≤ 1 %', () => {
-    const d = computeDistance(path([[0, 0], [0, 5000]], 10));
+    const d = computeDistance(path([[0, 0], [0, 5000]], 10, 5, 5));
     expect(relativeError(d, 5000)).toBeLessThanOrEqual(0.01);
   });
 
@@ -64,10 +64,10 @@ describe('computeDistance — teléfono quieto 5 minutos (CA-9)', () => {
     const random = rng(seed);
     let dx = 0;
     let dy = 0;
-    return Array.from({ length: POINTS }, () => {
+    return Array.from({ length: POINTS }, (_, i) => {
       dx = 0.9 * dx + 0.2 * ACCURACY * gaussian(random);
       dy = 0.9 * dy + 0.2 * ACCURACY * gaussian(random);
-      return at(dx, dy, ACCURACY);
+      return at(dx, dy, ACCURACY, 2 * i);
     });
   }
 
@@ -76,8 +76,8 @@ describe('computeDistance — teléfono quieto 5 minutos (CA-9)', () => {
   function independent(seed: number) {
     const random = rng(seed);
     const sigma = ACCURACY / 1.515;
-    return Array.from({ length: POINTS }, () =>
-      at(sigma * gaussian(random), sigma * gaussian(random), ACCURACY),
+    return Array.from({ length: POINTS }, (_, i) =>
+      at(sigma * gaussian(random), sigma * gaussian(random), ACCURACY, 2 * i),
     );
   }
 
@@ -88,6 +88,47 @@ describe('computeDistance — teléfono quieto 5 minutos (CA-9)', () => {
   it('con error independiente por lectura, la mediana suma menos de 20 m', () => {
     const totals = seeds(50).map((seed) => computeDistance(independent(seed)));
     expect(median(totals)).toBeLessThan(20);
+  });
+});
+
+describe('computeDistance — saltos de ubicación imposibles (CA-25)', () => {
+  // Ubicación por defecto del emulador de Android (Mountain View, California).
+  const mountainView: DistancePoint = {
+    latitude: 37.422,
+    longitude: -122.0841,
+    accuracy: 5,
+    recordedAt: '2026-10-05T14:59:58.000Z',
+  };
+
+  it('un primer punto de otro lugar no suma: el recorrido continúa desde el punto nuevo', () => {
+    const walk = path([[0, 0], [0, 500]], 2.6);
+    const d = computeDistance([mountainView, ...walk]);
+    expect(d).toBeCloseTo(computeDistance(walk), 6);
+    expect(d).toBeLessThan(500);
+  });
+
+  it('un brinco aislado de 500 m a mitad del recorrido pierde menos de 20 m', () => {
+    const walk = path([[0, 0], [0, 1000]], 2.6);
+    const middle = walk[200];
+    const spike = { ...at(500, 520), recordedAt: middle.recordedAt };
+    const withSpike = [...walk.slice(0, 200), spike, ...walk.slice(200)];
+    const loss = computeDistance(walk) - computeDistance(withSpike);
+    expect(loss).toBeGreaterThanOrEqual(0);
+    expect(loss).toBeLessThan(20);
+  });
+
+  it('una bajada rápida en bici (25 m/s) sí cuenta', () => {
+    // Un punto cada 2 s (50 m); 20 km para que el retraso fijo del promedio (~100 m) no pese.
+    const d = computeDistance(path([[0, 0], [0, 20_000]], 50, 5, 25));
+    expect(relativeError(d, 20_000)).toBeLessThanOrEqual(0.01);
+  });
+
+  it('puntos con la misma hora no fallan (se toma 1 s como mínimo)', () => {
+    const sameTime = path([[0, 0], [0, 1000]], 10).map((p) => ({
+      ...p,
+      recordedAt: mountainView.recordedAt,
+    }));
+    expect(Number.isFinite(computeDistance(sameTime))).toBe(true);
   });
 });
 

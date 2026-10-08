@@ -44,38 +44,43 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 - [x] T19 — Spec 003: anotar en su historial que el mensaje de CA-8 se reemplaza por el resumen (que muestra el mismo N) y que O1 quedó corregida por T14; actualizar sus observaciones en `tasks.md`.
 
+## Cambios tras pruebas
+
+- [x] T20 — `lib/metrics/distance.ts`: reinicio por saltos imposibles (`MAX_SPEED_MS = 50`, ver D3); los puntos de distancia llevan `recordedAt`. Pruebas: salto inicial Mountain View → Ensenada no suma; brinco aislado de 500 m pierde menos de 20 m; bajada en bici a 25 m/s sí cuenta; puntos con la misma hora no fallan. (CA-25)
+
 ## Cobertura
 
-Los 24 CA están cubiertos por al menos una tarea.
+Los 25 CA están cubiertos por al menos una tarea.
 
 ## Verificación
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | M1 | Manual | Pendiente |
-| CA-2 | M1 | Manual | Pendiente |
-| CA-3 | M2 | Manual | Pendiente |
-| CA-4 | `summary.test.ts` › duración | Automatizada | Pendiente |
-| CA-5 | `summary.test.ts` › ritmo y velocidad · `metrics.test.ts` (formato) · M1 (se ve el correcto según el tipo) | Ambas | Pendiente |
-| CA-6 | `summary.test.ts` › distancia 0 · `metrics.test.ts` › `—` | Automatizada | Pendiente |
-| CA-7 | `geo.test.ts` · `distance.test.ts` › recorrido conocido ≤ 1 % | Automatizada | Pendiente |
-| CA-8 | `distance.test.ts` › descarta precisión > 20 m | Automatizada | Pendiente |
-| CA-9 | `distance.test.ts` › quieto 5 min < 20 m · M5 | Ambas | Pendiente |
-| CA-10 | `elevation.test.ts` › ganancia y pérdida | Automatizada | Pendiente |
-| CA-11 | `elevation.test.ts` › oscilaciones dentro del umbral | Automatizada | Pendiente |
-| CA-12 | `summary.test.ts` › fuente barómetro · M3 | Ambas | Pendiente |
-| CA-13 | `summary.test.ts` › menos de 2 lecturas → GPS · M4 | Ambas | Pendiente |
-| CA-14 | M3 (la fuente queda en barómetro, lo que exige lecturas guardadas) + revisión de código (solo se escucha entre iniciar y detener) | Manual | Pendiente |
-| CA-15 | M1 | Manual | Pendiente |
-| CA-16 | `summary.test.ts` › acumulador incremental = cálculo completo | Automatizada | Pendiente |
-| CA-17 | `distance.test.ts`, `elevation.test.ts`, `summary.test.ts` (0 y 1 punto) · M9 | Ambas | Pendiente |
-| CA-18 | M6 (el historial muestra métricas leídas de SQLite) + revisión de código | Manual | Pendiente |
-| CA-19 | M6 | Manual | Pendiente |
-| CA-20 | M7 | Manual | Pendiente |
-| CA-21 | M7 | Manual | Pendiente |
-| CA-22 | M7 | Manual | Pendiente |
-| CA-23 | M2 | Manual | Pendiente |
-| CA-24 | M8 | Manual | Pendiente |
+| CA-1 | M1 | Manual | Cumple (emulador, 2026-10-06) |
+| CA-2 | M1 | Manual | Cumple (emulador, 2026-10-06) |
+| CA-3 | M2 | Manual | Pendiente (M2: requiere modo avión) |
+| CA-4 | `summary.test.ts` › duración | Automatizada | Cumple (Vitest) |
+| CA-5 | `summary.test.ts` › ritmo y velocidad · `metrics.test.ts` (formato) · M1 (se ve el correcto según el tipo) | Ambas | Cumple (Vitest + M1 emulador, 2026-10-06) |
+| CA-6 | `summary.test.ts` › distancia 0 · `metrics.test.ts` › `—` | Automatizada | Cumple (Vitest; M9 muestra `—`) |
+| CA-7 | `geo.test.ts` · `distance.test.ts` › recorrido conocido ≤ 1 % | Automatizada | Cumple (Vitest) |
+| CA-8 | `distance.test.ts` › descarta precisión > 20 m | Automatizada | Cumple (Vitest) |
+| CA-9 | `distance.test.ts` › quieto 5 min < 20 m · M5 | Ambas | Vitest ok · falta M5 en dispositivo |
+| CA-10 | `elevation.test.ts` › ganancia y pérdida | Automatizada | Cumple (Vitest; ganancia y pérdida de 50 m simuladas (emulador, 2026-10-06)) |
+| CA-11 | `elevation.test.ts` › oscilaciones dentro del umbral | Automatizada | Cumple (Vitest) |
+| CA-12 | `summary.test.ts` › fuente barómetro · M3 | Ambas | Vitest ok · barómetro simulado ok (emulador, 2026-10-06) · falta M3 en dispositivo |
+| CA-13 | `summary.test.ts` › menos de 2 lecturas → GPS · M4 | Ambas | Vitest ok · falta M4 en dispositivo |
+| CA-14 | M3 (la fuente queda en barómetro, lo que exige lecturas guardadas) + revisión de código (solo se escucha entre iniciar y detener) | Manual | Barómetro simulado ok (emulador, 2026-10-06) · falta M3 en dispositivo |
+| CA-15 | M1 | Manual | Cumple (emulador, 2026-10-06) |
+| CA-16 | `summary.test.ts` › acumulador incremental = cálculo completo | Automatizada | Cumple (Vitest; en vivo = resumen (emulador, 2026-10-06)) |
+| CA-17 | `distance.test.ts`, `elevation.test.ts`, `summary.test.ts` (0 y 1 punto) · M9 | Ambas | Cumple (Vitest + M9 emulador, 2026-10-06) |
+| CA-18 | M6 (el historial muestra métricas leídas de SQLite) + revisión de código | Manual | Cumple (emulador, 2026-10-06) |
+| CA-19 | M6 | Manual | Cumple (emulador, 2026-10-06) |
+| CA-20 | M7 | Manual | Cumple (emulador, 2026-10-06) |
+| CA-21 | M7 | Manual | Cumple (emulador, 2026-10-06) |
+| CA-22 | M7 | Manual | Pendiente (M7 paso 1: requiere una cuenta sin actividades) |
+| CA-23 | M2 | Manual | Pendiente (M2: requiere modo avión) |
+| CA-24 | M8 | Manual | Pendiente (M8: requiere otra cuenta) |
+| CA-25 | `distance.test.ts` › saltos imposibles · M10 | Ambas | Cumple (Vitest + M10 emulador, 2026-10-06) |
 
 Requisito de rendimiento (< 1 s): `summary.test.ts` › 5 400 puntos + 10 800 lecturas < 100 ms, más la observación en M1.
 
@@ -126,6 +131,11 @@ Hacerlos en un dispositivo físico (el barómetro no existe en emuladores y en w
 **M9 — Actividad sin movimiento**
 1. "Iniciar" y "Detener" de inmediato.
 - **Esperado:** el resumen muestra distancia 0, elevación ganada y perdida 0 y ritmo o velocidad `—`, sin errores.
+
+**M10 — Salto de ubicación (emulador)**
+1. En el emulador, dejar la ubicación por defecto (Mountain View). "Iniciar".
+2. En Extended controls → Location → Routes, reproducir una ruta en Baja California de ~500 m a velocidad de caminata. Detener al terminar.
+- **Esperado:** la distancia del resumen es de unos 500 m (no cientos de km) y el ritmo es razonable (p. ej. `10:00–15:00 /km`).
 
 ## Commits propuestos
 
