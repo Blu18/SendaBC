@@ -40,7 +40,7 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 | CA-6 | T6 + `create-user.dto.spec.ts` + `validation.pipe.spec.ts` | Automatizada | Cumple |
 | CA-7 | Caso M3 | Manual | Implementado; falta M3 en dispositivo |
 
-En `frontend/`, `npm test` corre `lib/api/errors.test.ts` (lectura del error de la API). En `backend/`, `npm test` corre las unitarias; `npm run test:e2e` corre T6 contra la base de `DATABASE_URL` (crea un usuario `e2e-<uuid>@senda.bc` y lo borra al terminar).
+En `frontend/`, `npm test` corre `lib/api/errors.test.ts` (lectura del error de la API) y `lib/api/client.test.ts` (tiempo límite de la petición). En `backend/`, `npm test` corre las unitarias; `npm run test:e2e` corre T6 contra la base de `DATABASE_URL` (crea un usuario `e2e-<uuid>@senda.bc` y lo borra al terminar).
 
 ### Casos manuales
 
@@ -59,4 +59,4 @@ En `frontend/`, `npm test` corre `lib/api/errors.test.ts` (lectura del error de 
 
 **M4 — Sin conexión**
 1. Apagar el backend (o el wifi) y enviar un registro válido.
-- **Esperado:** mensaje "No se pudo conectar con el servidor" y el botón vuelve a habilitarse.
+- **Esperado:** en 10 s o menos aparece "Error al registrar usuario. Inténtalo más tarde." y el botón vuelve a habilitarse.

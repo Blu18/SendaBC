@@ -1,7 +1,7 @@
 import { queryClient } from "../../App";
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { apiFetch } from "../../lib/api/client";
-import { type ApiError, NETWORK_ERROR_MESSAGE, parseApiError } from "../../lib/api/errors";
+import { type ApiError, parseApiError } from "../../lib/api/errors";
 import { useAuth } from "../../context/AuthContext";
 
 export interface Registrar {
@@ -30,20 +30,28 @@ export interface LoginFieldErrors {
     message: string;
 }
 
+const REGISTRO_TIMEOUT_MS = 10_000;
+const REGISTRO_ERROR_GENERICO = "Error al registrar usuario. Inténtalo más tarde.";
+
 export const useRegistrar  = () => {
     return useMutation<unknown, ApiError, Registrar>({
         mutationFn: async(registrar: Registrar) => {
+            // Sin red o sin respuesta en 10 s: mensaje genérico (spec 001, M4).
             const response = await apiFetch("/user", null, {
                 method: "POST",
                 body: JSON.stringify(registrar),
-            }).catch(() => {
-                throw { message: NETWORK_ERROR_MESSAGE, fieldErrors: {} } satisfies ApiError;
+            }, REGISTRO_TIMEOUT_MS).catch(() => {
+                throw { message: REGISTRO_ERROR_GENERICO, fieldErrors: {} } satisfies ApiError;
             })
 
             const payload = await response.json().catch(() => null)
 
+            // Un 5xx trae un mensaje técnico en inglés ("Internal server error"): se usa el genérico.
+            if (response.status >= 500) {
+                throw { message: REGISTRO_ERROR_GENERICO, fieldErrors: {} } satisfies ApiError;
+            }
             if (!response.ok) {
-                throw parseApiError(payload, "Error al registrar");
+                throw parseApiError(payload, REGISTRO_ERROR_GENERICO);
             }
 
             return payload

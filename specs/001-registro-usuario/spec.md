@@ -45,3 +45,4 @@ Para guardar actividades, publicar rutas y configurar un contacto de emergencia,
 - 2026-09-30 — Corrección: el hash bcrypt lo hace un trigger en Supabase; CA-2 y CA-3 sí se cumplen.
 - 2026-10-08 — Tareas de backend T1, T3–T6 completadas: `POST /user` recibe `password`, normaliza el correo y responde `400` con mensajes por campo. La app debe enviar `password` (T7) para volver a registrar.
 - 2026-10-08 — Tareas de frontend T7–T9 completadas: la app envía `password`, muestra los errores del servidor y, tras registrarse, pasa a Login con confirmación. Quedan pendientes los casos manuales M2–M4 en dispositivo.
+- 2026-10-08 — Sin conexión, el registro espera como máximo 10 s y muestra "Error al registrar usuario. Inténtalo más tarde." (también ante un error 5xx), en lugar de "No se pudo conectar con el servidor", que tardaba mucho en aparecer.

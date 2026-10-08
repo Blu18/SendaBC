@@ -5,8 +5,6 @@ export interface ApiError {
   fieldErrors: Record<string, string>;
 }
 
-export const NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servidor';
-
 // Convierte el body de error del backend en un ApiError. Acepta:
 // - { message: "Ya existe un usuario con ese email" }              (409 y otros)
 // - { message: "Datos inválidos", errors: { campo: ["..."] } }    (400 del ValidationPipe)

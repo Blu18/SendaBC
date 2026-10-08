@@ -44,7 +44,8 @@ Usa el modelo `User` (`users`). Trigger `hash_password_trigger` (`BEFORE INSERT 
 
 - `frontend/pages/auth/register.tsx` — formulario y validación en cliente (`validarCampos`).
 - `frontend/hooks/auth/auth.hooks.ts` — `useRegistrar()` (mutación a `POST /user`, envía `password`). Sus errores son `ApiError { message, fieldErrors }`.
-- `frontend/lib/api/errors.ts` — `parseApiError()`: convierte el body de error (409, 400 con `errors` por campo) en `ApiError`; un fallo de red da "No se pudo conectar con el servidor".
+- `frontend/lib/api/errors.ts` — `parseApiError()`: convierte el body de error (409, 400 con `errors` por campo) en `ApiError`.
+- `frontend/lib/api/client.ts` — `apiFetch()` acepta un `timeoutMs` opcional (aborta la petición). El registro usa 10 s; sin red, sin respuesta a tiempo o con un `5xx` muestra "Error al registrar usuario. Inténtalo más tarde."
 - `frontend/components/ui/buttons/PrimaryBtn.tsx` — prop `disabled` (botón deshabilitado mientras `isPending`).
 - `frontend/pages/auth/login.tsx` — parámetro opcional `emailRegistrado`: precarga el correo y muestra la confirmación. Register navega con `StackActions.replace('Login', …)` para que atrás no regrese al formulario (CA-7).
 - `frontend/lib/api/client.ts` — `apiFetch` con `EXPO_PUBLIC_BACKEND_IP`.
