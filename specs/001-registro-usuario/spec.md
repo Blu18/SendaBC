@@ -43,3 +43,4 @@ Para guardar actividades, publicar rutas y configurar un contacto de emergencia,
 
 - 2026-09-30 — Retro-spec creada a partir del código existente. Se detectan brechas (ver `tasks.md`).
 - 2026-09-30 — Corrección: el hash bcrypt lo hace un trigger en Supabase; CA-2 y CA-3 sí se cumplen.
+- 2026-10-08 — Tareas de backend T1, T3–T6 completadas: `POST /user` recibe `password`, normaliza el correo y responde `400` con mensajes por campo. La app debe enviar `password` (T7) para volver a registrar.

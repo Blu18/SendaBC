@@ -7,7 +7,11 @@ async function erroresDe(body: object) {
   return errors.map((e) => e.property);
 }
 
-const valido = { email: 'prueba@senda.bc', displayName: 'Prueba', password: '12345678' };
+const valido = {
+  email: 'prueba@senda.bc',
+  displayName: 'Prueba',
+  password: '12345678',
+};
 
 describe('CreateUserDto (spec 001, CA-6)', () => {
   it('acepta un body válido', async () => {
@@ -19,19 +23,30 @@ describe('CreateUserDto (spec 001, CA-6)', () => {
   });
 
   it('rechaza un nombre visible vacío', async () => {
-    expect(await erroresDe({ ...valido, displayName: '' })).toEqual(['displayName']);
+    expect(await erroresDe({ ...valido, displayName: '' })).toEqual([
+      'displayName',
+    ]);
   });
 
   it('rechaza una contraseña de menos de 8 caracteres', async () => {
-    expect(await erroresDe({ ...valido, password: '1234567' })).toEqual(['password']);
+    expect(await erroresDe({ ...valido, password: '1234567' })).toEqual([
+      'password',
+    ]);
   });
 
   it('rechaza un body sin campos', async () => {
-    expect((await erroresDe({})).sort()).toEqual(['displayName', 'email', 'password']);
+    expect((await erroresDe({})).sort()).toEqual([
+      'displayName',
+      'email',
+      'password',
+    ]);
   });
 
   it('normaliza el correo antes de validarlo (RN-1)', async () => {
-    const dto = plainToInstance(CreateUserDto, { ...valido, email: '  Prueba@Senda.BC ' });
+    const dto = plainToInstance(CreateUserDto, {
+      ...valido,
+      email: '  Prueba@Senda.BC ',
+    });
     expect(await validate(dto)).toEqual([]);
     expect(dto.email).toBe('prueba@senda.bc');
   });

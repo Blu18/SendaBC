@@ -20,7 +20,7 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 - [x] T3 — Normalizar email (trim + minúsculas) al crear y en `findByEmail`. (RN-1)
 - [x] T4 — `ValidationPipe`: responder `400` con los mensajes por campo (en español) en lugar de "Validation failed"; activar `whitelist` para descartar campos no declarados. (CA-6)
 - [x] T5 — Pruebas Vitest de `UserService.create`: omite `passwordHash` y lanza `ConflictException` en `P2002`. (CA-1, CA-4)
-- [ ] T6 — Prueba e2e contra una base con migraciones aplicadas: `POST /user` → `201`; el `passwordHash` guardado empieza con `$2`; repetido → `409`; body inválido → `400`; luego `POST /auth/login` con esas credenciales → `200`. (CA-1, CA-2, CA-3, CA-4, CA-6)
+- [x] T6 — Prueba e2e contra una base con migraciones aplicadas: `POST /user` → `201`; el `passwordHash` guardado empieza con `$2`; repetido → `409`; body inválido → `400`; luego `POST /auth/login` con esas credenciales → `200`. (CA-1, CA-2, CA-3, CA-4, CA-6)
 
 ### Frontend
 
@@ -32,13 +32,15 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | T5 + T6 | Automatizada | Cumple (falta prueba) |
-| CA-2 | T6 (registro → login) + caso M3 | Ambas | Cumple (falta prueba) |
-| CA-3 | T6 (el hash empieza con `$2`) | Automatizada | Cumple (falta prueba) |
-| CA-4 | T5 + T6 + caso M2 | Ambas | Parcial (API ok, UI no muestra el error) |
+| CA-1 | T5 + T6 (`user.service.spec.ts`, `test/user.e2e-spec.ts`) | Automatizada | Cumple |
+| CA-2 | T6 (registro → login) + caso M3 | Ambas | Cumple en API; falta M3 (depende de T7) |
+| CA-3 | T6 (el hash empieza con `$2`) | Automatizada | Cumple |
+| CA-4 | T5 + T6 + caso M2 | Ambas | Parcial (API ok, UI no muestra el error: T8) |
 | CA-5 | Caso M1 | Manual | Cumple |
-| CA-6 | T6 | Automatizada | Parcial (no valida longitud mínima) |
-| CA-7 | Caso M3 | Manual | Pendiente |
+| CA-6 | T6 + `create-user.dto.spec.ts` + `validation.pipe.spec.ts` | Automatizada | Cumple |
+| CA-7 | Caso M3 | Manual | Pendiente (T9) |
+
+`npm test` corre las unitarias; `npm run test:e2e` corre T6 contra la base de `DATABASE_URL` (crea un usuario `e2e-<uuid>@senda.bc` y lo borra al terminar).
 
 ### Casos manuales
 

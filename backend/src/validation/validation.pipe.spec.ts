@@ -26,14 +26,26 @@ describe('ValidationPipe (spec 001, CA-6)', () => {
 
   it('descarta los campos que el DTO no declara (whitelist) y normaliza', async () => {
     const result = await pipe.transform(
-      { email: ' Ana@Senda.BC', displayName: 'Ana', password: '12345678', avatarUrl: 'x', passwordHash: 'y' },
+      {
+        email: ' Ana@Senda.BC',
+        displayName: 'Ana',
+        password: '12345678',
+        avatarUrl: 'x',
+        passwordHash: 'y',
+      },
       meta,
     );
 
-    expect({ ...result }).toEqual({ email: 'ana@senda.bc', displayName: 'Ana', password: '12345678' });
+    expect({ ...result }).toEqual({
+      email: 'ana@senda.bc',
+      displayName: 'Ana',
+      password: '12345678',
+    });
   });
 
   it('no toca valores con tipos primitivos', async () => {
-    expect(await pipe.transform('abc', { type: 'param', metatype: String })).toBe('abc');
+    expect(
+      await pipe.transform('abc', { type: 'param', metatype: String }),
+    ).toBe('abc');
   });
 });
