@@ -18,7 +18,7 @@ describe('ValidationPipe (spec 001, CA-6)', () => {
       message: 'Datos inválidos',
       errors: {
         email: ['El correo no es válido'],
-        displayName: ['El nombre visible es obligatorio'],
+        displayName: ['El nombre visible debe tener al menos 5 caracteres'],
         password: ['La contraseña debe tener al menos 8 caracteres'],
       },
     });
@@ -28,7 +28,7 @@ describe('ValidationPipe (spec 001, CA-6)', () => {
     const result = await pipe.transform(
       {
         email: ' Ana@Senda.BC',
-        displayName: 'Ana',
+        displayName: 'Ana Luz',
         password: '12345678',
         avatarUrl: 'x',
         passwordHash: 'y',
@@ -38,7 +38,7 @@ describe('ValidationPipe (spec 001, CA-6)', () => {
 
     expect({ ...result }).toEqual({
       email: 'ana@senda.bc',
-      displayName: 'Ana',
+      displayName: 'Ana Luz',
       password: '12345678',
     });
   });

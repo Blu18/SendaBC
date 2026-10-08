@@ -36,7 +36,7 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 | CA-2 | T6 (registro → login) + caso M3 | Ambas | Cumple en API; falta M3 en dispositivo |
 | CA-3 | T6 (el hash empieza con `$2`) | Automatizada | Cumple |
 | CA-4 | T5 + T6 + `lib/api/errors.test.ts` + caso M2 | Ambas | Cumple en API; falta M2 en dispositivo |
-| CA-5 | Caso M1 | Manual | Cumple |
+| CA-5 | Caso M1 | Manual | Cumple; repetir M1 por RN-4 (nombre ≥ 5) |
 | CA-6 | T6 + `create-user.dto.spec.ts` + `validation.pipe.spec.ts` | Automatizada | Cumple |
 | CA-7 | Caso M3 | Manual | Implementado; falta M3 en dispositivo |
 
@@ -46,7 +46,7 @@ En `frontend/`, `npm test` corre `lib/api/errors.test.ts` (lectura del error de 
 
 **M1 — Validación en cliente**
 1. Abrir Registro, dejar campos vacíos y presionar "Registrarse".
-2. Probar correo `abc`, contraseña `123`, confirmación distinta.
+2. Probar correo `abc`, usuario `Ana` (y `  Ana  `), contraseña `123`, confirmación distinta.
 - **Esperado:** cada campo muestra su error; no hay petición de red.
 
 **M2 — Correo duplicado**

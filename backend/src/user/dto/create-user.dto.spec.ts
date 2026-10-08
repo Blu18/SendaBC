@@ -50,4 +50,26 @@ describe('CreateUserDto (spec 001, CA-6)', () => {
     expect(await validate(dto)).toEqual([]);
     expect(dto.email).toBe('prueba@senda.bc');
   });
+
+  it('rechaza un nombre visible de menos de 5 caracteres (RN-4)', async () => {
+    expect(await erroresDe({ ...valido, displayName: 'Ana' })).toEqual([
+      'displayName',
+    ]);
+  });
+
+  it('no cuenta los espacios al inicio y al final del nombre (RN-4)', async () => {
+    expect(await erroresDe({ ...valido, displayName: '  Ana  ' })).toEqual([
+      'displayName',
+    ]);
+    const dto = plainToInstance(CreateUserDto, {
+      ...valido,
+      displayName: '  Ana Luz ',
+    });
+    expect(await validate(dto)).toEqual([]);
+    expect(dto.displayName).toBe('Ana Luz');
+  });
+
+  it('acepta un nombre visible de exactamente 5 caracteres', async () => {
+    expect(await erroresDe({ ...valido, displayName: 'Diego' })).toEqual([]);
+  });
 });

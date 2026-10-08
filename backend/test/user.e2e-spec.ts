@@ -57,7 +57,7 @@ describe('POST /user (e2e, spec 001)', () => {
   it('responde 409 si el correo ya existe (CA-4)', async () => {
     const res = await request(app.getHttpServer())
       .post('/user')
-      .send({ email, displayName: 'Otra', password })
+      .send({ email, displayName: 'Otra persona', password })
       .expect(409);
 
     expect(res.body.message).toBe('Ya existe un usuario con ese email');
@@ -71,7 +71,7 @@ describe('POST /user (e2e, spec 001)', () => {
 
     expect(res.body.errors).toEqual({
       email: ['El correo no es válido'],
-      displayName: ['El nombre visible es obligatorio'],
+      displayName: ['El nombre visible debe tener al menos 5 caracteres'],
       password: ['La contraseña debe tener al menos 8 caracteres'],
     });
   });

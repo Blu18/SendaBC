@@ -16,6 +16,7 @@ const emptyFieldErrors: RegistroFieldError = {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
+const MIN_DISPLAY_NAME_LENGTH = 5;
 
 function validarCampos(values: {
   displayName: string;
@@ -25,8 +26,11 @@ function validarCampos(values: {
 }): RegistroFieldError {
   const errors: RegistroFieldError = { ...emptyFieldErrors };
 
+  // RN-4: los espacios al inicio y al final no cuentan.
   if (!values.displayName.trim()) {
     errors.displayName = "El usuario es obligatorio";
+  } else if (values.displayName.trim().length < MIN_DISPLAY_NAME_LENGTH) {
+    errors.displayName = `Debe tener al menos ${MIN_DISPLAY_NAME_LENGTH} caracteres`;
   }
 
   if (!values.email.trim()) {
@@ -70,7 +74,7 @@ export default function Register() {
       if (hayErrores) return;
 
       registrar.mutate(
-        { displayName: displayName, email: email, password: password },
+        { displayName: displayName.trim(), email: email, password: password },
         {
           // CA-7: Login reemplaza a Register (atrás no regresa al formulario) y muestra la confirmación.
           onSuccess: () => navigation.dispatch(
