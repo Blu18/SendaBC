@@ -19,7 +19,7 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 - [x] T2b — Migración aplicada en Supabase (`prisma migrate deploy`, 2026-09-30). Verificado con un INSERT revertido: un solo trigger, hash `$2a$`, `bcrypt.compare` de Node → `true`.
 - [x] T3 — Normalizar email (trim + minúsculas) al crear y en `findByEmail`. (RN-1)
 - [x] T4 — `ValidationPipe`: responder `400` con los mensajes por campo (en español) en lugar de "Validation failed"; activar `whitelist` para descartar campos no declarados. (CA-6)
-- [ ] T5 — Pruebas Vitest de `UserService.create`: omite `passwordHash` y lanza `ConflictException` en `P2002`. (CA-1, CA-4)
+- [x] T5 — Pruebas Vitest de `UserService.create`: omite `passwordHash` y lanza `ConflictException` en `P2002`. (CA-1, CA-4)
 - [ ] T6 — Prueba e2e contra una base con migraciones aplicadas: `POST /user` → `201`; el `passwordHash` guardado empieza con `$2`; repetido → `409`; body inválido → `400`; luego `POST /auth/login` con esas credenciales → `200`. (CA-1, CA-2, CA-3, CA-4, CA-6)
 
 ### Frontend

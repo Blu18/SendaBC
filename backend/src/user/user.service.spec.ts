@@ -1,7 +1,56 @@
+import { ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { UserService } from './user.service.js';
 import type { PrismaService } from '../prisma.service.js';
 
+const body = { email: 'prueba@senda.bc', displayName: 'Prueba', password: '12345678' };
+
+function serviceCon(create: ReturnType<typeof vi.fn>) {
+  return new UserService({ user: { create } } as unknown as PrismaService);
+}
+
 describe('UserService.create (spec 001)', () => {
+  it('no incluye passwordHash en la respuesta (CA-1)', async () => {
+    const guardado = {
+      id: 'u1',
+      email: 'prueba@senda.bc',
+      displayName: 'Prueba',
+      passwordHash: '$2a$06$hash',
+      avatarUrl: null,
+      emergencyContactName: null,
+      emergencyContactPhone: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const service = serviceCon(vi.fn().mockResolvedValue(guardado));
+
+    const result = await service.create(body);
+
+    expect(result).not.toHaveProperty('passwordHash');
+    const { passwordHash, ...esperado } = guardado;
+    expect(result).toEqual(esperado);
+  });
+
+  it('lanza ConflictException con el mensaje en español si el correo ya existe (CA-4)', async () => {
+    const duplicado = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+      code: 'P2002',
+      clientVersion: 'test',
+    });
+    const service = serviceCon(vi.fn().mockRejectedValue(duplicado));
+
+    const error = await service.create(body).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ConflictException);
+    expect((error as ConflictException).message).toBe('Ya existe un usuario con ese email');
+  });
+
+  it('propaga otros errores de Prisma sin convertirlos en 409', async () => {
+    const otro = new Prisma.PrismaClientKnownRequestError('Otro', { code: 'P2000', clientVersion: 'test' });
+    const service = serviceCon(vi.fn().mockRejectedValue(otro));
+
+    await expect(service.create(body)).rejects.toBe(otro);
+  });
+
   it('manda la contraseña en passwordHash para que la hashee el trigger e ignora campos extra (RN-3)', async () => {
     const create = vi.fn().mockResolvedValue({
       id: 'u1',
