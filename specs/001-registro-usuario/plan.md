@@ -12,7 +12,7 @@ Endpoint público `POST /user` en NestJS que valida el body con class-validator 
 - [x] Art. 5.1 — Trigger versionado en `backend/prisma/migrations/20260930000000_hash_password_trigger/`.
 - [x] Art. 3.2 — `UserService.create` omite `passwordHash` de la respuesta.
 - [x] Art. 4.1 — Validación con `class-validator` vía `ValidationPipe` global.
-- [ ] Art. 4.3 — El `ValidationPipe` responde un mensaje genérico en inglés ("Validation failed").
+- [x] Art. 4.3 — El `ValidationPipe` responde `400` con mensajes en español por campo (T4).
 
 ## Backend
 
@@ -29,7 +29,12 @@ Endpoint público `POST /user` en NestJS que valida el body con class-validator 
 - `backend/src/user/user.controller.ts` — `POST /user`.
 - `backend/src/user/user.service.ts` — `create()`: captura `P2002` → `ConflictException` (409).
 - `backend/src/user/dto/create-user.dto.ts` — DTO propio con `email`, `displayName`, `password` (mensajes en español).
-- `backend/src/validation/validation.pipe.ts` — pipe global de validación.
+- `backend/src/validation/validation.pipe.ts` — pipe global de validación (registrado como `APP_PIPE` en `AppModule`). Descarta campos no declarados (`whitelist`) y en error responde:
+
+  ```json
+  { "statusCode": 400, "error": "Bad Request", "message": "Datos inválidos",
+    "errors": { "password": ["La contraseña debe tener al menos 8 caracteres"] } }
+  ```
 
 ### Esquema
 

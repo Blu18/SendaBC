@@ -8,12 +8,22 @@ export class ValidationPipe implements PipeTransform<any> {
     if (!metatype || !this.toValidate(metatype)) {
       return value;
     }
-    const object = plainToInstance(metatype, value);
-    const errors = await validate(object);
+    const object = plainToInstance(metatype, value ?? {});
+    // whitelist: descarta los campos que el DTO no declara.
+    const errors = await validate(object, { whitelist: true });
     if (errors.length > 0) {
-      throw new BadRequestException('Validation failed');
+      const porCampo: Record<string, string[]> = {};
+      for (const error of errors) {
+        porCampo[error.property] = Object.values(error.constraints ?? {});
+      }
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Datos inválidos',
+        errors: porCampo,
+      });
     }
-    return value;
+    return object;
   }
 
   private toValidate(metatype: Function): boolean {
