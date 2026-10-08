@@ -5,12 +5,13 @@ interface BtnProps {
     style?: StyleProp<ViewStyle>
     textStyle?: StyleProp<TextStyle>
     onPress?: (event: GestureResponderEvent) => void;
+    disabled?: boolean;
 }
 
 export default function PrimaryButton(props: BtnProps) {
 
     return(
-        <Pressable onPress={props.onPress}  style={({ pressed }) => [styles.btn, props.style, {opacity: pressed ? 0.7 : 1}]}>
+        <Pressable onPress={props.onPress} disabled={props.disabled} style={({ pressed }) => [styles.btn, props.style, {opacity: props.disabled ? 0.5 : pressed ? 0.7 : 1}]}>
             <Text style={[styles.text, props.textStyle]}>{props.text}</Text>
         </Pressable>
     )

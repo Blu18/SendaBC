@@ -1,12 +1,13 @@
 import { queryClient } from "../../App";
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { apiFetch } from "../../lib/api/client";
+import { type ApiError, NETWORK_ERROR_MESSAGE, parseApiError } from "../../lib/api/errors";
 import { useAuth } from "../../context/AuthContext";
 
 export interface Registrar {
     displayName: string;
     email: string;
-    passwordHash: string;
+    password: string;
 }
 
 export interface Login {
@@ -20,7 +21,7 @@ export interface LoginResponse {
 }
 
 export interface RegistroFieldErrors {
-    field: "displayName" | "email" | "passwordHash" | "confirmPassword";
+    field: "displayName" | "email" | "password" | "confirmPassword";
     message: string;
 }
 
@@ -30,17 +31,19 @@ export interface LoginFieldErrors {
 }
 
 export const useRegistrar  = () => {
-    return useMutation({
+    return useMutation<unknown, ApiError, Registrar>({
         mutationFn: async(registrar: Registrar) => {
             const response = await apiFetch("/user", null, {
                 method: "POST",
                 body: JSON.stringify(registrar),
+            }).catch(() => {
+                throw { message: NETWORK_ERROR_MESSAGE, fieldErrors: {} } satisfies ApiError;
             })
 
             const payload = await response.json().catch(() => null)
 
             if (!response.ok) {
-                throw payload ?? { message: "Error al registrar" };
+                throw parseApiError(payload, "Error al registrar");
             }
 
             return payload

@@ -3,14 +3,14 @@ import { View, TextInput, StyleSheet, Text, Pressable } from "react-native";
 import { type RegistroFieldErrors, useRegistrar } from "../../hooks/auth/auth.hooks";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import TextBtn from "../../components/ui/buttons/TextBtn";
-import { useNavigation } from "@react-navigation/native";
+import { StackActions, useNavigation } from "@react-navigation/native";
 
 type RegistroFieldError = Record<RegistroFieldErrors["field"], string>;
 
 const emptyFieldErrors: RegistroFieldError = {
     displayName: "",
     email: "",
-    passwordHash: "",
+    password: "",
     confirmPassword: "",
 };
 
@@ -36,9 +36,9 @@ function validarCampos(values: {
   }
 
   if (!values.password) {
-    errors.passwordHash = "La contraseña es obligatoria";
+    errors.password = "La contraseña es obligatoria";
   } else if (values.password.length < MIN_PASSWORD_LENGTH) {
-    errors.passwordHash = `Debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`;
+    errors.password = `Debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`;
   }
 
   if (!values.confirmPassword) {
@@ -56,6 +56,7 @@ export default function Register() {
     const [password, setPassword] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState<string>('');
     const [fieldErrors, setFieldErrors] = useState<RegistroFieldError>(emptyFieldErrors);
+    const [serverError, setServerError] = useState<string>('');
 
     const registrar = useRegistrar();
     const navigation = useNavigation();
@@ -63,15 +64,24 @@ export default function Register() {
     const handleSubmit = () => {
       const errors = validarCampos({ displayName, email, password, confirmPassword });
       setFieldErrors(errors);
+      setServerError('');
 
       const hayErrores = Object.values(errors).some((mensaje) => mensaje !== "");
       if (hayErrores) return;
 
       registrar.mutate(
-        { displayName: displayName, email: email, passwordHash: password},
+        { displayName: displayName, email: email, password: password },
         {
-          onSuccess: () => {console.log("Cuenta registrada correctamente")},
-          onError: (error) => {console.log(error.message);}
+          // CA-7: Login reemplaza a Register (atrás no regresa al formulario) y muestra la confirmación.
+          onSuccess: () => navigation.dispatch(
+            StackActions.replace('Login', { emailRegistrado: email.trim().toLowerCase() })
+          ),
+          // CA-4: el mensaje del servidor (p. ej. el 409) se muestra en pantalla;
+          // los errores por campo del 400 se muestran junto a su campo.
+          onError: (error) => {
+            setFieldErrors({ ...emptyFieldErrors, ...error.fieldErrors });
+            setServerError(error.message);
+          }
         }
       )
     }
@@ -114,7 +124,7 @@ export default function Register() {
                 secureTextEntry={true}
                 style={styles.input}
               />
-              {!!fieldErrors.passwordHash && <Text style={styles.errorText}>{fieldErrors.passwordHash}</Text>}
+              {!!fieldErrors.password && <Text style={styles.errorText}>{fieldErrors.password}</Text>}
             </View>
             <View>
               <TextInput
@@ -128,7 +138,12 @@ export default function Register() {
             </View>
           </View>
           <View style={styles.formFooter}>
-            <PrimaryButton text="Registrarse" onPress={handleSubmit}/>
+            {!!serverError && <Text style={styles.serverErrorText}>{serverError}</Text>}
+            <PrimaryButton
+              text={registrar.isPending ? "Registrando..." : "Registrarse"}
+              onPress={handleSubmit}
+              disabled={registrar.isPending}
+            />
             <TextBtn text="Ya tengo una cuenta" onPress={() => navigation.navigate('Login')}/>
           </View>
         </View>
@@ -184,6 +199,11 @@ const styles = StyleSheet.create({
       color: "#B3261E",
       fontSize: 13,
       marginTop: 4,
+    },
+    serverErrorText: {
+      color: "#B3261E",
+      fontSize: 14,
+      textAlign: 'center',
     },
     formFooter: {
       alignItems: 'center',

@@ -3,7 +3,7 @@ import { View, TextInput, StyleSheet, Text } from "react-native";
 import { LoginFieldErrors, useLogin } from "../../hooks/auth/auth.hooks";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import TextBtn from "../../components/ui/buttons/TextBtn";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
 
 type LoginFieldError = Record<LoginFieldErrors["field"], string>;
@@ -36,8 +36,12 @@ function validarCampos(values: {
   return errors;
 }
 
-export default function Login() {
-    const [email, setEmail] = useState<string>('');
+// emailRegistrado llega al terminar el registro (spec 001, CA-7).
+type Props = StaticScreenProps<{ emailRegistrado?: string } | undefined>;
+
+export default function Login({ route }: Props) {
+    const emailRegistrado = route.params?.emailRegistrado;
+    const [email, setEmail] = useState<string>(emailRegistrado ?? '');
     const [password, setPassword] = useState<string>('');
     const [fieldErrors, setFieldErrors] = useState<LoginFieldError>(emptyFieldErrors);
 
@@ -70,6 +74,9 @@ export default function Login() {
           <View style={styles.formHeader}>
             <Text style={styles.headerFormText}>Inicio de Sesión</Text>
           </View>
+          {!!emailRegistrado && (
+            <Text style={styles.successText}>Tu cuenta se creó correctamente. Inicia sesión para continuar.</Text>
+          )}
           <View style={styles.inputContainer}>
             <View>
               <TextInput
@@ -151,6 +158,11 @@ const styles = StyleSheet.create({
       borderRadius: 8,
       borderColor: "#5C6B49",
       borderWidth: 1.5,
+    },
+    successText: {
+      color: "#5C6B49",
+      fontSize: 14,
+      marginBottom: 12,
     },
     errorText: {
       color: "#B3261E",
