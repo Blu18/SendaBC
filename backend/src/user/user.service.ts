@@ -2,7 +2,6 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto.js';
-import { UpdateUserDto } from './dto/update-user.dto.js';
 import { PrismaService } from '../prisma.service.js';
 import { normalizarEmail } from './normalizar-email.js';
 
@@ -33,22 +32,10 @@ export class UserService {
     });
   }
 
-  findAll() {
-    return `This action returns all user`;
-  }
-
   async findOne(id: string): Promise<SafeUser | null> {
     return this.prisma.user.findFirst({
       where: { id: id },
       omit: { passwordHash: true },
     });
-  }
-
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: string) {
-    return `This action removes a #${id} user`;
   }
 }
