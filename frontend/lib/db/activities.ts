@@ -34,6 +34,8 @@ export type Activity = {
   durationSeconds: number | null;
   elevationGainMeters: number | null;
   elevationLossMeters: number | null;
+  serverId: string | null; // id en el servidor, al subirla o recuperarla (spec 005)
+  syncError: string | null; // motivo si el servidor la rechazó: "No se pudo subir" (spec 005, CA-11)
 };
 
 const ACTIVITY_COLUMNS = `
@@ -48,7 +50,9 @@ const ACTIVITY_COLUMNS = `
   distance_meters AS distanceMeters,
   duration_seconds AS durationSeconds,
   elevation_gain_meters AS elevationGainMeters,
-  elevation_loss_meters AS elevationLossMeters`;
+  elevation_loss_meters AS elevationLossMeters,
+  server_id AS serverId,
+  sync_error AS syncError`;
 
 // Crea la actividad en RECORDING y devuelve su local_id (CA-4).
 // La fuente de la elevación se decide al iniciar (spec 004, RN-3).
@@ -193,6 +197,128 @@ export async function listFinishedActivities(userId: string) {
      ORDER BY startedAt DESC`,
     [userId]
   );
+}
+
+// --- Sincronización (spec 005) ---
+
+// Actividad recuperada del servidor, lista para guardarse en el teléfono (CA-20, CA-21).
+export type DownloadedActivity = {
+  serverId: string;
+  clientGeneratedId: string;
+  type: ActivityType;
+  startedAt: string;
+  endedAt: string;
+  distanceMeters: number;
+  durationSeconds: number;
+  elevationGainMeters: number;
+  elevationLossMeters: number;
+  elevationSource: ElevationSource;
+  points: ActivityPointInput[];
+};
+
+// Actividades que se pueden subir: terminadas, con métricas calculadas y del usuario de la
+// sesión, la más antigua primero (CA-3, CA-17, CA-19). Las que el servidor rechazó solo entran
+// en una sincronización manual (CA-16).
+export async function listUploadable(userId: string, { includeRejected = false } = {}) {
+  const db = await getDb();
+  return db.getAllAsync<Activity>(
+    `SELECT ${ACTIVITY_COLUMNS} FROM activities
+     WHERE status = 'PENDING_SYNC' AND user_id = ? AND distance_meters IS NOT NULL
+       AND (sync_error IS NULL OR ?)
+     ORDER BY startedAt ASC`,
+    [userId, includeRejected ? 1 : 0]
+  );
+}
+
+// El servidor confirmó que la guardó (CA-13). Solo avanza desde PENDING_SYNC (constitución 2.3).
+export async function markSynced(localId: number, serverId: string) {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE activities SET status = 'SYNCED', server_id = ?, sync_error = NULL
+     WHERE local_id = ? AND status = 'PENDING_SYNC'`,
+    [serverId, localId]
+  );
+}
+
+// El servidor la rechazó por datos inválidos: queda pendiente con el motivo (CA-11, D6).
+export async function markSyncError(localId: number, message: string) {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE activities SET sync_error = ? WHERE local_id = ? AND status = 'PENDING_SYNC'`,
+    [message, localId]
+  );
+}
+
+// Actividades del usuario que todavía no están en el servidor, rechazadas incluidas (CA-24).
+export async function countPendingUploads(userId: string) {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM activities WHERE status = 'PENDING_SYNC' AND user_id = ?`,
+    [userId]
+  );
+  return row?.n ?? 0;
+}
+
+// Todos los client_generated_id del teléfono, de cualquier usuario: la columna es única, así
+// que una actividad que ya existe no se vuelve a guardar al recuperar (CA-22).
+export async function listClientIds() {
+  const db = await getDb();
+  const rows = await db.getAllAsync<{ id: string }>(
+    'SELECT client_generated_id AS id FROM activities'
+  );
+  return new Set(rows.map((r) => r.id));
+}
+
+// Guarda una actividad recuperada como SYNCED, con sus métricas y puntos, en una sola
+// transacción. No trae lecturas del barómetro (RN-6). Devuelve su local_id.
+export async function insertDownloadedActivity(activity: DownloadedActivity, userId: string) {
+  const db = await getDb();
+  let localId = 0;
+  await db.withExclusiveTransactionAsync(async (tx) => {
+    const result = await tx.runAsync(
+      `INSERT INTO activities
+         (client_generated_id, user_id, type, status, startedAt, endedAt, elevation_source,
+          distance_meters, duration_seconds, elevation_gain_meters, elevation_loss_meters, server_id)
+       VALUES (?, ?, ?, 'SYNCED', ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        activity.clientGeneratedId,
+        userId,
+        activity.type,
+        activity.startedAt,
+        activity.endedAt,
+        activity.elevationSource,
+        activity.distanceMeters,
+        activity.durationSeconds,
+        activity.elevationGainMeters,
+        activity.elevationLossMeters,
+        activity.serverId,
+      ]
+    );
+    localId = result.lastInsertRowId;
+
+    // Una sentencia preparada para los miles de puntos de una actividad larga.
+    const insert = await tx.prepareAsync(
+      `INSERT INTO activity_points
+       (activity_id, sequence, latitude, longitude, altitude, accuracy, recordedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    );
+    try {
+      for (const p of activity.points) {
+        await insert.executeAsync([
+          localId,
+          p.sequence,
+          p.latitude,
+          p.longitude,
+          p.altitude,
+          p.accuracy,
+          p.recordedAt,
+        ]);
+      }
+    } finally {
+      await insert.finalizeAsync();
+    }
+  });
+  return localId;
 }
 
 // Actividades terminadas con métricas pendientes: cerradas al abrir la app o

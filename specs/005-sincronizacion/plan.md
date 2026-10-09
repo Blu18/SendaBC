@@ -141,7 +141,7 @@ CREATE INDEX IF NOT EXISTS idx_activities_sync ON activities(user_id, status);
 - `markSynced(localId, serverId)`: solo si sigue en `PENDING_SYNC`. Borra `sync_error`.
 - `markSyncError(localId, message)`.
 - `countPendingUploads(userId)`: para el aviso al cerrar sesión (CA-24).
-- `listClientIds(userId)`: los `clientGeneratedId` locales, para saber qué falta descargar.
+- `listClientIds()`: los `clientGeneratedId` locales **de cualquier usuario**, para saber qué falta descargar. No se filtra por usuario porque la columna es única en todo el teléfono: guardar uno repetido fallaría.
 - `insertDownloadedActivity(detail, userId)`: actividad `SYNCED` con métricas, fuente, `server_id` y todos sus puntos, en una transacción. No tiene lecturas de barómetro (RN-6).
 
 ### Lógica pura (`lib/sync/`, con pruebas Vitest)
