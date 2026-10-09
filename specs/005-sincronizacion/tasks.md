@@ -35,7 +35,8 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 - [x] T8 — Instalar `expo-network` (`npx expo install expo-network`). (D2)
   - Versión `~57.0.2`. No necesita plugin en `app.json`. Expone `getNetworkStateAsync`, `addNetworkStateListener` y `useNetworkState`. El lockfile solo agrega `expo-network`, sin dependencias transitivas.
-- [ ] T9 — Migración SQLite **v4**: `server_id`, `sync_error` e índice `idx_activities_sync (user_id, status)`.
+- [x] T9 — Migración SQLite **v4**: `server_id`, `sync_error` e índice `idx_activities_sync (user_id, status)`.
+  - Probada con `node:sqlite` usando el SQL extraído de `sqlite.ts`: instalación nueva → v4; teléfono en v3 con una actividad → v4 conservándola (`server_id` y `sync_error` en NULL); reapertura sin cambios.
 - [ ] T10 — En `lib/db/activities.ts`: `serverId` y `syncError` en `Activity`; `listUploadable(userId, { includeRejected })`, `markSynced`, `markSyncError`, `countPendingUploads`, `listClientIds`, `insertDownloadedActivity` (transacción, `SYNCED`, sin lecturas de barómetro). (CA-3, CA-13, CA-17, CA-19, CA-21, CA-22, CA-24, RN-6)
 
 ## Frontend — sincronización

@@ -1,7 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 
 // Versión del esquema local (PRAGMA user_version). Súbela al agregar un paso en migrate().
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -87,6 +87,19 @@ async function migrate(db: SQLite.SQLiteDatabase) {
           ON barometer_readings(activity_id, recorded_at);
       `);
       version = 3;
+    }
+
+    // v4: sincronización con el servidor (spec 005). server_id: id de la actividad en el
+    // servidor, al subirla o recuperarla. sync_error: NULL = sin error; con texto = el servidor
+    // la rechazó ("No se pudo subir", CA-11), sin cambiar su estado PENDING_SYNC (D6).
+    if (version < 4) {
+      await tx.execAsync(`
+        ALTER TABLE activities ADD COLUMN server_id TEXT;
+        ALTER TABLE activities ADD COLUMN sync_error TEXT;
+
+        CREATE INDEX IF NOT EXISTS idx_activities_sync ON activities(user_id, status);
+      `);
+      version = 4;
     }
 
     await tx.execAsync(`PRAGMA user_version = ${DB_VERSION}`);
