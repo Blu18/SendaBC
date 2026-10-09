@@ -48,7 +48,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - Además `classifyBatchResponse`: empareja los resultados por `clientGeneratedId` (no por orden) y deja pendiente cualquier actividad sin resultado reconocible (CA-13). Un 4xx inesperado (400, 404, 429) también se reintenta, para no perder nunca una actividad. 19 pruebas.
 - [x] T13 — `lib/sync/api.ts`: `uploadBatch`, `listRemoteActivities`, `getRemoteActivity` sobre `apiFetch` con `timeoutMs` (30 s / 10 s / 30 s, D10).
   - Cada función devuelve `{ ok: true, data }` o `{ ok: false, failure }` (el `Failure` de `classifyFailure`): el motor no maneja excepciones. Una respuesta 200 con un cuerpo inesperado también es un fallo, para no marcar nada por error (CA-13). Incluye `toDownloadedActivity`, que convierte el detalle del servidor para `insertDownloadedActivity` y descarta las actividades incompletas. 15 pruebas con `fetch` simulado.
-- [ ] T14 — `lib/sync/syncEngine.ts`: `configure`, `requestSync({ manual })` (una sola sincronización a la vez; si llega otra petición, se repite al terminar), ciclo subir → descargar, temporizador de reintento, `subscribe`. Pruebas con `lib/db`, `lib/sync/api` y `expo-network` simulados:
+- [x] T14 — `lib/sync/syncEngine.ts`: `configure`, `requestSync({ manual })` (una sola sincronización a la vez; si llega otra petición, se repite al terminar), ciclo subir → descargar, temporizador de reintento, `subscribe`. Pruebas con `lib/db`, `lib/sync/api` y `expo-network` simulados:
   - solo sube lo que devuelve `listUploadable` del usuario configurado;
   - marca `synced` / `rejected` según cada resultado;
   - un fallo de red programa el reintento con `retryDelayMs` y no marca nada;
@@ -59,6 +59,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - dos `requestSync` seguidos no corren en paralelo.
 
   (CA-2, CA-3, CA-9, CA-11, CA-12, CA-13, CA-15, CA-16, CA-17, CA-19, CA-20, CA-22)
+  - El motor es `createSyncEngine(deps)` en `syncEngine.ts` (recibe base, API y red como dependencias) y la instancia real `syncEngine` se arma en `lib/sync/index.ts` con `lib/db`, `lib/sync/api` y `expo-network`; así se prueba sin el teléfono. `requestSync` devuelve `done`, `offline`, `retry`, `auth` o `no-session`. Un error inesperado (p. ej. de SQLite) también programa un reintento. 17 pruebas con temporizadores falsos; dos fallas introducidas a propósito (sincronizaciones en paralelo y reintento tras 401) las detectan.
 
 ## Frontend — integración y pantallas
 
