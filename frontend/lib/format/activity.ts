@@ -37,3 +37,11 @@ export const SYNC_STATUS_LABELS: Record<SyncStatus, string> = {
   synced: 'Sincronizada',
   rejected: 'No se pudo subir',
 };
+
+// Aviso al cerrar sesión con actividades sin subir (spec 005, CA-24). null = no hay que avisar.
+export function pendingUploadsWarning(pendientes: number): string | null {
+  if (pendientes <= 0) return null;
+  return pendientes === 1
+    ? 'Tienes 1 actividad sin subir. Se subirá cuando vuelvas a iniciar sesión.'
+    : `Tienes ${pendientes} actividades sin subir. Se subirán cuando vuelvas a iniciar sesión.`;
+}

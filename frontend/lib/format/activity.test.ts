@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SYNC_STATUS_LABELS, syncStatusOf } from './activity';
+import { pendingUploadsWarning, SYNC_STATUS_LABELS, syncStatusOf } from './activity';
 
 describe('syncStatusOf (spec 005, CA-14)', () => {
   it('SYNCED → Sincronizada', () => {
@@ -20,5 +20,23 @@ describe('syncStatusOf (spec 005, CA-14)', () => {
       synced: 'Sincronizada',
       rejected: 'No se pudo subir',
     });
+  });
+});
+
+describe('pendingUploadsWarning (spec 005, CA-24)', () => {
+  it('sin pendientes no hay aviso', () => {
+    expect(pendingUploadsWarning(0)).toBeNull();
+  });
+
+  it('con N pendientes muestra el número', () => {
+    expect(pendingUploadsWarning(2)).toBe(
+      'Tienes 2 actividades sin subir. Se subirán cuando vuelvas a iniciar sesión.'
+    );
+  });
+
+  it('con 1 pendiente usa singular', () => {
+    expect(pendingUploadsWarning(1)).toBe(
+      'Tienes 1 actividad sin subir. Se subirá cuando vuelvas a iniciar sesión.'
+    );
   });
 });

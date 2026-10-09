@@ -71,7 +71,8 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - `syncStatusOf` y `SYNC_STATUS_LABELS` en `lib/format/activity.ts` (4 pruebas), compartidos con el resumen (T18). Insignias: Sincronizada en verde chaparral, Pendiente en ocre, No se pudo subir en el color de error. Con el servidor caído, deslizar muestra "No se pudo conectar con el servidor. Se volverá a intentar en unos minutos." (CA-16 ampliado en la spec). El hook expone `reload` y recarga con `useSyncDataChanged`.
 - [x] T18 — `ActivitySummaryPage`: mostrar el estado de sincronización. (CA-14, CA-21)
   - La insignia va debajo de la fecha. El hook del resumen relee la actividad con `useSyncDataChanged`, así que al detener pasa de "Pendiente de subir" a "Sincronizada" sin salir del resumen (M1). `SyncBadge` se movió a `components/ui/SyncBadge.tsx` para compartirla con el historial.
-- [ ] T19 — `MainPage`: antes de cerrar sesión, `countPendingUploads(userId)`; si es mayor a 0, `Alert` "Tienes N actividades sin subir. Se subirán cuando vuelvas a iniciar sesión." con "Cancelar" y "Cerrar sesión". (CA-24)
+- [x] T19 — `MainPage`: antes de cerrar sesión, `countPendingUploads(userId)`; si es mayor a 0, `Alert` "Tienes N actividades sin subir. Se subirán cuando vuelvas a iniciar sesión." con "Cancelar" y "Cerrar sesión". (CA-24)
+  - El texto sale de `pendingUploadsWarning` en `lib/format/activity.ts` (3 pruebas), con singular para 1 actividad. Si contar falla, se cierra sesión sin aviso: las actividades se conservan igual (RN-4).
 
 ## Documentación
 
