@@ -62,18 +62,28 @@ export const useRegistrar  = () => {
     })
 }
 
+const LOGIN_TIMEOUT_MS = 10_000;
+const LOGIN_ERROR_GENERICO = "Error al iniciar sesión. Inténtalo más tarde.";
+
 export const useLogin  = () => {
-    return useMutation({
+    return useMutation<LoginResponse, ApiError, Login>({
         mutationFn: async(login: Login) => {
+            // Sin red o sin respuesta en 10 s: mensaje genérico (como el registro, spec 001).
             const response = await apiFetch("/auth/login", null, {
                 method: "POST",
                 body: JSON.stringify(login),
+            }, LOGIN_TIMEOUT_MS).catch(() => {
+                throw { message: LOGIN_ERROR_GENERICO, fieldErrors: {} } satisfies ApiError;
             })
 
             const payload = await response.json().catch(() => null)
 
+            if (response.status >= 500) {
+                throw { message: LOGIN_ERROR_GENERICO, fieldErrors: {} } satisfies ApiError;
+            }
+            // CA-2: el 401 trae "Credenciales invalidas".
             if (!response.ok) {
-                throw payload ?? { message: "Error al iniciar sesión" };
+                throw parseApiError(payload, LOGIN_ERROR_GENERICO);
             }
 
             return payload as LoginResponse

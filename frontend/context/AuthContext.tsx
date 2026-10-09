@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { tokenStorage, userIdStorage } from '../lib/auth/tokenStorage';
 
 type AuthContextValue = {
@@ -36,12 +36,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserId(newUserId);
   };
 
-  const logout = async () => {
+  // Estable entre renders: App.tsx lo usa para cerrar la sesión ante un 401 (spec 002, CA-5).
+  const logout = useCallback(async () => {
     await tokenStorage.clear();
     await userIdStorage.clear();
     setToken(null);
     setUserId(null);
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ token, userId, isLoading, login, logout }}>
