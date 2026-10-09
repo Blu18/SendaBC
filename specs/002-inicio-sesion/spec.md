@@ -1,6 +1,6 @@
 # 002 — Inicio de sesión y sesión persistente
 
-- **Estado:** Implementada con pendientes
+- **Estado:** En progreso
 - **Semana:** 2
 - **Fecha:** 2026-09-30 (retro-spec)
 
@@ -39,3 +39,5 @@ Una persona con cuenta debe poder entrar a la app y no tener que volver a escrib
 ## Historial
 
 - 2026-09-30 — Retro-spec creada a partir del código existente.
+- 2026-10-08 — CA-8: se quitan los stubs `PATCH /user/:id` y `DELETE /user/:id` (y `UpdateUserDto`). Editar o borrar la cuenta se especifica en la spec 008, con rutas `/user/me`.
+- 2026-10-08 — Tareas de backend T1–T4 completadas, con pruebas Vitest y e2e. Quedan las de frontend (T5–T7).

@@ -9,9 +9,9 @@ Passport con dos estrategias: `local` (email + contraseña → `AuthService.vali
 ## Verificación contra la constitución
 
 - [x] Art. 3.3 — `GET /user/profile` usa el id del token.
-- [ ] Art. 3.3 — `PATCH /user/:id` y `DELETE /user/:id` toman el id de la URL (hoy son stubs que no hacen nada; corregir antes de implementarlos).
+- [x] Art. 3.3 — Se quitaron `PATCH /user/:id` y `DELETE /user/:id` (eran stubs). Las rutas de "mi usuario" se harán en `/user/me` en la spec 008 (T2).
 - [x] Art. 3.4 — Token en `expo-secure-store`.
-- [ ] Art. 3.6 — `jwt.config.ts` usa `''` como secreto por defecto.
+- [x] Art. 3.6 — `jwt.config.ts` lanza un error al arrancar si falta `JWT_SECRET` (T1); probado en `jwt.config.spec.ts`.
 
 ## Backend
 
@@ -21,8 +21,6 @@ Passport con dos estrategias: `local` (email + contraseña → `AuthService.vali
 |---|---|---|---|---|---|
 | POST | `/auth/login` | Pública (`LocalAuthGuard`) | `{ email, password }` | `200 { id, token }` | `401` |
 | GET | `/user/profile` | JWT | — | `200` usuario sin `passwordHash` | `401` |
-| PATCH | `/user/:id` | JWT | — | stub | — |
-| DELETE | `/user/:id` | JWT | — | stub | — |
 
 ### Archivos
 

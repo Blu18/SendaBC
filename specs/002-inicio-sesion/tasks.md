@@ -15,10 +15,10 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 ### Backend
 
-- [ ] T1 — `jwt.config.ts`: fallar al arrancar si falta `JWT_SECRET` (sin valor por defecto). (RN-2)
-- [ ] T2 — Reemplazar `PATCH /user/:id` y `DELETE /user/:id` por `/user/me` usando `req.user.id`, o quitarlos hasta la spec 008. (CA-8)
-- [ ] T3 — Pruebas Vitest de `AuthService.validateUser`: usuario inexistente → `401`; contraseña incorrecta → `401`; correcta → `{ id }`. (CA-1, CA-2)
-- [ ] T4 — Prueba e2e: login correcto → `200` con token; con ese token `GET /user/profile` → `200` sin `passwordHash`; sin token → `401`. (CA-1, CA-7)
+- [x] T1 — `jwt.config.ts`: fallar al arrancar si falta `JWT_SECRET` (sin valor por defecto). (RN-2)
+- [x] T2 — Reemplazar `PATCH /user/:id` y `DELETE /user/:id` por `/user/me` usando `req.user.id`, o quitarlos hasta la spec 008. (CA-8)
+- [x] T3 — Pruebas Vitest de `AuthService.validateUser`: usuario inexistente → `401`; contraseña incorrecta → `401`; correcta → `{ id }`. (CA-1, CA-2)
+- [x] T4 — Prueba e2e: login correcto → `200` con token; con ese token `GET /user/profile` → `200` sin `passwordHash`; sin token → `401`. (CA-1, CA-7)
 
 ### Frontend
 
@@ -28,16 +28,18 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 ## Verificación
 
+En `backend/`: `npm test` corre `auth.service.spec.ts` y `jwt.config.spec.ts`; `npm run test:e2e` corre `test/auth.e2e-spec.ts` contra la base de `DATABASE_URL` (crea un usuario `e2e-login-<uuid>@senda.bc` y lo borra al terminar).
+
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | T4 + caso M1 | Ambas | Parcial (login ok; la navegación permite volver a Login) |
-| CA-2 | T3 + caso M2 | Ambas | Parcial (API ok, UI no muestra error) |
+| CA-1 | T3 + T4 + caso M1 | Ambas | Parcial (API probada; la navegación permite volver a Login: T5) |
+| CA-2 | T3 + T4 + caso M2 | Ambas | Parcial (API probada; la UI no muestra el error: T6) |
 | CA-3 | Caso M2 | Manual | Cumple |
 | CA-4 | Caso M3 | Manual | Cumple |
-| CA-5 | Caso M4 | Manual | Pendiente |
+| CA-5 | T4 (token inválido → `401`) + caso M4 | Ambas | Parcial (API probada; falta el manejo en la app: T7) |
 | CA-6 | Caso M5 | Manual | Cumple |
-| CA-7 | T4 | Automatizada | Pendiente de prueba |
-| CA-8 | T2 + revisión de rutas | Revisión | Pendiente |
+| CA-7 | T4 | Automatizada | Cumple |
+| CA-8 | T2 + `test/auth.e2e-spec.ts` (`GET/PATCH/PUT/DELETE /user/:id` → `404` con token válido) | Automatizada | Cumple |
 
 ### Casos manuales
 
