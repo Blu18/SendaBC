@@ -78,7 +78,7 @@ describe('listUploadable (spec 005, CA-3, CA-17, CA-19)', () => {
 
   it('las rechazadas solo entran con includeRejected (CA-16)', async () => {
     const id = await terminada(A, '2026-10-09T10:00:00.000Z');
-    await markSyncError(id, 'El fin de la actividad debe ser posterior al inicio');
+    await markSyncError(id, 'El fin de la actividad no puede ser anterior al inicio');
 
     expect(await listUploadable(A)).toEqual([]);
     expect((await listUploadable(A, { includeRejected: true })).map((a) => a.localId)).toEqual([

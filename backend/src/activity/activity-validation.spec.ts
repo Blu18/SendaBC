@@ -54,13 +54,24 @@ describe('validarActividad (spec 005, CA-11, RN-5)', () => {
     if (resultado.ok) expect(resultado.actividad).not.toHaveProperty('userId');
   });
 
-  it('rechaza un fin anterior o igual al inicio', async () => {
+  it('rechaza un fin anterior al inicio', async () => {
     expect(
       await erroresDe({ ...valida, endedAt: '2026-10-09T09:00:00.000Z' }),
-    ).toEqual(['El fin de la actividad debe ser posterior al inicio']);
-    expect(await erroresDe({ ...valida, endedAt: valida.startedAt })).toEqual([
-      'El fin de la actividad debe ser posterior al inicio',
-    ]);
+    ).toEqual(['El fin de la actividad no puede ser anterior al inicio']);
+  });
+
+  it('acepta un fin igual al inicio: actividad cerrada sin puntos (spec 003, CA-10)', async () => {
+    expect(
+      await erroresDe({
+        ...valida,
+        endedAt: valida.startedAt,
+        durationSeconds: 0,
+        distanceMeters: 0,
+        elevationGainMeters: 0,
+        elevationLossMeters: 0,
+        points: [],
+      }),
+    ).toEqual([]);
   });
 
   it('rechaza una latitud fuera de rango e indica el punto', async () => {

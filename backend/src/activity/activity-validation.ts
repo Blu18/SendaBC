@@ -32,8 +32,8 @@ export async function validarActividad(
 export function reglasExtra(actividad: ActivityUploadDto): string[] {
   const errores: string[] = [];
 
-  if (Date.parse(actividad.endedAt) <= Date.parse(actividad.startedAt)) {
-    errores.push('El fin de la actividad debe ser posterior al inicio');
+  if (Date.parse(actividad.endedAt) < Date.parse(actividad.startedAt)) {
+    errores.push('El fin de la actividad no puede ser anterior al inicio');
   }
 
   const vistas = new Set<number>();

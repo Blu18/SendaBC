@@ -56,7 +56,7 @@ Todos con `JwtAuthGuard`. Sin token válido → `401` y no se guarda nada.
 ActivityUpload = {
   clientGeneratedId: string;          // UUID v4
   type: 'HIKING' | 'TRAIL_RUNNING' | 'CYCLING';
-  startedAt: string; endedAt: string; // ISO 8601, endedAt > startedAt
+  startedAt: string; endedAt: string; // ISO 8601, endedAt >= startedAt (RN-5)
   distanceMeters: number; durationSeconds: number;
   elevationGainMeters: number; elevationLossMeters: number;   // todas >= 0
   elevationSource: 'BAROMETER' | 'GPS';
@@ -76,7 +76,7 @@ ActivityDetail  = ActivitySummary & { points: ActivityUpload['points'] }
 ```
 
 **Reglas de la subida** (`ActivityService.syncBatch`):
-1. Cada actividad se valida con `class-validator` (`validate(plainToInstance(ActivityUploadDto, item))`) más las reglas de RN-5 que el decorador no cubre: `endedAt > startedAt`, secuencias sin repetir. Si falla → `REJECTED` con los mensajes.
+1. Cada actividad se valida con `class-validator` (`validate(plainToInstance(ActivityUploadDto, item))`) más las reglas de RN-5 que el decorador no cubre: `endedAt >= startedAt`, secuencias sin repetir. Si falla → `REJECTED` con los mensajes.
 2. Si ya existe una actividad con ese `clientGeneratedId`:
    - del mismo usuario → `ALREADY_EXISTS` con su `id`; no se modifica (RN-2);
    - de otro usuario → `REJECTED` ("Identificador de actividad inválido"), sin revelar que existe.

@@ -73,7 +73,7 @@ Hoy las actividades (spec 003) y sus métricas (spec 004) solo existen en el tel
 - RN-2: Las actividades son inmutables después de terminar: no hay ediciones que sincronizar, solo altas. Si el servidor ya tiene una actividad con ese identificador, la versión del servidor se conserva.
 - RN-3: Estados de una actividad en el teléfono: `RECORDING` → `PENDING_SYNC` → `SYNCED` (constitución 2.3). "No se pudo subir" es una marca sobre `PENDING_SYNC`, no un estado nuevo del ciclo. Las actividades recuperadas del servidor entran directamente como `SYNCED`.
 - RN-4: Sincronizar nunca borra datos del teléfono (constitución 2.4).
-- RN-5: El servidor valida cada actividad: tipo válido, fin posterior al inicio, latitudes entre −90 y 90, longitudes entre −180 y 180, secuencia de puntos sin repetir, métricas no negativas y fuente de elevación válida.
+- RN-5: El servidor valida cada actividad: tipo válido, fin igual o posterior al inicio (una actividad que se cerró sin puntos dura 0 s, spec 003 CA-10), latitudes entre −90 y 90, longitudes entre −180 y 180, secuencia de puntos sin repetir, métricas no negativas y fuente de elevación válida.
 - RN-6: Una actividad recuperada no tiene lecturas del barómetro en el teléfono (CA-8); sus métricas son las guardadas en el servidor y no se recalculan.
 
 ## Requisitos no funcionales
@@ -107,6 +107,7 @@ Resueltas el 2026-10-08:
 
 ## Historial
 
+- 2026-10-09 — RN-5: el fin puede ser igual al inicio. Una actividad que se cierra al abrir la app sin haber recibido puntos queda con fin = inicio (spec 003, CA-10) y no debe quedar como "No se pudo subir" para siempre.
 - 2026-10-08 — Aprobada por el usuario.
 - 2026-10-08 — Se resuelven las preguntas abiertas P1–P8: se agregan sincronización manual, recuperación de actividades y aviso al cerrar sesión.
 - 2026-10-08 — Creación.

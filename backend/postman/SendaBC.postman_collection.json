@@ -159,7 +159,7 @@
                   "const [result] = pm.response.json().results;",
                   "pm.test('REJECTED con motivos en español', () => {",
                   "  pm.expect(result.status).to.eql('REJECTED');",
-                  "  pm.expect(result.errors).to.include('El fin de la actividad debe ser posterior al inicio');",
+                  "  pm.expect(result.errors).to.include('El fin de la actividad no puede ser anterior al inicio');",
                   "});"
                 ]
               }

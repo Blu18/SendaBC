@@ -133,7 +133,7 @@ describe('Sincronización de actividades (e2e, spec 005)', () => {
       {
         clientGeneratedId: invalida.clientGeneratedId,
         status: 'REJECTED',
-        errors: ['El fin de la actividad debe ser posterior al inicio'],
+        errors: ['El fin de la actividad no puede ser anterior al inicio'],
       },
     ]);
     idCorta = res.body.results[0].id;

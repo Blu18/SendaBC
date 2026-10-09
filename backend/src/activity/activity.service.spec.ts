@@ -77,7 +77,7 @@ describe('ActivityService.syncBatch (spec 005)', () => {
       {
         clientGeneratedId: A2,
         status: 'REJECTED',
-        errors: ['El fin de la actividad debe ser posterior al inicio'],
+        errors: ['El fin de la actividad no puede ser anterior al inicio'],
       },
     ]);
     expect(tx.activity.create).toHaveBeenCalledTimes(1);
