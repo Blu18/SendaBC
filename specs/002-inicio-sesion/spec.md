@@ -1,6 +1,6 @@
 # 002 — Inicio de sesión y sesión persistente
 
-- **Estado:** En progreso
+- **Estado:** Implementada
 - **Semana:** 2
 - **Fecha:** 2026-09-30 (retro-spec)
 
@@ -41,3 +41,5 @@ Una persona con cuenta debe poder entrar a la app y no tener que volver a escrib
 - 2026-09-30 — Retro-spec creada a partir del código existente.
 - 2026-10-08 — CA-8: se quitan los stubs `PATCH /user/:id` y `DELETE /user/:id` (y `UpdateUserDto`). Editar o borrar la cuenta se especifica en la spec 008, con rutas `/user/me`.
 - 2026-10-08 — Tareas de backend T1–T4 completadas, con pruebas Vitest y e2e. Quedan las de frontend (T5–T7).
+- 2026-10-08 — Tareas de frontend T5–T7 completadas. El login también usa el límite de 10 s y el mensaje genérico sin conexión (como el registro, spec 001), con su caso manual M6. Quedan los casos manuales en dispositivo.
+- 2026-10-08 — Casos manuales M1–M6 aprobados en dispositivo. Todos los CA verificados; la spec pasa a Implementada.

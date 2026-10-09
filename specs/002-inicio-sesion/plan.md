@@ -36,7 +36,9 @@ Passport con dos estrategias: `local` (email + contraseña → `AuthService.vali
 - `frontend/lib/auth/tokenStorage.ts` — SecureStore, clave `sendabc_token`.
 - `frontend/App.tsx` — `Gate` muestra spinner mientras `isLoading`; stack `Index → Login/Register → MainPage`.
 - `frontend/pages/auth/index.tsx` — redirige con `navigation.reset` a `MainPage` si hay token.
-- `frontend/pages/auth/login.tsx` — formulario + `useLogin()`.
+- `frontend/pages/auth/login.tsx` — formulario + `useLogin()`. Muestra el error del servidor, deshabilita el botón mientras `isPending` y entra con `navigation.reset` a `MainPage` (T5, T6).
+- `frontend/lib/api/client.ts` — si una petición **con token** responde `401`, `apiFetch` llama al manejador de `setUnauthorizedHandler()` (T7). El `401` del login no cuenta: va sin token.
+- `frontend/App.tsx` — `Gate` registra el manejador: `logout()` y `navigationRef.reset` a `Index`, desde cualquier pantalla (CA-5).
 - `frontend/pages/main/mainPage.tsx` — `useProfile()` y botón de cerrar sesión.
 
 ## Decisiones
