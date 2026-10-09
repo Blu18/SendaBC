@@ -9,5 +9,8 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.spec.ts'],
+    // NestJS carga reflect-metadata al arrancar; en las pruebas unitarias hace falta para
+    // los decoradores que leen tipos, como @Type de class-transformer.
+    setupFiles: ['reflect-metadata'],
   },
 });
