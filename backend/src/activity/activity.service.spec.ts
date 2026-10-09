@@ -1,5 +1,10 @@
+import { NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { ActivityService, ID_AJENO } from './activity.service.js';
+import {
+  ActivityService,
+  ID_AJENO,
+  NO_ENCONTRADA,
+} from './activity.service.js';
 import type { PrismaService } from '../prisma.service.js';
 
 const USUARIO = '11111111-1111-4111-8111-111111111111';
@@ -216,5 +221,141 @@ describe('ActivityService.syncBatch (spec 005)', () => {
       [null, 'REJECTED'],
       [null, 'REJECTED'],
     ]);
+  });
+});
+
+// Fila como la devuelve Prisma con SUMMARY_SELECT.
+function fila(id: string, startedAt: string, points = 3) {
+  return {
+    id,
+    clientGeneratedId: A1,
+    type: 'HIKING',
+    startedAt: new Date(startedAt),
+    endedAt: new Date('2026-10-09T11:00:00.000Z'),
+    distanceMeters: 5234.7,
+    durationSeconds: 3600,
+    elevationGainMeters: 312,
+    elevationLossMeters: 298,
+    elevationSource: 'BAROMETER',
+    _count: { points },
+  };
+}
+
+function montarLectura() {
+  const prisma = {
+    activity: { findMany: vi.fn(), findFirst: vi.fn() },
+    $queryRaw: vi.fn(),
+  };
+  const service = new ActivityService(prisma as unknown as PrismaService);
+  return { service, prisma };
+}
+
+describe('ActivityService.list (spec 005, CA-20)', () => {
+  it('devuelve mis actividades sincronizadas, la más reciente primero', async () => {
+    const { service, prisma } = montarLectura();
+    prisma.activity.findMany.mockResolvedValue([
+      fila('srv-2', '2026-10-09T10:00:00.000Z', 5400),
+    ]);
+
+    const result = await service.list(USUARIO);
+
+    expect(prisma.activity.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: USUARIO, status: 'SYNCED' },
+        orderBy: { startedAt: 'desc' },
+      }),
+    );
+    expect(result).toEqual([
+      {
+        id: 'srv-2',
+        clientGeneratedId: A1,
+        type: 'HIKING',
+        startedAt: '2026-10-09T10:00:00.000Z',
+        endedAt: '2026-10-09T11:00:00.000Z',
+        distanceMeters: 5234.7,
+        durationSeconds: 3600,
+        elevationGainMeters: 312,
+        elevationLossMeters: 298,
+        elevationSource: 'BAROMETER',
+        pointCount: 5400,
+      },
+    ]);
+  });
+
+  it('sin actividades devuelve una lista vacía', async () => {
+    const { service, prisma } = montarLectura();
+    prisma.activity.findMany.mockResolvedValue([]);
+
+    expect(await service.list(USUARIO)).toEqual([]);
+  });
+});
+
+describe('ActivityService.getDetail (spec 005, CA-21)', () => {
+  it('devuelve la actividad con sus puntos en orden y fechas ISO', async () => {
+    const { service, prisma } = montarLectura();
+    prisma.activity.findFirst.mockResolvedValue(
+      fila('srv-2', '2026-10-09T10:00:00.000Z', 2),
+    );
+    prisma.$queryRaw.mockResolvedValue([
+      {
+        sequence: 1,
+        latitude: 31.86,
+        longitude: -116.59,
+        altitude: 20.5,
+        accuracy: 4,
+        recordedAt: new Date('2026-10-09T10:00:01.000Z'),
+      },
+      {
+        sequence: 2,
+        latitude: 31.861,
+        longitude: -116.591,
+        altitude: null,
+        accuracy: null,
+        recordedAt: new Date('2026-10-09T10:00:03.000Z'),
+      },
+    ]);
+
+    const detail = await service.getDetail(USUARIO, 'srv-2');
+
+    expect(prisma.activity.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'srv-2', userId: USUARIO, status: 'SYNCED' },
+      }),
+    );
+    expect(prisma.$queryRaw.mock.calls[0][0].join('?')).toContain(
+      'ST_Y(location) AS latitude',
+    );
+    expect(detail.pointCount).toBe(2);
+    expect(detail.points).toEqual([
+      {
+        sequence: 1,
+        latitude: 31.86,
+        longitude: -116.59,
+        altitude: 20.5,
+        accuracy: 4,
+        recordedAt: '2026-10-09T10:00:01.000Z',
+      },
+      {
+        sequence: 2,
+        latitude: 31.861,
+        longitude: -116.591,
+        altitude: null,
+        accuracy: null,
+        recordedAt: '2026-10-09T10:00:03.000Z',
+      },
+    ]);
+  });
+
+  it('responde 404 si no existe o es de otra cuenta, sin leer puntos', async () => {
+    const { service, prisma } = montarLectura();
+    prisma.activity.findFirst.mockResolvedValue(null);
+
+    const error = await service
+      .getDetail(USUARIO, 'srv-ajena')
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(NotFoundException);
+    expect((error as NotFoundException).message).toBe(NO_ENCONTRADA);
+    expect(prisma.$queryRaw).not.toHaveBeenCalled();
   });
 });

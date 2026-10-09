@@ -12,14 +12,15 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - `validarActividad()` en `backend/src/activity/activity-validation.ts` devuelve los errores en español con el número de punto ("Punto 2: La latitud debe estar entre -90 y 90"), sin repetidos y como máximo 10. `SyncRequestDto` solo valida la forma del lote, sin `@ValidateNested`, para que una actividad inválida no rechace a las demás. Se agregó `reflect-metadata` a `setupFiles` de Vitest, porque `@Type` lo necesita fuera de NestJS.
 - [x] T3 — `ActivityService.syncBatch(userId, items)`: validación por actividad; `ALREADY_EXISTS` si el `clientGeneratedId` es del mismo usuario y `REJECTED` si es de otro; transacción con `activity.create` (status `SYNCED`, `userId` del token), `INSERT … unnest` de puntos y `ST_MakeLine` para el recorrido con 2 o más puntos; `P2002` → `ALREADY_EXISTS`; errores inesperados se relanzan. Pruebas con Prisma simulado: lote mixto válido + inválido; reenvío; carrera `P2002`; `clientGeneratedId` ajeno; actividad con 0 puntos sin recorrido; el `userId` del body se ignora. (CA-5, CA-6, CA-10, CA-11, CA-18)
   - 11 pruebas con Prisma simulado. Además se comprobó el SQL crudo contra Supabase en una transacción revertida: 5 400 puntos en ~2.2 s, recorrido `ST_LineString` SRID 4326 con 5 400 vértices, nulos de altitud y precisión respetados, orden latitud/longitud correcto y reenvío → `ALREADY_EXISTS`. La transacción usa un límite de 30 s (el de Prisma por defecto es 5 s).
-- [ ] T4 — `ActivityService.list(userId)` (con `_count.points`, la más reciente primero) y `getDetail(userId, id)` (puntos con `ST_Y` / `ST_X`, ordenados por `sequence`; `404` si no existe o es de otro usuario). Pruebas con Prisma simulado. (CA-20, CA-21)
+- [x] T4 — `ActivityService.list(userId)` (con `_count.points`, la más reciente primero) y `getDetail(userId, id)` (puntos con `ST_Y` / `ST_X`, ordenados por `sequence`; `404` si no existe o es de otro usuario). Pruebas con Prisma simulado. (CA-20, CA-21)
+  - Solo devuelve actividades `SYNCED`. 4 pruebas con Prisma simulado. Ida y vuelta verificada contra Supabase (transacción revertida): el resumen coincide exacto con lo enviado y el detalle pedido por otro usuario responde 404. Las coordenadas leídas pueden diferir en el dígito 15 (≈ 10⁻¹⁴ grados), porque la conexión de Supabase convierte `float8` a texto con 15 dígitos significativos; el valor guardado es exacto.
 - [ ] T5 — `ActivityController` (`POST /activities/sync`, `GET /activities`, `GET /activities/:id`) con `JwtAuthGuard`, `ActivityModule`, registro en `AppModule` y `app.useBodyParser('json', { limit: '5mb' })` en `main.ts`. (CA-7, CA-18)
 - [ ] T6 — `test/activity.e2e-spec.ts` contra la base, con un usuario de prueba que se borra al final:
   - lote con una actividad válida y una inválida → `CREATED` + `REJECTED`;
   - reenvío → `ALREADY_EXISTS` con el mismo `id`;
   - actividad de 5 400 puntos → `CREATED`;
   - en la base, `ST_GeometryType(path) = 'ST_LineString'`, `ST_SRID(path) = 4326` y el número de puntos coincide;
-  - `GET /activities` y `GET /activities/:id` devuelven las mismas métricas, fuente y puntos enviados;
+  - `GET /activities` y `GET /activities/:id` devuelven las mismas métricas, fuente y puntos enviados; Las coordenadas se comparan con tolerancia (`toBeCloseTo(x, 9)`), ver la nota de T4;
   - sin token → `401`;
   - un `userId` en el body no cambia el dueño;
   - el detalle de una actividad de otro usuario → `404`.

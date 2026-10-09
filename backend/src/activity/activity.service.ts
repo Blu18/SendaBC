@@ -1,5 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { ActivityStatus, Prisma } from '@prisma/client';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ActivityStatus,
+  ActivityType,
+  ElevationSource,
+  Prisma,
+} from '@prisma/client';
 import { PrismaService } from '../prisma.service.js';
 import { validarActividad } from './activity-validation.js';
 import type { ActivityUploadDto } from './dto/activity-upload.dto.js';
@@ -17,8 +22,54 @@ export type SyncResult =
       errors: string[];
     };
 
+// Lo que necesita el teléfono para mostrar una actividad recuperada en el historial y en
+// su resumen (spec 005, CA-20, CA-21). Fechas en ISO 8601.
+export type ActivitySummary = {
+  id: string;
+  clientGeneratedId: string | null;
+  type: ActivityType;
+  startedAt: string;
+  endedAt: string | null;
+  distanceMeters: number | null;
+  durationSeconds: number | null;
+  elevationGainMeters: number | null;
+  elevationLossMeters: number | null;
+  elevationSource: ElevationSource | null;
+  pointCount: number;
+};
+
+export type ActivityPointOut = {
+  sequence: number;
+  latitude: number;
+  longitude: number;
+  altitude: number | null;
+  accuracy: number | null;
+  recordedAt: string;
+};
+
+export type ActivityDetail = ActivitySummary & { points: ActivityPointOut[] };
+
 // Mensaje genérico: no revela que el identificador existe y es de otra cuenta.
 export const ID_AJENO = 'Identificador de actividad inválido';
+
+// Igual para "no existe" y "es de otra cuenta" (spec 005, plan: GET /activities/:id).
+export const NO_ENCONTRADA = 'Actividad no encontrada';
+
+const SUMMARY_SELECT = {
+  id: true,
+  clientGeneratedId: true,
+  type: true,
+  startedAt: true,
+  endedAt: true,
+  distanceMeters: true,
+  durationSeconds: true,
+  elevationGainMeters: true,
+  elevationLossMeters: true,
+  elevationSource: true,
+  _count: { select: { points: true } },
+} satisfies Prisma.ActivitySelect;
+
+type SummaryRow = Prisma.ActivityGetPayload<{ select: typeof SUMMARY_SELECT }>;
 
 // Guardar una actividad de 3 h (≈ 5 400 puntos) puede tardar más que el límite por defecto
 // de una transacción interactiva de Prisma (5 s).
@@ -37,6 +88,49 @@ export class ActivityService {
       results.push(await this.syncOne(userId, item));
     }
     return results;
+  }
+
+  // Mis actividades sincronizadas, la más reciente primero (CA-20). Solo las SYNCED: son las
+  // terminadas que subió el teléfono.
+  async list(userId: string): Promise<ActivitySummary[]> {
+    const rows = await this.prisma.activity.findMany({
+      where: { userId, status: ActivityStatus.SYNCED },
+      orderBy: { startedAt: 'desc' },
+      select: SUMMARY_SELECT,
+    });
+    return rows.map(aResumen);
+  }
+
+  // Una actividad con todos sus puntos, para recuperarla en otro teléfono (CA-21). Si no
+  // existe o es de otra cuenta responde 404 en ambos casos.
+  async getDetail(userId: string, id: string): Promise<ActivityDetail> {
+    const row = await this.prisma.activity.findFirst({
+      where: { id, userId, status: ActivityStatus.SYNCED },
+      select: SUMMARY_SELECT,
+    });
+    if (!row) throw new NotFoundException(NO_ENCONTRADA);
+
+    // Prisma no lee columnas Unsupported: la ubicación se separa con ST_Y / ST_X.
+    const points = await this.prisma.$queryRaw<
+      (Omit<ActivityPointOut, 'recordedAt'> & { recordedAt: Date })[]
+    >`
+      SELECT sequence,
+             ST_Y(location) AS latitude,
+             ST_X(location) AS longitude,
+             "altitudeMeters" AS altitude,
+             "accuracyMeters" AS accuracy,
+             "recordedAt"
+      FROM activity_points
+      WHERE "activityId" = ${row.id}::uuid
+      ORDER BY sequence`;
+
+    return {
+      ...aResumen(row),
+      points: points.map((p) => ({
+        ...p,
+        recordedAt: p.recordedAt.toISOString(),
+      })),
+    };
   }
 
   private async syncOne(userId: string, item: unknown): Promise<SyncResult> {
@@ -158,6 +252,15 @@ function resultadoExistente(
     clientGeneratedId: actividad.clientGeneratedId,
     status: 'REJECTED',
     errors: [ID_AJENO],
+  };
+}
+
+function aResumen({ _count, ...row }: SummaryRow): ActivitySummary {
+  return {
+    ...row,
+    startedAt: row.startedAt.toISOString(),
+    endedAt: row.endedAt?.toISOString() ?? null,
+    pointCount: _count.points,
   };
 }
 
