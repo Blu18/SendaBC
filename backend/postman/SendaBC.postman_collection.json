@@ -1,0 +1,265 @@
+{
+  "info": {
+    "name": "SendaBC API",
+    "description": "Colección para validar la API de SendaBC (constitución 6.3). Ejecutar en orden: '1. Registro' (solo la primera vez), '2. Login' guarda el token y luego las peticiones de actividades. Configura las variables baseUrl, email y password de la colección antes de empezar.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "email", "value": "postman@senda.bc" },
+    { "key": "password", "value": "contrasena-postman" },
+    { "key": "token", "value": "" },
+    { "key": "clientGeneratedId", "value": "" },
+    { "key": "activityId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "1. Registro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 201 la primera vez; 409 si la cuenta ya existe (spec 001).",
+                  "pm.test('201 o 409', () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));",
+                  "if (pm.response.code === 201) {",
+                  "  pm.test('no devuelve passwordHash', () => pm.expect(pm.response.json()).to.not.have.property('passwordHash'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"displayName\": \"Prueba Postman\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/user"
+          }
+        },
+        {
+          "name": "2. Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('devuelve id y token', () => {",
+                  "  pm.expect(body).to.have.property('id');",
+                  "  pm.expect(body).to.have.property('token');",
+                  "});",
+                  "pm.collectionVariables.set('token', body.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Actividades (spec 005)",
+      "item": [
+        {
+          "name": "Subir lote",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Cada ejecución sube una actividad nueva con un UUID v4 distinto.",
+                  "pm.collectionVariables.set('clientGeneratedId', pm.variables.replaceIn('{{$guid}}'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const [result] = pm.response.json().results;",
+                  "pm.test('CREATED (CA-5)', () => pm.expect(result.status).to.eql('CREATED'));",
+                  "pm.collectionVariables.set('activityId', result.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activities\": [\n    {\n      \"clientGeneratedId\": \"{{clientGeneratedId}}\",\n      \"type\": \"HIKING\",\n      \"startedAt\": \"2026-10-09T10:00:00.000Z\",\n      \"endedAt\": \"2026-10-09T10:00:06.000Z\",\n      \"distanceMeters\": 24.6,\n      \"durationSeconds\": 6,\n      \"elevationGainMeters\": 0,\n      \"elevationLossMeters\": 0,\n      \"elevationSource\": \"GPS\",\n      \"points\": [\n        { \"sequence\": 1, \"latitude\": 31.8667, \"longitude\": -116.5964, \"altitude\": 20.5, \"accuracy\": 4.2, \"recordedAt\": \"2026-10-09T10:00:00.000Z\" },\n        { \"sequence\": 2, \"latitude\": 31.8668, \"longitude\": -116.5965, \"altitude\": 21.1, \"accuracy\": 3.9, \"recordedAt\": \"2026-10-09T10:00:03.000Z\" },\n        { \"sequence\": 3, \"latitude\": 31.8669, \"longitude\": -116.5966, \"altitude\": null, \"accuracy\": null, \"recordedAt\": \"2026-10-09T10:00:06.000Z\" }\n      ]\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/activities/sync"
+          }
+        },
+        {
+          "name": "Reenviar la misma actividad",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const [result] = pm.response.json().results;",
+                  "pm.test('ALREADY_EXISTS con el mismo id (CA-10)', () => {",
+                  "  pm.expect(result.status).to.eql('ALREADY_EXISTS');",
+                  "  pm.expect(result.id).to.eql(pm.collectionVariables.get('activityId'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activities\": [\n    {\n      \"clientGeneratedId\": \"{{clientGeneratedId}}\",\n      \"type\": \"HIKING\",\n      \"startedAt\": \"2026-10-09T10:00:00.000Z\",\n      \"endedAt\": \"2026-10-09T10:00:06.000Z\",\n      \"distanceMeters\": 24.6,\n      \"durationSeconds\": 6,\n      \"elevationGainMeters\": 0,\n      \"elevationLossMeters\": 0,\n      \"elevationSource\": \"GPS\",\n      \"points\": []\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/activities/sync"
+          }
+        },
+        {
+          "name": "Lote con una actividad inválida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 aunque se rechace (CA-11)', () => pm.response.to.have.status(200));",
+                  "const [result] = pm.response.json().results;",
+                  "pm.test('REJECTED con motivos en español', () => {",
+                  "  pm.expect(result.status).to.eql('REJECTED');",
+                  "  pm.expect(result.errors).to.include('El fin de la actividad debe ser posterior al inicio');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activities\": [\n    {\n      \"clientGeneratedId\": \"{{$guid}}\",\n      \"type\": \"HIKING\",\n      \"startedAt\": \"2026-10-09T10:00:00.000Z\",\n      \"endedAt\": \"2026-10-09T09:00:00.000Z\",\n      \"distanceMeters\": 0,\n      \"durationSeconds\": 0,\n      \"elevationGainMeters\": 0,\n      \"elevationLossMeters\": 0,\n      \"elevationSource\": \"GPS\",\n      \"points\": []\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/activities/sync"
+          }
+        },
+        {
+          "name": "Mis actividades",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const lista = pm.response.json();",
+                  "pm.test('incluye la actividad subida (CA-20)', () => {",
+                  "  pm.expect(lista.map((a) => a.id)).to.include(pm.collectionVariables.get('activityId'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/activities"
+          }
+        },
+        {
+          "name": "Detalle de la actividad",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const detalle = pm.response.json();",
+                  "pm.test('trae sus 3 puntos en orden (CA-21)', () => {",
+                  "  pm.expect(detalle.pointCount).to.eql(3);",
+                  "  pm.expect(detalle.points.map((p) => p.sequence)).to.eql([1, 2, 3]);",
+                  "  pm.expect(detalle.elevationSource).to.eql('GPS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/activities/{{activityId}}"
+          }
+        },
+        {
+          "name": "Detalle con id inválido (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404 Actividad no encontrada', () => {",
+                  "  pm.response.to.have.status(404);",
+                  "  pm.expect(pm.response.json().message).to.eql('Actividad no encontrada');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/activities/no-es-un-uuid"
+          }
+        },
+        {
+          "name": "Sin token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('401 (CA-18)', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/activities"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -28,7 +28,8 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
   (CA-5, CA-6, CA-7, CA-10, CA-11, CA-18, CA-20, CA-21)
   - 10 pruebas en `backend/test/activity.e2e-spec.ts`; los usuarios se crean con `POST /user` + `POST /auth/login`. Se agregó un caso: otra cuenta no puede reusar mi `clientGeneratedId` → `REJECTED`. Suite e2e completa: 26 pruebas; la base queda sin usuarios `e2e-`, actividades ni puntos.
-- [ ] T7 — Colección de Postman en `backend/postman/SendaBC.postman_collection.json` con login, `POST /activities/sync`, `GET /activities` y `GET /activities/:id` (el token se guarda en una variable de la colección). (Constitución 6.3)
+- [x] T7 — Colección de Postman en `backend/postman/SendaBC.postman_collection.json` con login, `POST /activities/sync`, `GET /activities` y `GET /activities/:id` (el token se guarda en una variable de la colección). (Constitución 6.3)
+  - 9 peticiones con pruebas de Postman: registro, login (guarda el token), subir lote, reenviar (`ALREADY_EXISTS`), lote inválido (`REJECTED`), lista, detalle, id inválido (404) y sin token (401). Validada el 2026-10-09 ejecutando sus propios scripts de prueba contra la app local: 17/17 verificaciones en verde.
 
 ## Frontend — datos
 
@@ -98,7 +99,7 @@ Los 24 CA están cubiertos por al menos una tarea.
 | CA-23 | M8 | Manual | Pendiente |
 | CA-24 | M9 · M10 | Manual | Pendiente |
 
-Además: colección de Postman (T7) ejecutada contra el backend local antes de cerrar la spec (constitución 6.3).
+Además: colección de Postman (T7) ejecutada contra el backend local antes de cerrar la spec (constitución 6.3). Ejecutada el 2026-10-09: 17/17 en verde.
 
 ### Casos manuales
 
