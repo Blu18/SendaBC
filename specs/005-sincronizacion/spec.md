@@ -1,6 +1,6 @@
 # 005 — Sincronización offline-first de actividades
 
-- **Estado:** Aprobada (2026-10-08)
+- **Estado:** En progreso (aprobada 2026-10-08)
 - **Semana:** 5
 - **Autor(es):**
 - **Fecha:** 2026-10-08
@@ -107,6 +107,7 @@ Resueltas el 2026-10-08:
 
 ## Historial
 
+- 2026-10-09 — Tareas T1–T19 implementadas. Faltan los casos manuales M1–M10 y el cierre (T20).
 - 2026-10-09 — CA-16: también se avisa cuando hay conexión pero el servidor no responde; antes, deslizar con el servidor caído no mostraba nada.
 - 2026-10-09 — RN-5: el fin puede ser igual al inicio. Una actividad que se cierra al abrir la app sin haber recibido puntos queda con fin = inicio (spec 003, CA-10) y no debe quedar como "No se pudo subir" para siempre.
 - 2026-10-08 — Aprobada por el usuario.

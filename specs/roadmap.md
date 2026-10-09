@@ -11,7 +11,7 @@ Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. L
 | 2 | Inicio de sesión y sesión persistente | [002-inicio-sesion](002-inicio-sesion/spec.md) | Implementada |
 | 3 | Captura de GPS y guardado local | [003-captura-gps](003-captura-gps/spec.md) | Implementada con pendientes (falta prueba en dispositivo) |
 | 4 | Barómetro y métricas de actividad (distancia, tiempo, elevación, resumen) | [004-metricas-actividad](004-metricas-actividad/spec.md) | Implementada con pendientes (falta prueba en dispositivo) |
-| 5 | Sincronización offline-first (cola local, endpoint batch, reintentos) | [005-sincronizacion](005-sincronizacion/spec.md) | Aprobada |
+| 5 | Sincronización offline-first (cola local, endpoint batch, reintentos) | [005-sincronizacion](005-sincronizacion/spec.md) | En progreso (faltan casos manuales) |
 | 6 | Catálogo de rutas cercanas con PostGIS y mapa | 006-rutas-cercanas | Por escribir |
 | 7 | Publicar rutas, detalle y favoritas | 007-publicar-rutas | Por escribir |
 | 8 | Seguridad: contacto de emergencia, inactividad y alerta push/SMS | 008-alerta-inactividad | Por escribir |
