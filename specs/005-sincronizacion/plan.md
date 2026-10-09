@@ -204,7 +204,7 @@ El `Gate` sigue igual. El proveedor espera a que `Gate` termine (`closeOrphanAct
 
 ## Riesgos
 
-- **Pruebas e2e contra la base:** las e2e de supertest escribirían en la base de Supabase de desarrollo. Las pruebas automáticas usan Prisma simulado; la prueba de punta a punta se hace con Postman y con los casos manuales, sobre una cuenta de prueba.
+- **Pruebas e2e contra la base:** siguen el patrón de las specs 001 y 002: crean un usuario con correo único y lo borran al final. Las actividades se borran en cascada (`onDelete: Cascade`). Si una prueba se interrumpe, puede quedar un usuario `e2e-…@senda.bc` que hay que borrar a mano.
 - **Cambio de tipo de las geometrías:** si alguna tabla ya tuviera datos con otro SRID, `USING ST_SetSRID(...)` los reetiqueta. Revisar antes de `migrate deploy` que estén vacías.
 - **Tamaño de las actividades:** una actividad de más de 5 MB (≈ 35 h de grabación) superaría el límite. Es improbable; si pasa, el servidor responde `413` y la actividad queda pendiente.
 - **Carga de la semana:** backend nuevo + migración PostGIS + motor + recuperación + pantallas. Si hace falta recortar, lo primero que se puede mover es la recuperación (CA-20 a CA-23).
