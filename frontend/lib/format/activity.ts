@@ -1,4 +1,4 @@
-import type { ActivityType } from '../db/activities';
+import type { Activity, ActivityType } from '../db/activities';
 import type { ElevationSource } from '../metrics/summary';
 
 // Nombres en pantalla de los tipos de actividad, en el orden del selector (spec 003, CA-1).
@@ -21,3 +21,19 @@ export const showsSpeed = (type: ActivityType) => type === 'CYCLING';
 export function formatStartedAt(iso: string) {
   return new Date(iso).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
 }
+
+// Estado de sincronización que se muestra en el historial y en el resumen (spec 005, CA-14).
+// "No se pudo subir" es una marca sobre PENDING_SYNC, no un estado propio (RN-3, D6).
+export type SyncStatus = 'pending' | 'synced' | 'rejected';
+
+export function syncStatusOf(activity: Pick<Activity, 'status' | 'syncError'>): SyncStatus {
+  if (activity.status === 'SYNCED') return 'synced';
+  if (activity.syncError !== null) return 'rejected';
+  return 'pending';
+}
+
+export const SYNC_STATUS_LABELS: Record<SyncStatus, string> = {
+  pending: 'Pendiente de subir',
+  synced: 'Sincronizada',
+  rejected: 'No se pudo subir',
+};

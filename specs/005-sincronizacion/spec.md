@@ -48,7 +48,7 @@ Hoy las actividades (spec 003) y sus métricas (spec 004) solo existen en el tel
 
 - **CA-14 (HU-2):** En "Mis actividades" y en el resumen de cada actividad veo su estado: "Pendiente de subir", "Sincronizada" o "No se pudo subir".
 - **CA-15 (HU-2):** Cuando una actividad termina de subirse mientras tengo abierta la lista, su estado se actualiza sin salir de la pantalla.
-- **CA-16 (HU-2):** Cuando deslizo hacia abajo en "Mis actividades", la app sincroniza en ese momento: sube las pendientes (incluidas las marcadas "No se pudo subir") y descarga las que falten (CA-20). Mientras tanto se ve un indicador de carga. Sin conexión, el indicador desaparece y se muestra un mensaje de que no hay conexión.
+- **CA-16 (HU-2):** Cuando deslizo hacia abajo en "Mis actividades", la app sincroniza en ese momento: sube las pendientes (incluidas las marcadas "No se pudo subir") y descarga las que falten (CA-20). Mientras tanto se ve un indicador de carga. Sin conexión, el indicador desaparece y se muestra un mensaje de que no hay conexión. Si hay conexión pero el servidor no responde, se muestra un mensaje de que se volverá a intentar.
 
 ### Propiedad y seguridad
 
@@ -107,6 +107,7 @@ Resueltas el 2026-10-08:
 
 ## Historial
 
+- 2026-10-09 — CA-16: también se avisa cuando hay conexión pero el servidor no responde; antes, deslizar con el servidor caído no mostraba nada.
 - 2026-10-09 — RN-5: el fin puede ser igual al inicio. Una actividad que se cierra al abrir la app sin haber recibido puntos queda con fin = inicio (spec 003, CA-10) y no debe quedar como "No se pudo subir" para siempre.
 - 2026-10-08 — Aprobada por el usuario.
 - 2026-10-08 — Se resuelven las preguntas abiertas P1–P8: se agregan sincronización manual, recuperación de actividades y aviso al cerrar sesión.

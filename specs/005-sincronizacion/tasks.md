@@ -67,7 +67,8 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - `SyncProvider` va dentro de `Gate` en `App.tsx`. `syncNow` es manual por defecto. Además `useSyncDataChanged(cb)` para que las pantallas recarguen (T17). La detección de "se recuperó la red" es pura (`lib/sync/network.ts`, 5 pruebas); el primer estado no dispara, porque al abrir la app ya se sincroniza. No se pudo generar el bundle con `expo export` para validarlo: Metro falla al leer archivos de `node_modules` que OneDrive marca como ReparsePoint (problema del entorno, previo a este cambio). Se valida con los casos manuales.
 - [x] T16 — `useActivityTracker.stop()`: llamar a `requestSync()` después de `finalizeMetrics`. (CA-1)
   - Sin `await`: el resumen se muestra de inmediato y la subida corre aparte (CA-4). Se verifica con M1.
-- [ ] T17 — `ActivityHistoryPage`: insignia de estado por fila; deslizar hacia abajo → `syncNow({ manual: true })` con indicador, y mensaje "Sin conexión. Se sincronizará cuando vuelva la señal." si devuelve `'offline'`; recarga la lista al recibir avisos del motor. (CA-14, CA-15, CA-16)
+- [x] T17 — `ActivityHistoryPage`: insignia de estado por fila; deslizar hacia abajo → `syncNow({ manual: true })` con indicador, y mensaje "Sin conexión. Se sincronizará cuando vuelva la señal." si devuelve `'offline'`; recarga la lista al recibir avisos del motor. (CA-14, CA-15, CA-16)
+  - `syncStatusOf` y `SYNC_STATUS_LABELS` en `lib/format/activity.ts` (4 pruebas), compartidos con el resumen (T18). Insignias: Sincronizada en verde chaparral, Pendiente en ocre, No se pudo subir en el color de error. Con el servidor caído, deslizar muestra "No se pudo conectar con el servidor. Se volverá a intentar en unos minutos." (CA-16 ampliado en la spec). El hook expone `reload` y recarga con `useSyncDataChanged`.
 - [ ] T18 — `ActivitySummaryPage`: mostrar el estado de sincronización. (CA-14, CA-21)
 - [ ] T19 — `MainPage`: antes de cerrar sesión, `countPendingUploads(userId)`; si es mayor a 0, `Alert` "Tienes N actividades sin subir. Se subirán cuando vuelvas a iniciar sesión." con "Cancelar" y "Cerrar sesión". (CA-24)
 
@@ -139,7 +140,8 @@ Con el backend corriendo y una cuenta de prueba. Pueden hacerse en el emulador s
 **M5 — Sincronizar deslizando**
 1. Con una actividad pendiente y conexión, deslizar hacia abajo en "Mis actividades".
 2. Activar modo avión y volver a deslizar.
-- **Esperado:** (1) aparece el indicador y la actividad pasa a "Sincronizada". (2) el indicador desaparece y se muestra "Sin conexión. Se sincronizará cuando vuelva la señal.".
+3. Desactivar el modo avión, detener el backend y volver a deslizar.
+- **Esperado:** (1) aparece el indicador y la actividad pasa a "Sincronizada". (2) el indicador desaparece y se muestra "Sin conexión. Se sincronizará cuando vuelva la señal.". (3) se muestra "No se pudo conectar con el servidor. Se volverá a intentar en unos minutos.".
 
 **M6 — Actividad rechazada**
 Cubierto por pruebas automáticas (T3, T6, T14): desde la app no se puede generar una actividad inválida sin modificar la base local. Si se quiere comprobar la insignia: en el emulador, cambiar a mano `endedAt` de una actividad pendiente a una fecha anterior a `startedAt` y deslizar.

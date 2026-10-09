@@ -1,16 +1,46 @@
-import { View, Text, Pressable, FlatList, StyleSheet, ActivityIndicator } from "react-native";
+import { useState } from "react";
+import { View, Text, Pressable, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useActivityHistory } from "../../hooks/activity/activityHistory.hook";
+import { useSync } from "../../context/SyncContext";
 import type { Activity } from "../../lib/db/activities";
-import { ACTIVITY_TYPE_LABELS, formatStartedAt } from "../../lib/format/activity";
+import {
+    ACTIVITY_TYPE_LABELS,
+    formatStartedAt,
+    SYNC_STATUS_LABELS,
+    syncStatusOf,
+    type SyncStatus,
+} from "../../lib/format/activity";
 import { formatDuration } from "../../lib/format/duration";
 import { formatDistance } from "../../lib/format/metrics";
 import { colors } from "../../lib/theme/colors";
 
-// "Mis actividades": actividades terminadas, la más reciente primero (spec 004, CA-20 a CA-24)
+// Mensajes al deslizar para sincronizar (spec 005, CA-16).
+const AVISO_SIN_CONEXION = "Sin conexión. Se sincronizará cuando vuelva la señal.";
+const AVISO_REINTENTO = "No se pudo conectar con el servidor. Se volverá a intentar en unos minutos.";
+
+// "Mis actividades": actividades terminadas, la más reciente primero (spec 004, CA-20 a CA-24),
+// con su estado de sincronización (spec 005, CA-14) y deslizar hacia abajo para sincronizar (CA-16).
 export default function ActivityHistoryPage() {
     const navigation = useNavigation();
-    const { activities, loading } = useActivityHistory();
+    const { activities, loading, reload } = useActivityHistory();
+    const { syncNow } = useSync();
+    const [refreshing, setRefreshing] = useState(false);
+    const [aviso, setAviso] = useState<string | null>(null);
+
+    // Sincronización manual: también reintenta las que no se pudieron subir (CA-16).
+    const onRefresh = async () => {
+        setRefreshing(true);
+        setAviso(null);
+        try {
+            const resultado = await syncNow();
+            if (resultado === "offline") setAviso(AVISO_SIN_CONEXION);
+            else if (resultado === "retry") setAviso(AVISO_REINTENTO);
+            await reload();
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     const openSummary = (activity: Activity) =>
         navigation.navigate('ActivitySummary', { localId: activity.localId, origin: 'history' });
@@ -18,6 +48,7 @@ export default function ActivityHistoryPage() {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Mis actividades</Text>
+            {aviso && <Text style={styles.aviso}>{aviso}</Text>}
 
             {loading ? (
                 <ActivityIndicator size="large" color={colors.primary} style={styles.loading} />
@@ -26,6 +57,14 @@ export default function ActivityHistoryPage() {
                     data={activities}
                     keyExtractor={(a) => String(a.localId)}
                     contentContainerStyle={activities.length === 0 ? styles.emptyContainer : styles.list}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[colors.primary]}
+                            tintColor={colors.primary}
+                        />
+                    }
                     ListEmptyComponent={
                         // Sin actividades terminadas: invitar a iniciar una (CA-22). Sin botón propio:
                         // grabar desde aquí haría que "Listo" regresara a esta lista y no a la
@@ -43,6 +82,7 @@ export default function ActivityHistoryPage() {
                             <View style={styles.rowMain}>
                                 <Text style={styles.rowType}>{ACTIVITY_TYPE_LABELS[item.type]}</Text>
                                 <Text style={styles.rowDate}>{formatStartedAt(item.startedAt)}</Text>
+                                <SyncBadge status={syncStatusOf(item)} />
                             </View>
                             <View style={styles.rowStats}>
                                 <Text style={styles.rowValue}>{formatDistance(item.distanceMeters)}</Text>
@@ -57,6 +97,23 @@ export default function ActivityHistoryPage() {
         </View>
     );
 }
+
+// Insignia con el estado de sincronización de la actividad (CA-14).
+function SyncBadge({ status }: { status: SyncStatus }) {
+    return (
+        <View style={[styles.badge, { borderColor: BADGE_COLORS[status] }]}>
+            <Text style={[styles.badgeText, { color: BADGE_COLORS[status] }]}>
+                {SYNC_STATUS_LABELS[status]}
+            </Text>
+        </View>
+    );
+}
+
+const BADGE_COLORS: Record<SyncStatus, string> = {
+    synced: colors.primary,
+    pending: colors.secondary,
+    rejected: colors.error,
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -73,6 +130,25 @@ const styles = StyleSheet.create({
     },
     loading: {
         marginTop: 32,
+    },
+    aviso: {
+        marginHorizontal: 16,
+        marginBottom: 12,
+        fontSize: 14,
+        color: colors.text,
+        textAlign: "center",
+    },
+    badge: {
+        alignSelf: "flex-start",
+        marginTop: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 10,
+        borderWidth: 1.5,
+    },
+    badgeText: {
+        fontSize: 12,
+        fontWeight: "600",
     },
     list: {
         paddingHorizontal: 16,
