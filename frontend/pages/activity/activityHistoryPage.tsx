@@ -4,13 +4,8 @@ import { useNavigation } from "@react-navigation/native";
 import { useActivityHistory } from "../../hooks/activity/activityHistory.hook";
 import { useSync } from "../../context/SyncContext";
 import type { Activity } from "../../lib/db/activities";
-import {
-    ACTIVITY_TYPE_LABELS,
-    formatStartedAt,
-    SYNC_STATUS_LABELS,
-    syncStatusOf,
-    type SyncStatus,
-} from "../../lib/format/activity";
+import SyncBadge from "../../components/ui/SyncBadge";
+import { ACTIVITY_TYPE_LABELS, formatStartedAt, syncStatusOf } from "../../lib/format/activity";
 import { formatDuration } from "../../lib/format/duration";
 import { formatDistance } from "../../lib/format/metrics";
 import { colors } from "../../lib/theme/colors";
@@ -82,7 +77,7 @@ export default function ActivityHistoryPage() {
                             <View style={styles.rowMain}>
                                 <Text style={styles.rowType}>{ACTIVITY_TYPE_LABELS[item.type]}</Text>
                                 <Text style={styles.rowDate}>{formatStartedAt(item.startedAt)}</Text>
-                                <SyncBadge status={syncStatusOf(item)} />
+                                <SyncBadge status={syncStatusOf(item)} style={styles.badge} />
                             </View>
                             <View style={styles.rowStats}>
                                 <Text style={styles.rowValue}>{formatDistance(item.distanceMeters)}</Text>
@@ -97,23 +92,6 @@ export default function ActivityHistoryPage() {
         </View>
     );
 }
-
-// Insignia con el estado de sincronización de la actividad (CA-14).
-function SyncBadge({ status }: { status: SyncStatus }) {
-    return (
-        <View style={[styles.badge, { borderColor: BADGE_COLORS[status] }]}>
-            <Text style={[styles.badgeText, { color: BADGE_COLORS[status] }]}>
-                {SYNC_STATUS_LABELS[status]}
-            </Text>
-        </View>
-    );
-}
-
-const BADGE_COLORS: Record<SyncStatus, string> = {
-    synced: colors.primary,
-    pending: colors.secondary,
-    rejected: colors.error,
-};
 
 const styles = StyleSheet.create({
     container: {
@@ -139,16 +117,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     badge: {
-        alignSelf: "flex-start",
         marginTop: 4,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 10,
-        borderWidth: 1.5,
-    },
-    badgeText: {
-        fontSize: 12,
-        fontWeight: "600",
     },
     list: {
         paddingHorizontal: 16,
