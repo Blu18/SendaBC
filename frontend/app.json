@@ -36,6 +36,12 @@
           "locationWhenInUsePermission": "SendaBC usa tu ubicación para registrar el recorrido de tus actividades."
         }
       ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "SendaBC usa el sensor de presión para medir el desnivel de tus actividades."
+        }
+      ],
       "expo-asset"
     ]
   }

@@ -2,8 +2,8 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto.js';
-import { UpdateUserDto } from './dto/update-user.dto.js';
 import { PrismaService } from '../prisma.service.js';
+import { normalizarEmail } from './normalizar-email.js';
 
 type SafeUser = Omit<User, 'passwordHash'>;
 
@@ -11,9 +11,12 @@ type SafeUser = Omit<User, 'passwordHash'>;
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createUserDto: CreateUserDto): Promise<SafeUser> {
+  async create({ email, displayName, password }: CreateUserDto): Promise<SafeUser> {
     try {
-      const { passwordHash, ...safeUser } = await this.prisma.user.create({ data: createUserDto });
+      // El trigger hash_password_trigger reemplaza la contraseña por su hash bcrypt al insertar.
+      const { passwordHash, ...safeUser } = await this.prisma.user.create({
+        data: { email: normalizarEmail(email), displayName, passwordHash: password },
+      });
       return safeUser;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
@@ -25,14 +28,8 @@ export class UserService {
 
   async findByEmail(email: string) {
     return this.prisma.user.findFirst({
-      where: {
-        email: email
-      }
-    })
-  }
-
-  findAll() {
-    return `This action returns all user`;
+      where: { email: normalizarEmail(email) },
+    });
   }
 
   async findOne(id: string): Promise<SafeUser | null> {
@@ -40,13 +37,5 @@ export class UserService {
       where: { id: id },
       omit: { passwordHash: true },
     });
-  }
-
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: string) {
-    return `This action removes a #${id} user`;
   }
 }

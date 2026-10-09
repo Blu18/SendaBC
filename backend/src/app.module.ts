@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
+import { APP_PIPE } from '@nestjs/core';
 import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
 import { UserModule } from './user/user.module.js';
+import { ValidationPipe } from './validation/validation.pipe.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -20,6 +22,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     UserModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  // Pipe global registrado aquí (no en main.ts) para que también aplique en las pruebas e2e.
+  providers: [AppService, { provide: APP_PIPE, useClass: ValidationPipe }],
 })
 export class AppModule {}

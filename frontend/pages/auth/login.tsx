@@ -3,7 +3,7 @@ import { View, TextInput, StyleSheet, Text } from "react-native";
 import { LoginFieldErrors, useLogin } from "../../hooks/auth/auth.hooks";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import TextBtn from "../../components/ui/buttons/TextBtn";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
 
 type LoginFieldError = Record<LoginFieldErrors["field"], string>;
@@ -36,10 +36,15 @@ function validarCampos(values: {
   return errors;
 }
 
-export default function Login() {
-    const [email, setEmail] = useState<string>('');
+// emailRegistrado llega al terminar el registro (spec 001, CA-7).
+type Props = StaticScreenProps<{ emailRegistrado?: string } | undefined>;
+
+export default function Login({ route }: Props) {
+    const emailRegistrado = route.params?.emailRegistrado;
+    const [email, setEmail] = useState<string>(emailRegistrado ?? '');
     const [password, setPassword] = useState<string>('');
     const [fieldErrors, setFieldErrors] = useState<LoginFieldError>(emptyFieldErrors);
+    const [serverError, setServerError] = useState<string>('');
 
     const login = useLogin();
     const navigation = useNavigation();
@@ -48,6 +53,7 @@ export default function Login() {
     const handleSubmit = () => {
       const errors = validarCampos({ email, password });
       setFieldErrors(errors);
+      setServerError('');
 
       const hayErrores = Object.values(errors).some((mensaje) => mensaje !== "");
       if (hayErrores) return;
@@ -55,8 +61,12 @@ export default function Login() {
       login.mutate(
         { email: email, password: password},
         {
-          onSuccess: (payload) => guardarSesion(payload.token).then(() => navigation.navigate('MainPage')),
-          onError: (error) => {console.log(error.message);}
+          // CA-1: reset para que el botón atrás no regrese a Login.
+          onSuccess: (payload) => guardarSesion(payload.token, payload.id).then(() =>
+            navigation.reset({ index: 0, routes: [{ name: 'MainPage' }] })
+          ),
+          // CA-2: "Credenciales invalidas" (o el error genérico sin conexión) visible en pantalla.
+          onError: (error) => setServerError(error.message)
         }
       )
     }
@@ -70,6 +80,9 @@ export default function Login() {
           <View style={styles.formHeader}>
             <Text style={styles.headerFormText}>Inicio de Sesión</Text>
           </View>
+          {!!emailRegistrado && (
+            <Text style={styles.successText}>Tu cuenta se creó correctamente. Inicia sesión para continuar.</Text>
+          )}
           <View style={styles.inputContainer}>
             <View>
               <TextInput
@@ -96,7 +109,12 @@ export default function Login() {
             </View>
           </View>
           <View style={styles.formFooter}>
-            <PrimaryButton text="Iniciar Sesión" onPress={handleSubmit}/>
+            {!!serverError && <Text style={styles.serverErrorText}>{serverError}</Text>}
+            <PrimaryButton
+              text={login.isPending ? "Iniciando sesión..." : "Iniciar Sesión"}
+              onPress={handleSubmit}
+              disabled={login.isPending}
+            />
             <TextBtn 
               text="¿Aun no tienes cuenta? Crea una" 
               textStyle={{textDecorationLine: 'underline'}}
@@ -152,10 +170,20 @@ const styles = StyleSheet.create({
       borderColor: "#5C6B49",
       borderWidth: 1.5,
     },
+    successText: {
+      color: "#5C6B49",
+      fontSize: 14,
+      marginBottom: 12,
+    },
     errorText: {
       color: "#B3261E",
       fontSize: 13,
       marginTop: 4,
+    },
+    serverErrorText: {
+      color: "#B3261E",
+      fontSize: 14,
+      textAlign: 'center',
     },
     formFooter: {
       alignItems: 'center',

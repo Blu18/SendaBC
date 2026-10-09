@@ -13,12 +13,12 @@ export function useLocationPermission() {
     });
   }, []);
 
-  // Mostrar el diálogo del sistema y devolver si el usuario aceptó
+  // Mostrar el diálogo del sistema y devolver si el usuario aceptó y si se puede volver a preguntar
   const request = useCallback(async () => {
     const res = await requestForegroundPermissionsAsync();
     setGranted(res.granted);
     setCanAskAgain(res.canAskAgain);
-    return res.granted;
+    return { granted: res.granted, canAskAgain: res.canAskAgain };
   }, []);
 
   return { granted, canAskAgain, request };

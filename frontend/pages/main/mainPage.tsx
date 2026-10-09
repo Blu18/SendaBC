@@ -3,13 +3,11 @@ import { useNavigation } from "@react-navigation/native";
 import { useProfile } from "../../hooks/auth/auth.hooks";
 import { useAuth } from "../../context/AuthContext";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
-import { useActivityTracker } from "../../hooks/activity/activityTracker.hook";
 
 export default function MainPage() {
     const navigation = useNavigation();
     const { logout } = useAuth();
     const profile = useProfile();
-    const { status, pointCount, start, stop } = useActivityTracker();
 
     const handleLogout = async () => {
         await logout();
@@ -26,10 +24,16 @@ export default function MainPage() {
                 <Text style={styles.subtitle}>Hola, {profile.data.displayName}</Text>
             )}
 
-            <Text>Estado: {status} - Puntos: {pointCount}</Text>
             <PrimaryButton
-              text={status === 'recording' ? 'Detener actividad' : 'Iniciar actividad'}
-              onPress={status === 'recording' ? stop : start}
+              text="Nueva actividad"
+              style={styles.activityBtn}
+              onPress={() => navigation.navigate('Activity')}
+            />
+
+            <PrimaryButton
+              text="Mis actividades"
+              style={styles.activityBtn}
+              onPress={() => navigation.navigate('ActivityHistory')}
             />
 
             <PrimaryButton text="Cerrar sesión" style={styles.logoutBtn} onPress={handleLogout} />
@@ -57,8 +61,14 @@ const styles = StyleSheet.create({
     error: {
         color: "#B3261E",
     },
+    // PrimaryButton trae alignSelf: 'stretch'; con ancho fijo eso lo pega a la izquierda
+    activityBtn: {
+        width: '60%',
+        alignSelf: 'center',
+    },
     logoutBtn: {
         width: '60%',
+        alignSelf: 'center',
         marginTop: 24,
     },
 });

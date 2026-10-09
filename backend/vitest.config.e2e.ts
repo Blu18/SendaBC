@@ -7,5 +7,7 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.e2e-spec.ts'],
+    // Las e2e levantan AppModule completo: necesitan DATABASE_URL y JWT_SECRET del .env.
+    setupFiles: ['dotenv/config'],
   },
 });
