@@ -16,7 +16,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - Solo devuelve actividades `SYNCED`. 4 pruebas con Prisma simulado. Ida y vuelta verificada contra Supabase (transacción revertida): el resumen coincide exacto con lo enviado y el detalle pedido por otro usuario responde 404. Las coordenadas leídas pueden diferir en el dígito 15 (≈ 10⁻¹⁴ grados), porque la conexión de Supabase convierte `float8` a texto con 15 dígitos significativos; el valor guardado es exacto.
 - [x] T5 — `ActivityController` (`POST /activities/sync`, `GET /activities`, `GET /activities/:id`) con `JwtAuthGuard`, `ActivityModule`, registro en `AppModule` y `app.useBodyParser('json', { limit: '5mb' })` en `main.ts`. (CA-7, CA-18)
   - El límite de 5 MB vive en `configurarHttp()` (`backend/src/configurar-http.ts`), que usan `main.ts` y las e2e: las e2e no pasan por `main.ts`. Un id que no es UUID responde 404, igual que una actividad ajena. Prueba de humo con la app completa, sin escrituras: 401 sin token, 1.5 MB pasa el parser, 6 MB → 413, 404 para un id inválido o ajeno, 400 para un lote vacío.
-- [ ] T6 — `test/activity.e2e-spec.ts` contra la base, con un usuario de prueba que se borra al final (llamar a `configurarHttp(app)` antes de `app.init()`):
+- [x] T6 — `test/activity.e2e-spec.ts` contra la base, con un usuario de prueba que se borra al final (llamar a `configurarHttp(app)` antes de `app.init()`):
   - lote con una actividad válida y una inválida → `CREATED` + `REJECTED`;
   - reenvío → `ALREADY_EXISTS` con el mismo `id`;
   - actividad de 5 400 puntos → `CREATED`;
@@ -27,6 +27,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - el detalle de una actividad de otro usuario → `404`.
 
   (CA-5, CA-6, CA-7, CA-10, CA-11, CA-18, CA-20, CA-21)
+  - 10 pruebas en `backend/test/activity.e2e-spec.ts`; los usuarios se crean con `POST /user` + `POST /auth/login`. Se agregó un caso: otra cuenta no puede reusar mi `clientGeneratedId` → `REJECTED`. Suite e2e completa: 26 pruebas; la base queda sin usuarios `e2e-`, actividades ni puntos.
 - [ ] T7 — Colección de Postman en `backend/postman/SendaBC.postman_collection.json` con login, `POST /activities/sync`, `GET /activities` y `GET /activities/:id` (el token se guarda en una variable de la colección). (Constitución 6.3)
 
 ## Frontend — datos
