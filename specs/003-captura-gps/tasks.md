@@ -63,7 +63,7 @@ Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el
 | CA-4 | M4 | Cumple (emulador, 2026-10-06) |
 | CA-5 | M1 | Cumple (emulador, 2026-10-06) |
 | CA-6 | M4 | Cumple (emulador, 2026-10-06); O2 sigue abierta |
-| CA-7 | M5 | Código ok (sin red en la ruta de grabación) · falta M5 |
+| CA-7 | M5 | Cumple (emulador, 2026-10-15, caso M2 de la spec 005): en modo avión se grabaron 3 actividades con sus puntos (p. ej. 6 puntos, 32 m) |
 | CA-8 | M4 | Cumple (emulador, 2026-10-06): el resumen muestra los mismos N puntos que el contador (O1 corregida en la spec 004) |
 | CA-9 | M6 | Cumple (emulador, 2026-10-06): doble toque en "Iniciar" crea una sola actividad |
 | CA-10 | M7 | Cumple (emulador, 2026-10-06): tras cerrar la app a la fuerza, la actividad aparece terminada con la duración hasta su último punto |
