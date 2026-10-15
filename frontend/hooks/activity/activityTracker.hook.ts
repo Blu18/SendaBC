@@ -38,6 +38,8 @@ export function useActivityTracker() {
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [permissionError, setPermissionError] = useState<PermissionError | null>(null);
   // Métricas en vivo, con los mismos umbrales que el resumen (spec 004, CA-15, CA-16)
+  // No se pudo cerrar la actividad al detener (spec 003, CA-12)
+  const [stopFailed, setStopFailed] = useState(false);
   const [liveDistance, setLiveDistance] = useState(0);
   const [liveElevationGain, setLiveElevationGain] = useState(0);
 
@@ -156,8 +158,16 @@ export function useActivityTracker() {
     //    actividad ni se guarde en una ya cerrada (corrige O1 de la spec 003)
     await Promise.all(pendingSaves.current);
 
-    // 3. Cerrar la actividad
-    await finishActivity(id);
+    // 3. Cerrar la actividad. Si falla, la grabación ya se detuvo: se avisa en pantalla en lugar
+    //    de dejarla en "Detener", y closeOrphanActivities() la cierra al abrir la app (CA-12, O3)
+    try {
+      await finishActivity(id);
+    } catch (e) {
+      console.log('Error cerrando la actividad al detener:', e);
+      setStopFailed(true);
+      setStatus('stopped');
+      return null;
+    }
 
     // 4. Calcular y guardar sus métricas con lo guardado en SQLite (RN-4). Si falla,
     //    computeMissingMetrics() las calcula al volver a abrir la app (CA-19)
@@ -218,6 +228,7 @@ export function useActivityTracker() {
     pointCount,
     startedAt,
     permissionError,
+    stopFailed,
     liveDistance,
     liveElevationGain,
     start,

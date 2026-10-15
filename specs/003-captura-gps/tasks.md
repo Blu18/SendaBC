@@ -45,6 +45,10 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 - [x] T13 — Instalar `expo-keep-awake` (`npx expo install expo-keep-awake`); activarlo en `start` y desactivarlo en `stop` y al desmontar el hook. (CA-11)
 
+### Cierre de observaciones
+
+- [x] T14 — Corregir O3: si `finishActivity` falla en `stop()`, dejar de mostrar "Detener actividad", mostrar el aviso de CA-12 con el botón "Volver" y no permitir iniciar otra actividad desde la pantalla. (CA-12)
+
 ## Verificación
 
 Todas manuales (aún no hay runner de pruebas en el frontend). Hacerlas en un dispositivo físico.
@@ -64,12 +68,13 @@ Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el
 | CA-9 | M6 | Cumple (emulador, 2026-10-06): doble toque en "Iniciar" crea una sola actividad |
 | CA-10 | M7 | Cumple (emulador, 2026-10-06): tras cerrar la app a la fuerza, la actividad aparece terminada con la duración hasta su último punto |
 | CA-11 | M8 | Código ok · falta M8 |
+| CA-12 | Revisión de código (no se puede provocar un fallo de SQLite desde la app) | Cumple (revisión, 2026-10-15): `stop()` captura el fallo, marca `stopFailed` y la pantalla muestra el aviso con "Volver" en lugar de "Iniciar" |
 
 ### Observaciones de la revisión
 
 - ~~**O1 (CA-8):** `stop()` quita la suscripción y cuenta los puntos, pero no espera a un `insertPoint` que siga en curso. Si llega un punto justo al detener, "Actividad guardada: N" puede mostrar uno menos que el contador, y ese punto se guarda en una actividad ya cerrada.~~ **Corregida** en la spec 004 (T14): `stop()` espera los guardados de puntos y lecturas en curso antes de cerrar la actividad.
-- **O2 (CA-6):** la secuencia se incrementa antes de guardar. Si un `insertPoint` falla, queda un hueco (1, 2, 4...) y el contador en pantalla cuenta el punto que no se guardó.
-- **O3:** si `finishActivity` falla en `stop()`, el GPS ya se detuvo pero la pantalla sigue en "Detener actividad" y el botón no hace nada. La actividad se recupera al reabrir la app (CA-10). Sigue aplicando tras la spec 004: el error ahora se registra, pero la pantalla no cambia.
+- **O2 (CA-6) — aceptada como limitación conocida (2026-10-15):** la secuencia se incrementa antes de guardar. Si un `insertPoint` falla, queda un hueco (1, 2, 4...) y el contador en pantalla cuenta el punto que no se guardó.
+- **O3 — corregida con CA-12 / T14:** si `finishActivity` falla en `stop()`, el GPS ya se detuvo pero la pantalla sigue en "Detener actividad" y el botón no hace nada. La actividad se recupera al reabrir la app (CA-10). Sigue aplicando tras la spec 004: el error ahora se registra, pero la pantalla no cambia.
 
 ### Casos manuales
 
@@ -113,4 +118,4 @@ Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el
 Para pasar la spec a *Implementada*:
 
 - [ ] Ejecutar en un dispositivo físico los casos M1, M3, M4, M5, M6, M7 y M8 y actualizar la tabla de verificación.
-- [ ] Decidir si se corrigen O2 y O3 (ver "Observaciones de la revisión") o se aceptan como limitaciones conocidas. O1 quedó corregida en la spec 004.
+- [x] O2 aceptada como limitación conocida y O3 corregida (T14). O1 quedó corregida en la spec 004.
