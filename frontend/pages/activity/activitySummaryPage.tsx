@@ -1,12 +1,14 @@
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
+import SyncBadge from "../../components/ui/SyncBadge";
 import { useActivitySummary } from "../../hooks/activity/activitySummary.hook";
 import {
     ACTIVITY_TYPE_LABELS,
     ELEVATION_SOURCE_LABELS,
     formatStartedAt,
     showsSpeed,
+    syncStatusOf,
 } from "../../lib/format/activity";
 import { formatDuration } from "../../lib/format/duration";
 import { formatDistance, formatElevation, formatPace, formatSpeed } from "../../lib/format/metrics";
@@ -26,7 +28,8 @@ function Stat({ value, label }: { value: string; label: string }) {
     );
 }
 
-// Resumen de una actividad terminada, leído de SQLite (spec 004, CA-1, CA-3, RN-4)
+// Resumen de una actividad terminada, leído de SQLite (spec 004, CA-1, CA-3, RN-4), con su
+// estado de sincronización (spec 005, CA-14, CA-21)
 export default function ActivitySummaryPage({ route }: Props) {
     const { localId, origin } = route.params;
     const navigation = useNavigation();
@@ -62,6 +65,7 @@ export default function ActivitySummaryPage({ route }: Props) {
             <View style={styles.header}>
                 <Text style={styles.title}>{ACTIVITY_TYPE_LABELS[activity.type]}</Text>
                 <Text style={styles.subtitle}>{formatStartedAt(activity.startedAt)}</Text>
+                <SyncBadge status={syncStatusOf(activity)} style={styles.badge} />
             </View>
 
             <View style={styles.stats}>
@@ -112,6 +116,10 @@ const styles = StyleSheet.create({
     subtitle: {
         fontSize: 16,
         color: colors.textMuted,
+    },
+    badge: {
+        alignSelf: 'center',
+        marginTop: 4,
     },
     stats: {
         flexDirection: 'row',

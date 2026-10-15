@@ -9,6 +9,7 @@ import {
   type ActivityType,
 } from '../../lib/db/activities';
 import { finalizeMetrics } from '../../lib/db/activityMetrics';
+import { syncEngine } from '../../lib/sync';
 import { createLiveMetrics } from '../../lib/metrics/summary';
 import { prepareBarometer, startBarometer } from '../../lib/sensors/barometer';
 import { useAuth } from '../../context/AuthContext';
@@ -165,6 +166,10 @@ export function useActivityTracker() {
     } catch (e) {
       console.log('Error calculando métricas al detener:', e);
     }
+
+    // 5. Subirla en cuanto haya conexión (spec 005, CA-1). Sin await: el resumen se muestra
+    //    de inmediato y la subida corre aparte (CA-4). Sin métricas no se sube (CA-3).
+    void syncEngine.requestSync();
 
     setStatus('stopped');
     return id;

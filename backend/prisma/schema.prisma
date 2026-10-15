@@ -20,6 +20,12 @@ enum ActivityStatus {
   SYNCED // ya está en el backend
 }
 
+// Fuente de la elevación de una actividad (spec 004, RN-3; se sube en la spec 005)
+enum ElevationSource {
+  BAROMETER
+  GPS
+}
+
 enum RouteStatus {
   DRAFT
   PUBLISHED
@@ -69,64 +75,66 @@ model User {
 }
 
 model Activity {
-  clientGeneratedId   String?                  @unique @db.Uuid
-  createdAt           DateTime                 @default(now()) @db.Timestamptz(6)
+  clientGeneratedId   String?                                    @unique @db.Uuid
+  createdAt           DateTime                                   @default(now()) @db.Timestamptz(6)
   distanceMeters      Float?
   durationSeconds     Int?
   elevationGainMeters Float?
   elevationLossMeters Float?
-  endedAt             DateTime?                @db.Timestamptz(6)
-  id                  String                   @id @default(uuid()) @db.Uuid
-  isPublished         Boolean                  @default(false)
-  path                Unsupported("geometry")?
-  startedAt           DateTime                 @db.Timestamptz(6)
-  status              ActivityStatus           @default(RECORDING)
+  elevationSource     ElevationSource?
+  endedAt             DateTime?                                  @db.Timestamptz(6)
+  id                  String                                     @id @default(uuid()) @db.Uuid
+  isPublished         Boolean                                    @default(false)
+  path                Unsupported("geometry(LineString, 4326)")?
+  startedAt           DateTime                                   @db.Timestamptz(6)
+  status              ActivityStatus                             @default(RECORDING)
   type                ActivityType
-  updatedAt           DateTime                 @updatedAt @db.Timestamptz(6)
-  userId              String                   @db.Uuid
-  user                User                     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedAt           DateTime                                   @updatedAt @db.Timestamptz(6)
+  userId              String                                     @db.Uuid
+  user                User                                       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   points              ActivityPoint[]
   alerts              EmergencyAlert[]
   route               Route?
 
   @@index([userId], map: "activities_userId_idx_a489d58a")
+  @@index([path], map: "activities_path_gist_idx", type: Gist)
   @@map("activities")
 }
 
 model ActivityPoint {
   accuracyMeters Float?
-  activityId     String                  @db.Uuid
+  activityId     String                               @db.Uuid
   altitudeMeters Float?
-  id             BigInt                  @id @default(autoincrement())
-  location       Unsupported("geometry")
-  recordedAt     DateTime                @db.Timestamptz(6)
+  id             BigInt                               @id @default(autoincrement())
+  location       Unsupported("geometry(Point, 4326)")
+  recordedAt     DateTime                             @db.Timestamptz(6)
   sequence       Int
-  activity       Activity                @relation(fields: [activityId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  activity       Activity                             @relation(fields: [activityId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
+  @@unique([activityId, sequence], map: "activity_points_activityId_sequence_key")
   @@index([activityId], map: "activity_points_activityId_idx_bf2a659e")
-  @@index([activityId, sequence], map: "activity_points_activityId_sequence_idx_0b074f75")
   @@map("activity_points")
 }
 
 model Route {
-  createdAt           DateTime                 @default(now()) @db.Timestamptz(6)
-  createdByUserId     String                   @db.Uuid
+  createdAt           DateTime                                   @default(now()) @db.Timestamptz(6)
+  createdByUserId     String                                     @db.Uuid
   description         String?
   difficulty          RouteDifficulty?
   distanceMeters      Float?
   elevationGainMeters Float?
-  id                  String                   @id @default(uuid()) @db.Uuid
+  id                  String                                     @id @default(uuid()) @db.Uuid
   name                String
-  path                Unsupported("geometry")?
+  path                Unsupported("geometry(LineString, 4326)")?
   region              String?
-  sourceActivityId    String?                  @unique @db.Uuid
-  startPoint          Unsupported("geometry")?
-  status              RouteStatus              @default(DRAFT)
+  sourceActivityId    String?                                    @unique @db.Uuid
+  startPoint          Unsupported("geometry(Point, 4326)")?
+  status              RouteStatus                                @default(DRAFT)
   type                ActivityType
-  updatedAt           DateTime                 @updatedAt @db.Timestamptz(6)
+  updatedAt           DateTime                                   @updatedAt @db.Timestamptz(6)
   favorites           RouteFavorite[]
-  createdBy           User                     @relation("RouteCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  sourceActivity      Activity?                @relation(fields: [sourceActivityId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy           User                                       @relation("RouteCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sourceActivity      Activity?                                  @relation(fields: [sourceActivityId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([createdByUserId], map: "routes_createdByUserId_idx_93e8a540")
   @@index([status], map: "routes_status_idx_e98638ab")

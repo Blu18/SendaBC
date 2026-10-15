@@ -1,17 +1,41 @@
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useProfile } from "../../hooks/auth/auth.hooks";
 import { useAuth } from "../../context/AuthContext";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
+import { countPendingUploads } from "../../lib/db/activities";
+import { pendingUploadsWarning } from "../../lib/format/activity";
 
 export default function MainPage() {
     const navigation = useNavigation();
-    const { logout } = useAuth();
+    const { logout, userId } = useAuth();
     const profile = useProfile();
 
-    const handleLogout = async () => {
+    const cerrarSesion = async () => {
         await logout();
         navigation.reset({ index: 0, routes: [{ name: 'Index' }] });
+    };
+
+    // Spec 005, CA-24: con actividades sin subir, avisar antes de cerrar sesión. Las actividades
+    // no se borran: se suben cuando esa cuenta vuelva a iniciar sesión (RN-4).
+    const handleLogout = async () => {
+        let pendientes = 0;
+        try {
+            if (userId) pendientes = await countPendingUploads(userId);
+        } catch (e) {
+            // Sin el conteo se cierra sesión igual: los datos se conservan en el teléfono.
+            console.log('Error contando actividades sin subir:', e);
+        }
+
+        const aviso = pendingUploadsWarning(pendientes);
+        if (!aviso) {
+            await cerrarSesion();
+            return;
+        }
+        Alert.alert('Actividades sin subir', aviso, [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Cerrar sesión', style: 'destructive', onPress: () => void cerrarSesion() },
+        ]);
     };
 
     return (

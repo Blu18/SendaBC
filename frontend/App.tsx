@@ -12,6 +12,7 @@ import ActivityPage from './pages/activity/activityPage';
 import ActivitySummaryPage from './pages/activity/activitySummaryPage';
 import ActivityHistoryPage from './pages/activity/activityHistoryPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SyncProvider } from './context/SyncContext';
 import { closeOrphanActivities } from './lib/db/activities';
 import { computeMissingMetrics } from './lib/db/activityMetrics';
 import { setUnauthorizedHandler } from './lib/api/client';
@@ -105,7 +106,10 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <SafeAreaView style={styles.safeArea}>
           <Gate>
-            <Navigation ref={navigationRef}/>
+            {/* Dentro de Gate: la sincronización arranca con los datos locales listos (spec 005) */}
+            <SyncProvider>
+              <Navigation ref={navigationRef}/>
+            </SyncProvider>
           </Gate>
         </SafeAreaView>
       </QueryClientProvider>
