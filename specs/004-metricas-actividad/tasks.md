@@ -58,7 +58,7 @@ Los 25 CA están cubiertos por al menos una tarea.
 |---|---|---|---|
 | CA-1 | M1 | Manual | Cumple (emulador, 2026-10-06) |
 | CA-2 | M1 | Manual | Cumple (emulador, 2026-10-06) |
-| CA-3 | M2 | Manual | Pendiente (M2: requiere modo avión) |
+| CA-3 | M2 | Manual | Cumple (emulador, 2026-10-15, durante los casos M2 y M8 de la spec 005): con modo avión, el resumen se mostró completo al detener |
 | CA-4 | `summary.test.ts` › duración | Automatizada | Cumple (Vitest) |
 | CA-5 | `summary.test.ts` › ritmo y velocidad · `metrics.test.ts` (formato) · M1 (se ve el correcto según el tipo) | Ambas | Cumple (Vitest + M1 emulador, 2026-10-06) |
 | CA-6 | `summary.test.ts` › distancia 0 · `metrics.test.ts` › `—` | Automatizada | Cumple (Vitest; M9 muestra `—`) |
@@ -77,9 +77,9 @@ Los 25 CA están cubiertos por al menos una tarea.
 | CA-19 | M6 | Manual | Cumple (emulador, 2026-10-06) |
 | CA-20 | M7 | Manual | Cumple (emulador, 2026-10-06) |
 | CA-21 | M7 | Manual | Cumple (emulador, 2026-10-06) |
-| CA-22 | M7 | Manual | Pendiente (M7 paso 1: requiere una cuenta sin actividades) |
-| CA-23 | M2 | Manual | Pendiente (M2: requiere modo avión) |
-| CA-24 | M8 | Manual | Pendiente (M8: requiere otra cuenta) |
+| CA-22 | M7 | Manual | Cumple (emulador, 2026-10-15, caso M9 de la spec 005): una cuenta sin actividades ve "Aún no tienes actividades…" |
+| CA-23 | M2 | Manual | Cumple (emulador, 2026-10-15, caso M8 de la spec 005): la lista y los resúmenes se ven en modo avión |
+| CA-24 | M8 | Manual | Cumple (emulador, 2026-10-15, caso M9 de la spec 005): con otra cuenta en el mismo teléfono la lista quedó vacía |
 | CA-25 | `distance.test.ts` › saltos imposibles · M10 | Ambas | Cumple (Vitest + M10 emulador, 2026-10-06) |
 
 Requisito de rendimiento (< 1 s): `summary.test.ts` › 5 400 puntos + 10 800 lecturas < 100 ms, más la observación en M1.
@@ -153,9 +153,9 @@ Hacerlos en un dispositivo físico (el barómetro no existe en emuladores y en w
 
 Para pasar la spec a *Implementada*, ejecutar en un dispositivo físico:
 
-- [ ] M2 — Sin conexión (CA-3, CA-23).
+- [x] M2 — Sin conexión (CA-3, CA-23). Verificado en el emulador durante la spec 005.
 - [ ] M3 — Elevación con barómetro (CA-12, CA-14).
 - [ ] M4 — Elevación con GPS (CA-13).
 - [ ] M5 — Quieto 5 minutos (CA-9).
-- [ ] M7, paso 1 — Historial vacío con una cuenta sin actividades (CA-22).
-- [ ] M8 — Otro usuario en el mismo teléfono (CA-24).
+- [x] M7, paso 1 — Historial vacío con una cuenta sin actividades (CA-22). Verificado en el emulador durante la spec 005.
+- [x] M8 — Otro usuario en el mismo teléfono (CA-24). Verificado en el emulador durante la spec 005.
