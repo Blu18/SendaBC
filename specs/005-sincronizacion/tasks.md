@@ -76,7 +76,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Documentación
 
-- [ ] T20 — Al cerrar la semana: actualizar el estado de la spec, la tabla de verificación y `specs/roadmap.md`.
+- [x] T20 — Al cerrar la semana: actualizar el estado de la spec, la tabla de verificación y `specs/roadmap.md`.
 
 ## Cobertura
 
@@ -102,14 +102,14 @@ Los 24 CA están cubiertos por al menos una tarea.
 | CA-14 | M1 · M2 | Manual | Cumple (M1, M2) |
 | CA-15 | M2 | Manual | Cumple (M2: ~13 s sin salir de la lista) |
 | CA-16 | `syncEngine.test.ts` › modo manual · M5 | Ambas | Cumple (Vitest + M5, pasos 1–3) |
-| CA-17 | `syncEngine.test.ts` › solo el usuario configurado · M9 | Ambas | Vitest ok · falta M9 |
+| CA-17 | `syncEngine.test.ts` › solo el usuario configurado · M9 | Ambas | Cumple (Vitest + M9) |
 | CA-18 | `activity.service.spec.ts` · `activity.e2e-spec.ts` › `401`, `userId` ignorado, `404` ajeno | Automatizada | Cumple (Vitest + e2e) |
 | CA-19 | `syncEngine.test.ts` (usa `listUploadable`, que exige `user_id = ?`) · revisión de la consulta | Automatizada | Cumple (Vitest) |
 | CA-20 | `activity.e2e-spec.ts` › lista · `syncEngine.test.ts` › descarga · M8 | Ambas | Cumple (e2e + Vitest + M8) |
 | CA-21 | `activity.e2e-spec.ts` › detalle · M8 | Ambas | Cumple (e2e + M8) |
 | CA-22 | `syncEngine.test.ts` › solo descarga las que faltan · M8 | Ambas | Cumple (Vitest + M8) |
 | CA-23 | M8 | Manual | Cumple (M8, ver nota) |
-| CA-24 | M9 · M10 | Manual | Pendiente (M9, M10) |
+| CA-24 | M9 · M10 | Manual | Cumple (M9, M10) |
 
 Además: colección de Postman (T7) ejecutada contra el backend local antes de cerrar la spec (constitución 6.3). Ejecutada el 2026-10-09: 17/17 en verde.
 
@@ -123,7 +123,8 @@ Además: colección de Postman (T7) ejecutada contra el backend local antes de c
 - **M6** — Opcional, no ejecutado (cubierto por pruebas automáticas).
 - **M7** ✅ Con `JWT_EXPIRE_IN=30s` la app cerró sesión al subir y no marcó nada; al volver a entrar se subió.
 - **M8** ✅ Tras borrar los datos de Expo Go: 9/9 recuperadas como "Sincronizada", resumen igual al servidor, sin duplicados al deslizar y visibles en modo avión. Nota: en Expo Go no se puede reabrir la app sin conexión (carga desde Metro); se reabrió la lista en modo avión.
-- **M9**, **M10** — Pendientes.
+- **M9** ✅ Con A (diego) en modo avión se grabaron 2 actividades; "Cerrar sesión" mostró "Tienes 2 actividades sin subir…" (Cancelar deja la sesión abierta). Con B (cuenta de prueba creada para el caso) y conexión, el servidor siguió con A=18 y B=0 y la lista de B quedó vacía; al volver a entrar con A se subieron las 2 (A=20).
+- **M10** ✅ B, sin pendientes, cerró sesión sin aviso.
 
 ### Casos manuales
 
