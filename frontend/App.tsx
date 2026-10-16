@@ -11,6 +11,7 @@ import MainPage from './pages/main/mainPage';
 import ActivityPage from './pages/activity/activityPage';
 import ActivitySummaryPage from './pages/activity/activitySummaryPage';
 import ActivityHistoryPage from './pages/activity/activityHistoryPage';
+import ExploreRoutesPage from './pages/routes/exploreRoutesPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
 import { closeOrphanActivities } from './lib/db/activities';
@@ -44,6 +45,9 @@ const RootStack = createNativeStackNavigator({
     },
     ActivityHistory: {
       screen: ActivityHistoryPage
+    },
+    ExploreRoutes: {
+      screen: ExploreRoutesPage
     }
   }
 })

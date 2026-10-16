@@ -34,10 +34,11 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 - [x] T10 — `lib/routes/api.ts`: `fetchNearbyRoutes` sobre `apiFetch`, con límite de 10 s y resultado `{ ok, data }` / `{ ok: false, failure }`. Pruebas con `fetch` simulado: parámetros de la query, token, `401`, `500`, sin red y tiempo agotado. (CA-15, CA-16)
 - [x] T11 — `hooks/routes/useNearbyRoutes.ts`: TanStack Query bajo demanda, revisión de red con `hayConexion` y estados `idle` / `loading` / `success` / `empty` / `offline` / `error`, con `search` y `retry`. (CA-13, CA-15, CA-16)
   - El estado se decide con `nearbyStatus` en `lib/routes/status.ts` (lógica pura, con `status.test.ts`); el hook solo lo conecta con TanStack Query y `expo-network`. Además expone `lastSearch` para `hasMovedEnough`. `geo.ts` agrega `regionAround` para encuadrar el radio de búsqueda.
-- [ ] T12 — `pages/routes/exploreRoutesPage.tsx`: `MapView` con un `Polyline` y un `Marker` por ruta; selección resaltada; tocar el mapa vacío quita la selección; tarjeta con nombre, tipo, distancia, desnivel, dificultad, "Por {author}", "A X km de ti" e insignia "Tuya". (CA-1, CA-2, CA-6, CA-7, CA-8, CA-19)
-- [ ] T13 — Controles: chips de tipo y de radio (25 km al abrir), botón "Buscar en esta zona" con `hasMovedEnough` y botón para volver a centrar. (CA-9, CA-10, CA-11, CA-12)
-- [ ] T14 — Permiso y avisos: con permiso, centrar y buscar al abrir; sin permiso, región de Baja California sin buscar, aviso y tarjeta sin distancia; avisos de "sin rutas", "sin conexión" y error con "Reintentar"; indicador de carga. (CA-1, CA-13, CA-14, CA-15, CA-16)
-- [ ] T15 — Navegación: ruta `ExploreRoutes` en `App.tsx` y botón "Explorar rutas" en `MainPage`. (CA-1, CA-17)
+- [x] T12 — `pages/routes/exploreRoutesPage.tsx`: `MapView` con un `Polyline` y un `Marker` por ruta; selección resaltada; tocar el mapa vacío quita la selección; tarjeta con nombre, tipo, distancia, desnivel, dificultad, "Por {author}", "A X km de ti" e insignia "Tuya". (CA-1, CA-2, CA-6, CA-7, CA-8, CA-19)
+- [x] T13 — Controles: chips de tipo y de radio (25 km al abrir), botón "Buscar en esta zona" con `hasMovedEnough` y botón para volver a centrar. (CA-9, CA-10, CA-11, CA-12)
+- [x] T14 — Permiso y avisos: con permiso, centrar y buscar al abrir; sin permiso, región de Baja California sin buscar, aviso y tarjeta sin distancia; avisos de "sin rutas", "sin conexión" y error con "Reintentar"; indicador de carga. (CA-1, CA-13, CA-14, CA-15, CA-16)
+- [x] T15 — Navegación: ruta `ExploreRoutes` en `App.tsx` y botón "Explorar rutas" en `MainPage`. (CA-1, CA-17)
+  - T12–T15 implementadas el 2026-10-16: `tsc` sin errores y el bundle de Android compila (`expo export`). Antes de buscar (sin permiso), cambiar radio o tipo solo los elige; después, vuelve a buscar en el centro del mapa. Al cambiar el radio, el mapa se encuadra al nuevo radio. Si no se puede obtener la posición (GPS apagado), se explora como sin permiso. **Pendiente:** los casos manuales M1–M8 en el emulador o el teléfono.
 
 ## Documentación
 
