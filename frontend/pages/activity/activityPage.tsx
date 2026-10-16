@@ -40,6 +40,7 @@ export default function ActivityPage() {
         pointCount,
         startedAt,
         permissionError,
+        stopFailed,
         liveDistance,
         liveElevationGain,
         start,
@@ -122,11 +123,24 @@ export default function ActivityPage() {
                 </View>
             )}
 
-            <PrimaryButton
-                text={recording ? 'Detener actividad' : 'Iniciar actividad'}
-                onPress={recording ? handleStop : () => start(type)}
-                style={[styles.mainBtn, recording && styles.stopBtn]}
-            />
+            {/* No se pudo cerrar la actividad al detener: no se ofrece iniciar otra mientras
+                quede una sin cerrar (spec 003, CA-12, RN-1) */}
+            {stopFailed ? (
+                <>
+                    <View style={styles.notice}>
+                        <Text style={styles.noticeText}>
+                            No se pudo cerrar la actividad. Se completará automáticamente al volver a abrir la app.
+                        </Text>
+                    </View>
+                    <PrimaryButton text="Volver" onPress={() => navigation.goBack()} style={styles.mainBtn} />
+                </>
+            ) : (
+                <PrimaryButton
+                    text={recording ? 'Detener actividad' : 'Iniciar actividad'}
+                    onPress={recording ? handleStop : () => start(type)}
+                    style={[styles.mainBtn, recording && styles.stopBtn]}
+                />
+            )}
         </View>
     );
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Register from './pages/auth/register';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import Index from './pages/auth';
 import Login from './pages/auth/login';
 import {createNavigationContainerRef, createStaticNavigation} from '@react-navigation/native';
@@ -16,8 +16,7 @@ import { SyncProvider } from './context/SyncContext';
 import { closeOrphanActivities } from './lib/db/activities';
 import { computeMissingMetrics } from './lib/db/activityMetrics';
 import { setUnauthorizedHandler } from './lib/api/client';
-
-export const queryClient = new QueryClient()
+import { queryClient } from './lib/api/queryClient';
 
 const RootStack = createNativeStackNavigator({
   initialRouteName: 'Index',
