@@ -30,9 +30,10 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 - [ ] T8 — Instalar `react-native-maps` (`npx expo install react-native-maps`) y confirmar que el mapa se muestra en Expo Go en el emulador.
   - 2026-10-16: instalado `react-native-maps` 1.27.2 (la versión del SDK 57), sin plugin en `app.json`, porque Expo Go no lo necesita; la clave de Google Maps queda para la spec 010. **Falta** confirmar que el mapa se ve en Expo Go en el emulador; se hará con la primera pantalla que use `MapView` (T12, caso M1).
-- [ ] T9 — `lib/routes/constants.ts`, `geo.ts` y `format.ts`: radios, región de Baja California, `pathToCoordinates`, `distanceFromUser`, `hasMovedEnough` y `DIFFICULTY_LABELS`. Pruebas: conversión de coordenadas; distancia conocida entre dos puntos; sin ubicación → `null`; moverse menos o más del 20 % del radio; etiquetas de dificultad. (CA-7, CA-9, CA-11, CA-14)
-- [ ] T10 — `lib/routes/api.ts`: `fetchNearbyRoutes` sobre `apiFetch`, con límite de 10 s y resultado `{ ok, data }` / `{ ok: false, failure }`. Pruebas con `fetch` simulado: parámetros de la query, token, `401`, `500`, sin red y tiempo agotado. (CA-15, CA-16)
-- [ ] T11 — `hooks/routes/useNearbyRoutes.ts`: TanStack Query bajo demanda, revisión de red con `hayConexion` y estados `idle` / `loading` / `success` / `empty` / `offline` / `error`, con `search` y `retry`. (CA-13, CA-15, CA-16)
+- [x] T9 — `lib/routes/constants.ts`, `geo.ts` y `format.ts`: radios, región de Baja California, `pathToCoordinates`, `distanceFromUser`, `hasMovedEnough` y `DIFFICULTY_LABELS`. Pruebas: conversión de coordenadas; distancia conocida entre dos puntos; sin ubicación → `null`; moverse menos o más del 20 % del radio; etiquetas de dificultad. (CA-7, CA-9, CA-11, CA-14)
+- [x] T10 — `lib/routes/api.ts`: `fetchNearbyRoutes` sobre `apiFetch`, con límite de 10 s y resultado `{ ok, data }` / `{ ok: false, failure }`. Pruebas con `fetch` simulado: parámetros de la query, token, `401`, `500`, sin red y tiempo agotado. (CA-15, CA-16)
+- [x] T11 — `hooks/routes/useNearbyRoutes.ts`: TanStack Query bajo demanda, revisión de red con `hayConexion` y estados `idle` / `loading` / `success` / `empty` / `offline` / `error`, con `search` y `retry`. (CA-13, CA-15, CA-16)
+  - El estado se decide con `nearbyStatus` en `lib/routes/status.ts` (lógica pura, con `status.test.ts`); el hook solo lo conecta con TanStack Query y `expo-network`. Además expone `lastSearch` para `hasMovedEnough`. `geo.ts` agrega `regionAround` para encuadrar el radio de búsqueda.
 - [ ] T12 — `pages/routes/exploreRoutesPage.tsx`: `MapView` con un `Polyline` y un `Marker` por ruta; selección resaltada; tocar el mapa vacío quita la selección; tarjeta con nombre, tipo, distancia, desnivel, dificultad, "Por {author}", "A X km de ti" e insignia "Tuya". (CA-1, CA-2, CA-6, CA-7, CA-8, CA-19)
 - [ ] T13 — Controles: chips de tipo y de radio (25 km al abrir), botón "Buscar en esta zona" con `hasMovedEnough` y botón para volver a centrar. (CA-9, CA-10, CA-11, CA-12)
 - [ ] T14 — Permiso y avisos: con permiso, centrar y buscar al abrir; sin permiso, región de Baja California sin buscar, aviso y tarjeta sin distancia; avisos de "sin rutas", "sin conexión" y error con "Reintentar"; indicador de carga. (CA-1, CA-13, CA-14, CA-15, CA-16)
@@ -62,9 +63,9 @@ Los 20 CA están cubiertos por al menos una tarea.
 | CA-10 | M3 | Manual | Pendiente |
 | CA-11 | `nearby-query.dto.spec.ts` · `route.e2e-spec.ts` › 25/50/100/101 km · M4 | Ambas | Pendiente |
 | CA-12 | `route.e2e-spec.ts` › filtro por tipo · M5 | Ambas | Pendiente |
-| CA-13 | M6 | Manual | Pendiente |
+| CA-13 | `status.test.ts` › empty · M6 | Ambas | Pendiente |
 | CA-14 | `constants`/`geo` (región y distancia `null`) · M7 | Ambas | Pendiente |
-| CA-15 | `api.test.ts` › sin red · M8 | Ambas | Pendiente |
+| CA-15 | `api.test.ts` › sin red · `status.test.ts` › offline · M8 | Ambas | Pendiente |
 | CA-16 | `api.test.ts` › `500` · M8 | Ambas | Pendiente |
 | CA-17 | `route.controller.spec.ts` › guard · `route.e2e-spec.ts` › `401` | Automatizada | Pendiente |
 | CA-18 | `rutas-ejemplo.spec.ts` › 12+ rutas, 4+ zonas, 3 tipos · M1 | Ambas | Pendiente |
