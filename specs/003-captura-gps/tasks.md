@@ -59,7 +59,7 @@ Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el
 |---|---|---|
 | CA-1 | M1 | Cumple (emulador, 2026-10-06) |
 | CA-2 | M2 | Cumple |
-| CA-3 | M3 | Código ok · falta M3 |
+| CA-3 | M3 | Cumple (emulador, 2026-10-16): negado una vez → no inicia y pide volver a intentar; bloqueado → aviso con "Abrir ajustes", que abre App info |
 | CA-4 | M4 | Cumple (emulador, 2026-10-06) |
 | CA-5 | M1 | Cumple (emulador, 2026-10-06) |
 | CA-6 | M4 | Cumple (emulador, 2026-10-06); O2 sigue abierta |
@@ -67,7 +67,7 @@ Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el
 | CA-8 | M4 | Cumple (emulador, 2026-10-06): el resumen muestra los mismos N puntos que el contador (O1 corregida en la spec 004) |
 | CA-9 | M6 | Cumple (emulador, 2026-10-06): doble toque en "Iniciar" crea una sola actividad |
 | CA-10 | M7 | Cumple (emulador, 2026-10-06): tras cerrar la app a la fuerza, la actividad aparece terminada con la duración hasta su último punto |
-| CA-11 | M8 | Código ok · falta M8 |
+| CA-11 | M8 | Cumple (emulador, 2026-10-16, Metro con `--no-dev`): con apagado a 15 s, la pantalla siguió encendida 30 s grabando sin tocar y se apagó entre 10 y 20 s después de detener |
 | CA-12 | Revisión de código (no se puede provocar un fallo de SQLite desde la app) | Cumple (revisión, 2026-10-15): `stop()` captura el fallo, marca `stopFailed` y la pantalla muestra el aviso con "Volver" en lugar de "Iniciar" |
 
 ### Observaciones de la revisión
@@ -109,6 +109,9 @@ Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el
 - **Esperado:** la actividad quedó en `PENDING_SYNC` con `endedAt` igual a la hora de su último punto; no hay ninguna en `RECORDING`.
 
 **M8 — Pantalla encendida**
+
+> En Expo Go hay que correr Metro con `npx expo start --no-dev`: en desarrollo, Expo mantiene la pantalla siempre encendida (`withDevTools` activa `expo-keep-awake`) y el caso no prueba nada.
+
 1. Configurar el apagado automático del teléfono en 30 s. Iniciar una actividad y no tocar la pantalla 1 minuto.
 2. Detener la actividad y esperar 1 minuto.
 - **Esperado:** durante la grabación la pantalla sigue encendida y los puntos siguen llegando; después de detener, la pantalla se apaga sola.
@@ -117,5 +120,5 @@ Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el
 
 Para pasar la spec a *Implementada*:
 
-- [ ] Ejecutar en un dispositivo físico los casos M1, M3, M4, M5, M6, M7 y M8 y actualizar la tabla de verificación.
+- [x] Casos M1–M8 ejecutados (emulador, 2026-10-06 a 2026-10-16) y tabla de verificación actualizada.
 - [x] O2 aceptada como limitación conocida y O3 corregida (T14). O1 quedó corregida en la spec 004.
