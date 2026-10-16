@@ -10,7 +10,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 - [x] T2 — `NearbyQueryDto`: `lat` (−90…90), `lng` (−180…180), `radiusKm` (1…100, por defecto 25) y `type` opcional, convertidos de texto a número y con mensajes en español. Pruebas: valores válidos; sin `radiusKm` → 25; `radiusKm` 0 y 101 → `400`; latitud 91; tipo inválido. (CA-11, RN-5)
 - [x] T3 — `RouteService.nearby(userId, query)` con la consulta del plan (`ST_DWithin` sobre `geography`, solo `PUBLISHED`, filtro por tipo, orden por cercanía, `LIMIT 50`, `ST_Simplify` del recorrido) y conversión al tipo `NearbyRoute`. Pruebas con `$queryRaw` simulado: conversión del GeoJSON a `[lng, lat][]`, `isMine`, `author`, números y lista vacía. (CA-2, CA-3, CA-5, CA-6, CA-12)
 - [x] T4 — `RouteController` (`GET /routes/nearby`) con `JwtAuthGuard`, `RouteModule` y registro en `AppModule`. Pruebas del controlador: guard y uso del usuario del token. (CA-17)
-- [ ] T5 — `test/route.e2e-spec.ts` contra la base, con dos usuarios de prueba que se borran al final (primero sus rutas, porque la relación con el creador no se borra en cascada). Inserta rutas con SQL alrededor de un centro de prueba:
+- [x] T5 — `test/route.e2e-spec.ts` contra la base, con dos usuarios de prueba que se borran al final (primero sus rutas, porque la relación con el creador no se borra en cascada). Inserta rutas con SQL alrededor de un centro de prueba:
   - publicada a 3 km, borrador a 3 km y archivada a 3 km → solo la publicada (CA-3);
   - publicada a 40 km → no aparece con 25 km y sí con 50 km; con 100 km sí, con 101 → `400` (CA-4, CA-11, RN-5);
   - 55 publicadas dentro del radio → 50, ordenadas por distancia (CA-5);
@@ -20,8 +20,10 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - sin token → `401` (CA-17).
 
   (CA-2 a CA-6, CA-11, CA-12, CA-17)
+  - 8 pruebas; ejecutadas el 2026-10-16 contra la base: 8/8 en verde y la limpieza deja `routes` sin rutas de prueba.
 - [ ] T6 — Rutas de ejemplo: `backend/prisma/seed/rutas-ejemplo.json` (al menos 12 rutas, 4 zonas o más, los tres tipos, UUID fijos) y `rutas-ejemplo.ts` con `npm run seed:rutas` y `npm run seed:rutas:quitar`, según el plan. Prueba Vitest del JSON: 12 o más rutas, 4 regiones o más, los tres tipos, ids únicos, al menos 10 puntos por ruta y todos dentro de los límites de Baja California. Verificación contra la base: correr `seed:rutas` dos veces no duplica; `seed:rutas:quitar` borra solo esas rutas y al usuario del sistema. (CA-18, CA-19, CA-20)
-- [ ] T7 — Colección de Postman: "Rutas cercanas" (`200`), "Radio fuera de rango" (`400`) y "Rutas cercanas sin token" (`401`). Validar con la app local, como en la 005. (Constitución 6.3)
+- [x] T7 — Colección de Postman: "Rutas cercanas" (`200`), "Radio fuera de rango" (`400`) y "Rutas cercanas sin token" (`401`). Validar con la app local, como en la 005. (Constitución 6.3)
+  - Variables `lat` y `lng` (Ensenada) como centro. Validada el 2026-10-16 ejecutando sus propios scripts de prueba contra la app local, con dos rutas temporales (a 3 y 40 km) que se borraron al terminar: 9/9 verificaciones en verde (login incluido); la de 40 km no aparece con 25 km.
 
 ## Frontend
 
