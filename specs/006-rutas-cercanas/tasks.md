@@ -29,6 +29,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 ## Frontend
 
 - [ ] T8 — Instalar `react-native-maps` (`npx expo install react-native-maps`) y confirmar que el mapa se muestra en Expo Go en el emulador.
+  - 2026-10-16: instalado `react-native-maps` 1.27.2 (la versión del SDK 57), sin plugin en `app.json`, porque Expo Go no lo necesita; la clave de Google Maps queda para la spec 010. **Falta** confirmar que el mapa se ve en Expo Go en el emulador; se hará con la primera pantalla que use `MapView` (T12, caso M1).
 - [ ] T9 — `lib/routes/constants.ts`, `geo.ts` y `format.ts`: radios, región de Baja California, `pathToCoordinates`, `distanceFromUser`, `hasMovedEnough` y `DIFFICULTY_LABELS`. Pruebas: conversión de coordenadas; distancia conocida entre dos puntos; sin ubicación → `null`; moverse menos o más del 20 % del radio; etiquetas de dificultad. (CA-7, CA-9, CA-11, CA-14)
 - [ ] T10 — `lib/routes/api.ts`: `fetchNearbyRoutes` sobre `apiFetch`, con límite de 10 s y resultado `{ ok, data }` / `{ ok: false, failure }`. Pruebas con `fetch` simulado: parámetros de la query, token, `401`, `500`, sin red y tiempo agotado. (CA-15, CA-16)
 - [ ] T11 — `hooks/routes/useNearbyRoutes.ts`: TanStack Query bajo demanda, revisión de red con `hayConexion` y estados `idle` / `loading` / `success` / `empty` / `offline` / `error`, con `search` y `retry`. (CA-13, CA-15, CA-16)
