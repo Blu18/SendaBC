@@ -21,7 +21,8 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
   (CA-2 a CA-6, CA-11, CA-12, CA-17)
   - 8 pruebas; ejecutadas el 2026-10-16 contra la base: 8/8 en verde y la limpieza deja `routes` sin rutas de prueba.
-- [ ] T6 — Rutas de ejemplo: `backend/prisma/seed/rutas-ejemplo.json` (al menos 12 rutas, 4 zonas o más, los tres tipos, UUID fijos) y `rutas-ejemplo.ts` con `npm run seed:rutas` y `npm run seed:rutas:quitar`, según el plan. Prueba Vitest del JSON: 12 o más rutas, 4 regiones o más, los tres tipos, ids únicos, al menos 10 puntos por ruta y todos dentro de los límites de Baja California. Verificación contra la base: correr `seed:rutas` dos veces no duplica; `seed:rutas:quitar` borra solo esas rutas y al usuario del sistema. (CA-18, CA-19, CA-20)
+- [x] T6 — Rutas de ejemplo: `backend/prisma/seed/rutas-ejemplo.json` (al menos 12 rutas, 4 zonas o más, los tres tipos, UUID fijos) y `rutas-ejemplo.ts` con `npm run seed:rutas` y `npm run seed:rutas:quitar`, según el plan. Prueba Vitest del JSON: 12 o más rutas, 4 regiones o más, los tres tipos, ids únicos, al menos 10 puntos por ruta y todos dentro de los límites de Baja California. Verificación contra la base: correr `seed:rutas` dos veces no duplica; `seed:rutas:quitar` borra solo esas rutas y al usuario del sistema. (CA-18, CA-19, CA-20)
+  - 17 rutas en 6 zonas (Ensenada, Valle de Guadalupe, Tecate, Sierra de Juárez, Sierra de San Pedro Mártir y Rosarito). Prueba: `prisma/seed/rutas-ejemplo.spec.ts` (5/5). Verificado el 2026-10-16 contra la base: dos cargas seguidas dejan 17 rutas; `seed:rutas:quitar` borra las 17 y al usuario "SendaBC" y deja intactas las 22 actividades y los demás usuarios. Quedan cargadas para los casos manuales.
 - [x] T7 — Colección de Postman: "Rutas cercanas" (`200`), "Radio fuera de rango" (`400`) y "Rutas cercanas sin token" (`401`). Validar con la app local, como en la 005. (Constitución 6.3)
   - Variables `lat` y `lng` (Ensenada) como centro. Validada el 2026-10-16 ejecutando sus propios scripts de prueba contra la app local, con dos rutas temporales (a 3 y 40 km) que se borraron al terminar: 9/9 verificaciones en verde (login incluido); la de 40 km no aparece con 25 km.
 
@@ -65,7 +66,7 @@ Los 20 CA están cubiertos por al menos una tarea.
 | CA-15 | `api.test.ts` › sin red · M8 | Ambas | Pendiente |
 | CA-16 | `api.test.ts` › `500` · M8 | Ambas | Pendiente |
 | CA-17 | `route.controller.spec.ts` › guard · `route.e2e-spec.ts` › `401` | Automatizada | Pendiente |
-| CA-18 | `rutas-ejemplo.test.ts` › 12+ rutas, 4+ zonas, 3 tipos · M1 | Ambas | Pendiente |
+| CA-18 | `rutas-ejemplo.spec.ts` › 12+ rutas, 4+ zonas, 3 tipos · M1 | Ambas | Pendiente |
 | CA-19 | `route.e2e-spec.ts` › `author` · M2 ("Por SendaBC") | Ambas | Pendiente |
 | CA-20 | T6: `seed:rutas` dos veces sin duplicar y `seed:rutas:quitar` sin tocar otros datos | Verificación contra la base | Pendiente |
 
