@@ -5,6 +5,7 @@ import { AppController } from './app.controller.js';
 import { ActivityModule } from './activity/activity.module.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
+import { RouteModule } from './route/route.module.js';
 import { UserModule } from './user/user.module.js';
 import { ValidationPipe } from './validation/validation.pipe.js';
 
@@ -22,6 +23,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     AuthModule,
     UserModule,
     ActivityModule,
+    RouteModule,
   ],
   controllers: [AppController],
   // Pipe global registrado aquí (no en main.ts) para que también aplique en las pruebas e2e.
