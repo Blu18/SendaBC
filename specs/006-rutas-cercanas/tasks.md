@@ -6,7 +6,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Backend
 
-- [ ] T1 — Migración `20261016000000_routes_start_point_geography`: `routes.startPoint` a `geography(Point, 4326)` e índice GIST declarado en `schema.prisma`. Antes de `migrate deploy`, confirmar con una consulta de solo lectura que `routes` está vacía; después, que `prisma migrate diff` contra la base queda vacío. (CA-2, CA-4)
+- [x] T1 — Migración `20261016000000_routes_start_point_geography`: `routes.startPoint` a `geography(Point, 4326)` e índice GIST declarado en `schema.prisma`. Antes de `migrate deploy`, confirmar con una consulta de solo lectura que `routes` está vacía; después, que `prisma migrate diff` contra la base queda vacío. (CA-2, CA-4)
 - [ ] T2 — `NearbyQueryDto`: `lat` (−90…90), `lng` (−180…180), `radiusKm` (1…100, por defecto 25) y `type` opcional, convertidos de texto a número y con mensajes en español. Pruebas: valores válidos; sin `radiusKm` → 25; `radiusKm` 0 y 101 → `400`; latitud 91; tipo inválido. (CA-11, RN-5)
 - [ ] T3 — `RouteService.nearby(userId, query)` con la consulta del plan (`ST_DWithin` sobre `geography`, solo `PUBLISHED`, filtro por tipo, orden por cercanía, `LIMIT 50`, `ST_Simplify` del recorrido) y conversión al tipo `NearbyRoute`. Pruebas con `$queryRaw` simulado: conversión del GeoJSON a `[lng, lat][]`, `isMine`, `author`, números y lista vacía. (CA-2, CA-3, CA-5, CA-6, CA-12)
 - [ ] T4 — `RouteController` (`GET /routes/nearby`) con `JwtAuthGuard`, `RouteModule` y registro en `AppModule`. Pruebas del controlador: guard y uso del usuario del token. (CA-17)

@@ -128,7 +128,7 @@ model Route {
   path                Unsupported("geometry(LineString, 4326)")?
   region              String?
   sourceActivityId    String?                                    @unique @db.Uuid
-  startPoint          Unsupported("geometry(Point, 4326)")?
+  startPoint          Unsupported("geography(Point, 4326)")?
   status              RouteStatus                                @default(DRAFT)
   type                ActivityType
   updatedAt           DateTime                                   @updatedAt @db.Timestamptz(6)
@@ -138,6 +138,7 @@ model Route {
 
   @@index([createdByUserId], map: "routes_createdByUserId_idx_93e8a540")
   @@index([status], map: "routes_status_idx_e98638ab")
+  @@index([startPoint], map: "routes_startPoint_gist_idx", type: Gist)
   @@map("routes")
 }
 
