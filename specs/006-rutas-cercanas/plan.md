@@ -1,6 +1,6 @@
 # 006 — Plan técnico
 
-Estado: **Aprobado** (2026-10-16)
+Estado: **Aprobado** (2026-10-16; cambio D7 aprobado el mismo día)
 
 Spec: [spec.md](spec.md)
 
@@ -23,13 +23,13 @@ La distancia hasta el usuario se calcula en el teléfono con `haversineMeters`, 
 - [x] **Art. 2.1 Offline-first:** explorar necesita red (spec CA-15), pero no afecta la grabación. Sin conexión no se hace la petición.
 - [x] **Art. 3.3:** `JwtAuthGuard`. La marca "Tuya" se calcula con el id del token, no con un parámetro.
 - [x] **Art. 3.5 Privacidad:** la ubicación viaja solo como centro de la búsqueda; el servidor no la guarda ni la registra en logs.
-- [x] **Art. 3.6:** el usuario del sistema "SendaBC" tiene una contraseña aleatoria que no se guarda en ningún lado, así que nadie puede iniciar sesión con él.
+- [x] **Art. 3.6:** el usuario del sistema "SendaBC" tiene una contraseña aleatoria que no se guarda en ningún lado, así que nadie puede iniciar sesión con él. La clave de Google Maps va en `frontend/.env.local` (ignorado por git), no en `app.json` (D7).
 - [x] **Art. 4.1–4.4:** DTO de consulta con class-validator, `400` con mensajes en español, `401` sin token; el endpoint está documentado abajo.
 - [x] **Art. 5.1:** migración de Prisma `20261016000000_routes_start_point_geography`.
 - [x] **Art. 5.2:** SRID 4326, `ST_MakePoint(longitud, latitud)`. `startPoint` pasa a `geography` para medir en metros; `path` sigue como `geometry(LineString, 4326)` para simplificarlo y dibujarlo.
 - [x] **Art. 5.4:** metros y kilómetros según RN-4.
 - [x] **Art. 6.1 / 6.3:** Vitest en el backend (DTO, servicio, e2e) y en la lógica pura del frontend; casos manuales para el mapa; requests nuevas en la colección de Postman.
-- [x] **Art. 7.1:** `react-native-maps` ya está en el stack. No hay dependencias nuevas.
+- [x] **Art. 7.1:** `react-native-maps` ya está en el stack. `expo-dev-client` es nueva y se justifica en D7.
 
 ## Backend
 
@@ -111,7 +111,17 @@ La tabla está vacía: la publicación llega en la 007. Antes de `migrate deploy
 
 ### Dependencia
 
-- `react-native-maps` (`npx expo install react-native-maps`). En Expo Go funciona sin configuración. Para el build de la tienda (spec 010) hará falta la clave `androidGoogleMapsApiKey` en el plugin (ver Riesgos).
+- `react-native-maps` (`npx expo install react-native-maps`). ~~En Expo Go funciona sin configuración.~~ En Android, Expo Go no sirve: la clave de Google Maps que trae es rechazada ("Authorization failure") y el mapa sale en blanco, tanto en el emulador como en un teléfono (2026-10-16). Por eso la app se prueba con un **development build** con clave propia (D7).
+- `expo-dev-client` (`npx expo install expo-dev-client`): el cliente de desarrollo que reemplaza a Expo Go.
+
+### Configuración del development build (D7)
+
+- `app.json`: `android.package` = `com.sendabc.app`. Es el identificador con el que se restringe la clave y el que se usará en la tienda (spec 010).
+- `app.config.ts`: extiende `app.json` y agrega el plugin `["react-native-maps", { "androidGoogleMapsApiKey": process.env.GOOGLE_MAPS_ANDROID_API_KEY }]`. Sin la variable, el build se arma igual y el mapa sale en blanco, como hoy.
+- `frontend/.env.local` (ignorado por git): `GOOGLE_MAPS_ANDROID_API_KEY=...`. No lleva el prefijo `EXPO_PUBLIC_`, así que no entra al bundle de JavaScript.
+- Clave: proyecto de Google Cloud con **Maps SDK for Android**, restringida a apps Android con el paquete `com.sendabc.app` y el SHA-1 del keystore de depuración (`keytool -list -v -keystore android/app/debug.keystore`, contraseña `android`). La crea el equipo; el agente no la crea ni la ve en el chat.
+- Build local: `npx expo run:android` (prebuild + Gradle; necesita el JDK de Android Studio). `/android` se agrega a `.gitignore`: las carpetas nativas se generan con prebuild.
+- Después, el día a día es igual: `npx expo start` y la app del development build en lugar de Expo Go. Solo hay que recompilar al cambiar dependencias nativas o `app.config.ts`.
 
 ### Lógica pura (`lib/routes/`, con pruebas Vitest)
 
@@ -152,10 +162,18 @@ La tabla está vacía: la publicación llega en la 007. Antes de `migrate deploy
 | D4 | Distancia hasta el usuario calculada en el teléfono | Mandar la ubicación del usuario aparte del centro | Tras mover el mapa, el centro ya no es el usuario; calcular en el teléfono evita mandar la ubicación de más (constitución 3.5). |
 | D5 | Seed en TypeScript ejecutado con Node 24 | `prisma db seed` con `tsx`; SQL a mano | No agrega dependencias. Puede usar `PrismaClient` y `$executeRaw` igual que el servicio. |
 | D6 | Búsqueda bajo demanda, no en cada movimiento del mapa | Buscar en `onRegionChangeComplete` | Menos peticiones y datos móviles; es lo que pide la spec ("Buscar en esta zona", CA-9). |
+| D7 | Development build (`expo-dev-client`) con clave propia de Google Maps para Android, leída de una variable de entorno en `app.config.ts` | Seguir con Expo Go (el mapa no carga en Android); probar solo en iPhone (Android sin verificar); MapLibre con OpenStreetMap (también necesita development build y cambia el stack) | Es la única forma de ver el mapa en Android sin cambiar de librería. La clave hará falta de todos modos para la tienda (spec 010): se adelanta. La variable de entorno cumple la constitución 3.6. |
 
 ## Riesgos
 
-- **Clave de Google Maps para la tienda:** Expo Go no la necesita, pero el build de Android de la semana 10 sí (proyecto de Google Cloud, Maps SDK, restricción por paquete y SHA-1). Se anota como tarea de la spec 010.
+- **Clave de Google Maps:** se adelanta de la spec 010 a esta (D7). Para la tienda, la 010 solo agrega el SHA-1 de la firma de Play a la misma clave. Google Cloud pide una cuenta de facturación aunque el uso del Maps SDK for Android en móvil no tiene costo.
 - **Emulador:** el mapa necesita Google Play Services. Si el AVD no los tiene, el mapa sale en blanco y los casos manuales se hacen en el teléfono.
+- **Build local en Windows:** `expo run:android` necesita el JDK (el de Android Studio, `JAVA_HOME`) y tarda varios minutos la primera vez.
 - **Recorridos aproximados:** las rutas de ejemplo no son trazas GPS reales. Están marcadas como de ejemplo en su descripción y se quitan con `seed:rutas:quitar` antes de producción.
 - **Muchas rutas superpuestas:** con 50 recorridos en 100 km el mapa puede verse cargado. No se agrupan marcadores en esta spec; se evalúa en la 009.
+
+## Historial
+
+- 2026-10-16 — Cambio D7 aprobado por el usuario.
+- 2026-10-16 — Cambio propuesto (D7): en Android, Expo Go no carga el mapa con su clave de Google Maps (emulador y teléfono). Se pasa a un development build con `expo-dev-client` y clave propia en `.env.local`; `android.package` = `com.sendabc.app`; `/android` en `.gitignore`.
+- 2026-10-16 — Aprobado.
