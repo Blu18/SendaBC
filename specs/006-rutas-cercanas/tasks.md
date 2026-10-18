@@ -135,6 +135,22 @@ En el emulador (necesita Google Play Services para el mapa) o en el teléfono, c
 | 8 | `fix(006)`: ajustes de los casos manuales | — |
 | 9 | `docs(006): verificación y estado de la spec` | T16 |
 
+### Resultados de los casos manuales
+
+- **M1 — 2026-10-17, aprobado** (emulador, development build, ubicación fijada en Ensenada): el mapa se centra en Ensenada con 25 km y muestra las rutas de ejemplo cercanas con su recorrido y su marcador de inicio. Al acercar, los recorridos siguen el terreno real (Cañón de Doña Petra hacia Las Lomas, circuito del Bosque de los Attenuatas). Doña Petra y Cerros de Ensenada empiezan casi en el mismo punto y sus marcadores se enciman.
+- **M2 — 2026-10-17, parcial:** la tarjeta de Bosque de los Attenuatas muestra nombre, tipo, dificultad, 8.35 km, 550 m, "Por SendaBC" y "A 8.62 km de ti"; tocar el mapa vacío quita la selección y la tarjeta. **Falla:** en el tramo que comparte con Cerros de Ensenada, la ruta seleccionada queda debajo de la otra y parece resaltada solo en parte (CA-8). Probablemente es el mismo problema de recorridos viejos que se ve en M8. Para el `fix(006)`.
+- **M3 — 2026-10-17, aprobado:** al mover el mapa a Tecate aparece "Buscar en esta zona"; al tocarlo, aparece El Refugio – Tecate. Volver a centrar regresa a Ensenada con sus rutas.
+- **M4 — 2026-10-17, aprobado:** con 5 km no hay rutas (la más cercana empieza a ~5.1 km) y aparece el aviso de CA-13; con 100 km aparecen también las de Tijuana–Rosarito, Tecate, Valle de Guadalupe y Sierra de Juárez; al salir y volver a entrar el radio regresa a 25 km. Al abrir, "Buscando tu ubicación…" tarda más de 10 s en el emulador.
+- **M5 — 2026-10-17, aprobado:** "Ciclismo" oculta las de senderismo y, sin rutas de ciclismo cerca de Ensenada, muestra el aviso; "Trail running" con 100 km muestra solo San Antonio Necua; "Todas" las regresa. El botón flotante de herramientas de desarrollo tapa parte del chip "Ciclismo" (solo en el development build).
+- **M6 — 2026-10-17, aprobado:** con el mapa sobre el mar frente a Eréndira y 10 km aparece "No hay rutas publicadas cerca de aquí…".
+- **M7 — 2026-10-17, aprobado:** al negar el permiso se ve todo Baja California, sin rutas, con el aviso del permiso y sin botón para centrar; al mover a Ensenada y buscar aparecen las rutas y la tarjeta no muestra "A X km de ti".
+- **M8 — 2026-10-17, paso 1 con falla:** en modo avión aparece "Explorar rutas necesita conexión a internet…" con "Reintentar" y sin carga infinita, pero **los recorridos de la búsqueda anterior se quedan dibujados** (los marcadores sí desaparecen), contra CA-15. Pasos 2 y 3 (backend detenido y reintento) pendientes.
+- **`fix(006)` — 2026-10-17, verificado en el emulador:** al seleccionar Doña Petra y luego Bosque de los Attenuatas, la primera vuelve a `primary` y la segunda se resalta completa (CA-8; lo de M2 era una copia vieja de otra ruta). En modo avión ya no queda ningún recorrido dibujado (M8, paso 1, CA-15). Los inicios salen con el verde de la paleta y el seleccionado en `data`. Al abrir, el mapa queda centrado y con rutas en ~6 s. Seleccionar ya no mueve la cámara ni hace aparecer "Buscar en esta zona".
+
 ## Pendientes conocidos
 
-Ninguno por ahora.
+- M8, pasos 2 y 3 (backend detenido y reintento): pendientes.
+- Sin permiso de ubicación, el encuadre de todo Baja California llega hasta Baja California Sur en pantallas verticales. No se corrige: para que quepa el estado completo a lo ancho (CA-14), el mapa tiene que mostrar más latitud.
+- El botón flotante de herramientas del development build tapa parte del chip "Ciclismo". Solo pasa en desarrollo.
+
+Corregido en el `fix(006)` (2026-10-17): recorridos viejos (M2, M8), color de los marcadores, ubicación lenta al abrir, cámara que se movía al tocar un marcador y `edgeToEdgeEnabled` obsoleto en `app.json`.

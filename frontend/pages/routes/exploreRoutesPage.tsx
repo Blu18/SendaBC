@@ -32,8 +32,14 @@ const centerOf = (region: Region): Coordinates => ({
     longitude: region.longitude,
 });
 
+// Una posición reciente basta para centrar el mapa y es casi inmediata; pedir una nueva al GPS
+// tardaba más de 10 s (M4).
+const MAX_EDAD_POSICION_MS = 5 * 60_000;
+
 async function currentPosition(): Promise<Coordinates> {
-    const { coords } = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    const reciente = await Location.getLastKnownPositionAsync({ maxAge: MAX_EDAD_POSICION_MS });
+    const { coords } =
+        reciente ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
     return { latitude: coords.latitude, longitude: coords.longitude };
 }
 
@@ -149,12 +155,6 @@ export default function ExploreRoutesPage() {
 
     const selected = useMemo(() => routes.find((r) => r.id === selectedId) ?? null, [routes, selectedId]);
 
-    // Primero las no seleccionadas: la seleccionada se dibuja encima (CA-8).
-    const ordenadas = useMemo(
-        () => [...routes].sort((a, b) => Number(a.id === selectedId) - Number(b.id === selectedId)),
-        [routes, selectedId]
-    );
-
     const seleccionar = (id: string) => {
         lastOverlayPress.current = Date.now();
         setSelectedId(id);
@@ -224,33 +224,51 @@ export default function ExploreRoutesPage() {
                 showsUserLocation={user !== null}
                 showsMyLocationButton={false}
                 toolbarEnabled={false}
+                // Seleccionar una ruta no mueve la cámara: si no, aparecía "Buscar en esta zona"
+                // sin que el usuario moviera el mapa (CA-9).
+                moveOnMarkerPress={false}
                 onMapReady={() => setMapReady(true)}
                 onRegionChangeComplete={(region) => setMapCenter(centerOf(region))}
                 onPress={onMapPress}
             >
-                {ordenadas.map((route) => {
-                    const activa = route.id === selectedId;
-                    const color = activa ? colors.data : colors.primary;
-                    return [
-                        route.path.length >= 2 && (
+                {/* En Android un Polyline no aplica bien los cambios de color o grosor y deja copias
+                    viejas dibujadas (M2, M8). Por eso nunca se actualiza: al cambiar la selección se
+                    vuelve a montar con otra key, en el orden fijo de la respuesta. La seleccionada
+                    sube con zIndex (CA-8). */}
+                {routes
+                    .filter((route) => route.path.length >= 2)
+                    .map((route) => {
+                        const activa = route.id === selectedId;
+                        return (
                             <Polyline
-                                key={`${route.id}-path`}
+                                key={`${route.id}-path-${activa ? 'on' : 'off'}`}
                                 coordinates={pathToCoordinates(route.path)}
-                                strokeColor={color}
+                                strokeColor={activa ? colors.data : colors.primary}
                                 strokeWidth={activa ? 6 : 3}
                                 zIndex={activa ? 2 : 1}
                                 tappable
                                 onPress={() => seleccionar(route.id)}
                             />
-                        ),
+                        );
+                    })}
+                {routes.map((route) => {
+                    const activa = route.id === selectedId;
+                    return (
                         <Marker
+                            // Cambiar de key al seleccionar vuelve a dibujar el punto (con
+                            // tracksViewChanges en false Android no lo actualiza solo).
                             key={`${route.id}-start-${activa ? 'on' : 'off'}`}
                             coordinate={route.start}
-                            pinColor={color}
-                            zIndex={activa ? 2 : 1}
+                            anchor={{ x: 0.5, y: 0.5 }}
+                            zIndex={activa ? 4 : 3}
+                            // Vista propia y no pinColor: en Android pinColor solo toma el tono
+                            // y el verde de la paleta salía claro.
+                            tracksViewChanges={false}
                             onPress={() => seleccionar(route.id)}
-                        />,
-                    ];
+                        >
+                            <View style={[styles.startDot, activa && styles.startDotActive]} />
+                        </Marker>
+                    );
                 })}
             </MapView>
 
@@ -413,6 +431,21 @@ const styles = StyleSheet.create({
     recenterText: {
         fontSize: 24,
         color: colors.primary,
+    },
+    // Marcador del inicio de cada ruta (CA-2): punto con el color de la paleta.
+    startDot: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        borderWidth: 3,
+        borderColor: colors.background,
+        backgroundColor: colors.primary,
+    },
+    startDotActive: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: colors.data,
     },
     card: {
         padding: 16,
