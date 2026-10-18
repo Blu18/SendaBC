@@ -50,7 +50,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Documentación
 
-- [ ] T16 — Al cerrar: tabla de verificación, estado de la spec y `specs/roadmap.md`.
+- [x] T16 — Al cerrar: tabla de verificación, estado de la spec y `specs/roadmap.md`.
 
 ## Cobertura
 
@@ -60,28 +60,30 @@ Los 20 CA están cubiertos por al menos una tarea.
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | M1 | Manual | Pendiente |
-| CA-2 | `route.e2e-spec.ts` · M1 | Ambas | Pendiente |
-| CA-3 | `route.e2e-spec.ts` › solo publicadas | Automatizada | Pendiente |
-| CA-4 | `route.e2e-spec.ts` › fuera del radio | Automatizada | Pendiente |
-| CA-5 | `route.e2e-spec.ts` › 55 → 50 ordenadas | Automatizada | Pendiente |
-| CA-6 | `route.service.spec.ts` · `route.e2e-spec.ts` › `isMine` · revisión de la insignia | Automatizada | Pendiente |
-| CA-7 | `geo.test.ts` › distancia hasta el usuario · M2 | Ambas | Pendiente |
-| CA-8 | M2 | Manual | Pendiente |
-| CA-9 | `geo.test.ts` › `hasMovedEnough` · M3 | Ambas | Pendiente |
-| CA-10 | M3 | Manual | Pendiente |
-| CA-11 | `nearby-query.dto.spec.ts` · `route.e2e-spec.ts` › 25/50/100/101 km · M4 | Ambas | Pendiente |
-| CA-12 | `route.e2e-spec.ts` › filtro por tipo · M5 | Ambas | Pendiente |
-| CA-13 | `status.test.ts` › empty · M6 | Ambas | Pendiente |
-| CA-14 | `constants`/`geo` (región y distancia `null`) · M7 | Ambas | Pendiente |
-| CA-15 | `api.test.ts` › sin red · `status.test.ts` › offline · M8 | Ambas | Pendiente |
-| CA-16 | `api.test.ts` › `500` · M8 | Ambas | Pendiente |
-| CA-17 | `route.controller.spec.ts` › guard · `route.e2e-spec.ts` › `401` | Automatizada | Pendiente |
-| CA-18 | `rutas-ejemplo.spec.ts` › 12+ rutas, 4+ zonas, 3 tipos · M1 | Ambas | Pendiente |
-| CA-19 | `route.e2e-spec.ts` › `author` · M2 ("Por SendaBC") | Ambas | Pendiente |
-| CA-20 | T6: `seed:rutas` dos veces sin duplicar y `seed:rutas:quitar` sin tocar otros datos | Verificación contra la base | Pendiente |
+| CA-1 | M1 | Manual | Verificado (M1, 2026-10-17) |
+| CA-2 | `route.e2e-spec.ts` · M1 | Ambas | Verificado (e2e 8/8; M1) |
+| CA-3 | `route.e2e-spec.ts` › solo publicadas | Automatizada | Verificado (e2e) |
+| CA-4 | `route.e2e-spec.ts` › fuera del radio | Automatizada | Verificado (e2e) |
+| CA-5 | `route.e2e-spec.ts` › 55 → 50 ordenadas | Automatizada | Verificado (e2e) |
+| CA-6 | `route.service.spec.ts` · `route.e2e-spec.ts` › `isMine` · revisión de la insignia | Automatizada | Verificado (automatizadas; insignia por revisión, ver nota) |
+| CA-7 | `geo.test.ts` › distancia hasta el usuario · M2 | Ambas | Verificado (`geo.test.ts`; M2) |
+| CA-8 | M2 | Manual | Verificado (M2, tras el `fix(006)`) |
+| CA-9 | `geo.test.ts` › `hasMovedEnough` · M3 | Ambas | Verificado (`geo.test.ts`; M3) |
+| CA-10 | M3 | Manual | Verificado (M3) |
+| CA-11 | `nearby-query.dto.spec.ts` · `route.e2e-spec.ts` › 25/50/100/101 km · M4 | Ambas | Verificado (DTO y e2e; M4) |
+| CA-12 | `route.e2e-spec.ts` › filtro por tipo · M5 | Ambas | Verificado (e2e; M5) |
+| CA-13 | `status.test.ts` › empty · M6 | Ambas | Verificado (`status.test.ts`; M4 y M6) |
+| CA-14 | `constants`/`geo` (región y distancia `null`) · M7 | Ambas | Verificado (`geo.test.ts`; M7) |
+| CA-15 | `api.test.ts` › sin red · `status.test.ts` › offline · M8 | Ambas | Verificado (`api.test.ts`, `status.test.ts`; M8 tras el `fix(006)`) |
+| CA-16 | `api.test.ts` › `500` · M8 | Ambas | Verificado (`api.test.ts`; M8) |
+| CA-17 | `route.controller.spec.ts` › guard · `route.e2e-spec.ts` › `401` | Automatizada | Verificado (controlador y e2e) |
+| CA-18 | `rutas-ejemplo.spec.ts` › 12+ rutas, 4+ zonas, 3 tipos · M1 | Ambas | Verificado (`rutas-ejemplo.spec.ts` 6/6: 17 rutas, 8 zonas, 3 tipos; M1) |
+| CA-19 | `route.e2e-spec.ts` › `author` · M2 ("Por SendaBC") | Ambas | Verificado (e2e; M2 "Por SendaBC") |
+| CA-20 | T6: `seed:rutas` dos veces sin duplicar y `seed:rutas:quitar` sin tocar otros datos | Verificación contra la base | Verificado contra la base (T6 y T6b) |
 
 CA-6 en pantalla (la insignia "Tuya") se ve en la app hasta que la spec 007 permita publicar; aquí se cubre con las pruebas automáticas y la revisión del componente.
+
+Cierre (2026-10-17): los 20 CA están verificados. Pruebas finales: backend 86/86, e2e 34/34 (5 suites), frontend 190/190. Colección de Postman validada en T7 (constitución 6.3). Casos manuales M1–M8 en el emulador con el development build (D7) y las rutas de ejemplo reales (D8).
 
 ### Casos manuales
 

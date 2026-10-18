@@ -1,6 +1,6 @@
 # 006 — Catálogo de rutas cercanas en un mapa
 
-- **Estado:** En progreso (2026-10-16)
+- **Estado:** Implementada (2026-10-17)
 - **Semana:** 6
 - **Autor(es):**
 - **Fecha:** 2026-10-16
@@ -103,6 +103,7 @@ Resueltas el 2026-10-16:
 
 ## Historial
 
+- 2026-10-17 — Implementada: los 20 CA verificados (pruebas automáticas y casos manuales M1–M8). Las rutas de ejemplo salen de trazas GPX reales (plan D8) y la app se prueba con un development build (plan D7).
 - 2026-10-16 — En progreso: T1 (migración de `startPoint` a `geography`) aplicada.
 - 2026-10-16 — Aprobada por el usuario.
 - 2026-10-16 — Se resuelven las preguntas abiertas P1–P7: rutas de ejemplo, radio modificable, marca "Tuya" y mapa de Baja California sin permiso.

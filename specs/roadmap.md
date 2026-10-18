@@ -12,7 +12,7 @@ Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. L
 | 3 | Captura de GPS y guardado local | [003-captura-gps](003-captura-gps/spec.md) | Implementada |
 | 4 | Barómetro y métricas de actividad (distancia, tiempo, elevación, resumen) | [004-metricas-actividad](004-metricas-actividad/spec.md) | Implementada con pendientes (falta prueba en dispositivo) |
 | 5 | Sincronización offline-first (cola local, endpoint batch, reintentos) | [005-sincronizacion](005-sincronizacion/spec.md) | Implementada |
-| 6 | Catálogo de rutas cercanas con PostGIS y mapa | [006-rutas-cercanas](006-rutas-cercanas/spec.md) | En progreso |
+| 6 | Catálogo de rutas cercanas con PostGIS y mapa | [006-rutas-cercanas](006-rutas-cercanas/spec.md) | Implementada |
 | 7 | Publicar rutas, detalle y favoritas | 007-publicar-rutas | Por escribir |
 | 8 | Seguridad: contacto de emergencia, inactividad y alerta push/SMS | 008-alerta-inactividad | Por escribir |
 | 9 | Pulido, prueba de campo, pruebas unitarias, bugs | 009-estabilidad | Por escribir |
