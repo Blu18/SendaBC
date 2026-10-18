@@ -19,6 +19,7 @@ type RutaEjemplo = {
   difficulty: 'EASY' | 'MODERATE' | 'HARD' | 'EXTREME' | null;
   region: string;
   description: string;
+  distanceMeters: number; // medida sobre la traza GPX completa (D8)
   elevationGainMeters: number;
   path: [number, number][]; // [longitud, latitud]
 };
@@ -40,8 +41,8 @@ async function cargar() {
     update: {},
   });
 
-  // Mismo id fijo → actualiza en lugar de duplicar (CA-20). La distancia se calcula aquí una
-  // sola vez a partir del recorrido; el catálogo no la recalcula (RN-3).
+  // Mismo id fijo → actualiza en lugar de duplicar (CA-20). La distancia viene del JSON, medida
+  // sobre la traza GPX completa, no del recorrido simplificado; el catálogo no la recalcula (RN-3).
   for (const ruta of rutas as RutaEjemplo[]) {
     const geojson = JSON.stringify({
       type: 'LineString',
@@ -54,7 +55,7 @@ async function cargar() {
       SELECT ${ruta.id}::uuid, ${ruta.name}, ${ruta.type}::"ActivityType", 'PUBLISHED',
              ${ruta.difficulty}::"RouteDifficulty", ${ruta.description}, ${ruta.region},
              ${ruta.elevationGainMeters}, ${catalogo.id}::uuid, now(),
-             g.path, ST_StartPoint(g.path)::geography, ST_Length(g.path::geography)
+             g.path, ST_StartPoint(g.path)::geography, ${ruta.distanceMeters}
       FROM (SELECT ST_SetSRID(ST_GeomFromGeoJSON(${geojson}), 4326) AS path) g
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,

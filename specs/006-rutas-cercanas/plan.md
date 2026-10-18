@@ -1,6 +1,6 @@
 # 006 — Plan técnico
 
-Estado: **Aprobado** (2026-10-16; cambio D7 aprobado el mismo día)
+Estado: **Aprobado** (2026-10-16; D7 aprobado el 2026-10-16, D8 el 2026-10-17)
 
 Spec: [spec.md](spec.md)
 
@@ -102,9 +102,18 @@ La tabla está vacía: la publicación llega en la 007. Antes de `migrate deploy
   - nombre, tipo, dificultad, región, descripción y desnivel;
   - recorrido de 10 a 40 puntos `[longitud, latitud]`.
 
-  Los recorridos son **aproximados**: sirven para desarrollar, no para navegar.
+  ~~Los recorridos son **aproximados**: sirven para desarrollar, no para navegar.~~ Desde D8 los recorridos salen de **trazas GPX reales** de Wikiloc:
+  - Los GPX originales viven en `backend/prisma/seed/gpx/`, que se agrega a `.gitignore`: son de sus autores y no se redistribuyen.
+  - `backend/prisma/seed/rutas-ejemplo.fuentes.json` (versionado) dice, por archivo, nombre en pantalla, tipo (el que marca Wikiloc), región y dificultad, porque el GPX no los trae.
+  - `backend/prisma/seed/gpx-a-json.ts` (Node 24, sin dependencias) lee cada GPX y escribe `rutas-ejemplo.json`. Por cada ruta:
+    - recorrido simplificado con Douglas-Peucker hasta un máximo de 40 puntos;
+    - `distanceMeters` medida sobre la traza completa (haversine);
+    - `elevationGainMeters` de las altitudes del GPX con histéresis de 5 m, para no sumar el ruido del GPS;
+    - `id` UUID v5 fijo, derivado del nombre del archivo;
+    - `source`, con el autor como "usuario de Wikiloc" y el enlace a su perfil, que es lo que trae el GPX.
+  - La descripción dice "Traza de un usuario de Wikiloc ({enlace}). Recorrido simplificado; no sirve para navegar."
 - `backend/prisma/seed/rutas-ejemplo.ts`, que se ejecuta con Node 24, que entiende TypeScript sin compilar:
-  - `npm run seed:rutas`: crea, si no existe, el usuario del sistema `catalogo@senda.bc` con nombre "SendaBC" y una contraseña aleatoria que no se guarda. Luego hace `INSERT … ON CONFLICT (id) DO UPDATE` de cada ruta: `status = PUBLISHED`, `path` desde las coordenadas, `startPoint` con el primer punto y `distanceMeters = ST_Length(path::geography)`, calculada una sola vez (RN-3). Volver a correrlo no duplica nada (CA-20).
+  - `npm run seed:rutas`: crea, si no existe, el usuario del sistema `catalogo@senda.bc` con nombre "SendaBC" y una contraseña aleatoria que no se guarda. Luego hace `INSERT … ON CONFLICT (id) DO UPDATE` de cada ruta: `status = PUBLISHED`, `path` desde las coordenadas, `startPoint` con el primer punto y `distanceMeters` del JSON, medida sobre la traza completa (D8; ya no `ST_Length` del recorrido simplificado, que la subestima). Se guarda una sola vez (RN-3). Volver a correrlo no duplica nada (CA-20).
   - `npm run seed:rutas:quitar`: borra solo las rutas de ese usuario y luego al usuario. No toca rutas ni actividades de nadie más (CA-20).
 
 ## Frontend
@@ -163,16 +172,20 @@ La tabla está vacía: la publicación llega en la 007. Antes de `migrate deploy
 | D5 | Seed en TypeScript ejecutado con Node 24 | `prisma db seed` con `tsx`; SQL a mano | No agrega dependencias. Puede usar `PrismaClient` y `$executeRaw` igual que el servicio. |
 | D6 | Búsqueda bajo demanda, no en cada movimiento del mapa | Buscar en `onRegionChangeComplete` | Menos peticiones y datos móviles; es lo que pide la spec ("Buscar en esta zona", CA-9). |
 | D7 | Development build (`expo-dev-client`) con clave propia de Google Maps para Android, leída de una variable de entorno en `app.config.ts` | Seguir con Expo Go (el mapa no carga en Android); probar solo en iPhone (Android sin verificar); MapLibre con OpenStreetMap (también necesita development build y cambia el stack) | Es la única forma de ver el mapa en Android sin cambiar de librería. La clave hará falta de todos modos para la tienda (spec 010): se adelanta. La variable de entorno cumple la constitución 3.6. |
+| D8 | Rutas de ejemplo desde trazas GPX reales de Wikiloc que descarga el equipo, convertidas con un script a `rutas-ejemplo.json` simplificado (≤ 40 puntos) y con atribución; los GPX originales no se suben al repositorio | Recorridos aproximados (no siguen ningún sendero); OpenStreetMap (licencia abierta, pero sin rutas armadas en todas las zonas) | El usuario pidió que las rutas coincidan con senderos reales (HU-6). Simplificar mantiene la respuesta ligera (D3). Guardar autor y enlace, y no redistribuir el GPX, respeta a quien grabó la traza. Para tienda o uso público habría que pedir permiso a los autores o cambiar a OSM: se revisa en la 010. |
 
 ## Riesgos
 
 - **Clave de Google Maps:** se adelanta de la spec 010 a esta (D7). Para la tienda, la 010 solo agrega el SHA-1 de la firma de Play a la misma clave. Google Cloud pide una cuenta de facturación aunque el uso del Maps SDK for Android en móvil no tiene costo.
 - **Emulador:** el mapa necesita Google Play Services. Si el AVD no los tiene, el mapa sale en blanco y los casos manuales se hacen en el teléfono.
 - **Build local en Windows:** `expo run:android` necesita el JDK (el de Android Studio, `JAVA_HOME`) y tarda varios minutos la primera vez.
-- **Recorridos aproximados:** las rutas de ejemplo no son trazas GPS reales. Están marcadas como de ejemplo en su descripción y se quitan con `seed:rutas:quitar` antes de producción.
+- ~~**Recorridos aproximados:**~~ (resuelto con D8) las rutas de ejemplo no son trazas GPS reales. Están marcadas como de ejemplo en su descripción y se quitan con `seed:rutas:quitar` antes de producción.
 - **Muchas rutas superpuestas:** con 50 recorridos en 100 km el mapa puede verse cargado. No se agrupan marcadores en esta spec; se evalúa en la 009.
 
 ## Historial
+
+- 2026-10-17 — Cambio D8 aprobado por el usuario. El tipo de cada ruta es el que marca Wikiloc; las 15 trazas iniciales son de senderismo, así que para cumplir CA-18 el equipo agrega al menos una traza real de ciclismo y una de trail running.
+- 2026-10-17 — Cambio propuesto (D8): las rutas de ejemplo salen de 15 GPX reales de Wikiloc (Ensenada, Tijuana-Rosarito, Tecate, Mexicali, Sierra de Juárez, Sierra de San Pedro Mártir y desierto central), simplificados a ≤ 40 puntos y con atribución. La distancia se mide sobre la traza completa. Los límites de Baja California se corrigen a longitud −117.13…−112.7 en la prueba del JSON y en `BAJA_CALIFORNIA_REGION`. Pendiente de aprobación.
 
 - 2026-10-16 — Cambio D7 aprobado por el usuario.
 - 2026-10-16 — Cambio propuesto (D7): en Android, Expo Go no carga el mapa con su clave de Google Maps (emulador y teléfono). Se pasa a un development build con `expo-dev-client` y clave propia en `.env.local`; `android.package` = `com.sendabc.app`; `/android` en `.gitignore`.

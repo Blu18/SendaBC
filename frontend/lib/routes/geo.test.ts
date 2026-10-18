@@ -81,7 +81,7 @@ describe('constantes (CA-11, CA-14)', () => {
     expect(DEFAULT_RADIUS_KM).toBe(25);
   });
 
-  it('la región de Baja California cubre Tijuana, Mexicali y el paralelo 28', () => {
+  it('la región de Baja California cubre Tijuana, Mexicali, el paralelo 28 y la costa del Golfo', () => {
     const { latitude, longitude, latitudeDelta, longitudeDelta } = BAJA_CALIFORNIA_REGION;
     const dentro = (lat: number, lng: number) =>
       Math.abs(lat - latitude) <= latitudeDelta / 2 && Math.abs(lng - longitude) <= longitudeDelta / 2;
@@ -89,5 +89,7 @@ describe('constantes (CA-11, CA-14)', () => {
     expect(dentro(32.6245, -115.4523)).toBe(true); // Mexicali
     expect(dentro(28.0, -114.8)).toBe(true); // límite con Baja California Sur
     expect(dentro(31.0447, -114.8389)).toBe(true); // San Felipe
+    expect(dentro(28.95, -113.56)).toBe(true); // Bahía de los Ángeles
+    expect(dentro(28.54, -114.09)).toBe(true); // inicio de La Otra Baja 100
   });
 });

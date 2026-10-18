@@ -1,7 +1,8 @@
 import rutas from './rutas-ejemplo.json' with { type: 'json' };
 
-// Límites aproximados del estado de Baja California (grados WGS84).
-const BC = { minLat: 28.0, maxLat: 32.72, minLng: -117.13, maxLng: -114.72 };
+// Límites aproximados del estado de Baja California (grados WGS84). Al este llega al Golfo de
+// California, hasta la Isla Ángel de la Guarda (~ -112.7).
+const BC = { minLat: 28.0, maxLat: 32.72, minLng: -117.13, maxLng: -112.7 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -42,6 +43,17 @@ describe('Rutas de ejemplo (spec 006, CA-18)', () => {
         expect(lng, ruta.name).toBeGreaterThanOrEqual(BC.minLng);
         expect(lng, ruta.name).toBeLessThanOrEqual(BC.maxLng);
       }
+    }
+  });
+
+  it('vienen de una traza real, con atribución y distancia (plan D8)', () => {
+    for (const ruta of rutas) {
+      expect(ruta.source.platform, ruta.name).toBe('Wikiloc');
+      expect(ruta.source.url, ruta.name).toMatch(
+        /^https:\/\/www\.wikiloc\.com\//,
+      );
+      expect(ruta.description, ruta.name).toContain('Wikiloc');
+      expect(ruta.distanceMeters, ruta.name).toBeGreaterThan(0);
     }
   });
 });
