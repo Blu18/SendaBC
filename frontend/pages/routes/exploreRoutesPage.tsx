@@ -154,6 +154,8 @@ export default function ExploreRoutesPage() {
     }, [routes, selectedId]);
 
     const selected = useMemo(() => routes.find((r) => r.id === selectedId) ?? null, [routes, selectedId]);
+    // Número de la búsqueda actual: cambia las keys de todo lo dibujado en cada búsqueda nueva.
+    const busqueda = lastSearch?.n ?? 0;
 
     const seleccionar = (id: string) => {
         lastOverlayPress.current = Date.now();
@@ -231,45 +233,64 @@ export default function ExploreRoutesPage() {
                 onRegionChangeComplete={(region) => setMapCenter(centerOf(region))}
                 onPress={onMapPress}
             >
-                {/* En Android un Polyline no aplica bien los cambios de color o grosor y deja copias
-                    viejas dibujadas (M2, M8). Por eso nunca se actualiza: al cambiar la selección se
-                    vuelve a montar con otra key, en el orden fijo de la respuesta. La seleccionada
-                    sube con zIndex (CA-8). */}
+                {/* react-native-maps 1.27 en Android guarda cada elemento nuevo con
+                    features.set(index): si se inserta en medio de la lista, el que estaba ahí queda
+                    dibujado pero ya nadie lo borra (M2, M8). Por eso solo se agrega al final:
+                    - los recorridos y puntos de una búsqueda no cambian mientras dura (su key lleva
+                      el número de búsqueda; una búsqueda nueva quita todos y agrega los nuevos);
+                    - la selección es un recorrido y un punto extra, siempre los últimos (CA-8). */}
                 {routes
                     .filter((route) => route.path.length >= 2)
-                    .map((route) => {
-                        const activa = route.id === selectedId;
-                        return (
-                            <Polyline
-                                key={`${route.id}-path-${activa ? 'on' : 'off'}`}
-                                coordinates={pathToCoordinates(route.path)}
-                                strokeColor={activa ? colors.data : colors.primary}
-                                strokeWidth={activa ? 6 : 3}
-                                zIndex={activa ? 2 : 1}
-                                tappable
-                                onPress={() => seleccionar(route.id)}
-                            />
-                        );
-                    })}
-                {routes.map((route) => {
-                    const activa = route.id === selectedId;
-                    return (
-                        <Marker
-                            // Cambiar de key al seleccionar vuelve a dibujar el punto (con
-                            // tracksViewChanges en false Android no lo actualiza solo).
-                            key={`${route.id}-start-${activa ? 'on' : 'off'}`}
-                            coordinate={route.start}
-                            anchor={{ x: 0.5, y: 0.5 }}
-                            zIndex={activa ? 4 : 3}
-                            // Vista propia y no pinColor: en Android pinColor solo toma el tono
-                            // y el verde de la paleta salía claro.
-                            tracksViewChanges={false}
+                    .map((route) => (
+                        <Polyline
+                            key={`${busqueda}-${route.id}-path`}
+                            coordinates={pathToCoordinates(route.path)}
+                            strokeColor={colors.primary}
+                            strokeWidth={3}
+                            zIndex={1}
+                            tappable
                             onPress={() => seleccionar(route.id)}
-                        >
-                            <View style={[styles.startDot, activa && styles.startDotActive]} />
-                        </Marker>
-                    );
-                })}
+                        />
+                    ))}
+                {routes.map((route) => (
+                    <Marker
+                        key={`${busqueda}-${route.id}-start`}
+                        coordinate={route.start}
+                        anchor={{ x: 0.5, y: 0.5 }}
+                        zIndex={3}
+                        // Vista propia y no pinColor: en Android pinColor solo toma el tono y el
+                        // verde de la paleta salía claro.
+                        tracksViewChanges={false}
+                        onPress={() => seleccionar(route.id)}
+                    >
+                        <View style={styles.startDot} />
+                    </Marker>
+                ))}
+                {selected && selected.path.length >= 2 && (
+                    <Polyline
+                        key={`${busqueda}-${selected.id}-path-sel`}
+                        coordinates={pathToCoordinates(selected.path)}
+                        strokeColor={colors.data}
+                        strokeWidth={6}
+                        zIndex={2}
+                        tappable
+                        onPress={() => seleccionar(selected.id)}
+                    />
+                )}
+                {selected && (
+                    <Marker
+                        key={`${busqueda}-${selected.id}-start-sel`}
+                        coordinate={selected.start}
+                        anchor={{ x: 0.5, y: 0.5 }}
+                        zIndex={4}
+                        // Es uno solo: puede seguir los cambios de su vista sin costo apreciable, y
+                        // así Android no se queda con una imagen tomada antes de dibujarla.
+                        tracksViewChanges
+                        onPress={() => seleccionar(selected.id)}
+                    >
+                        <View style={styles.startRing} />
+                    </Marker>
+                )}
             </MapView>
 
             {/* Filtros arriba: tipo (CA-12) y radio (CA-11) */}
@@ -441,11 +462,15 @@ const styles = StyleSheet.create({
         borderColor: colors.background,
         backgroundColor: colors.primary,
     },
-    startDotActive: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: colors.data,
+    // Anillo alrededor del punto de la ruta seleccionada: se ve igual quede encima o debajo del
+    // punto normal (en Android el zIndex entre marcadores no siempre se respeta).
+    startRing: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        borderWidth: 5,
+        borderColor: colors.data,
+        backgroundColor: 'transparent',
     },
     card: {
         padding: 16,

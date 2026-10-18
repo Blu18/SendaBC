@@ -152,7 +152,7 @@ La tabla está vacía: la publicación llega en la 007. Antes de `migrate deploy
 - **Al abrir:** pide el permiso de ubicación con `useLocationPermission`.
   - Con permiso: la última posición conocida si tiene menos de 5 minutos (`getLastKnownPositionAsync`); si no, `getCurrentPositionAsync`. Centra el mapa y busca (CA-1).
   - Sin permiso: muestra `BAJA_CALIFORNIA_REGION`, no busca y muestra el aviso (CA-14).
-- **`MapView`:** un `Polyline` y un `Marker` (punto de inicio, con una vista propia en el color de la paleta) por ruta. La ruta seleccionada se dibuja con más grosor, en el color `data` y encima (`zIndex`); las demás, en `primary`. Tocar el mapa vacío quita la selección (CA-2, CA-8). En Android un `Polyline` no aplica bien los cambios de props y deja trazos viejos, así que cada recorrido y cada marcador se vuelve a montar (otra `key`) al cambiar la selección, en el orden fijo de la respuesta. Tocar un marcador no mueve la cámara (`moveOnMarkerPress={false}`).
+- **`MapView`:** un `Polyline` y un `Marker` (punto de inicio, con una vista propia en el color de la paleta) por ruta. Todos en `primary`; la ruta seleccionada se marca con un recorrido extra más grueso en `data` y un anillo `data` en su inicio. Tocar el mapa vacío quita la selección (CA-2, CA-8). En Android, `react-native-maps` 1.27 guarda cada elemento nuevo con `features.set(index)`: si se inserta en medio de la lista, el que estaba ahí queda dibujado y ya nadie lo borra. Por eso solo se agrega al final: los elementos de una búsqueda no cambian mientras dura (su `key` lleva el número de búsqueda) y los de la selección van siempre al final. Tocar un marcador no mueve la cámara (`moveOnMarkerPress={false}`).
 - **Controles:**
   - arriba, los chips de tipo (CA-12) y de radio (CA-11);
   - el botón "Buscar en esta zona", que aparece cuando `hasMovedEnough` (CA-9);
@@ -184,7 +184,7 @@ La tabla está vacía: la publicación llega en la 007. Antes de `migrate deploy
 
 ## Historial
 
-- 2026-10-17 — Ajustes de los casos manuales (`fix(006)`): recorridos que se vuelven a montar al cambiar la selección (dejaban trazos viejos, M2 y M8), marcadores con vista propia (con `pinColor` el verde de la paleta salía claro en Android), última posición conocida al abrir (tardaba más de 10 s) y la cámara ya no se mueve al tocar un marcador.
+- 2026-10-17 — Ajustes de los casos manuales (`fix(006)`): el mapa solo agrega elementos al final, porque `react-native-maps` en Android dejaba trazos huérfanos al insertar en medio (M2, M8); la selección es un recorrido y un anillo extra, marcadores con vista propia (con `pinColor` el verde de la paleta salía claro en Android), última posición conocida al abrir (tardaba más de 10 s) y la cámara ya no se mueve al tocar un marcador.
 - 2026-10-17 — Cambio D8 aprobado por el usuario. El tipo de cada ruta es el que marca Wikiloc; las 15 trazas iniciales son de senderismo, así que para cumplir CA-18 el equipo agrega al menos una traza real de ciclismo y una de trail running.
 - 2026-10-17 — Cambio propuesto (D8): las rutas de ejemplo salen de 15 GPX reales de Wikiloc (Ensenada, Tijuana-Rosarito, Tecate, Mexicali, Sierra de Juárez, Sierra de San Pedro Mártir y desierto central), simplificados a ≤ 40 puntos y con atribución. La distancia se mide sobre la traza completa. Los límites de Baja California se corrigen a longitud −117.13…−112.7 en la prueba del JSON y en `BAJA_CALIFORNIA_REGION`. Pendiente de aprobación.
 
