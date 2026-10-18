@@ -59,3 +59,5 @@ dist/
 
 .env
 tsconfig.build.tsbuildinfo
+# Trazas GPX originales de las rutas de ejemplo (spec 006, D8): son de sus autores, no se redistribuyen
+prisma/seed/gpx/

@@ -1,0 +1,19 @@
+[
+  { "archivo": "bosque-de-los-attenuatas-ensenada.gpx", "name": "Bosque de los Attenuatas", "type": "HIKING", "region": "Ensenada", "difficulty": "MODERATE" },
+  { "archivo": "canon-de-dona-petra-san-antonio-de-las-minas.gpx", "name": "Cañón de Doña Petra – San Antonio de las Minas", "type": "HIKING", "region": "Ensenada", "difficulty": "MODERATE" },
+  { "archivo": "cerro-de-ensenada-bc-en-solitario-nivel-4-exigente.gpx", "name": "Cerros de Ensenada", "type": "HIKING", "region": "Ensenada", "difficulty": "EXTREME" },
+  { "archivo": "el-salto-ensenada-b-c-.gpx", "name": "El Salto", "type": "HIKING", "region": "Ensenada", "difficulty": "MODERATE" },
+  { "archivo": "cerro-coronel.gpx", "name": "Cerro Coronel", "type": "HIKING", "region": "Tijuana–Rosarito", "difficulty": "MODERATE" },
+  { "archivo": "perla-escondida-sab310824.gpx", "name": "Perla Escondida", "type": "HIKING", "region": "Tijuana–Rosarito", "difficulty": "HARD" },
+  { "archivo": "cerro-prieto-c-sab25012025.gpx", "name": "Cerro Prieto", "type": "HIKING", "region": "Tijuana–Rosarito", "difficulty": "HARD" },
+  { "archivo": "refugio-tecate-sab091124.gpx", "name": "El Refugio – Tecate", "type": "HIKING", "region": "Tecate", "difficulty": "HARD" },
+  { "archivo": "centinela-n-s-n-dom19112023.gpx", "name": "Cerro El Centinela (norte–sur–norte)", "type": "HIKING", "region": "Mexicali", "difficulty": "EXTREME" },
+  { "archivo": "cerro-el-centinela-mexicali-bc-de-sur-a-norte.gpx", "name": "Cerro El Centinela (de sur a norte)", "type": "HIKING", "region": "Mexicali", "difficulty": "HARD" },
+  { "archivo": "ruta-de-canon-de-guadalupe-a-la-4ta-cascada-ida-y-vuelta.gpx", "name": "Cañón de Guadalupe a la 4.ª cascada", "type": "HIKING", "region": "Sierra de Juárez", "difficulty": "EASY" },
+  { "archivo": "tajo-trono-blanco.gpx", "name": "El Tajo – Trono Blanco", "type": "HIKING", "region": "Sierra de Juárez", "difficulty": "MODERATE" },
+  { "archivo": "teepe-botella-azul.gpx", "name": "Teepe – Botella Azul", "type": "HIKING", "region": "Sierra de San Pedro Mártir", "difficulty": "HARD" },
+  { "archivo": "torre-de-piedra.gpx", "name": "Torre de Piedra", "type": "HIKING", "region": "Sierra de San Pedro Mártir", "difficulty": "EASY" },
+  { "archivo": "la-otra-baja-100.gpx", "name": "La Otra Baja 100", "type": "HIKING", "region": "Desierto Central", "difficulty": "HARD" },
+  { "archivo": "Trail running/san-antonio-necua-trail-21-k-sierra-blanca.gpx", "name": "San Antonio Necua – Sierra Blanca", "type": "TRAIL_RUNNING", "region": "Valle de Guadalupe", "difficulty": "HARD" },
+  { "archivo": "ciclismo/san-pedro-martir-tasajera-la-grulla-en-bicicleta-de-montana.gpx", "name": "La Tasajera – La Grulla", "type": "CYCLING", "region": "Sierra de San Pedro Mártir", "difficulty": "EASY" }
+]

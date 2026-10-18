@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "SendaBC API",
-    "description": "Colección para validar la API de SendaBC (constitución 6.3). Ejecutar en orden: '1. Registro' (solo la primera vez), '2. Login' guarda el token y luego las peticiones de actividades. Configura las variables baseUrl, email y password de la colección antes de empezar.",
+    "description": "Colección para validar la API de SendaBC (constitución 6.3). Ejecutar en orden: '1. Registro' (solo la primera vez), '2. Login' guarda el token y luego las peticiones de actividades y de rutas. Configura las variables baseUrl, email y password de la colección antes de empezar. Las variables lat y lng (Ensenada por defecto) son el centro de la búsqueda de rutas cercanas.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -14,7 +14,9 @@
     { "key": "password", "value": "contrasena-postman" },
     { "key": "token", "value": "" },
     { "key": "clientGeneratedId", "value": "" },
-    { "key": "activityId", "value": "" }
+    { "key": "activityId", "value": "" },
+    { "key": "lat", "value": "31.8667" },
+    { "key": "lng", "value": "-116.5964" }
   ],
   "item": [
     {
@@ -257,6 +259,83 @@
             "auth": { "type": "noauth" },
             "method": "GET",
             "url": "{{baseUrl}}/activities"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rutas (spec 006)",
+      "item": [
+        {
+          "name": "Rutas cercanas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const rutas = pm.response.json();",
+                  "pm.test('como máximo 50, la más cercana primero (CA-5)', () => {",
+                  "  pm.expect(rutas.length).to.be.at.most(50);",
+                  "  const d = rutas.map((r) => r.distanceFromCenterMeters);",
+                  "  pm.expect(d).to.eql([...d].sort((a, b) => a - b));",
+                  "});",
+                  "pm.test('dentro de 25 km y con recorrido [lng, lat] (CA-2, CA-4)', () => {",
+                  "  rutas.forEach((r) => {",
+                  "    pm.expect(r.distanceFromCenterMeters).to.be.at.most(25000);",
+                  "    pm.expect(r).to.have.keys('id', 'name', 'type', 'difficulty', 'distanceMeters', 'elevationGainMeters', 'start', 'distanceFromCenterMeters', 'path', 'author', 'isMine');",
+                  "    r.path.forEach(([lng, lat]) => {",
+                  "      pm.expect(lng).to.be.within(-180, 180);",
+                  "      pm.expect(lat).to.be.within(-90, 90);",
+                  "    });",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/nearby?lat={{lat}}&lng={{lng}}&radiusKm=25"
+          }
+        },
+        {
+          "name": "Radio fuera de rango (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 (RN-5)', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje en español', () => {",
+                  "  pm.expect(pm.response.json().errors.radiusKm).to.include('El radio debe estar entre 1 y 100 km');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/nearby?lat={{lat}}&lng={{lng}}&radiusKm=101"
+          }
+        },
+        {
+          "name": "Rutas cercanas sin token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('401 (CA-17)', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/nearby?lat={{lat}}&lng={{lng}}"
           }
         }
       ]

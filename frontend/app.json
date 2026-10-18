@@ -16,11 +16,11 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.sendabc.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
