@@ -7,13 +7,13 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 ## Backend
 
 - [x] T1 — Migración `20261020000000_routes_publish`: valor `DELETED` en `RouteStatus` y columna `routes.elevationProfile` (`JSONB`), declarados en `schema.prisma`. Antes de `migrate deploy`, confirmar con una consulta de solo lectura que `routes` solo tiene las rutas de ejemplo; después, que `prisma migrate diff` contra la base queda vacío. (CA-11, CA-25)
-- [ ] T2 — `src/route/difficulty.ts`: `dificultadDe(type, distanceMeters, elevationGainMeters)` con la tabla de RN-6. Pruebas:
+- [x] T2 — `src/route/difficulty.ts`: `dificultadDe(type, distanceMeters, elevationGainMeters)` con la tabla de RN-6. Pruebas:
   - los ejemplos de la spec (12 km y 200 m a pie → Moderada; 6 km y 900 m de trail → Difícil; 35 km y 500 m en bici → Moderada);
   - los bordes de cada nivel (8/15/30 km y 300/700/1 500 m a pie; 15/35/75 km y 400/900/1 800 m en bici);
   - el nivel más alto entre distancia y elevación.
 
   (CA-4)
-- [ ] T3 — `src/route/elevation-profile.ts`: `perfilDe(puntos)`, con distancia acumulada por haversine, solo los puntos con altitud y muestreo a ≤ 200 puntos. Pruebas:
+- [x] T3 — `src/route/elevation-profile.ts`: `perfilDe(puntos)`, con distancia acumulada por haversine, solo los puntos con altitud y muestreo a ≤ 200 puntos. Pruebas:
   - distancias acumuladas conocidas;
   - el primer punto en 0 m y el último en la distancia total;
   - 5 400 puntos se reducen a ≤ 200;
@@ -21,7 +21,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - sin altitudes devuelve `null`.
 
   (CA-11)
-- [ ] T4 — `CreateRouteDto` y `UpdateRouteDto`: `activityId` UUID; `name` de 1 a 40 caracteres sin espacios al inicio y al final; `description` ≤ 200; `region` ≤ 40, y `null`/vacía para borrarla; `status` solo `PUBLISHED` o `ARCHIVED`. El `whitelist` descarta `type`, `difficulty`, `distanceMeters`, `path`, etc. Pruebas de valores válidos, bordes (40/41, 200/201), nombre solo con espacios y estado inválido, con mensajes en español. (CA-5, CA-22)
+- [x] T4 — `CreateRouteDto` y `UpdateRouteDto`: `activityId` UUID; `name` de 1 a 40 caracteres sin espacios al inicio y al final; `description` ≤ 200; `region` ≤ 40, y `null`/vacía para borrarla; `status` solo `PUBLISHED` o `ARCHIVED`. El `whitelist` descarta `type`, `difficulty`, `distanceMeters`, `path`, etc. Pruebas de valores válidos, bordes (40/41, 200/201), nombre solo con espacios y estado inválido, con mensajes en español. (CA-5, CA-22)
 - [ ] T5 — `RouteService.publish(userId, dto)`: actividad del token, mínimo de 1.5 km, una ruta no borrada por actividad (también por el `UNIQUE`), datos tomados de la actividad, `difficulty` con `dificultadDe` y `elevationProfile` con `perfilDe`, en una transacción. Pruebas con Prisma simulado: `404` si es ajena o no existe, `400` si es corta, `409` si ya tiene ruta, y los valores que se insertan. (CA-6, CA-8, CA-9)
 - [ ] T6 — `RouteService.detail`, `update` y `remove`:
   - visibilidad: `PUBLISHED` siempre; `ARCHIVED` solo para su dueño; `DELETED` nunca;
