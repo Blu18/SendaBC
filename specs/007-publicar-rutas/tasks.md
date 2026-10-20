@@ -6,7 +6,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Backend
 
-- [ ] T1 — Migración `20261020000000_routes_publish`: valor `DELETED` en `RouteStatus` y columna `routes.elevationProfile` (`JSONB`), declarados en `schema.prisma`. Antes de `migrate deploy`, confirmar con una consulta de solo lectura que `routes` solo tiene las rutas de ejemplo; después, que `prisma migrate diff` contra la base queda vacío. (CA-11, CA-25)
+- [x] T1 — Migración `20261020000000_routes_publish`: valor `DELETED` en `RouteStatus` y columna `routes.elevationProfile` (`JSONB`), declarados en `schema.prisma`. Antes de `migrate deploy`, confirmar con una consulta de solo lectura que `routes` solo tiene las rutas de ejemplo; después, que `prisma migrate diff` contra la base queda vacío. (CA-11, CA-25)
 - [ ] T2 — `src/route/difficulty.ts`: `dificultadDe(type, distanceMeters, elevationGainMeters)` con la tabla de RN-6. Pruebas:
   - los ejemplos de la spec (12 km y 200 m a pie → Moderada; 6 km y 900 m de trail → Difícil; 35 km y 500 m en bici → Moderada);
   - los bordes de cada nivel (8/15/30 km y 300/700/1 500 m a pie; 15/35/75 km y 400/900/1 800 m en bici);

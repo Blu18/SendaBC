@@ -1,6 +1,6 @@
 # 007 — Publicar rutas, detalle y favoritas
 
-- **Estado:** Aprobada (2026-10-20)
+- **Estado:** En progreso (2026-10-20)
 - **Semana:** 7
 - **Autor(es):**
 - **Fecha:** 2026-10-20
@@ -139,6 +139,7 @@ No quedan preguntas abiertas.
 
 ## Historial
 
+- 2026-10-20 — En progreso: T1 (migración `20261020000000_routes_publish`) aplicada.
 - 2026-10-20 — Corrección al escribir el plan: RN-8 decía que el perfil usa la altitud del barómetro o del GPS, pero en el servidor solo existe la del GPS de cada punto (spec 005, CA-8). El perfil usa esa.
 - 2026-10-20 — Aprobada por el usuario.
 - 2026-10-20 — Se resuelve P13: los umbrales de ciclismo bajan 5 km en cada nivel (15, 35 y 75 km). Sin preguntas abiertas; la spec queda lista para aprobación.
