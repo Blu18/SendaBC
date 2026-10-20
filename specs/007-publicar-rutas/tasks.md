@@ -1,0 +1,183 @@
+# 007 — Tareas
+
+Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
+
+Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al terminar. Las tareas de backend y de `lib/routes` incluyen sus pruebas Vitest (constitución 6.1).
+
+## Backend
+
+- [ ] T1 — Migración `20261020000000_routes_publish`: valor `DELETED` en `RouteStatus` y columna `routes.elevationProfile` (`JSONB`), declarados en `schema.prisma`. Antes de `migrate deploy`, confirmar con una consulta de solo lectura que `routes` solo tiene las rutas de ejemplo; después, que `prisma migrate diff` contra la base queda vacío. (CA-11, CA-25)
+- [ ] T2 — `src/route/difficulty.ts`: `dificultadDe(type, distanceMeters, elevationGainMeters)` con la tabla de RN-6. Pruebas:
+  - los ejemplos de la spec (12 km y 200 m a pie → Moderada; 6 km y 900 m de trail → Difícil; 35 km y 500 m en bici → Moderada);
+  - los bordes de cada nivel (8/15/30 km y 300/700/1 500 m a pie; 15/35/75 km y 400/900/1 800 m en bici);
+  - el nivel más alto entre distancia y elevación.
+
+  (CA-4)
+- [ ] T3 — `src/route/elevation-profile.ts`: `perfilDe(puntos)`, con distancia acumulada por haversine, solo los puntos con altitud y muestreo a ≤ 200 puntos. Pruebas:
+  - distancias acumuladas conocidas;
+  - el primer punto en 0 m y el último en la distancia total;
+  - 5 400 puntos se reducen a ≤ 200;
+  - salta los puntos sin altitud;
+  - sin altitudes devuelve `null`.
+
+  (CA-11)
+- [ ] T4 — `CreateRouteDto` y `UpdateRouteDto`: `activityId` UUID; `name` de 1 a 40 caracteres sin espacios al inicio y al final; `description` ≤ 200; `region` ≤ 40, y `null`/vacía para borrarla; `status` solo `PUBLISHED` o `ARCHIVED`. El `whitelist` descarta `type`, `difficulty`, `distanceMeters`, `path`, etc. Pruebas de valores válidos, bordes (40/41, 200/201), nombre solo con espacios y estado inválido, con mensajes en español. (CA-5, CA-22)
+- [ ] T5 — `RouteService.publish(userId, dto)`: actividad del token, mínimo de 1.5 km, una ruta no borrada por actividad (también por el `UNIQUE`), datos tomados de la actividad, `difficulty` con `dificultadDe` y `elevationProfile` con `perfilDe`, en una transacción. Pruebas con Prisma simulado: `404` si es ajena o no existe, `400` si es corta, `409` si ya tiene ruta, y los valores que se insertan. (CA-6, CA-8, CA-9)
+- [ ] T6 — `RouteService.detail`, `update` y `remove`:
+  - visibilidad: `PUBLISHED` siempre; `ARCHIVED` solo para su dueño; `DELETED` nunca;
+  - `isMine` e `isFavorite`, y recorrido simplificado a ~2 m;
+  - editar nombre, descripción y zona; archivar y volver a publicar;
+  - borrado lógico (`DELETED`, `sourceActivityId = NULL`);
+  - `403` si la ruta es ajena.
+
+  Pruebas con Prisma simulado de cada regla. (CA-10, CA-12, CA-14, CA-22, CA-23, CA-24, CA-25, CA-26)
+- [ ] T7 — `RouteService.listMine`, `listFavorites`, `addFavorite` y `removeFavorite`:
+  - `listMine`: sin `DELETED`, la más reciente primero;
+  - `listFavorites`: con `available` según el estado, la guardada más reciente primero;
+  - `addFavorite` y `removeFavorite`: idempotentes, y `addFavorite` responde `404` si la ruta no está disponible.
+
+  Pruebas con Prisma simulado. (CA-15, CA-16, CA-18, CA-19, CA-20, CA-21)
+- [ ] T8 — `RouteController`: `POST /routes`, `GET /routes/mine`, `GET /routes/favorites`, `GET /routes/:id`, `PATCH /routes/:id`, `DELETE /routes/:id`, `PUT` y `DELETE /routes/:id/favorite`. `mine` y `favorites` van antes de `:id`, y `:id` usa `ParseUUIDPipe` con `404`. Pruebas del controlador: el guard en toda la clase y el usuario del token en cada acción. (CA-26, CA-27)
+- [ ] T9 — `test/route-publish.e2e-spec.ts` contra la base. Usa dos usuarios de prueba, cada uno con actividades sincronizadas por `POST /activities/sync` (una de 3 km y otra de 1 km), y al final borra sus rutas y luego a los usuarios. Casos:
+  - publicar la de 3 km → `201`, aparece en `GET /routes/nearby` y su detalle trae perfil, dificultad e `isMine` (CA-6, CA-11);
+  - publicar otra vez → `409`; la de 1 km → `400`; una actividad del otro usuario → `404` (CA-8, CA-9);
+  - el otro usuario la guarda en favoritas dos veces → una sola favorita; la quita dos veces → `204` (CA-15, CA-16);
+  - la favorita aparece en `GET /routes/favorites` del que la guardó y no en la del dueño (CA-17, CA-20);
+  - el otro usuario intenta `PATCH` y `DELETE` → `403`; con la ruta de ejemplo también (CA-26);
+  - el dueño edita el nombre → se ve en el detalle y en `nearby`; un nombre de 41 → `400` (CA-22, CA-5);
+  - archivar → desaparece de `nearby`, el otro usuario recibe `404` en el detalle y en favoritas ve `available: false`; volver a publicar → reaparece (CA-23, CA-24, CA-14, CA-19);
+  - borrar → `204`, desaparece de `nearby` y de `mine`, sigue en favoritas como no disponible, y la actividad se puede publicar de nuevo (CA-25, CA-19, CA-8);
+  - sin token → `401` en todos los endpoints nuevos (CA-27).
+- [ ] T10 — Rutas de ejemplo con perfil y dificultad calculada:
+  - `gpx-a-json.ts` agrega `elevationProfile` (con `perfilDe` sobre la traza completa) y `difficulty` (con `dificultadDe`);
+  - `rutas-ejemplo.fuentes.json` deja de llevar dificultad;
+  - `rutas-ejemplo.ts` guarda el perfil;
+  - la prueba del JSON comprueba que toda ruta tiene perfil de 2 a 200 puntos, con distancias crecientes, y que su dificultad coincide con `dificultadDe`.
+
+  Volver a cargar con `seed:rutas` y anotar las rutas cuya dificultad cambió. (CA-11)
+- [ ] T11 — Colección de Postman: carpeta "Publicar rutas (spec 007)" con publicar, detalle, editar, archivar, volver a publicar, favorita (guardar y quitar), "Mis rutas", "Mis favoritas" y borrar, más un `409` y un `403`. Validar contra la app local, como en la 006. (Constitución 6.3)
+
+## Frontend
+
+- [ ] T12 — Lógica pura en `lib/routes/`, con pruebas Vitest:
+  - `difficulty.ts`, con los mismos casos que T2;
+  - `publish.ts` (`MIN_PUBLISH_DISTANCE_M`, `validarRuta` y `motivoNoPublicable`): no sincronizada, < 1.5 km, ya tiene ruta, publicable, y los errores por campo;
+  - `region.ts` (`zonaDe`): ciudad, luego subregión y luego región, recortada a 40, y vacía sin datos;
+  - `profile.ts` (`perfilParaGrafica`): agrupar en N columnas, mínimo y máximo, perfil vacío o `null`.
+
+  (CA-1, CA-2, CA-3, CA-4, CA-5, CA-8, CA-11)
+- [ ] T13 — `lib/routes/api.ts`: `publishRoute`, `getRoute`, `updateRoute`, `deleteRoute`, `listMyRoutes`, `listFavorites`, `addFavorite` y `removeFavorite`, con límite de 10 s y resultado `{ ok, data }` / `{ ok: false, failure }`. Pruebas con `fetch` simulado: método, ruta, body y token de cada una; `404`, `409`, `400` con errores por campo; sin red y tiempo agotado. (CA-7, CA-13, CA-14)
+- [ ] T14 — Hooks `hooks/routes/`: `useRouteDetail` (estados `loading`, `success`, `offline`, `error` y `unavailable` ante un `404`), `useMyRoutes`, `useFavorites` y `useRouteMutations`, que al terminar invalidan `['routes']`. (CA-13, CA-14, CA-17)
+- [ ] T15 — Publicar:
+  - `components/routes/RouteForm.tsx`;
+  - `pages/routes/publishRoutePage.tsx`: zona propuesta con `reverseGeocodeAsync`, dificultad, tipo, distancia y elevación de solo lectura, aviso de privacidad, errores por campo, y conserva lo escrito si falla;
+  - en el resumen de la actividad: "Publicar como ruta", "Ver ruta publicada" o el motivo por el que no se puede.
+
+  (CA-1, CA-2, CA-3, CA-4, CA-5, CA-6, CA-7, CA-8)
+- [ ] T16 — Detalle:
+  - `pages/routes/routeDetailPage.tsx`: mapa con el recorrido completo, inicio y final; datos, autor, descripción, distancia hasta mí, marca "Tuya" o "Por SendaBC";
+  - `components/routes/ElevationProfile.tsx`;
+  - guardar y quitar de favoritas;
+  - avisos de sin conexión con "Reintentar" y de "ya no está disponible";
+  - "Ver detalle" en la tarjeta de "Explorar rutas".
+
+  (CA-10, CA-11, CA-12, CA-13, CA-14, CA-15)
+- [ ] T17 — Acciones del dueño en el detalle (editar, archivar o volver a publicar, y borrar con confirmación) y `pages/routes/editRoutePage.tsx`. (CA-12, CA-22, CA-23, CA-24, CA-25)
+- [ ] T18 — `pages/routes/myRoutesPage.tsx` y `pages/routes/favoritesPage.tsx`, con sus listas, estados, la marca "Ya no disponible", quitar de favoritas y los mensajes de lista vacía. Botones "Mis rutas" y "Mis favoritas" en `MainPage`, y las rutas `PublishRoute`, `EditRoute`, `RouteDetail`, `MyRoutes` y `Favorites` en `App.tsx`. (CA-18, CA-19, CA-21, CA-27)
+
+## Documentación
+
+- [ ] T19 — Al cerrar: tabla de verificación, estado de la spec y `specs/roadmap.md`.
+
+## Cobertura
+
+Los 27 CA están cubiertos por al menos una tarea.
+
+## Verificación
+
+| CA | Cómo se verifica | Tipo | Estado |
+|---|---|---|---|
+| CA-1 | `publish.test.ts` › publicable · M1 | Ambas | Pendiente |
+| CA-2 | `publish.test.ts` › no sincronizada · M1 | Ambas | Pendiente |
+| CA-3 | `publish.test.ts` › menos de 1.5 km · `route.service.spec.ts` › `400` · M1 | Ambas | Pendiente |
+| CA-4 | `difficulty.spec.ts` / `difficulty.test.ts` · `region.test.ts` · M2 | Ambas | Pendiente |
+| CA-5 | `create-route.dto.spec.ts` · `publish.test.ts` › errores · `route-publish.e2e-spec.ts` › nombre de 41 · M2 | Ambas | Pendiente |
+| CA-6 | `route.service.spec.ts` › publicar · `route-publish.e2e-spec.ts` › `201` y en `nearby` · M2 | Ambas | Pendiente |
+| CA-7 | `api.test.ts` › sin red y `500` · M3 | Ambas | Pendiente |
+| CA-8 | `route-publish.e2e-spec.ts` › `409` y publicar de nuevo tras borrar · `publish.test.ts` › ya tiene ruta · M2 | Ambas | Pendiente |
+| CA-9 | `route.service.spec.ts` · `route-publish.e2e-spec.ts` › actividad ajena `404` | Automatizada | Pendiente |
+| CA-10 | `route.service.spec.ts` › detalle · M4 | Ambas | Pendiente |
+| CA-11 | `elevation-profile.spec.ts` · `rutas-ejemplo.spec.ts` › perfil · `profile.test.ts` · M4 | Ambas | Pendiente |
+| CA-12 | `route.service.spec.ts` › `isMine` · M4 y M6 | Ambas | Pendiente |
+| CA-13 | `api.test.ts` · M5 | Ambas | Pendiente |
+| CA-14 | `route.service.spec.ts` › visibilidad · `route-publish.e2e-spec.ts` › archivada `404` · M7 | Ambas | Pendiente |
+| CA-15 | `route-publish.e2e-spec.ts` › guardar y quitar · M4 | Ambas | Pendiente |
+| CA-16 | `route.service.spec.ts` › idempotente · `route-publish.e2e-spec.ts` › dos veces | Automatizada | Pendiente |
+| CA-17 | `route-publish.e2e-spec.ts` › favoritas por cuenta · M8 | Ambas | Pendiente |
+| CA-18 | `route.service.spec.ts` › orden de favoritas · M8 | Ambas | Pendiente |
+| CA-19 | `route-publish.e2e-spec.ts` › `available: false` tras archivar y borrar · M7 | Ambas | Pendiente |
+| CA-20 | `route-publish.e2e-spec.ts` › favoritas del otro usuario | Automatizada | Pendiente |
+| CA-21 | `route.service.spec.ts` › "Mis rutas" · M6 | Ambas | Pendiente |
+| CA-22 | `update-route.dto.spec.ts` · `route-publish.e2e-spec.ts` › editar · M6 | Ambas | Pendiente |
+| CA-23 | `route-publish.e2e-spec.ts` › archivar · M6 | Ambas | Pendiente |
+| CA-24 | `route-publish.e2e-spec.ts` › volver a publicar · M6 | Ambas | Pendiente |
+| CA-25 | `route-publish.e2e-spec.ts` › borrar · M6 | Ambas | Pendiente |
+| CA-26 | `route.service.spec.ts` › `403` · `route-publish.e2e-spec.ts` › ajena y de ejemplo | Automatizada | Pendiente |
+| CA-27 | `route.controller.spec.ts` › guard · `route-publish.e2e-spec.ts` › `401` | Automatizada | Pendiente |
+
+### Casos manuales
+
+En el emulador o el teléfono con el development build (spec 006, D7), el backend corriendo y las rutas de ejemplo cargadas (`npm run seed:rutas`). Hace falta una actividad sincronizada de más de 1.5 km y otra de menos; se pueden grabar en el emulador con una ruta GPX simulada.
+
+**M1 — Cuándo se puede publicar**
+1. Abrir el resumen de una actividad "Pendiente de subir". 2. El de una sincronizada de menos de 1.5 km. 3. El de una sincronizada de 3 km.
+- **Esperado:** (1) no hay "Publicar como ruta" y se explica que primero tiene que subirse. (2) se explica que una ruta debe medir al menos 1.5 km. (3) aparece "Publicar como ruta".
+
+**M2 — Publicar**
+1. En la de 3 km, tocar "Publicar como ruta". 2. Dejar el nombre vacío y publicar. 3. Escribir 41 caracteres. 4. Escribir un nombre válido, cambiar la zona y publicar. 5. Volver al resumen. 6. Abrir "Explorar rutas" cerca del inicio.
+- **Esperado:** (1) formulario con la zona ya llenada, dificultad, tipo, distancia y elevación de solo lectura y el aviso de que se publica completo. (2) y (3) mensaje junto al nombre, no se publica. (4) confirmación. (5) aparece "Ver ruta publicada". (6) la ruta aparece con la marca "Tuya".
+
+**M3 — Publicar sin conexión**
+1. Con el formulario lleno, activar el modo avión y publicar. 2. Quitar el modo avión y volver a publicar.
+- **Esperado:** (1) mensaje de que hace falta conexión; lo escrito sigue ahí. (2) se publica.
+
+**M4 — Detalle y favorita**
+1. En "Explorar rutas", tocar una ruta de ejemplo y "Ver detalle". 2. Tocar "Guardar en favoritas" y luego "Quitar de favoritas".
+- **Esperado:** (1) mapa con el recorrido completo, nombre, tipo, zona, dificultad, distancia, elevación, "Por SendaBC", "A X km de ti" y el perfil de elevación. (2) el botón cambia en cada toque.
+
+**M5 — Detalle sin conexión**
+1. Con el modo avión activado, abrir el detalle de una ruta. 2. Quitar el modo avión y tocar "Reintentar".
+- **Esperado:** (1) mensaje con "Reintentar", sin carga infinita. (2) aparece el detalle.
+
+**M6 — Mis rutas: editar, archivar, volver a publicar y borrar**
+1. Pantalla principal → "Mis rutas". 2. Abrir la ruta publicada en M2 y editar el nombre. 3. Archivarla. 4. Volver a publicarla. 5. Borrarla y confirmar.
+- **Esperado:** (1) la lista muestra la ruta como "Publicada". (2) el nombre nuevo se ve en el detalle y en "Explorar rutas". (3) queda "Archivada" en "Mis rutas" y desaparece del mapa. (4) vuelve al mapa y queda "Publicada". (5) desaparece de "Mis rutas" y del mapa, y en el resumen de la actividad vuelve a aparecer "Publicar como ruta".
+
+**M7 — Favorita que deja de estar disponible**
+1. Con la cuenta B, guardar en favoritas una ruta de la cuenta A. 2. Con la cuenta A, archivarla. 3. Con la cuenta B, abrir "Mis favoritas" y tocarla. 4. Quitarla de favoritas.
+- **Esperado:** (3) aparece con la marca "Ya no disponible" y al tocarla se ve "Esta ruta ya no está disponible". (4) desaparece de la lista.
+
+**M8 — Mis favoritas en otro teléfono**
+1. Con favoritas guardadas, cerrar sesión e iniciarla en otro emulador o teléfono. 2. Abrir "Mis favoritas".
+- **Esperado:** están las mismas favoritas, la más reciente primero. Sin favoritas, se ve el mensaje que explica cómo guardarlas.
+
+## Commits propuestos
+
+| # | Commit | Tareas |
+|---|---|---|
+| 1 | `feat(007): estado DELETED y perfil de elevación en rutas` | T1 |
+| 2 | `feat(007): dificultad, perfil y validaciones de rutas` | T2–T4 |
+| 3 | `feat(007): publicar, detalle, administrar y favoritas en el backend` | T5–T8 |
+| 4 | `test(007): e2e de publicar rutas y colección de Postman` | T9, T11 |
+| 5 | `feat(007): rutas de ejemplo con perfil y dificultad calculada` | T10 |
+| 6 | `feat(007): lógica, cliente y hooks de publicar rutas` | T12–T14 |
+| 7 | `feat(007): publicar una actividad como ruta` | T15 |
+| 8 | `feat(007): detalle de ruta, favoritas y Mis rutas` | T16–T18 |
+| 9 | `fix(007)`: ajustes de los casos manuales | — |
+| 10 | `docs(007): verificación y estado de la spec` | T19 |
+
+Así quedan los tres tipos de la semana: `feat(007)` (1–3 y 5–8), `test/fix(007)` (4 y 9) y `docs(007)` (10).
+
+## Pendientes conocidos
+
+Ninguno por ahora.
