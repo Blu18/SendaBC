@@ -22,8 +22,8 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
   (CA-11)
 - [x] T4 — `CreateRouteDto` y `UpdateRouteDto`: `activityId` UUID; `name` de 1 a 40 caracteres sin espacios al inicio y al final; `description` ≤ 200; `region` ≤ 40, y `null`/vacía para borrarla; `status` solo `PUBLISHED` o `ARCHIVED`. El `whitelist` descarta `type`, `difficulty`, `distanceMeters`, `path`, etc. Pruebas de valores válidos, bordes (40/41, 200/201), nombre solo con espacios y estado inválido, con mensajes en español. (CA-5, CA-22)
-- [ ] T5 — `RouteService.publish(userId, dto)`: actividad del token, mínimo de 1.5 km, una ruta no borrada por actividad (también por el `UNIQUE`), datos tomados de la actividad, `difficulty` con `dificultadDe` y `elevationProfile` con `perfilDe`, en una transacción. Pruebas con Prisma simulado: `404` si es ajena o no existe, `400` si es corta, `409` si ya tiene ruta, y los valores que se insertan. (CA-6, CA-8, CA-9)
-- [ ] T6 — `RouteService.detail`, `update` y `remove`:
+- [x] T5 — `RouteService.publish(userId, dto)`: actividad del token, mínimo de 1.5 km, una ruta no borrada por actividad (también por el `UNIQUE`), datos tomados de la actividad, `difficulty` con `dificultadDe` y `elevationProfile` con `perfilDe`, en una transacción. Pruebas con Prisma simulado: `404` si es ajena o no existe, `400` si es corta, `409` si ya tiene ruta, y los valores que se insertan. (CA-6, CA-8, CA-9)
+- [x] T6 — `RouteService.detail`, `update` y `remove`:
   - visibilidad: `PUBLISHED` siempre; `ARCHIVED` solo para su dueño; `DELETED` nunca;
   - `isMine` e `isFavorite`, y recorrido simplificado a ~2 m;
   - editar nombre, descripción y zona; archivar y volver a publicar;
@@ -31,13 +31,13 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - `403` si la ruta es ajena.
 
   Pruebas con Prisma simulado de cada regla. (CA-10, CA-12, CA-14, CA-22, CA-23, CA-24, CA-25, CA-26)
-- [ ] T7 — `RouteService.listMine`, `listFavorites`, `addFavorite` y `removeFavorite`:
+- [x] T7 — `RouteService.listMine`, `listFavorites`, `addFavorite` y `removeFavorite`:
   - `listMine`: sin `DELETED`, la más reciente primero;
   - `listFavorites`: con `available` según el estado, la guardada más reciente primero;
   - `addFavorite` y `removeFavorite`: idempotentes, y `addFavorite` responde `404` si la ruta no está disponible.
 
   Pruebas con Prisma simulado. (CA-15, CA-16, CA-18, CA-19, CA-20, CA-21)
-- [ ] T8 — `RouteController`: `POST /routes`, `GET /routes/mine`, `GET /routes/favorites`, `GET /routes/:id`, `PATCH /routes/:id`, `DELETE /routes/:id`, `PUT` y `DELETE /routes/:id/favorite`. `mine` y `favorites` van antes de `:id`, y `:id` usa `ParseUUIDPipe` con `404`. Pruebas del controlador: el guard en toda la clase y el usuario del token en cada acción. (CA-26, CA-27)
+- [x] T8 — `RouteController`: `POST /routes`, `GET /routes/mine`, `GET /routes/favorites`, `GET /routes/:id`, `PATCH /routes/:id`, `DELETE /routes/:id`, `PUT` y `DELETE /routes/:id/favorite`. `mine` y `favorites` van antes de `:id`, y `:id` usa `ParseUUIDPipe` con `404`. Pruebas del controlador: el guard en toda la clase y el usuario del token en cada acción. (CA-26, CA-27)
 - [ ] T9 — `test/route-publish.e2e-spec.ts` contra la base. Usa dos usuarios de prueba, cada uno con actividades sincronizadas por `POST /activities/sync` (una de 3 km y otra de 1 km), y al final borra sus rutas y luego a los usuarios. Casos:
   - publicar la de 3 km → `201`, aparece en `GET /routes/nearby` y su detalle trae perfil, dificultad e `isMine` (CA-6, CA-11);
   - publicar otra vez → `409`; la de 1 km → `400`; una actividad del otro usuario → `404` (CA-8, CA-9);

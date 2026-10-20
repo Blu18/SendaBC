@@ -63,7 +63,7 @@ Todos con `JwtAuthGuard`. `RouteDetail`, `MyRoute` y `FavoriteRoute` se definen 
 
 | Método | Ruta | Auth | Request | Response | Errores |
 |---|---|---|---|---|---|
-| POST | `/routes` | JWT | `{ activityId, name, description?, region? }` | `201 RouteDetail` | `400` validación o actividad de menos de 1.5 km · `404` actividad inexistente o ajena · `409` la actividad ya tiene una ruta publicada o archivada |
+| POST | `/routes` | JWT | `{ activityId, name, description?, region? }` | `201 RouteDetail` | `400` validación, actividad de menos de 1.5 km o sin recorrido (menos de 2 puntos) · `404` actividad inexistente o ajena · `409` la actividad ya tiene una ruta publicada o archivada |
 | GET | `/routes/:id` | JWT | — | `200 RouteDetail` | `404` "Esta ruta ya no está disponible" (no existe, borrada, o archivada y ajena) |
 | PATCH | `/routes/:id` | JWT (dueño) | `{ name?, description?, region?, status?: 'PUBLISHED' \| 'ARCHIVED' }` | `200 RouteDetail` | `400` · `403` ruta ajena (incluidas las de ejemplo) · `404` |
 | DELETE | `/routes/:id` | JWT (dueño) | — | `204` | `403` · `404` |
@@ -91,7 +91,7 @@ RouteDetail = {
   isMine: boolean;
   isFavorite: boolean;
   status: 'PUBLISHED' | 'ARCHIVED';
-  sourceActivityId: string | null;
+  sourceActivityId: string | null;         // solo para el dueño; null para los demás
   publishedAt: string;                      // createdAt, ISO 8601
 }
 MyRoute = { id; name; type; distanceMeters; status: 'PUBLISHED' | 'ARCHIVED'; sourceActivityId; publishedAt }
@@ -99,7 +99,7 @@ FavoriteRoute = { id; name; type; distanceMeters; elevationGainMeters; available
 ```
 
 **Reglas del servidor:**
-- **Publicar (`POST /routes`):** en una transacción, busca la actividad del usuario del token (`404` si no existe o es ajena). Rechaza con `400` si `distanceMeters < 1500` (RN-5) y con `409` si ya tiene una ruta no borrada (RN-2). Inserta con SQL:
+- **Publicar (`POST /routes`):** en una transacción, busca la actividad del usuario del token (`404` si no existe o es ajena). Rechaza con `400` si `distanceMeters < 1500` (RN-5) o si la actividad no tiene recorrido y con `409` si ya tiene una ruta no borrada (RN-2). Inserta con SQL:
   - `path = activities.path`;
   - `startPoint = ST_StartPoint(path)::geography`;
   - `type`, `distanceMeters` y `elevationGainMeters` de la actividad;
@@ -117,7 +117,7 @@ FavoriteRoute = { id; name; type; distanceMeters; elevationGainMeters; available
 
 - `backend/src/route/route.controller.ts`: los endpoints nuevos. `mine` y `favorites` se declaran antes de `:id`, y `:id` usa `ParseUUIDPipe` con un `404`.
 - `backend/src/route/route.service.ts`: `publish`, `detail`, `update`, `remove`, `listMine`, `listFavorites`, `addFavorite`, `removeFavorite`.
-- `backend/src/route/dto/create-route.dto.ts` y `update-route.dto.ts`: `name` sin espacios al inicio y al final, de 1 a 40 caracteres; `description` de hasta 200; `region` de hasta 40, y `null` o una cadena vacía la borran; `status` con `@IsIn(['PUBLISHED', 'ARCHIVED'])`.
+- `backend/src/route/dto/create-route.dto.ts` y `update-route.dto.ts`: `name` sin espacios al inicio y al final, de 1 a 40 caracteres; `description` de hasta 200 y `region` de hasta 40; en las dos, `null` o una cadena vacía (o solo con espacios) la borran; `status` con `@IsIn(['PUBLISHED', 'ARCHIVED'])`.
 - `backend/src/route/difficulty.ts`: `dificultadDe(type, distanceMeters, elevationGainMeters)` con la tabla de RN-6. La función es pura y la usan el servicio y el seed.
 - `backend/src/route/elevation-profile.ts`: `perfilDe(puntos)`. Lleva la distancia acumulada con haversine sobre los puntos en orden, se queda con los que tienen altitud y muestrea a 200 puntos como máximo por distancia. Sin altitudes devuelve `null`.
 - `backend/prisma/seed/gpx-a-json.ts`: agrega `elevationProfile` (con `perfilDe` sobre la traza GPX completa) y calcula `difficulty` con `dificultadDe`. `rutas-ejemplo.fuentes.json` ya no lleva dificultad.
@@ -208,5 +208,8 @@ Las rutas existentes son solo las de ejemplo y se regeneran con `seed:rutas` des
 
 ## Historial
 
+- 2026-10-20 — Al implementar T6: `RouteDetail.sourceActivityId` solo se llena para el dueño (para los demás es `null`), porque es un dato de su actividad que nadie más necesita. Para editar o borrar, una ruta que el usuario no puede ver (archivada y ajena, o borrada) responde `404` y una que ve pero no es suya, `403`.
+- 2026-10-20 — Al implementar T5: `POST /routes` también responde `400` si la actividad tiene menos de 2 puntos, porque sin `activities.path` la ruta no tendría recorrido ni inicio (RN-1). `RouteService.publish` devuelve el id y el controlador responde con el detalle (T8).
+- 2026-10-20 — Al implementar T4: `null` o una cadena vacía también borran la descripción, no solo la zona. La descripción es opcional y sin esto no habría forma de quitarla al editar (CA-22).
 - 2026-10-20 — Aprobado por el usuario.
 - 2026-10-20 — Creación.
