@@ -38,7 +38,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
   Pruebas con Prisma simulado. (CA-15, CA-16, CA-18, CA-19, CA-20, CA-21)
 - [x] T8 — `RouteController`: `POST /routes`, `GET /routes/mine`, `GET /routes/favorites`, `GET /routes/:id`, `PATCH /routes/:id`, `DELETE /routes/:id`, `PUT` y `DELETE /routes/:id/favorite`. `mine` y `favorites` van antes de `:id`, y `:id` usa `ParseUUIDPipe` con `404`. Pruebas del controlador: el guard en toda la clase y el usuario del token en cada acción. (CA-26, CA-27)
-- [ ] T9 — `test/route-publish.e2e-spec.ts` contra la base. Usa dos usuarios de prueba, cada uno con actividades sincronizadas por `POST /activities/sync` (una de 3 km y otra de 1 km), y al final borra sus rutas y luego a los usuarios. Casos:
+- [x] T9 — `test/route-publish.e2e-spec.ts` contra la base. Usa dos usuarios de prueba, cada uno con actividades sincronizadas por `POST /activities/sync` (una de 3 km y otra de 1 km), y al final borra sus rutas y luego a los usuarios. Casos:
   - publicar la de 3 km → `201`, aparece en `GET /routes/nearby` y su detalle trae perfil, dificultad e `isMine` (CA-6, CA-11);
   - publicar otra vez → `409`; la de 1 km → `400`; una actividad del otro usuario → `404` (CA-8, CA-9);
   - el otro usuario la guarda en favoritas dos veces → una sola favorita; la quita dos veces → `204` (CA-15, CA-16);
@@ -55,7 +55,9 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - la prueba del JSON comprueba que toda ruta tiene perfil de 2 a 200 puntos, con distancias crecientes, y que su dificultad coincide con `dificultadDe`.
 
   Volver a cargar con `seed:rutas` y anotar las rutas cuya dificultad cambió. (CA-11)
-- [ ] T11 — Colección de Postman: carpeta "Publicar rutas (spec 007)" con publicar, detalle, editar, archivar, volver a publicar, favorita (guardar y quitar), "Mis rutas", "Mis favoritas" y borrar, más un `409` y un `403`. Validar contra la app local, como en la 006. (Constitución 6.3)
+- [x] T11 — Colección de Postman: carpeta "Publicar rutas (spec 007)" con publicar, detalle, editar, archivar, volver a publicar, favorita (guardar y quitar), "Mis rutas", "Mis favoritas" y borrar, más un `409` y un `403`. Validar contra la app local, como en la 006. (Constitución 6.3)
+
+  Validada el 2026-10-20 contra la API local: la colección completa, en orden, pasa 54/54 pruebas (17 peticiones nuevas). Se corrió con un ejecutor en Node que implementa lo que usa la colección (`pm.test`, `pm.expect` con chai, `pm.response`, variables y `{{$guid}}`), porque `newman` no está instalado; conviene correrla también en Postman.
 
 ## Frontend
 
