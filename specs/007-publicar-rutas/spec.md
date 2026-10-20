@@ -92,7 +92,7 @@ Con la spec 006, el catálogo muestra rutas cercanas, pero solo tiene las rutas 
 
   Ejemplos: 12 km con 200 m de senderismo es Moderada (por la distancia); 6 km con 900 m de trail running es Difícil (por la elevación); 35 km con 500 m de ciclismo es Moderada.
 - RN-7: La zona es opcional y tiene como máximo 40 caracteres. La app la propone según dónde empieza el recorrido; si no puede deducirla, el campo queda vacío.
-- RN-8: Todas las rutas tienen perfil de elevación: las publicadas desde una actividad, con las altitudes que grabó la actividad (barómetro o GPS, spec 004), y las de ejemplo, con las altitudes de su traza original.
+- RN-8: Todas las rutas tienen perfil de elevación: las publicadas desde una actividad, con la altitud que el GPS registró en cada punto (las lecturas del barómetro se quedan en el teléfono, spec 005, CA-8), y las de ejemplo, con las altitudes de su traza original.
 - RN-9: Las rutas de ejemplo de SendaBC se pueden ver a detalle y guardar en favoritas igual que cualquier otra ruta.
 
 ## Requisitos no funcionales
@@ -139,6 +139,7 @@ No quedan preguntas abiertas.
 
 ## Historial
 
+- 2026-10-20 — Corrección al escribir el plan: RN-8 decía que el perfil usa la altitud del barómetro o del GPS, pero en el servidor solo existe la del GPS de cada punto (spec 005, CA-8). El perfil usa esa.
 - 2026-10-20 — Aprobada por el usuario.
 - 2026-10-20 — Se resuelve P13: los umbrales de ciclismo bajan 5 km en cada nivel (15, 35 y 75 km). Sin preguntas abiertas; la spec queda lista para aprobación.
 - 2026-10-20 — Se resuelven P10–P12: una ruta archivada se puede volver a publicar (CA-24), una actividad con su ruta borrada se puede publicar de nuevo (RN-2) y la regla de dificultad queda en RN-6, con umbrales propios para ciclismo pendientes de confirmar (P13). Se renumeran CA-24 a CA-27.
