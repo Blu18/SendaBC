@@ -48,13 +48,20 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - archivar → desaparece de `nearby`, el otro usuario recibe `404` en el detalle y en favoritas ve `available: false`; volver a publicar → reaparece (CA-23, CA-24, CA-14, CA-19);
   - borrar → `204`, desaparece de `nearby` y de `mine`, sigue en favoritas como no disponible, y la actividad se puede publicar de nuevo (CA-25, CA-19, CA-8);
   - sin token → `401` en todos los endpoints nuevos (CA-27).
-- [ ] T10 — Rutas de ejemplo con perfil y dificultad calculada:
+- [x] T10 — Rutas de ejemplo con perfil y dificultad calculada:
   - `gpx-a-json.ts` agrega `elevationProfile` (con `perfilDe` sobre la traza completa) y `difficulty` (con `dificultadDe`);
   - `rutas-ejemplo.fuentes.json` deja de llevar dificultad;
   - `rutas-ejemplo.ts` guarda el perfil;
   - la prueba del JSON comprueba que toda ruta tiene perfil de 2 a 200 puntos, con distancias crecientes, y que su dificultad coincide con `dificultadDe`.
 
   Volver a cargar con `seed:rutas` y anotar las rutas cuya dificultad cambió. (CA-11)
+
+  Recargadas el 2026-10-20: las 17 rutas tienen perfil (de 189 a 200 puntos) y cambiaron de dificultad tres:
+  - Cañón de Doña Petra – San Antonio de las Minas (senderismo, 17.3 km, 545 m): Moderada → Difícil, por la distancia.
+  - El Tajo – Trono Blanco (senderismo, 5.4 km, 269 m): Moderada → Fácil.
+  - La Otra Baja 100 (senderismo, 111.0 km, 851 m): Difícil → Extrema, por la distancia.
+
+  Distancia, desnivel, recorrido e ids no cambiaron.
 - [x] T11 — Colección de Postman: carpeta "Publicar rutas (spec 007)" con publicar, detalle, editar, archivar, volver a publicar, favorita (guardar y quitar), "Mis rutas", "Mis favoritas" y borrar, más un `409` y un `403`. Validar contra la app local, como en la 006. (Constitución 6.3)
 
   Validada el 2026-10-20 contra la API local: la colección completa, en orden, pasa 54/54 pruebas (17 peticiones nuevas). Se corrió con un ejecutor en Node que implementa lo que usa la colección (`pm.test`, `pm.expect` con chai, `pm.response`, variables y `{{$guid}}`), porque `newman` no está instalado; conviene correrla también en Postman.
