@@ -54,8 +54,13 @@ function PublishSection({ activity, localId }: { activity: Activity; localId: nu
                 />
             );
         case 'ya-publicada':
-            // Abre el detalle de la ruta (spec 007, T16).
-            return <BgBtn text="Ver ruta publicada" style={styles.doneBtn} />;
+            return (
+                <BgBtn
+                    text="Ver ruta publicada"
+                    style={styles.doneBtn}
+                    onPress={() => navigation.navigate('RouteDetail', { id: publicable.rutaId })}
+                />
+            );
         default:
             return <Text style={styles.publishNotice}>{publicable.mensaje}</Text>;
     }

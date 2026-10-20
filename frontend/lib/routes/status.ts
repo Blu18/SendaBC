@@ -42,7 +42,9 @@ export function routeDetailStatus(q: {
   isError: boolean;
   data: RouteDetailOutcome | undefined;
 }): RouteDetailStatus {
-  if (q.isFetching) return 'loading';
+  // Si ya hay una ruta, se sigue mostrando mientras se refresca (por ejemplo, después de
+  // guardarla en favoritas): la pantalla no vuelve a "cargando".
+  if (q.isFetching && q.data?.kind !== 'found') return 'loading';
   if (q.isError || !q.data) return 'error';
   if (q.data.kind === 'offline') return 'offline';
   if (q.data.kind === 'unavailable') return 'unavailable';
@@ -58,7 +60,8 @@ export function routeListStatus<T>(q: {
   isError: boolean;
   data: RouteListOutcome<T> | undefined;
 }): RouteListStatus {
-  if (q.isFetching) return 'loading';
+  // Igual que el detalle: una lista ya cargada se sigue mostrando mientras se refresca.
+  if (q.isFetching && (!q.data || q.data.offline)) return 'loading';
   if (q.isError || !q.data) return 'error';
   if (q.data.offline) return 'offline';
   return q.data.items.length === 0 ? 'empty' : 'success';

@@ -85,7 +85,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   (CA-1, CA-2, CA-3, CA-4, CA-5, CA-6, CA-7, CA-8)
 
   Implementada el 2026-10-20 (`tsc` y bundle de Android sin errores). "Ver ruta publicada" abre el detalle a partir de T16. Faltan los casos manuales M1–M3 en el dispositivo.
-- [ ] T16 — Detalle:
+- [x] T16 — Detalle:
   - `pages/routes/routeDetailPage.tsx`: mapa con el recorrido completo, inicio y final; datos, autor, descripción, distancia hasta mí, marca "Tuya" o "Por SendaBC";
   - `components/routes/ElevationProfile.tsx`;
   - guardar y quitar de favoritas;
@@ -93,8 +93,14 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - "Ver detalle" en la tarjeta de "Explorar rutas".
 
   (CA-10, CA-11, CA-12, CA-13, CA-14, CA-15)
-- [ ] T17 — Acciones del dueño en el detalle (editar, archivar o volver a publicar, y borrar con confirmación) y `pages/routes/editRoutePage.tsx`. (CA-12, CA-22, CA-23, CA-24, CA-25)
-- [ ] T18 — `pages/routes/myRoutesPage.tsx` y `pages/routes/favoritesPage.tsx`, con sus listas, estados, la marca "Ya no disponible", quitar de favoritas y los mensajes de lista vacía. Botones "Mis rutas" y "Mis favoritas" en `MainPage`, y las rutas `PublishRoute`, `EditRoute`, `RouteDetail`, `MyRoutes` y `Favorites` en `App.tsx`. (CA-18, CA-19, CA-21, CA-27)
+
+  Implementada el 2026-10-20 (`tsc` y bundle de Android sin errores). También conecta "Ver ruta publicada" del resumen (T15). Faltan los casos manuales M4, M5 y M7 en el dispositivo.
+- [x] T17 — Acciones del dueño en el detalle (editar, archivar o volver a publicar, y borrar con confirmación) y `pages/routes/editRoutePage.tsx`. (CA-12, CA-22, CA-23, CA-24, CA-25)
+
+  Implementada el 2026-10-20 (`tsc` y bundle de Android sin errores). Falta el caso manual M6 en el dispositivo.
+- [x] T18 — `pages/routes/myRoutesPage.tsx` y `pages/routes/favoritesPage.tsx`, con sus listas, estados, la marca "Ya no disponible", quitar de favoritas y los mensajes de lista vacía. Botones "Mis rutas" y "Mis favoritas" en `MainPage`, y las rutas `PublishRoute`, `EditRoute`, `RouteDetail`, `MyRoutes` y `Favorites` en `App.tsx`. (CA-18, CA-19, CA-21, CA-27)
+
+  Implementada el 2026-10-20 (`tsc` y bundle de Android sin errores). Las favoritas se quitan desde la lista con "Quitar" en cada fila, también las que ya no están disponibles (CA-19). Faltan los casos manuales M6–M8 en el dispositivo.
 
 ## Documentación
 

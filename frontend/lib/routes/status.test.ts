@@ -63,10 +63,17 @@ describe('Detalle, listas y acciones de rutas (spec 007)', () => {
   describe('routeDetailStatus', () => {
     const base = { isFetching: false, isError: false };
 
-    it('cargando mientras pide, aunque haya datos de antes', () => {
+    it('cargando mientras pide la primera vez o al reintentar sin conexión', () => {
+      expect(routeDetailStatus({ ...base, isFetching: true, data: undefined })).toBe('loading');
+      expect(routeDetailStatus({ ...base, isFetching: true, data: { kind: 'offline' } })).toBe(
+        'loading'
+      );
+    });
+
+    it('con la ruta ya cargada, refrescar no vuelve a "cargando"', () => {
       expect(
         routeDetailStatus({ ...base, isFetching: true, data: { kind: 'found', route: ruta } })
-      ).toBe('loading');
+      ).toBe('success');
     });
 
     it('distingue éxito, sin conexión y no disponible (CA-13, CA-14)', () => {
@@ -90,6 +97,15 @@ describe('Detalle, listas y acciones de rutas (spec 007)', () => {
       expect(routeListStatus({ ...base, data: { offline: true } })).toBe('offline');
       expect(routeListStatus({ ...base, isError: true, data: undefined })).toBe('error');
       expect(routeListStatus({ ...base, isFetching: true, data: undefined })).toBe('loading');
+    });
+
+    it('una lista ya cargada se sigue mostrando mientras se refresca', () => {
+      expect(
+        routeListStatus({ ...base, isFetching: true, data: { offline: false, items: [1] } })
+      ).toBe('success');
+      expect(routeListStatus({ ...base, isFetching: true, data: { offline: true } })).toBe(
+        'loading'
+      );
     });
   });
 

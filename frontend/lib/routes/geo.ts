@@ -29,6 +29,26 @@ export function hasMovedEnough(
   return haversineMeters(lastCenter, center) > radiusKm * 1000 * MOVE_THRESHOLD;
 }
 
+// Margen alrededor del recorrido en el detalle, como fracción de su tamaño, y tamaño mínimo
+// de la región (≈ 500 m) para que una ruta muy corta o recta no quede pegada a los bordes.
+const PATH_MARGIN = 0.25;
+const MIN_DELTA_DEG = 0.005;
+
+// Región del mapa que muestra el recorrido completo (spec 007, CA-10). `path` en [lng, lat];
+// sin puntos, la región alrededor de `start`.
+export function regionForPath(path: [number, number][], start: Coordinates) {
+  const lngs = path.length > 0 ? path.map(([lng]) => lng) : [start.longitude];
+  const lats = path.length > 0 ? path.map(([, lat]) => lat) : [start.latitude];
+  const [minLng, maxLng] = [Math.min(...lngs), Math.max(...lngs)];
+  const [minLat, maxLat] = [Math.min(...lats), Math.max(...lats)];
+  return {
+    latitude: (minLat + maxLat) / 2,
+    longitude: (minLng + maxLng) / 2,
+    latitudeDelta: Math.max(MIN_DELTA_DEG, (maxLat - minLat) * (1 + 2 * PATH_MARGIN)),
+    longitudeDelta: Math.max(MIN_DELTA_DEG, (maxLng - minLng) * (1 + 2 * PATH_MARGIN)),
+  };
+}
+
 // Región del mapa centrada en `center` que muestra el círculo de búsqueda completo (CA-1, CA-10).
 export function regionAround(center: Coordinates, radiusKm: number) {
   const latitudeDelta = 2 * radiusKm * DEG_LAT_PER_KM;
