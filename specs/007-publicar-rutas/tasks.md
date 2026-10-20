@@ -77,12 +77,14 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   (CA-1, CA-2, CA-3, CA-4, CA-5, CA-8, CA-11)
 - [x] T13 — `lib/routes/api.ts`: `publishRoute`, `getRoute`, `updateRoute`, `deleteRoute`, `listMyRoutes`, `listFavorites`, `addFavorite` y `removeFavorite`, con límite de 10 s y resultado `{ ok, data }` / `{ ok: false, failure }`. Pruebas con `fetch` simulado: método, ruta, body y token de cada una; `404`, `409`, `400` con errores por campo; sin red y tiempo agotado. (CA-7, CA-13, CA-14)
 - [x] T14 — Hooks `hooks/routes/`: `useRouteDetail` (estados `loading`, `success`, `offline`, `error` y `unavailable` ante un `404`), `useMyRoutes`, `useFavorites` y `useRouteMutations`, que al terminar invalidan `['routes']`. (CA-13, CA-14, CA-17)
-- [ ] T15 — Publicar:
+- [x] T15 — Publicar:
   - `components/routes/RouteForm.tsx`;
   - `pages/routes/publishRoutePage.tsx`: zona propuesta con `reverseGeocodeAsync`, dificultad, tipo, distancia y elevación de solo lectura, aviso de privacidad, errores por campo, y conserva lo escrito si falla;
   - en el resumen de la actividad: "Publicar como ruta", "Ver ruta publicada" o el motivo por el que no se puede.
 
   (CA-1, CA-2, CA-3, CA-4, CA-5, CA-6, CA-7, CA-8)
+
+  Implementada el 2026-10-20 (`tsc` y bundle de Android sin errores). "Ver ruta publicada" abre el detalle a partir de T16. Faltan los casos manuales M1–M3 en el dispositivo.
 - [ ] T16 — Detalle:
   - `pages/routes/routeDetailPage.tsx`: mapa con el recorrido completo, inicio y final; datos, autor, descripción, distancia hasta mí, marca "Tuya" o "Por SendaBC";
   - `components/routes/ElevationProfile.tsx`;

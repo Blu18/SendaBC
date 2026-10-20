@@ -208,6 +208,7 @@ Las rutas existentes son solo las de ejemplo y se regeneran con `seed:rutas` des
 
 ## Historial
 
+- 2026-10-20 — Al implementar T15 (D6): en Android, `reverseGeocodeAsync` necesita el permiso de ubicación. Publicar no lo pide (constitución 3.5): si ya está concedido se propone la zona y, si no, el campo queda vacío y se escribe a mano (RN-7). En iOS no hace falta el permiso.
 - 2026-10-20 — Al implementar T10: el seed (que corre con `node`, sin compilar) importa `difficulty.ts` y `elevation-profile.ts` de `src/route/` con la extensión `.ts`. Para que `tsc` lo acepte se activa `rewriteRelativeImportExtensions` en `backend/tsconfig.json`; el build de `src/` no cambia. El GPX de La Otra Baja 100 trae altitudes de hasta -53 m (error del GPS en la costa) y el perfil las conserva, como pide RN-8.
 - 2026-10-20 — Al implementar T6: `RouteDetail.sourceActivityId` solo se llena para el dueño (para los demás es `null`), porque es un dato de su actividad que nadie más necesita. Para editar o borrar, una ruta que el usuario no puede ver (archivada y ajena, o borrada) responde `404` y una que ve pero no es suya, `403`.
 - 2026-10-20 — Al implementar T5: `POST /routes` también responde `400` si la actividad tiene menos de 2 puntos, porque sin `activities.path` la ruta no tendría recorrido ni inicio (RN-1). `RouteService.publish` devuelve el id y el controlador responde con el detalle (T8).
