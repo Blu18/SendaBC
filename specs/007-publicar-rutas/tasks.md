@@ -68,15 +68,15 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Frontend
 
-- [ ] T12 — Lógica pura en `lib/routes/`, con pruebas Vitest:
+- [x] T12 — Lógica pura en `lib/routes/`, con pruebas Vitest:
   - `difficulty.ts`, con los mismos casos que T2;
   - `publish.ts` (`MIN_PUBLISH_DISTANCE_M`, `validarRuta` y `motivoNoPublicable`): no sincronizada, < 1.5 km, ya tiene ruta, publicable, y los errores por campo;
   - `region.ts` (`zonaDe`): ciudad, luego subregión y luego región, recortada a 40, y vacía sin datos;
   - `profile.ts` (`perfilParaGrafica`): agrupar en N columnas, mínimo y máximo, perfil vacío o `null`.
 
   (CA-1, CA-2, CA-3, CA-4, CA-5, CA-8, CA-11)
-- [ ] T13 — `lib/routes/api.ts`: `publishRoute`, `getRoute`, `updateRoute`, `deleteRoute`, `listMyRoutes`, `listFavorites`, `addFavorite` y `removeFavorite`, con límite de 10 s y resultado `{ ok, data }` / `{ ok: false, failure }`. Pruebas con `fetch` simulado: método, ruta, body y token de cada una; `404`, `409`, `400` con errores por campo; sin red y tiempo agotado. (CA-7, CA-13, CA-14)
-- [ ] T14 — Hooks `hooks/routes/`: `useRouteDetail` (estados `loading`, `success`, `offline`, `error` y `unavailable` ante un `404`), `useMyRoutes`, `useFavorites` y `useRouteMutations`, que al terminar invalidan `['routes']`. (CA-13, CA-14, CA-17)
+- [x] T13 — `lib/routes/api.ts`: `publishRoute`, `getRoute`, `updateRoute`, `deleteRoute`, `listMyRoutes`, `listFavorites`, `addFavorite` y `removeFavorite`, con límite de 10 s y resultado `{ ok, data }` / `{ ok: false, failure }`. Pruebas con `fetch` simulado: método, ruta, body y token de cada una; `404`, `409`, `400` con errores por campo; sin red y tiempo agotado. (CA-7, CA-13, CA-14)
+- [x] T14 — Hooks `hooks/routes/`: `useRouteDetail` (estados `loading`, `success`, `offline`, `error` y `unavailable` ante un `404`), `useMyRoutes`, `useFavorites` y `useRouteMutations`, que al terminar invalidan `['routes']`. (CA-13, CA-14, CA-17)
 - [ ] T15 — Publicar:
   - `components/routes/RouteForm.tsx`;
   - `pages/routes/publishRoutePage.tsx`: zona propuesta con `reverseGeocodeAsync`, dificultad, tipo, distancia y elevación de solo lectura, aviso de privacidad, errores por campo, y conserva lo escrito si falla;
