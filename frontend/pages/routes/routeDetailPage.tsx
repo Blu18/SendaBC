@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert, PixelRatio, Platform } from "react-native";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import * as Location from "expo-location";
@@ -53,13 +53,33 @@ function Stat({ value, label }: { value: string; label: string }) {
 
 // Recorrido completo con su inicio y su final. Los elementos son fijos mientras se muestra la
 // ruta (no se insertan en medio), así que no tiene el problema de Android de la spec 006 (M2).
+// Margen alrededor del recorrido, en puntos de pantalla. En Android react-native-maps lo recibe
+// en píxeles físicos; en iOS, en puntos.
+const MARGEN_MAPA_PT = 32;
+const margenMapa = Platform.OS === 'android' ? PixelRatio.getPixelSizeForLayoutSize(MARGEN_MAPA_PT) : MARGEN_MAPA_PT;
+
 function RouteMap({ route }: { route: RouteDetail }) {
+    const mapRef = useRef<MapView>(null);
     const coordenadas = useMemo(() => pathToCoordinates(route.path), [route.path]);
     const final = coordenadas[coordenadas.length - 1];
+
+    // initialRegion solo da el primer cuadro: en Android no respeta su margen y el extremo de un
+    // recorrido largo quedaba en el borde (M4). Con el mapa listo se encuadra el recorrido completo
+    // con un margen fijo en pantalla.
+    const encuadrar = () => {
+        if (coordenadas.length < 2) return;
+        mapRef.current?.fitToCoordinates(coordenadas, {
+            edgePadding: { top: margenMapa, right: margenMapa, bottom: margenMapa, left: margenMapa },
+            animated: false,
+        });
+    };
+
     return (
         <MapView
+            ref={mapRef}
             style={styles.map}
             initialRegion={regionForPath(route.path, route.start)}
+            onMapReady={encuadrar}
             toolbarEnabled={false}
             showsMyLocationButton={false}
         >

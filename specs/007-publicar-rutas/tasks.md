@@ -178,6 +178,25 @@ En el emulador o el teléfono con el development build (spec 006, D7), el backen
 1. Con favoritas guardadas, cerrar sesión e iniciarla en otro emulador o teléfono. 2. Abrir "Mis favoritas".
 - **Esperado:** están las mismas favoritas, la más reciente primero. Sin favoritas, se ve el mensaje que explica cómo guardarlas.
 
+### Resultado de los casos manuales (2026-10-21)
+
+En el emulador `Pixel_10_Pro` con el development build de la 006 (sin cambios nativos en la 007), el backend local y las rutas de ejemplo con perfil. Cuenta A: la de la colección de Postman; cuenta B: una de prueba creada para M7 y borrada al terminar, junto con las rutas y favoritas de prueba.
+
+| Caso | Resultado | Notas |
+|---|---|---|
+| M1 | Pasa | Pendiente: "primero tiene que subirse"; al sincronizarse (65 m), "al menos 1.5 km" en el mismo resumen; 3.20 km: "Publicar como ruta". |
+| M2 | Pasa | Zona propuesta ("Baja California"), dificultad Fácil, aviso de privacidad; errores de nombre vacío y de 41; publicada con "Tuya" en el catálogo y "Ver ruta publicada" en el resumen. |
+| M3 | Pasa | Sin conexión, mensaje y lo escrito se conserva; con conexión se publica. En el océano la zona queda vacía (RN-7). |
+| M4 | Pasa | Detalle de ruta de ejemplo con mapa, datos, "Por SendaBC", "A 17.60 km de ti" y perfil; favorita alterna en cada toque sin volver a "cargando". |
+| M5 | Pasa | Aviso con "Reintentar" sin carga infinita; con conexión aparece el detalle. |
+| M6 | Pasa | Editar (catálogo y detalle), archivar (fuera de `nearby`, "Archivada"), volver a publicar y borrar con confirmación, sin el aviso de "no disponible"; la actividad vuelve a ofrecer publicar. |
+| M7 | Pasa | Pasos 1 y 2 por la API. B ve "Ya no disponible", al tocarla "Esta ruta ya no está disponible", y la quita de la lista. |
+| M8 | Pasa con nota | Las favoritas se ven en una sesión nueva y las guardadas por la API aparecen en la app, la más reciente primero; mensaje de lista vacía. No había un segundo teléfono: se simuló con otra sesión. |
+
+Observaciones (no bloquean ningún CA):
+- En el detalle, el mapa de "Cañón de Guadalupe" parecía cortar el extremo del recorrido. Revisado de nuevo, el recorrido sí cabía (unos 150 px de margen por lado); lo que se cortaba eran las etiquetas del mapa. Aun así, el detalle ahora encuadra con `fitToCoordinates` al cargar el mapa, con un margen fijo de 32 pt, en lugar de depender de cómo interpreta Android `initialRegion`. Comprobado en el emulador.
+- El eje del perfil marca la distancia medida sobre los puntos (3.25 km) y la ruta, la de la actividad (3.20 km, RN-1).
+
 ## Commits propuestos
 
 | # | Commit | Tareas |
