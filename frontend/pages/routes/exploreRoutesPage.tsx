@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, Pressable, ScrollView } from "react-native";
 import MapView, { Marker, Polyline, type MapPressEvent, type Region } from "react-native-maps";
 import * as Location from "expo-location";
+import { useNavigation } from "@react-navigation/native";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import { useLocationPermission } from "../../hooks/activity/locationPermission.hook";
 import { useNearbyRoutes } from "../../hooks/routes/useNearbyRoutes";
@@ -57,7 +58,16 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
 }
 
 // Tarjeta de la ruta seleccionada (CA-6, CA-7, CA-19). Sin ubicación no hay "A X km de ti" (CA-14).
-function RouteCard({ route, user }: { route: NearbyRoute; user: Coordinates | null }) {
+// "Ver detalle" abre el recorrido completo y el perfil (spec 007, CA-10).
+function RouteCard({
+    route,
+    user,
+    onDetail,
+}: {
+    route: NearbyRoute;
+    user: Coordinates | null;
+    onDetail: () => void;
+}) {
     const distanciaATi = formatDistanceFromUser(distanceFromUser(route, user));
     const subtitulo = [
         ACTIVITY_TYPE_LABELS[route.type],
@@ -89,12 +99,14 @@ function RouteCard({ route, user }: { route: NearbyRoute; user: Coordinates | nu
             </View>
             <Text style={styles.cardDetail}>Por {route.author}</Text>
             {distanciaATi && <Text style={styles.cardDetail}>{distanciaATi}</Text>}
+            <PrimaryButton text="Ver detalle" style={styles.cardButton} onPress={onDetail} />
         </View>
     );
 }
 
 // Catálogo de rutas cercanas en un mapa (spec 006).
 export default function ExploreRoutesPage() {
+    const navigation = useNavigation();
     const mapRef = useRef<MapView>(null);
     const lastOverlayPress = useRef(0);
     const { request } = useLocationPermission();
@@ -346,7 +358,13 @@ export default function ExploreRoutesPage() {
                         <Text style={styles.recenterText}>◎</Text>
                     </Pressable>
                 )}
-                {selected && <RouteCard route={selected} user={user} />}
+                {selected && (
+                    <RouteCard
+                        route={selected}
+                        user={user}
+                        onDetail={() => navigation.navigate('RouteDetail', { id: selected.id })}
+                    />
+                )}
             </View>
         </View>
     );
@@ -525,5 +543,9 @@ const styles = StyleSheet.create({
     cardDetail: {
         fontSize: 14,
         color: colors.textMuted,
+    },
+    cardButton: {
+        marginTop: 8,
+        paddingVertical: 10,
     },
 });

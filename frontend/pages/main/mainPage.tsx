@@ -66,6 +66,19 @@ export default function MainPage() {
               onPress={() => navigation.navigate('ExploreRoutes')}
             />
 
+            {/* Por ahora se entra desde aquí (spec 007, P8) */}
+            <PrimaryButton
+              text="Mis rutas"
+              style={styles.activityBtn}
+              onPress={() => navigation.navigate('MyRoutes')}
+            />
+
+            <PrimaryButton
+              text="Mis favoritas"
+              style={styles.activityBtn}
+              onPress={() => navigation.navigate('Favorites')}
+            />
+
             <PrimaryButton text="Cerrar sesión" style={styles.logoutBtn} onPress={handleLogout} />
         </View>
     )

@@ -1,10 +1,15 @@
 // Spec 006 — T6b (plan D8). Convierte las trazas GPX reales de gpx/ en rutas-ejemplo.json.
 // Se ejecuta con Node 24, sin dependencias: `npm run seed:rutas:generar`.
 //   - gpx/ (ignorado por git): los GPX originales, descargados de Wikiloc por el equipo.
-//   - rutas-ejemplo.fuentes.json: nombre, tipo, región y dificultad de cada archivo.
+//   - rutas-ejemplo.fuentes.json: nombre, tipo y región de cada archivo.
+// Spec 007 — T10: la dificultad ya no se pone a mano, se calcula con la regla de RN-6, y cada
+// ruta lleva su perfil de elevación sobre la traza completa (RN-8). Las dos funciones son las
+// mismas que usa el servidor al publicar.
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { dificultadDe } from '../../src/route/difficulty.ts';
+import { perfilDe } from '../../src/route/elevation-profile.ts';
 
 const DIR = import.meta.dirname;
 const MAX_PUNTOS = 40;
@@ -19,7 +24,6 @@ type Fuente = {
   name: string;
   type: 'HIKING' | 'TRAIL_RUNNING' | 'CYCLING';
   region: string;
-  difficulty: 'EASY' | 'MODERATE' | 'HARD' | 'EXTREME';
 };
 
 type Punto = { lat: number; lng: number; ele: number | null };
@@ -151,15 +155,23 @@ const rutas = fuentes.map((f) => {
   const path = simplificarHasta(puntos, MAX_PUNTOS).map(
     (p) => [redondear(p.lng, 5), redondear(p.lat, 5)] as [number, number],
   );
+  const distanceMeters = Math.round(distanciaTotal(puntos));
+  const elevationGainMeters = Math.round(desnivelPositivo(puntos));
+  const elevationProfile = perfilDe(
+    puntos.map((p) => ({ lat: p.lat, lng: p.lng, altitudeMeters: p.ele })),
+  );
+  if (!elevationProfile) {
+    throw new Error(`${f.archivo}: el GPX no trae altitudes para el perfil`);
+  }
   return {
     id: uuidV5(f.archivo),
     name: f.name,
     type: f.type,
-    difficulty: f.difficulty,
+    difficulty: dificultadDe(f.type, distanceMeters, elevationGainMeters),
     region: f.region,
     description: `Traza de un usuario de Wikiloc${enlace ? ` (${enlace})` : ''}. Recorrido simplificado; no sirve para navegar.`,
-    distanceMeters: Math.round(distanciaTotal(puntos)),
-    elevationGainMeters: Math.round(desnivelPositivo(puntos)),
+    distanceMeters,
+    elevationGainMeters,
     source: {
       platform: 'Wikiloc',
       author: 'Usuario de Wikiloc',
@@ -167,6 +179,7 @@ const rutas = fuentes.map((f) => {
       file: f.archivo,
     },
     path,
+    elevationProfile,
   };
 });
 
@@ -177,6 +190,6 @@ writeFileSync(
 console.log(`${rutas.length} rutas escritas en rutas-ejemplo.json`);
 for (const r of rutas) {
   console.log(
-    `  ${r.name}: ${r.path.length} puntos, ${(r.distanceMeters / 1000).toFixed(1)} km, ${r.elevationGainMeters} m`,
+    `  ${r.name}: ${r.path.length} puntos, ${(r.distanceMeters / 1000).toFixed(1)} km, ${r.elevationGainMeters} m, ${r.difficulty}, perfil de ${r.elevationProfile.length}`,
   );
 }

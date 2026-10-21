@@ -11,6 +11,10 @@ export const MAX_ROUTES = 50;
 // más de un minuto (CA-15, CA-16).
 export const NEARBY_TIMEOUT_MS = 10_000;
 
+// Límite de tiempo de publicar, el detalle, favoritas y "Mis rutas" (spec 007, CA-7, CA-13):
+// sin él, un backend inalcanzable deja la pantalla cargando indefinidamente.
+export const ROUTE_REQUEST_TIMEOUT_MS = 10_000;
+
 // "Buscar en esta zona" aparece cuando el centro del mapa se movió más de esta fracción del
 // radio desde la última búsqueda (CA-9).
 export const MOVE_THRESHOLD = 0.2;

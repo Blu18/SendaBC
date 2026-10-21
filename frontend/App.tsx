@@ -12,6 +12,11 @@ import ActivityPage from './pages/activity/activityPage';
 import ActivitySummaryPage from './pages/activity/activitySummaryPage';
 import ActivityHistoryPage from './pages/activity/activityHistoryPage';
 import ExploreRoutesPage from './pages/routes/exploreRoutesPage';
+import PublishRoutePage from './pages/routes/publishRoutePage';
+import RouteDetailPage from './pages/routes/routeDetailPage';
+import EditRoutePage from './pages/routes/editRoutePage';
+import MyRoutesPage from './pages/routes/myRoutesPage';
+import FavoritesPage from './pages/routes/favoritesPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
 import { closeOrphanActivities } from './lib/db/activities';
@@ -48,6 +53,21 @@ const RootStack = createNativeStackNavigator({
     },
     ExploreRoutes: {
       screen: ExploreRoutesPage
+    },
+    PublishRoute: {
+      screen: PublishRoutePage
+    },
+    RouteDetail: {
+      screen: RouteDetailPage
+    },
+    EditRoute: {
+      screen: EditRoutePage
+    },
+    MyRoutes: {
+      screen: MyRoutesPage
+    },
+    Favorites: {
+      screen: FavoritesPage
     }
   }
 })

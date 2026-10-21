@@ -1,8 +1,10 @@
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
+import BgBtn from "../../components/ui/buttons/BgBtn";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import SyncBadge from "../../components/ui/SyncBadge";
 import { useActivitySummary } from "../../hooks/activity/activitySummary.hook";
+import { useMyRoutes } from "../../hooks/routes/useRouteLists";
 import {
     ACTIVITY_TYPE_LABELS,
     ELEVATION_SOURCE_LABELS,
@@ -13,6 +15,8 @@ import {
 import { formatDuration } from "../../lib/format/duration";
 import { formatDistance, formatElevation, formatPace, formatSpeed } from "../../lib/format/metrics";
 import { averagePace, averageSpeed } from "../../lib/metrics/summary";
+import type { Activity } from "../../lib/db/activities";
+import { motivoNoPublicable } from "../../lib/routes/publish";
 import { colors } from "../../lib/theme/colors";
 
 // origin 'recording': se llega al detener y "Listo" regresa a la pantalla principal (CA-2).
@@ -26,6 +30,40 @@ function Stat({ value, label }: { value: string; label: string }) {
             <Text style={styles.statLabel}>{label}</Text>
         </View>
     );
+}
+
+// "Publicar como ruta", el motivo por el que no se puede o "Ver ruta publicada" (spec 007,
+// CA-1 a CA-3, CA-8). Si la ruta ya existe se sabe por "Mis rutas" (plan D7); mientras carga no
+// se ofrece publicar. Sin conexión sí: el formulario avisa y el servidor responde 409 si ya
+// tenía ruta.
+function PublishSection({ activity, localId }: { activity: Activity; localId: number }) {
+    const navigation = useNavigation();
+    const { routes, status } = useMyRoutes();
+
+    const existente = routes.find((r) => r.sourceActivityId === activity.serverId);
+    const publicable = motivoNoPublicable(activity, existente);
+    if (publicable.kind === 'publicable' && status === 'loading') return null;
+
+    switch (publicable.kind) {
+        case 'publicable':
+            return (
+                <PrimaryButton
+                    text="Publicar como ruta"
+                    style={styles.doneBtn}
+                    onPress={() => navigation.navigate('PublishRoute', { localId })}
+                />
+            );
+        case 'ya-publicada':
+            return (
+                <BgBtn
+                    text="Ver ruta publicada"
+                    style={styles.doneBtn}
+                    onPress={() => navigation.navigate('RouteDetail', { id: publicable.rutaId })}
+                />
+            );
+        default:
+            return <Text style={styles.publishNotice}>{publicable.mensaje}</Text>;
+    }
 }
 
 // Resumen de una actividad terminada, leído de SQLite (spec 004, CA-1, CA-3, RN-4), con su
@@ -87,6 +125,8 @@ export default function ActivitySummaryPage({ route }: Props) {
                     {pointCount} {pointCount === 1 ? 'punto registrado' : 'puntos registrados'}
                 </Text>
             </View>
+
+            <PublishSection activity={activity} localId={localId} />
 
             {origin === 'recording' && (
                 <PrimaryButton text="Listo" style={styles.doneBtn} onPress={() => navigation.goBack()} />
@@ -156,5 +196,10 @@ const styles = StyleSheet.create({
     },
     doneBtn: {
         paddingVertical: 14,
+    },
+    publishNotice: {
+        fontSize: 14,
+        color: colors.textMuted,
+        textAlign: 'center',
     },
 });

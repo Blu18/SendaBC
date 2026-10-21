@@ -30,6 +30,7 @@ enum RouteStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+  DELETED
 }
 
 enum RouteDifficulty {
@@ -123,6 +124,7 @@ model Route {
   difficulty          RouteDifficulty?
   distanceMeters      Float?
   elevationGainMeters Float?
+  elevationProfile    Json?
   id                  String                                     @id @default(uuid()) @db.Uuid
   name                String
   path                Unsupported("geometry(LineString, 4326)")?

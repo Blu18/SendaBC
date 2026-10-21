@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "SendaBC API",
-    "description": "Colección para validar la API de SendaBC (constitución 6.3). Ejecutar en orden: '1. Registro' (solo la primera vez), '2. Login' guarda el token y luego las peticiones de actividades y de rutas. Configura las variables baseUrl, email y password de la colección antes de empezar. Las variables lat y lng (Ensenada por defecto) son el centro de la búsqueda de rutas cercanas.",
+    "description": "Colección para validar la API de SendaBC (constitución 6.3). Ejecutar en orden: '1. Registro' (solo la primera vez), '2. Login' guarda el token y luego las peticiones de actividades, de rutas y de publicar rutas. Configura las variables baseUrl, email y password de la colección antes de empezar. Las variables lat y lng (Ensenada por defecto) son el centro de la búsqueda de rutas cercanas.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -16,7 +16,11 @@
     { "key": "clientGeneratedId", "value": "" },
     { "key": "activityId", "value": "" },
     { "key": "lat", "value": "31.8667" },
-    { "key": "lng", "value": "-116.5964" }
+    { "key": "lng", "value": "-116.5964" },
+    { "key": "publishActivityBody", "value": "" },
+    { "key": "publishActivityId", "value": "" },
+    { "key": "routeId", "value": "" },
+    { "key": "exampleRouteId", "value": "45bd31cd-1604-532c-abbd-8251a1ceed21" }
   ],
   "item": [
     {
@@ -336,6 +340,488 @@
             "auth": { "type": "noauth" },
             "method": "GET",
             "url": "{{baseUrl}}/routes/nearby?lat={{lat}}&lng={{lng}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Publicar rutas (spec 007)",
+      "description": "Ejecutar en orden, después de \"2. Login\". Sube una actividad nueva de 3 km, la publica, la edita, la guarda en favoritas, la archiva, la vuelve a publicar y al final la borra. exampleRouteId es una ruta de ejemplo de SendaBC (npm run seed:rutas).",
+      "item": [
+        {
+          "name": "Subir actividad de 3 km",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Una actividad nueva de 3 km en cada ejecución: 28 puntos hacia el norte (~111 m entre",
+                  "// cada uno), en el océano Pacífico para no mezclarse con las rutas de ejemplo.",
+                  "const inicio = Date.UTC(2026, 9, 20, 15);",
+                  "const points = Array.from({ length: 28 }, (_, i) => ({",
+                  "  sequence: i + 1,",
+                  "  latitude: 24 + i * 0.001,",
+                  "  longitude: -127,",
+                  "  altitude: 500 + i * 10,",
+                  "  accuracy: 4.8,",
+                  "  recordedAt: new Date(inicio + i * 30000).toISOString(),",
+                  "}));",
+                  "pm.collectionVariables.set('publishActivityBody', JSON.stringify({",
+                  "  activities: [{",
+                  "    clientGeneratedId: pm.variables.replaceIn('{{$guid}}'),",
+                  "    type: 'HIKING',",
+                  "    startedAt: points[0].recordedAt,",
+                  "    endedAt: points[points.length - 1].recordedAt,",
+                  "    distanceMeters: 3000,",
+                  "    durationSeconds: 810,",
+                  "    elevationGainMeters: 350,",
+                  "    elevationLossMeters: 0,",
+                  "    elevationSource: 'GPS',",
+                  "    points,",
+                  "  }],",
+                  "}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const [result] = pm.response.json().results;",
+                  "pm.test('CREATED', () => pm.expect(result.status).to.eql('CREATED'));",
+                  "pm.collectionVariables.set('publishActivityId', result.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/activities/sync",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{publishActivityBody}}"
+            }
+          }
+        },
+        {
+          "name": "Publicar como ruta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 (CA-6)', () => pm.response.to.have.status(201));",
+                  "const ruta = pm.response.json();",
+                  "pm.collectionVariables.set('routeId', ruta.id);",
+                  "pm.test('RouteDetail completo', () => pm.expect(ruta).to.have.keys('id', 'name', 'description', 'region', 'type', 'difficulty', 'distanceMeters', 'elevationGainMeters', 'start', 'path', 'elevationProfile', 'author', 'isMine', 'isFavorite', 'status', 'sourceActivityId', 'publishedAt'));",
+                  "pm.test('datos de la actividad y dificultad calculada (RN-1, RN-6)', () => {",
+                  "  pm.expect(ruta.type).to.eql('HIKING');",
+                  "  pm.expect(ruta.distanceMeters).to.eql(3000);",
+                  "  pm.expect(ruta.difficulty).to.eql('MODERATE');",
+                  "  pm.expect(ruta.isMine).to.eql(true);",
+                  "  pm.expect(ruta.status).to.eql('PUBLISHED');",
+                  "});",
+                  "pm.test('perfil de elevación (CA-11)', () => {",
+                  "  pm.expect(ruta.elevationProfile.length).to.be.within(2, 200);",
+                  "  pm.expect(ruta.elevationProfile[0]).to.eql([0, 500]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/routes",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activityId\": \"{{publishActivityId}}\",\n  \"name\": \"Ruta de Postman\",\n  \"description\": \"Publicada desde la colección (spec 007).\",\n  \"region\": \"Océano Pacífico\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Publicar otra vez (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 (RN-2, CA-8)', () => pm.response.to.have.status(409));",
+                  "pm.test('mensaje en español', () => {",
+                  "  pm.expect(pm.response.json().message).to.eql('Esta actividad ya tiene una ruta publicada');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/routes",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activityId\": \"{{publishActivityId}}\",\n  \"name\": \"Otra vez\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Detalle de la ruta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 (CA-10)', () => pm.response.to.have.status(200));",
+                  "const ruta = pm.response.json();",
+                  "pm.test('recorrido [lng, lat] y marca de mía (CA-12)', () => {",
+                  "  pm.expect(ruta.path.length).to.be.at.least(2);",
+                  "  pm.expect(ruta.path[0][0]).to.be.closeTo(-127, 0.0001);",
+                  "  pm.expect(ruta.isMine).to.eql(true);",
+                  "  pm.expect(ruta.sourceActivityId).to.eql(pm.collectionVariables.get('publishActivityId'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/{{routeId}}"
+          }
+        },
+        {
+          "name": "Editar nombre y zona",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 (CA-22)', () => pm.response.to.have.status(200));",
+                  "const ruta = pm.response.json();",
+                  "pm.test('nombre nuevo, zona borrada y distancia sin cambios (RN-1)', () => {",
+                  "  pm.expect(ruta.name).to.eql('Ruta de Postman editada');",
+                  "  pm.expect(ruta.region).to.eql(null);",
+                  "  pm.expect(ruta.distanceMeters).to.eql(3000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/routes/{{routeId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ruta de Postman editada\",\n  \"region\": \"\",\n  \"distanceMeters\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Nombre de 41 caracteres (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 (CA-5)', () => pm.response.to.have.status(400));",
+                  "pm.test('error junto al campo, en español', () => {",
+                  "  pm.expect(pm.response.json().errors.name).to.include('El nombre debe tener como máximo 40 caracteres');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/routes/{{routeId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Guardar en favoritas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('204 (CA-15)', () => pm.response.to.have.status(204));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/routes/{{routeId}}/favorite"
+          }
+        },
+        {
+          "name": "Guardar otra vez (idempotente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 sin duplicar (CA-16)', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/routes/{{routeId}}/favorite"
+          }
+        },
+        {
+          "name": "Mis favoritas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 (CA-18)', () => pm.response.to.have.status(200));",
+                  "const favoritas = pm.response.json();",
+                  "const id = pm.collectionVariables.get('routeId');",
+                  "pm.test('la ruta está una sola vez y disponible', () => {",
+                  "  const mias = favoritas.filter((f) => f.id === id);",
+                  "  pm.expect(mias.length).to.eql(1);",
+                  "  pm.expect(mias[0].available).to.eql(true);",
+                  "  pm.expect(mias[0]).to.have.keys('id', 'name', 'type', 'distanceMeters', 'elevationGainMeters', 'available', 'savedAt');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/favorites"
+          }
+        },
+        {
+          "name": "Archivar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 (CA-23)', () => pm.response.to.have.status(200));",
+                  "pm.test('queda archivada', () => pm.expect(pm.response.json().status).to.eql('ARCHIVED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/routes/{{routeId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ARCHIVED\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Mis rutas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 (CA-21)', () => pm.response.to.have.status(200));",
+                  "const rutas = pm.response.json();",
+                  "const ruta = rutas.find((r) => r.id === pm.collectionVariables.get('routeId'));",
+                  "pm.test('la ruta aparece como archivada', () => {",
+                  "  pm.expect(ruta.status).to.eql('ARCHIVED');",
+                  "  pm.expect(ruta).to.have.keys('id', 'name', 'type', 'distanceMeters', 'status', 'sourceActivityId', 'publishedAt');",
+                  "});",
+                  "pm.test('la más reciente primero', () => {",
+                  "  const fechas = rutas.map((r) => r.publishedAt);",
+                  "  pm.expect(fechas).to.eql([...fechas].sort().reverse());",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/mine"
+          }
+        },
+        {
+          "name": "Volver a publicar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 (CA-24)', () => pm.response.to.have.status(200));",
+                  "pm.test('queda publicada', () => pm.expect(pm.response.json().status).to.eql('PUBLISHED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/routes/{{routeId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PUBLISHED\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Quitar de favoritas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('204 (CA-15, CA-16)', () => pm.response.to.have.status(204));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/routes/{{routeId}}/favorite"
+          }
+        },
+        {
+          "name": "Editar una ruta de ejemplo (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 (CA-26)', () => pm.response.to.have.status(403));",
+                  "pm.test('mensaje en español', () => {",
+                  "  pm.expect(pm.response.json().message).to.eql('Solo quien publicó esta ruta puede cambiarla');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/routes/{{exampleRouteId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ARCHIVED\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Borrar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('204 (CA-25)', () => pm.response.to.have.status(204));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/routes/{{routeId}}"
+          }
+        },
+        {
+          "name": "Detalle de la ruta borrada (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404 (CA-14)', () => pm.response.to.have.status(404));",
+                  "pm.test('mensaje en español', () => {",
+                  "  pm.expect(pm.response.json().message).to.eql('Esta ruta ya no está disponible');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/{{routeId}}"
+          }
+        },
+        {
+          "name": "Mis rutas sin token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('401 (CA-27)', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/mine",
+            "auth": {
+              "type": "noauth"
+            }
           }
         }
       ]

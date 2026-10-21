@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { haversineMeters } from '../metrics/geo';
 import { BAJA_CALIFORNIA_REGION, DEFAULT_RADIUS_KM, RADIUS_OPTIONS_KM } from './constants';
-import { distanceFromUser, hasMovedEnough, pathToCoordinates, regionAround } from './geo';
+import { distanceFromUser, hasMovedEnough, pathToCoordinates, regionAround, regionForPath } from './geo';
 
 const ENSENADA = { latitude: 31.8667, longitude: -116.5964 };
 const TECATE = { latitude: 32.5725, longitude: -116.6264 };
@@ -91,5 +91,45 @@ describe('constantes (CA-11, CA-14)', () => {
     expect(dentro(31.0447, -114.8389)).toBe(true); // San Felipe
     expect(dentro(28.95, -113.56)).toBe(true); // Bahía de los Ángeles
     expect(dentro(28.54, -114.09)).toBe(true); // inicio de La Otra Baja 100
+  });
+});
+
+describe('regionForPath (spec 007, CA-10)', () => {
+  const start = { latitude: 31.8, longitude: -116.6 };
+
+  it('centra el recorrido y deja un margen de 25 % por lado', () => {
+    const region = regionForPath(
+      [
+        [-116.6, 31.8],
+        [-116.5, 31.9],
+        [-116.55, 31.85],
+      ],
+      start
+    );
+    expect(region.latitude).toBeCloseTo(31.85);
+    expect(region.longitude).toBeCloseTo(-116.55);
+    expect(region.latitudeDelta).toBeCloseTo(0.15);
+    expect(region.longitudeDelta).toBeCloseTo(0.15);
+  });
+
+  it('una ruta recta o muy corta tiene una región mínima', () => {
+    const region = regionForPath(
+      [
+        [-116.6, 31.8],
+        [-116.6, 31.8001],
+      ],
+      start
+    );
+    expect(region.latitudeDelta).toBe(0.005);
+    expect(region.longitudeDelta).toBe(0.005);
+  });
+
+  it('sin recorrido, la región mínima alrededor del inicio', () => {
+    expect(regionForPath([], start)).toEqual({
+      latitude: 31.8,
+      longitude: -116.6,
+      latitudeDelta: 0.005,
+      longitudeDelta: 0.005,
+    });
   });
 });
