@@ -1,6 +1,6 @@
 # 007 — Publicar rutas, detalle y favoritas
 
-- **Estado:** En progreso (2026-10-20)
+- **Estado:** Implementada (2026-10-21)
 - **Semana:** 7
 - **Autor(es):**
 - **Fecha:** 2026-10-20
@@ -139,6 +139,7 @@ No quedan preguntas abiertas.
 
 ## Historial
 
+- 2026-10-21 — Implementada: los 27 CA verificados con pruebas automáticas (backend, e2e y frontend) y los casos manuales M1–M8 en el emulador.
 - 2026-10-20 — En progreso: T1 (migración `20261020000000_routes_publish`) aplicada.
 - 2026-10-20 — Corrección al escribir el plan: RN-8 decía que el perfil usa la altitud del barómetro o del GPS, pero en el servidor solo existe la del GPS de cada punto (spec 005, CA-8). El perfil usa esa.
 - 2026-10-20 — Aprobada por el usuario.

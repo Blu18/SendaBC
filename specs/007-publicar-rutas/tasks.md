@@ -104,7 +104,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Documentación
 
-- [ ] T19 — Al cerrar: tabla de verificación, estado de la spec y `specs/roadmap.md`.
+- [x] T19 — Al cerrar: tabla de verificación, estado de la spec y `specs/roadmap.md`.
 
 ## Cobertura
 
@@ -114,33 +114,35 @@ Los 27 CA están cubiertos por al menos una tarea.
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | `publish.test.ts` › publicable · M1 | Ambas | Pendiente |
-| CA-2 | `publish.test.ts` › no sincronizada · M1 | Ambas | Pendiente |
-| CA-3 | `publish.test.ts` › menos de 1.5 km · `route.service.spec.ts` › `400` · M1 | Ambas | Pendiente |
-| CA-4 | `difficulty.spec.ts` / `difficulty.test.ts` · `region.test.ts` · M2 | Ambas | Pendiente |
-| CA-5 | `create-route.dto.spec.ts` · `publish.test.ts` › errores · `route-publish.e2e-spec.ts` › nombre de 41 · M2 | Ambas | Pendiente |
-| CA-6 | `route.service.spec.ts` › publicar · `route-publish.e2e-spec.ts` › `201` y en `nearby` · M2 | Ambas | Pendiente |
-| CA-7 | `api.test.ts` › sin red y `500` · M3 | Ambas | Pendiente |
-| CA-8 | `route-publish.e2e-spec.ts` › `409` y publicar de nuevo tras borrar · `publish.test.ts` › ya tiene ruta · M2 | Ambas | Pendiente |
-| CA-9 | `route.service.spec.ts` · `route-publish.e2e-spec.ts` › actividad ajena `404` | Automatizada | Pendiente |
-| CA-10 | `route.service.spec.ts` › detalle · M4 | Ambas | Pendiente |
-| CA-11 | `elevation-profile.spec.ts` · `rutas-ejemplo.spec.ts` › perfil · `profile.test.ts` · M4 | Ambas | Pendiente |
-| CA-12 | `route.service.spec.ts` › `isMine` · M4 y M6 | Ambas | Pendiente |
-| CA-13 | `api.test.ts` · M5 | Ambas | Pendiente |
-| CA-14 | `route.service.spec.ts` › visibilidad · `route-publish.e2e-spec.ts` › archivada `404` · M7 | Ambas | Pendiente |
-| CA-15 | `route-publish.e2e-spec.ts` › guardar y quitar · M4 | Ambas | Pendiente |
-| CA-16 | `route.service.spec.ts` › idempotente · `route-publish.e2e-spec.ts` › dos veces | Automatizada | Pendiente |
-| CA-17 | `route-publish.e2e-spec.ts` › favoritas por cuenta · M8 | Ambas | Pendiente |
-| CA-18 | `route.service.spec.ts` › orden de favoritas · M8 | Ambas | Pendiente |
-| CA-19 | `route-publish.e2e-spec.ts` › `available: false` tras archivar y borrar · M7 | Ambas | Pendiente |
-| CA-20 | `route-publish.e2e-spec.ts` › favoritas del otro usuario | Automatizada | Pendiente |
-| CA-21 | `route.service.spec.ts` › "Mis rutas" · M6 | Ambas | Pendiente |
-| CA-22 | `update-route.dto.spec.ts` · `route-publish.e2e-spec.ts` › editar · M6 | Ambas | Pendiente |
-| CA-23 | `route-publish.e2e-spec.ts` › archivar · M6 | Ambas | Pendiente |
-| CA-24 | `route-publish.e2e-spec.ts` › volver a publicar · M6 | Ambas | Pendiente |
-| CA-25 | `route-publish.e2e-spec.ts` › borrar · M6 | Ambas | Pendiente |
-| CA-26 | `route.service.spec.ts` › `403` · `route-publish.e2e-spec.ts` › ajena y de ejemplo | Automatizada | Pendiente |
-| CA-27 | `route.controller.spec.ts` › guard · `route-publish.e2e-spec.ts` › `401` | Automatizada | Pendiente |
+| CA-1 | `publish.test.ts` › publicable · M1 | Ambas | Verificado (`publish.test.ts`; M1) |
+| CA-2 | `publish.test.ts` › no sincronizada · M1 | Ambas | Verificado (`publish.test.ts`; M1) |
+| CA-3 | `publish.test.ts` › menos de 1.5 km · `route.service.spec.ts` › `400` · M1 | Ambas | Verificado (`publish.test.ts`, `route.service.spec.ts`; M1) |
+| CA-4 | `difficulty.spec.ts` / `difficulty.test.ts` · `region.test.ts` · M2 | Ambas | Verificado (`difficulty.spec.ts` y `difficulty.test.ts` con los mismos 43 casos, `region.test.ts`; M2) |
+| CA-5 | `create-route.dto.spec.ts` · `publish.test.ts` › errores · `route-publish.e2e-spec.ts` › nombre de 41 · M2 | Ambas | Verificado (DTO, `publish.test.ts`, e2e; M2) |
+| CA-6 | `route.service.spec.ts` › publicar · `route-publish.e2e-spec.ts` › `201` y en `nearby` · M2 | Ambas | Verificado (`route.service.spec.ts`, e2e; M2 con "Tuya" en el catálogo) |
+| CA-7 | `api.test.ts` › sin red y `500` · M3 | Ambas | Verificado (`api.test.ts`; M3) |
+| CA-8 | `route-publish.e2e-spec.ts` › `409` y publicar de nuevo tras borrar · `publish.test.ts` › ya tiene ruta · M2 | Ambas | Verificado (e2e `409` y publicar tras borrar; M2 y M6) |
+| CA-9 | `route.service.spec.ts` · `route-publish.e2e-spec.ts` › actividad ajena `404` | Automatizada | Verificado (`route.service.spec.ts`, e2e) |
+| CA-10 | `route.service.spec.ts` › detalle · M4 | Ambas | Verificado (`route.service.spec.ts`; M4) |
+| CA-11 | `elevation-profile.spec.ts` · `rutas-ejemplo.spec.ts` › perfil · `profile.test.ts` · M4 | Ambas | Verificado (`elevation-profile.spec.ts`, `rutas-ejemplo.spec.ts`, `profile.test.ts`; M4) |
+| CA-12 | `route.service.spec.ts` › `isMine` · M4 y M6 | Ambas | Verificado (`route.service.spec.ts`; M4 "Por SendaBC" y M6 "Tuya" con acciones) |
+| CA-13 | `api.test.ts` · M5 | Ambas | Verificado (`api.test.ts`, `status.test.ts`; M5) |
+| CA-14 | `route.service.spec.ts` › visibilidad · `route-publish.e2e-spec.ts` › archivada `404` · M7 | Ambas | Verificado (`route.service.spec.ts`, e2e; M7) |
+| CA-15 | `route-publish.e2e-spec.ts` › guardar y quitar · M4 | Ambas | Verificado (e2e; M4) |
+| CA-16 | `route.service.spec.ts` › idempotente · `route-publish.e2e-spec.ts` › dos veces | Automatizada | Verificado (`route.service.spec.ts` › `skipDuplicates`, e2e dos veces) |
+| CA-17 | `route-publish.e2e-spec.ts` › favoritas por cuenta · M8 | Ambas | Verificado (e2e; M8 con otra sesión, sin segundo teléfono) |
+| CA-18 | `route.service.spec.ts` › orden de favoritas · M8 | Ambas | Verificado (`route.service.spec.ts` › orden; M8 y mensaje de lista vacía) |
+| CA-19 | `route-publish.e2e-spec.ts` › `available: false` tras archivar y borrar · M7 | Ambas | Verificado (e2e `available: false`; M7) |
+| CA-20 | `route-publish.e2e-spec.ts` › favoritas del otro usuario | Automatizada | Verificado (e2e) |
+| CA-21 | `route.service.spec.ts` › "Mis rutas" · M6 | Ambas | Verificado (`route.service.spec.ts`; M6) |
+| CA-22 | `update-route.dto.spec.ts` · `route-publish.e2e-spec.ts` › editar · M6 | Ambas | Verificado (`update-route.dto.spec.ts`, e2e; M6) |
+| CA-23 | `route-publish.e2e-spec.ts` › archivar · M6 | Ambas | Verificado (e2e; M6) |
+| CA-24 | `route-publish.e2e-spec.ts` › volver a publicar · M6 | Ambas | Verificado (e2e; M6) |
+| CA-25 | `route-publish.e2e-spec.ts` › borrar · M6 | Ambas | Verificado (e2e; M6) |
+| CA-26 | `route.service.spec.ts` › `403` · `route-publish.e2e-spec.ts` › ajena y de ejemplo | Automatizada | Verificado (`route.service.spec.ts`, e2e con ruta ajena y de ejemplo) |
+| CA-27 | `route.controller.spec.ts` › guard · `route-publish.e2e-spec.ts` › `401` | Automatizada | Verificado (`route.controller.spec.ts`, e2e `401` en los 8 endpoints) |
+
+Cierre (2026-10-21): los 27 CA están verificados. Pruebas finales: backend 223/223, e2e 56/56 (6 suites, incluida `route-publish.e2e-spec.ts` con 22 casos), frontend 295/295. Colección de Postman validada en T11 contra la API local, 54/54, con un ejecutor en Node porque `newman` no está instalado (constitución 6.3). Casos manuales M1–M8 en el emulador con el development build de la 006 (ver "Resultado de los casos manuales").
 
 ### Casos manuales
 
@@ -216,4 +218,6 @@ Así quedan los tres tipos de la semana: `feat(007)` (1–3 y 5–8), `test/fix(
 
 ## Pendientes conocidos
 
-Ninguno por ahora.
+- Correr la colección de Postman una vez en Postman (T11 se validó con un ejecutor en Node).
+- M8 se probó con otra sesión en el mismo emulador; falta verlo en un segundo teléfono.
+- El eje del perfil marca la distancia medida sobre los puntos y la ruta, la de la actividad (RN-1); con datos reales la diferencia debería ser pequeña. Revisar en la prueba de campo (009).
