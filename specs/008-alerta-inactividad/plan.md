@@ -120,7 +120,7 @@ Solo atiende `/start <token>`:
 | GET | `/safety/sessions/:clientId` | — | `200 SafetySession` | `404` |
 | POST | `/safety/sessions/:clientId/locations` | `{ latitude, longitude, recordedAt }` | `204` (se queda con la más reciente, CA-20) | `400` · `404` · `409` sesión terminada |
 | POST | `/safety/sessions/:clientId/finish` | `{ endedAt }` | `200 SafetySession` (si había alerta por hora de regreso, la resuelve y avisa "ya terminó", CA-22) | `404` |
-| POST | `/safety/sessions/:clientId/alerts` | `{ clientAlertId, reason: 'INACTIVITY' \| 'SOS', triggeredAt, latitude, longitude, locationAt }` | `201 SafetyAlert`, o `200` con la activa si ya había una (CA-27) | `400` · `404` |
+| POST | `/safety/sessions/:clientId/alerts` | `{ clientAlertId, reason: 'INACTIVITY' \| 'SOS', triggeredAt, latitude, longitude, locationAt }` (la ubicación va completa o en `null`: un SOS puede pedirse antes de la primera posición del GPS) | `201 SafetyAlert`, o `200` con la activa si ya había una (CA-27) | `400` · `404` |
 | POST | `/safety/alerts/:id/cancel` | — | `200 SafetyAlert` (avisa "estoy bien", CA-25) | `404` · `409` ya no está activa |
 
 ```ts
@@ -139,7 +139,7 @@ SafetyAlert = {
 - **Alerta (`POST …/alerts`):** guarda la ubicación y le manda a cada contacto activo el texto de alerta (RN-6) seguido del pin de la ubicación (D10). El índice único parcial (una alerta `ACTIVE` por sesión) evita las duplicadas y responde con la existente (CA-27, RN-8). `clientAlertId` hace que un reintento devuelva la misma alerta.
 - **Ubicaciones (`…/locations`):** se guarda la más reciente (D7). Si hay una alerta activa y pasaron 15 minutos o 200 m desde el último reenvío, se manda la ubicación actualizada a los contactos (CA-16, RN-11).
 - **Terminar (`…/finish`):** la sesión queda terminada y deja de aceptar ubicaciones (RN-9). Si la alerta activa es por hora de regreso, se resuelve y se manda "ya terminó y está bien" (CA-22). Una alerta por inactividad o SOS sigue activa hasta que el usuario la cancele (CA-26 se lo pregunta).
-- **Tarea programada (cada minuto):** busca las sesiones sin terminar, con `returnBy + 30 min < now()` y sin alerta activa, y crea una alerta `RETURN_TIME` con la última ubicación recibida (CA-18). La crea con una inserción condicionada al índice único, así que dos instancias o dos ejecuciones no la duplican.
+- **Tarea programada (cada minuto):** busca las sesiones sin terminar, con `returnBy + 30 min < now()` y sin alerta activa, y crea una alerta `RETURN_TIME` con la última ubicación recibida (CA-18). La crea con una inserción condicionada al índice único, así que dos instancias o dos ejecuciones no la duplican. Tampoco la repite si ya avisó por esa hora de regreso (una alerta `RETURN_TIME` disparada después de `returnBy`): si el usuario la canceló, no vuelve a crearse cada minuto; si cambia la hora de regreso a una posterior, puede volver a avisar.
 - **Contacto inalcanzable (CA-7, RN-13):** si Telegram responde `403` (el contacto bloqueó al bot o borró la conversación), el contacto pasa a `UNREACHABLE` y se le genera una invitación nueva para volver a compartirla.
 - **Contactos:**
   - El límite de tres se comprueba en una transacción (RN-3).
@@ -362,6 +362,8 @@ model AlertMessage {                // alert_messages (nuevo): cada envío por T
 
 ## Historial
 
+- 2026-10-22 — Al implementar T8: la tarea no repite la alerta por una hora de regreso que ya avisó, aunque el usuario la haya cancelado; cambiar la hora a una posterior permite volver a avisar.
+- 2026-10-22 — Al implementar T7: `latitude`, `longitude` y `locationAt` de una alerta pueden ir en `null`, las tres juntas (un SOS antes de la primera posición del GPS); una ubicación incompleta da `400`. El mensaje dice entonces que la app no registró ninguna ubicación.
 - 2026-10-22 — Aprobado por el usuario. La constitución pasa a v1.6 con las dependencias nuevas en el stack.
 - 2026-10-22 — El canal pasa de WhatsApp a Telegram (spec, P15): módulo `telegram` con webhook y `getUpdates`, contactos por invitación sin teléfono, D2 y D10 a D12 nuevas o reescritas, y referencias a los CA renumerados.
 - 2026-10-22 — Creación.

@@ -46,14 +46,14 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - `polling.service.ts` con `getUpdates`, solo en `TELEGRAM_MODE=polling`.
 
   Pruebas de cada caso. (CA-5, CA-7)
-- [ ] T6 — `SessionsService` y DTOs:
+- [x] T6 — `SessionsService` y DTOs:
   - `PUT` crea o actualiza la sesión (idempotente por `clientGeneratedId`; `400` si `returnBy` ≤ `startedAt`; `404` si es de otra cuenta);
   - `GET`;
   - `locations` guarda la más reciente (`409` si la sesión terminó);
   - `finish`.
 
   Pruebas con Prisma simulado. (CA-19, CA-20, CA-23, CA-28)
-- [ ] T7 — `AlertsService`:
+- [x] T7 — `AlertsService`:
   - crear: idempotente por `clientAlertId`; si ya hay una activa, la devuelve sin enviar nada; manda el texto y el pin a cada contacto activo y guarda cada envío en `alert_messages`;
   - cancelar: `409` si ya no está activa; manda "estoy bien";
   - reenviar la ubicación al recibir una (15 min o 200 m desde el último reenvío, RN-11);
@@ -61,14 +61,14 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - si un envío responde `blocked`, el contacto pasa a `UNREACHABLE` con una invitación nueva.
 
   Pruebas de cada regla. (CA-7, CA-14, CA-16, CA-17, CA-22, CA-24, CA-25, CA-27)
-- [ ] T8 — `return-time.job.ts`: `@nestjs/schedule` (`ScheduleModule.forRoot`) y `@Cron` cada minuto. Busca las sesiones sin terminar con `returnBy + 30 min < now()` y sin alerta activa, y crea una alerta `RETURN_TIME` con la última ubicación. Pruebas con reloj simulado:
+- [x] T8 — `return-time.job.ts`: `@nestjs/schedule` (`ScheduleModule.forRoot`) y `@Cron` cada minuto. Busca las sesiones sin terminar con `returnBy + 30 min < now()` y sin alerta activa, y crea una alerta `RETURN_TIME` con la última ubicación. Pruebas con reloj simulado:
   - a los 29 min no avisa y a los 31 sí;
   - una sesión terminada no avisa;
   - una que cambió su hora de regreso usa la nueva;
   - dos ejecuciones no duplican la alerta (índice único).
 
   (CA-18, CA-19)
-- [ ] T9 — `SafetyController` y conexión en `AppModule` (`ScheduleModule`, `TelegramModule`, `EmergencyContactModule` y `SafetyModule`). Pruebas del controlador: el guard en toda la clase, el usuario del token en cada acción, `ParseUUIDPipe` con `404`. (CA-28)
+- [x] T9 — `SafetyController` y conexión en `AppModule` (`ScheduleModule`, `TelegramModule`, `EmergencyContactModule` y `SafetyModule`). Pruebas del controlador: el guard en toda la clase, el usuario del token en cada acción, `ParseUUIDPipe` con `404`. (CA-28)
 - [ ] T10 — `test/safety.e2e-spec.ts` contra la base, con `TELEGRAM_MODE=log`. Usa dos usuarios de prueba y al final borra sus sesiones, contactos y usuarios. Casos:
   - crear tres contactos; el cuarto da `409`; un nombre de 41 caracteres da `400` (CA-1, CA-2);
   - aceptar la invitación con un update simulado al webhook: con el secreto pasa a `ACTIVE` y registra la bienvenida; sin el secreto da `401`; el mismo token otra vez no vincula (CA-5);
