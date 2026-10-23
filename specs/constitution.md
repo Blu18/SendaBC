@@ -1,6 +1,6 @@
 # Constitución de SendaBC
 
-Versión 1.5 · 2026-10-22 · **Aprobada**
+Versión 1.6 · 2026-10-22 · **Aprobada**
 
 Principios que toda spec, plan y línea de código debe respetar. Cambiar la constitución requiere acuerdo explícito del equipo y una entrada en el historial al final de este archivo.
 
@@ -62,8 +62,9 @@ Principios que toda spec, plan y línea de código debe respetar. Cambiar la con
 |---|---|
 | App móvil | Expo SDK 57, React Native 0.86, TypeScript |
 | Navegación / datos remotos | React Navigation 7 (API estática), TanStack Query 5 |
-| Dispositivo | `expo-location`, `expo-sensors` (barómetro), `expo-sqlite`, `expo-secure-store`, `expo-keep-awake`, `expo-network`, `expo-notifications`, `react-native-maps` |
-| Backend | NestJS 12, Passport (local + JWT), class-validator |
+| Dispositivo | `expo-location`, `expo-sensors` (barómetro), `expo-sqlite`, `expo-secure-store`, `expo-keep-awake`, `expo-network`, `expo-notifications`, `expo-task-manager` (ubicación en segundo plano), `react-native-maps` |
+| Backend | NestJS 12, Passport (local + JWT), class-validator, `@nestjs/schedule` (tareas programadas) |
+| Mensajería | Bot API de Telegram, llamada con `fetch` (avisos a los contactos de emergencia) |
 | Datos | Prisma 7 con `@prisma/adapter-pg`, PostgreSQL + PostGIS en Supabase |
 | Calidad | Vitest + supertest (backend), Vitest para lógica pura (frontend), oxlint, Prettier, Postman |
 | Despliegue | Railway o Render (API), Supabase (BD), Expo EAS Build (app) |
@@ -84,5 +85,6 @@ Diferencias respecto al plan original: se usa **Vitest** en lugar de Jest y **ox
 - 2026-09-30 — v1.1. 3.1: el hash lo genera un trigger en Supabase, no el código de NestJS. 5.1: triggers y funciones de la base también van en migraciones.
 - 2026-09-30 — v1.2. Aprobada por el equipo. Se agrega `expo-keep-awake` al stack (spec 003).
 - 2026-10-05 — v1.3. 6.1 y stack: Vitest en el frontend para lógica pura (spec 004, decisión D1). Aprobada junto con el plan de la spec 004.
+- 2026-10-22 — v1.6. Se agregan al stack `expo-task-manager`, `@nestjs/schedule` y la Bot API de Telegram (spec 008, plan D2 a D4). Aprobada junto con el plan de la spec 008.
 - 2026-10-22 — v1.5. 3.5: se permite el permiso de ubicación en segundo plano, solo durante una actividad iniciada por el usuario (spec 008, P14). Aprobada por el equipo al resolver las preguntas de la spec 008.
 - 2026-10-09 — v1.4. Se agrega `expo-network` al stack (spec 005, decisión D2). Aprobada junto con el plan de la spec 005.
