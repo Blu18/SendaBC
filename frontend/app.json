@@ -33,9 +33,21 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "SendaBC usa tu ubicación para registrar el recorrido de tus actividades."
+          "locationWhenInUsePermission": "SendaBC usa tu ubicación para registrar el recorrido de tus actividades.",
+          "locationAlwaysAndWhenInUsePermission": "SendaBC usa tu ubicación con la pantalla bloqueada solo durante una actividad que iniciaste, para seguir grabando tu recorrido y avisar a tus contactos de emergencia si dejas de moverte y no respondes.",
+          "locationAlwaysPermission": "SendaBC usa tu ubicación con la pantalla bloqueada solo durante una actividad que iniciaste, para seguir grabando tu recorrido y avisar a tus contactos de emergencia si dejas de moverte y no respondes.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "isIosBackgroundLocationEnabled": true
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "color": "#C1432A"
+        }
+      ],
+      "expo-task-manager",
       [
         "expo-sensors",
         {

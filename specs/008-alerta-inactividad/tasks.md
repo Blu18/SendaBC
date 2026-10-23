@@ -87,12 +87,14 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Frontend
 
-- [ ] T12 — Configuración nativa:
+- [x] T12 — Configuración nativa:
   - `npx expo install expo-task-manager expo-notifications`;
   - en `app.json`: el plugin de `expo-location` con `locationAlwaysAndWhenInUsePermission`, segundo plano en Android e iOS y servicio en primer plano; los plugins de `expo-notifications` y `expo-task-manager`, con textos de propósito en español;
   - **generar un development build nuevo** (`expo run:android` o EAS) e instalarlo en el emulador.
 
   (CA-10, CA-11)
+
+  Hecho el 2026-10-22: `expo-task-manager` ~57.0.21 y `expo-notifications` ~57.0.24. El color de las notificaciones es el `alert` del tema (`#C1432A`, solo seguridad). El texto en segundo plano también se puso en `locationAlwaysPermission`, porque si no iOS queda con el texto en inglés. No se agregó `SCHEDULE_EXACT_ALARM`: Android 14 lo niega por omisión, Google Play lo restringe, y `expo-notifications` cae a una alarma inexacta sin fallar (lo resuelve T17). El build se generó con `expo prebuild --clean` y `expo run:android` con `JAVA_HOME` en el JDK 21 de `C:\Program Files\Android\openjdk`. La app carga en el emulador con los permisos nuevos declarados (`ACCESS_BACKGROUND_LOCATION`, `FOREGROUND_SERVICE_LOCATION`, `POST_NOTIFICATIONS`), todavía sin conceder.
 - [ ] T13 — Lógica pura en `lib/safety/`, con pruebas Vitest:
   - `contacts.ts`: validación con los mismos casos que el DTO, etiquetas de estado y `contactosActivos`;
   - `inactivity.ts`: quieto 10 min → preguntar; 12 min → alertar; moverse más de 30 m reinicia; un punto con precisión mayor a 30 m no mueve el ancla; "Estoy bien" reinicia;
