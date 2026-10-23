@@ -69,7 +69,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
   (CA-18, CA-19)
 - [x] T9 — `SafetyController` y conexión en `AppModule` (`ScheduleModule`, `TelegramModule`, `EmergencyContactModule` y `SafetyModule`). Pruebas del controlador: el guard en toda la clase, el usuario del token en cada acción, `ParseUUIDPipe` con `404`. (CA-28)
-- [ ] T10 — `test/safety.e2e-spec.ts` contra la base, con `TELEGRAM_MODE=log`. Usa dos usuarios de prueba y al final borra sus sesiones, contactos y usuarios. Casos:
+- [x] T10 — `test/safety.e2e-spec.ts` contra la base, con `TELEGRAM_MODE=log`. Usa dos usuarios de prueba y al final borra sus sesiones, contactos y usuarios. Casos:
   - crear tres contactos; el cuarto da `409`; un nombre de 41 caracteres da `400` (CA-1, CA-2);
   - aceptar la invitación con un update simulado al webhook: con el secreto pasa a `ACTIVE` y registra la bienvenida; sin el secreto da `401`; el mismo token otra vez no vincula (CA-5);
   - la prueba a un pendiente da `409`; a un activo, `200` y queda registrada; dos seguidas dan `429` (CA-6);
@@ -79,7 +79,11 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - hora de regreso en el pasado más la tarea ejecutada a mano: crea la alerta `RETURN_TIME`; al terminar la sesión, la resuelve y manda "terminó" (CA-18, CA-22);
   - un envío `blocked` deja al contacto `UNREACHABLE` (CA-7);
   - sin token, `401` en todos los endpoints de la app (CA-28).
-- [ ] T11 — Colección de Postman: carpeta "Seguridad (spec 008)" con contactos, sesión, ubicación, alerta, cancelar, terminar, un `409` y un `429`. Validarla contra la API local (constitución 6.3). Probar el bot de desarrollo real en `TELEGRAM_MODE=polling`: aceptar una invitación y recibir la prueba en Telegram.
+- [x] T11 — Colección de Postman: carpeta "Seguridad (spec 008)" con contactos, sesión, ubicación, alerta, cancelar, terminar, un `409` y un `429`. Validarla contra la API local (constitución 6.3). Probar el bot de desarrollo real en `TELEGRAM_MODE=polling`: aceptar una invitación y recibir la prueba en Telegram.
+
+  Validada el 2026-10-22 contra la API local con `TELEGRAM_MODE=log` y `TELEGRAM_WEBHOOK_SECRET` igual a la variable `webhookSecret`: la colección completa, en orden, pasa 92/92 pruebas (23 peticiones nuevas), y otra vez 92/92 al repetirla. La carpeta quita al inicio los contactos que hayan quedado y activa el contacto con un "Iniciar" simulado por el webhook. Se corrió con un ejecutor en Node, como en la 007 (ahora también con `pm.sendRequest`), porque `newman` no está instalado; conviene correrla también en Postman.
+
+  Bot real, el mismo día, con `@senda_bc_bot` en `TELEGRAM_MODE=polling`: el usuario abrió la invitación en su teléfono y tocó "Iniciar"; recibió la bienvenida, el contacto pasó a "Activo" con su nombre de Telegram, y el mensaje de prueba (`200 SENT`) le llegó a Telegram. Después se quitó el contacto de prueba de la cuenta de Postman.
 
 ## Frontend
 
