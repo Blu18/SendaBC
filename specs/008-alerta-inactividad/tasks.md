@@ -17,7 +17,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - índice único parcial de una alerta `ACTIVE` por sesión, escrito a mano.
 
   Antes de `migrate deploy`, confirmar con una consulta de solo lectura que `emergency_alerts` sigue vacía y que ningún usuario tiene contacto. Después, que `prisma migrate diff` contra la base queda vacío. (CA-1, CA-18, CA-27)
-- [ ] T2 — Módulo `telegram`, parte de envío:
+- [x] T2 — Módulo `telegram`, parte de envío:
   - la interfaz `TelegramSender` (`sendMessage` en HTML y `sendLocation`);
   - `log.sender.ts`, que solo registra y guarda lo enviado para las pruebas;
   - `bot-api.sender.ts`, con `fetch`, límite de 10 s y `403` como `blocked`;
@@ -25,7 +25,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - variables nuevas en `backend/.env.example`.
 
   Pruebas con `fetch` simulado: método, ruta, body y token; `403` → `blocked`; sin red y tiempo agotado. (CA-6, CA-7, CA-14)
-- [ ] T3 — `safety/messages.ts`, puro. Los siete textos del plan: bienvenida, prueba, alerta por inactividad o SOS, no regresó, ubicación, cancelada y terminó. Pruebas:
+- [x] T3 — `safety/messages.ts`, puro. Los siete textos del plan: bienvenida, prueba, alerta por inactividad o SOS, no regresó, ubicación, cancelada y terminó. Pruebas:
   - cada texto lleva lo que pide RN-6, en español y sin el correo;
   - el escape de HTML en el nombre del usuario y del contacto;
   - las horas en `America/Tijuana`;
@@ -33,14 +33,14 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - el aviso de "puede deberse a falta de señal" solo en el de hora de regreso.
 
   (CA-5, CA-6, CA-14, CA-18, CA-22, CA-25)
-- [ ] T4 — Módulo `emergency-contact`:
+- [x] T4 — Módulo `emergency-contact`:
   - DTOs (`name` de 1 a 40 caracteres sin los espacios de los extremos);
   - `invitation.ts` (token de 32 bytes en base64url y enlace `t.me/<bot>?start=`);
   - servicio: listar, crear (máximo tres, en una transacción), editar el nombre, borrar (la invitación deja de servir) y mensaje de prueba (`409` si no está activo, `429` a menos de 1 min del anterior);
   - controlador con `JwtAuthGuard`.
 
   Pruebas con Prisma simulado y mensajes en español. (CA-1, CA-2, CA-3, CA-4, CA-6, CA-28)
-- [ ] T5 — Módulo `telegram`, parte de recepción:
+- [x] T5 — Módulo `telegram`, parte de recepción:
   - `updates.service.ts`: `/start <token>` válido deja el contacto `ACTIVE` con su `chat_id` y nombre, borra el token y manda la bienvenida; un token inválido, o la misma cuenta de Telegram ya vinculada con ese usuario (RN-3), responde que la invitación no es válida; otro mensaje recibe una explicación breve;
   - `telegram.controller.ts`, el webhook, con un guard que compara el secreto en tiempo constante (`401` si no coincide);
   - `polling.service.ts` con `getUpdates`, solo en `TELEGRAM_MODE=polling`.
