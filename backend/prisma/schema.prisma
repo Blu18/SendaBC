@@ -43,13 +43,36 @@ enum RouteDifficulty {
 enum AlertReason {
   INACTIVITY_TIMEOUT
   MANUAL_SOS
+  RETURN_TIME_EXCEEDED // hora de regreso + 30 min sin terminar (spec 008, CA-18)
 }
 
+// Estado de una alerta (spec 008). Una sola ACTIVE por sesión (índice parcial, CA-27).
 enum AlertStatus {
-  PENDING
-  NOTIFIED
-  ACKNOWLEDGED
-  RESOLVED
+  ACTIVE
+  CANCELLED // el usuario la canceló (CA-25)
+  RESOLVED // la sesión terminó tras una alerta por hora de regreso (CA-22)
+}
+
+// Estado de un contacto de emergencia (spec 008, CA-1, CA-5, CA-7)
+enum ContactStatus {
+  PENDING // "Pendiente de aceptar"
+  ACTIVE // "Activo"
+  UNREACHABLE // "No recibe mensajes": bloqueó al bot o borró la conversación
+}
+
+// Tipo de mensaje enviado por Telegram (spec 008)
+enum MessageKind {
+  WELCOME
+  TEST
+  ALERT
+  LOCATION
+  CANCELLED
+  FINISHED
+}
+
+enum MessageStatus {
+  SENT
+  FAILED
 }
 
 enum DevicePlatform {
@@ -58,19 +81,20 @@ enum DevicePlatform {
 }
 
 model User {
-  avatarUrl             String?
-  createdAt             DateTime        @default(now()) @db.Timestamptz(6)
-  displayName           String
-  email                 String          @unique
-  emergencyContactName  String?
-  emergencyContactPhone String?
-  id                    String          @id @default(uuid()) @db.Uuid
-  updatedAt             DateTime        @updatedAt @db.Timestamptz(6)
-  passwordHash          String
-  activities            Activity[]
-  devices               Device[]
-  favorites             RouteFavorite[]
-  routes                Route[]         @relation("RouteCreator")
+  avatarUrl         String?
+  createdAt         DateTime           @default(now()) @db.Timestamptz(6)
+  displayName       String
+  email             String             @unique
+  id                String             @id @default(uuid()) @db.Uuid
+  updatedAt         DateTime           @updatedAt @db.Timestamptz(6)
+  passwordHash      String
+  activities        Activity[]
+  devices           Device[]
+  emergencyContacts EmergencyContact[]
+  favorites         RouteFavorite[]
+  routes            Route[]            @relation("RouteCreator")
+  safetySessions    SafetySession[]
+  alertMessages     AlertMessage[]
 
   @@map("users")
 }
@@ -94,7 +118,6 @@ model Activity {
   userId              String                                     @db.Uuid
   user                User                                       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   points              ActivityPoint[]
-  alerts              EmergencyAlert[]
   route               Route?
 
   @@index([userId], map: "activities_userId_idx_a489d58a")
@@ -157,20 +180,89 @@ model RouteFavorite {
   @@map("route_favorites")
 }
 
-model EmergencyAlert {
-  activityId   String      @db.Uuid
-  contactName  String?
-  contactPhone String?
-  id           String      @id @default(uuid()) @db.Uuid
-  notifiedAt   DateTime?   @db.Timestamptz(6)
-  reason       AlertReason
-  resolvedAt   DateTime?   @db.Timestamptz(6)
-  status       AlertStatus @default(PENDING)
-  triggeredAt  DateTime    @default(now()) @db.Timestamptz(6)
-  activity     Activity    @relation(fields: [activityId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+// Contacto de emergencia, vinculado a Telegram al aceptar la invitación (spec 008, RN-2, RN-3)
+model EmergencyContact {
+  id             String         @id @default(uuid()) @db.Uuid
+  userId         String         @db.Uuid
+  name           String
+  status         ContactStatus  @default(PENDING)
+  inviteToken    String?        @unique // null cuando está activo (RN-13)
+  telegramChatId BigInt?
+  telegramName   String?
+  acceptedAt     DateTime?      @db.Timestamptz(6)
+  createdAt      DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @db.Timestamptz(6)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  messages       AlertMessage[]
 
-  @@index([activityId], map: "emergency_alerts_activityId_idx_bf2a659e")
+  @@unique([userId, telegramChatId])
+  @@index([userId])
+  @@map("emergency_contacts")
+}
+
+// Sesión de seguridad de una actividad en curso, con el clientGeneratedId de la actividad (spec 008, plan D1)
+model SafetySession {
+  id                String                                 @id @default(uuid()) @db.Uuid
+  clientGeneratedId String                                 @unique @db.Uuid
+  userId            String                                 @db.Uuid
+  type              ActivityType
+  startedAt         DateTime                               @db.Timestamptz(6)
+  returnBy          DateTime?                              @db.Timestamptz(6)
+  endedAt           DateTime?                              @db.Timestamptz(6)
+  lastLocation      Unsupported("geography(Point, 4326)")?
+  lastLocationAt    DateTime?                              @db.Timestamptz(6)
+  createdAt         DateTime                               @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime                               @updatedAt @db.Timestamptz(6)
+  user              User                                   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  alerts            EmergencyAlert[]
+
+  @@index([userId])
+  @@index([endedAt, returnBy])
+  @@map("safety_sessions")
+}
+
+// Alerta de una sesión de seguridad (spec 008). Índice único parcial a mano en la migración:
+// una sola alerta ACTIVE por sesión (CA-27, RN-8).
+model EmergencyAlert {
+  id                    String                                 @id @default(uuid()) @db.Uuid
+  sessionId             String                                 @db.Uuid
+  clientGeneratedId     String?                                @unique @db.Uuid // null en las del servidor (RETURN_TIME_EXCEEDED)
+  reason                AlertReason
+  status                AlertStatus                            @default(ACTIVE)
+  triggeredAt           DateTime                               @db.Timestamptz(6)
+  location              Unsupported("geography(Point, 4326)")?
+  locationAt            DateTime?                              @db.Timestamptz(6)
+  lastForwardedAt       DateTime?                              @db.Timestamptz(6)
+  lastForwardedLocation Unsupported("geography(Point, 4326)")?
+  resolvedAt            DateTime?                              @db.Timestamptz(6)
+  createdAt             DateTime                               @default(now()) @db.Timestamptz(6)
+  session               SafetySession                          @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  messages              AlertMessage[]
+
+  @@index([sessionId])
   @@map("emergency_alerts")
+}
+
+// Cada envío por Telegram a un contacto (spec 008, CA-17). contactName es una copia al enviar.
+model AlertMessage {
+  id                String            @id @default(uuid()) @db.Uuid
+  userId            String            @db.Uuid
+  alertId           String?           @db.Uuid // null en la prueba y la bienvenida
+  contactId         String?           @db.Uuid
+  contactName       String
+  kind              MessageKind
+  status            MessageStatus
+  telegramMessageId BigInt?
+  error             String?
+  createdAt         DateTime          @default(now()) @db.Timestamptz(6)
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  alert             EmergencyAlert?   @relation(fields: [alertId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  contact           EmergencyContact? @relation(fields: [contactId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([userId])
+  @@index([alertId])
+  @@index([contactId, createdAt])
+  @@map("alert_messages")
 }
 
 model Device {

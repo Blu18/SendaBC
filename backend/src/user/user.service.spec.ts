@@ -21,8 +21,6 @@ describe('UserService.create (spec 001)', () => {
       displayName: 'Prueba',
       passwordHash: '$2a$06$hash',
       avatarUrl: null,
-      emergencyContactName: null,
-      emergencyContactPhone: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

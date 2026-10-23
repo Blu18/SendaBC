@@ -11,7 +11,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Backend
 
-- [ ] T1 — Migración `20261022000000_safety_module`:
+- [x] T1 — Migración `20261022000000_safety_module`:
   - en `schema.prisma`: `EmergencyContact`, `SafetySession`, `EmergencyAlert` rehecha, `AlertMessage` y los enums `ContactStatus`, `AlertStatus`, `AlertReason`, `MessageKind` y `MessageStatus`;
   - quitar `users.emergencyContact*`;
   - índice único parcial de una alerta `ACTIVE` por sesión, escrito a mano.

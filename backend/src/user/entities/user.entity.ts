@@ -1,4 +1,4 @@
-import { IsDate, IsEmail, IsInt, IsOptional, IsPhoneNumber, IsString, IsUrl, IsUUID, Min } from "class-validator";
+import { IsDate, IsEmail, IsInt, IsOptional, IsString, IsUrl, IsUUID, Min } from "class-validator";
 
 export class User {
     @IsOptional()
@@ -14,14 +14,6 @@ export class User {
 
     @IsEmail()
     email: string = ""
-
-    @IsOptional()
-    @IsString()
-    emergencyContactName?: string
-
-    @IsOptional()
-    @IsPhoneNumber()
-    emergencyContactPhone?: string
 
     @IsUUID()
     id: string = ""
