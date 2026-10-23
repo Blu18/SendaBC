@@ -1,6 +1,6 @@
 # Roadmap SendaBC
 
-Duración: 10 semanas. Semana actual: **7**.
+Duración: 10 semanas. Semana actual: **8**.
 
 Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. Las specs de semanas futuras se escriben al inicio de su semana (o antes, si hay tiempo), no todas de golpe.
 
@@ -14,7 +14,7 @@ Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. L
 | 5 | Sincronización offline-first (cola local, endpoint batch, reintentos) | [005-sincronizacion](005-sincronizacion/spec.md) | Implementada |
 | 6 | Catálogo de rutas cercanas con PostGIS y mapa | [006-rutas-cercanas](006-rutas-cercanas/spec.md) | Implementada |
 | 7 | Publicar rutas, detalle y favoritas | [007-publicar-rutas](007-publicar-rutas/spec.md) | Implementada |
-| 8 | Seguridad: contacto de emergencia, inactividad y alerta push/SMS | 008-alerta-inactividad | Por escribir |
+| 8 | Seguridad: contacto de emergencia, inactividad y alerta por WhatsApp | [008-alerta-inactividad](008-alerta-inactividad/spec.md) | Aprobada |
 | 9 | Pulido, prueba de campo, pruebas unitarias, bugs | 009-estabilidad | Por escribir |
 | 10 | Cierre: README, manual, EAS Build, despliegue, demo | 010-entrega | Por escribir |
 
