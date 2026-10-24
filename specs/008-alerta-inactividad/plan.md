@@ -262,9 +262,9 @@ model AlertMessage {                // alert_messages (nuevo): cada envío por T
 | Archivo | Contenido |
 |---|---|
 | `contacts.ts` | `validarContacto` (RN-1, mismos casos que el DTO), etiquetas de estado ("Pendiente de aceptar", "Activo", "No recibe mensajes") y `contactosActivos` (CA-8, CA-9) |
-| `inactivity.ts` | Detector: `evaluar(estado, punto, ahora)` devuelve `{ estado, accion: 'nada' \| 'programar-pregunta' \| 'preguntar' \| 'alertar' }`. El ancla se mueve solo con un punto a más de 30 m y con precisión ≤ 30 m (D8). Pregunta a los 10 min sin moverse y alerta a los 12 (RN-4) |
+| `inactivity.ts` | Detector: `evaluar(estado, punto, ahora)` devuelve `{ estado, accion: 'nada' \| 'programar-pregunta' \| 'preguntar' \| 'alertar' }`. El ancla se mueve solo con un punto a más de 30 m y con precisión ≤ 30 m (D8). Pregunta a los 10 min sin moverse y alerta 2 min después de preguntar (RN-4): la cuenta regresiva empieza al preguntar, para que la persona tenga sus 2 min aunque la tarea o la notificación lleguen tarde. Moverse más de 30 m durante la pregunta cuenta como respuesta |
 | `returnTime.ts` | Opciones de hora de regreso (dentro de 1 a 12 h, en pasos de 15 min), validación (posterior al inicio) y "avisaría a las HH:MM" (+30 min, RN-10) |
-| `outbox.ts` | Tipos y reglas de la bandeja: orden de envío, qué se combina (de las ubicaciones solo vale la más reciente) y qué fallos se reintentan (D6) |
+| `outbox.ts` | Tipos y reglas de la bandeja: orden de envío (cronológico), qué se combina (de cada sesión, la última versión en el lugar de la primera; de las ubicaciones, la más reciente; una alerta y su cancelación sin enviar se descartan juntas) y qué fallos se reintentan (D6) |
 | `messages.ts` | Textos del modal, de la notificación, de la invitación al compartir y de los avisos (CA-10, CA-21, CA-23 y el aviso del 911) |
 | `api.ts` | Cliente de los endpoints, con el patrón `{ ok, data }` / `{ ok: false, failure }` de `lib/routes/api.ts` |
 
@@ -290,7 +290,7 @@ model AlertMessage {                // alert_messages (nuevo): cada envío por T
 
 ### Bandeja de salida y sincronización de seguridad
 
-- `lib/safety/safetySync.ts`: envía la bandeja en orden: sesión, alertas, cancelaciones, ubicaciones, terminar.
+- `lib/safety/safetySync.ts`: envía la bandeja en orden cronológico, con las reglas de `outbox.ts`. No se ordena por tipo: una alerta cancelada seguida de otra nueva debe llegar en ese orden (RN-8).
   - Es aparte del `syncEngine` de actividades (D6): intenta de inmediato al encolar, reintenta cada 30 s mientras haya red (con `expo-network` y `hayConexion` de la 005) y no usa la espera de hasta 15 min de la 005.
   - Se detiene con un `401`, igual que la 005.
 - **Al terminar sin red, con hora de regreso:** se encola `finish` y se muestra el aviso de CA-21 con "avisaría a las HH:MM". Cuando se envía `finish`, el servidor manda el "ya terminó" si hacía falta (CA-22).
@@ -324,7 +324,7 @@ model AlertMessage {                // alert_messages (nuevo): cada envío por T
 - `hooks/safety/useSafetySession.ts`: el estado de la sesión de la actividad en curso (enviada o pendiente, alerta activa, entregas), la hora de regreso, SOS y cancelar.
 - `hooks/safety/useAreYouOk.ts`: une el detector, las notificaciones y el modal.
 - **SQLite v5:**
-  - `safety_sessions` (`activity_local_id`, `client_generated_id`, `return_by`, `server_ack`);
+  - `safety_sessions` (`activity_local_id`, `client_generated_id`, `user_id`, `return_by`, `server_ack`, `location_queued_at` y la última alerta: `alert_client_id`, `alert_server_id`, `alert_triggered_at`, `alert_cancelled_at`);
   - `safety_detector` (el estado del detector por actividad);
   - `safety_outbox` (`id`, `kind`, `payload` JSON, `created_at`, `attempts`);
   - `emergency_contacts_cache`.
@@ -362,6 +362,8 @@ model AlertMessage {                // alert_messages (nuevo): cada envío por T
 
 ## Historial
 
+- 2026-10-23 — Al implementar T14: `safety_sessions` guarda también el usuario, cuándo se encoló la última ubicación y la última alerta. Cancelar una alerta la marca cancelada sin borrar sus ids, para que la bandeja pueda mandar la cancelación con el id del servidor aunque la alerta se haya enviado después; la cancelación se encola por `clientAlertId`.
+- 2026-10-23 — Al implementar T13: la cuenta regresiva de "¿Estás bien?" empieza al preguntar y no a los 10 min exactos (una notificación programada puede retrasarse: Android 14 no da alarmas exactas por omisión); moverse más de 30 m durante la pregunta cuenta como respuesta (RN-4); la bandeja se envía en orden cronológico en lugar de por tipo, y una alerta y su cancelación que no se han enviado se descartan juntas.
 - 2026-10-22 — Al implementar T8: la tarea no repite la alerta por una hora de regreso que ya avisó, aunque el usuario la haya cancelado; cambiar la hora a una posterior permite volver a avisar.
 - 2026-10-22 — Al implementar T7: `latitude`, `longitude` y `locationAt` de una alerta pueden ir en `null`, las tres juntas (un SOS antes de la primera posición del GPS); una ubicación incompleta da `400`. El mensaje dice entonces que la app no registró ninguna ubicación.
 - 2026-10-22 — Aprobado por el usuario. La constitución pasa a v1.6 con las dependencias nuevas en el stack.
