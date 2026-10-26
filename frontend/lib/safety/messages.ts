@@ -86,3 +86,38 @@ export function textoTerminarSinRed(regreso: number, timeZone?: string): string 
 export function textoInvitacion(inviteUrl: string): string {
   return `Te registré como contacto de emergencia en SendaBC. Si me pasa algo durante una actividad al aire libre, te llegará un aviso por Telegram con mi ubicación. Para aceptar, abre este enlace en Telegram y toca "Iniciar": ${inviteUrl}`;
 }
+
+// Pantalla "Seguridad" (CA-1 a CA-7).
+export const CONTACTS_PAGE_MESSAGES = {
+  titulo: 'Seguridad',
+  subtitulo: 'Contactos de emergencia',
+  explicacion:
+    'Si durante una actividad dejas de moverte y no respondes, o pides ayuda, avisaremos por Telegram a tus contactos activos con tu última ubicación.',
+  vacio: 'Todavía no tienes contactos de emergencia. Agrega de uno a tres.',
+  sinConexion:
+    'Sin conexión: estos son los contactos guardados en tu teléfono. Para cambiarlos o enviar una prueba necesitas conexión.',
+  error: 'No se pudieron cargar tus contactos. Inténtalo de nuevo.',
+  pendiente: 'Compártele la invitación. Cuando la acepte en Telegram, aparecerá como Activo.',
+  inalcanzable:
+    'Bloqueó a SendaBC o borró la conversación en Telegram, así que no recibe avisos. Vuelve a compartirle la invitación.',
+  agregar: 'Agregar contacto',
+  compartir: 'Compartir invitación',
+  probar: 'Enviar mensaje de prueba',
+  editar: 'Editar',
+  quitar: 'Quitar',
+  agregadoTitulo: 'Contacto agregado',
+  agregadoCuerpo:
+    'Comparte la invitación con tu contacto por el medio que quieras. Tiene que abrirla en Telegram y tocar "Iniciar".',
+  quitarTitulo: 'Quitar contacto',
+  pruebaEnviada: 'Mensaje de prueba enviado. Pregúntale a tu contacto si le llegó.',
+} as const;
+
+// "¿Quitar a Mamá? Dejará de recibir tus avisos." (CA-3).
+export function textoQuitar(nombre: string): string {
+  return `¿Quitar a ${nombre}? Dejará de recibir tus avisos y su invitación ya no servirá.`;
+}
+
+// Resultado del mensaje de prueba cuando Telegram no lo entregó (CA-6, CA-7).
+export function textoPruebaFallida(error: string | null): string {
+  return error ? `No se envió: ${error}.` : 'No se envió el mensaje de prueba.';
+}

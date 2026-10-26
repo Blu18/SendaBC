@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { UMBRALES } from './inactivity';
 import {
   AVISO_911,
+  CONTACTS_PAGE_MESSAGES,
   formatoCuentaRegresiva,
   listaNombres,
   SAFETY_MESSAGES,
   textoAlertaEnviada,
   textoInvitacion,
   textoPregunta,
+  textoPruebaFallida,
+  textoQuitar,
   textoSeguridadActiva,
   textoTerminarSinRed,
 } from './messages';
@@ -100,5 +103,25 @@ describe('invitación y aviso del 911', () => {
   it('dice que SendaBC no sustituye al 911 y de qué dependen las alertas', () => {
     expect(AVISO_911).toContain('no sustituye a los servicios de emergencia (911)');
     expect(AVISO_911).toContain('señal');
+  });
+});
+
+describe('pantalla "Seguridad" (CA-1 a CA-7)', () => {
+  it('explica qué hacer con un pendiente y con uno que no recibe mensajes', () => {
+    expect(CONTACTS_PAGE_MESSAGES.pendiente).toContain('Telegram');
+    expect(CONTACTS_PAGE_MESSAGES.inalcanzable).toContain('Vuelve a compartirle la invitación');
+  });
+
+  it('confirma antes de quitar un contacto (CA-3)', () => {
+    expect(textoQuitar('Mamá')).toBe(
+      '¿Quitar a Mamá? Dejará de recibir tus avisos y su invitación ya no servirá.'
+    );
+  });
+
+  it('dice por qué no se envió la prueba (CA-6)', () => {
+    expect(textoPruebaFallida('El contacto bloqueó a SendaBC o borró la conversación en Telegram')).toBe(
+      'No se envió: El contacto bloqueó a SendaBC o borró la conversación en Telegram.'
+    );
+    expect(textoPruebaFallida(null)).toBe('No se envió el mensaje de prueba.');
   });
 });

@@ -109,12 +109,14 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - `lib/safety/safetySync.ts`: intenta al encolar, reintenta cada 30 s con red, se detiene con `401` y marca la sesión como recibida. Pruebas de la lógica con dependencias simuladas, como `syncEngine.test.ts`.
 
   (CA-15, CA-20, CA-23)
-- [ ] T15 — Contactos en la app:
+- [x] T15 — Contactos en la app:
   - `hooks/safety/useEmergencyContacts.ts`, con copia en SQLite;
   - `pages/safety/emergencyContactsPage.tsx` y `components/safety/ContactForm.tsx`: estado de cada contacto; agregar, editar y quitar con confirmación; "Compartir invitación" con `Share`; "Enviar mensaje de prueba" con su resultado; recargar al volver a la pantalla; aviso del 911;
   - botón "Seguridad" en `MainPage` y la ruta `EmergencyContacts` en `App.tsx`.
 
   (CA-1, CA-2, CA-3, CA-4, CA-5, CA-6, CA-7)
+
+  Probado el 2026-10-26 en el emulador, con el backend local en `TELEGRAM_MODE=log` y la aceptación simulada por el webhook: nombre vacío y de 41 caracteres (mensaje junto al campo); agregar, con la invitación lista para compartir en la hoja del sistema; el contacto pasa a "Activo" al volver a la pantalla; prueba enviada y la segunda da el aviso del `429`; con tres contactos ya no deja agregar; editar y quitar con confirmación; sin red se muestra la copia del teléfono (la migración v5 corrió en el dispositivo). Se corrigió que, con el teclado abierto, el primer toque en "Agregar" solo cerraba el teclado (`keyboardShouldPersistTaps`). Falta M1 completo con el bot real y otro emulador (pasos 3 y 8).
 - [ ] T16 — Grabación en segundo plano:
   - `lib/safety/locationTask.ts`, con `defineTask` en `index.ts`: guarda puntos a 5 m o más del anterior, pasa cada punto por el detector y encola la ubicación cada 5 min (cada 1 min con alerta activa);
   - `activityTracker.hook.ts` elige el modo: con permiso en segundo plano, la tarea sin `keep-awake`; sin él, `watchPositionAsync` con `keep-awake` como hoy;

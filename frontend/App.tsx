@@ -17,6 +17,7 @@ import RouteDetailPage from './pages/routes/routeDetailPage';
 import EditRoutePage from './pages/routes/editRoutePage';
 import MyRoutesPage from './pages/routes/myRoutesPage';
 import FavoritesPage from './pages/routes/favoritesPage';
+import EmergencyContactsPage from './pages/safety/emergencyContactsPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
 import { closeOrphanActivities } from './lib/db/activities';
@@ -68,6 +69,10 @@ const RootStack = createNativeStackNavigator({
     },
     Favorites: {
       screen: FavoritesPage
+    },
+    // Contactos de emergencia (spec 008, CA-1 a CA-7)
+    EmergencyContacts: {
+      screen: EmergencyContactsPage
     }
   }
 })
