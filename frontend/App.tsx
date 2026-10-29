@@ -21,6 +21,7 @@ import EmergencyContactsPage from './pages/safety/emergencyContactsPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
 import { closeOrphanActivities } from './lib/db/activities';
+import { sessionActions } from './lib/safety';
 import { computeMissingMetrics } from './lib/db/activityMetrics';
 import { setUnauthorizedHandler } from './lib/api/client';
 import { queryClient } from './lib/api/queryClient';
@@ -95,7 +96,9 @@ function Gate({ children }: { children: React.ReactNode }) {
   // Se espera antes de mostrar la navegación para que no se cruce con una grabación nueva
   // y para que el historial ya muestre sus métricas.
   useEffect(() => {
-    closeOrphanActivities()
+    // Sus sesiones de seguridad también se terminan (spec 008, CA-19).
+    sessionActions
+      .cerrarHuerfanas(closeOrphanActivities)
       .catch((e) => console.log('Error cerrando actividades huérfanas:', e))
       .then(() => computeMissingMetrics())
       .catch((e) => console.log('Error calculando métricas pendientes:', e))

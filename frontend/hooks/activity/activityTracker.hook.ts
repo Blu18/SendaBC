@@ -22,6 +22,7 @@ import {
   onGrabacion,
 } from '../../lib/safety/locationTask';
 import { quitarPregunta } from '../../lib/safety/notifications';
+import { sessionActions } from '../../lib/safety';
 import { useAuth } from '../../context/AuthContext';
 import { useLocationPermission } from './locationPermission.hook';
 
@@ -37,6 +38,10 @@ export type StartOptions = {
   // Explica para qué es el permiso en segundo plano y dice si el usuario quiere darlo. Solo se
   // pasa con contactos activos: sin ellos no hay a quién avisar (spec 008, CA-10).
   explicarSegundoPlano?: () => Promise<boolean>;
+  // Se llama con la actividad ya creada y antes de empezar a grabar, para crear su sesión de
+  // seguridad: el detector solo corre si existe (spec 008, T18). Un fallo no impide grabar
+  // (constitución 2.1).
+  alCrear?: (localId: number) => Promise<unknown>;
 };
 
 // Tag propio para no interferir con otros usos de keep-awake (CA-11)
@@ -128,6 +133,11 @@ export function useActivityTracker() {
       startedAtRef.current = inicio;
       lastPointAt.current = null;
       setPointCount(0);
+      if (opciones.alCrear) {
+        await opciones
+          .alCrear(activityId.current)
+          .catch((e) => console.log('Error creando la sesión de seguridad:', e));
+      }
       // Acumuladores en vivo de esta actividad; los puntos guardados y el barómetro los alimentan
       const live = createLiveMetrics(elevationSource);
       setLiveDistance(0);
@@ -229,14 +239,21 @@ export function useActivityTracker() {
 
     // 3. Cerrar la actividad. Si falla, la grabación ya se detuvo: se avisa en pantalla en lugar
     //    de dejarla en "Detener", y closeOrphanActivities() la cierra al abrir la app (CA-12, O3)
+    const fin = new Date().toISOString();
     try {
-      await finishActivity(id);
+      await finishActivity(id, fin);
     } catch (e) {
       console.log('Error cerrando la actividad al detener:', e);
       setStopFailed(true);
       setStatus('stopped');
       return null;
     }
+
+    // La sesión de seguridad también termina: el servidor ya no avisa por la hora de regreso
+    // (spec 008, CA-19, CA-22). Sin conexión queda en la bandeja.
+    await sessionActions
+      .terminar(id, fin)
+      .catch((e) => console.log('Error terminando la sesión de seguridad:', e));
 
     // 4. Calcular y guardar sus métricas con lo guardado en SQLite (RN-4). Si falla,
     //    computeMissingMetrics() las calcula al volver a abrir la app (CA-19)
@@ -277,10 +294,13 @@ export function useActivityTracker() {
     const endedAt = lastPointAt.current ?? startedAtRef.current;
     if (id == null || !endedAt) return;
     void detenerDetector(id);
-    finishActivity(id, endedAt).catch((e) => {
-      // Si falla, closeOrphanActivities la cierra al volver a abrir la app (T12)
-      console.log('Error cerrando actividad al salir:', e);
-    });
+    finishActivity(id, endedAt)
+      .then(() => sessionActions.terminar(id, endedAt))
+      .catch((e) => {
+        // Si falla, closeOrphanActivities la cierra al volver a abrir la app (T12), junto con su
+        // sesión de seguridad
+        console.log('Error cerrando actividad al salir:', e);
+      });
   };
 
   useEffect(() => {

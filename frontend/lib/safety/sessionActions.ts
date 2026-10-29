@@ -1,0 +1,104 @@
+import type { Activity } from '../db/activities';
+import type { LocalSafetySession } from '../db/safety';
+import type { OutboxEntry } from './outbox';
+import { validarRegreso } from './returnTime';
+
+// Sesión de seguridad de la actividad en curso (spec 008, plan D1): se crea al iniciar con el
+// mismo clientGeneratedId de la actividad, guarda la hora de regreso y se termina al detener.
+// Todo pasa por la bandeja: funciona sin conexión y se envía en cuanto la hay (CA-23). Sin
+// dependencias de React Native.
+
+export type SessionActionsDeps = {
+  getActivity(localId: number): Promise<Pick<Activity, 'clientGeneratedId' | 'type' | 'startedAt' | 'endedAt'> | null>;
+  createSafetySession(localId: number, clientId: string, userId: string, returnBy: string | null): Promise<void>;
+  getSafetySession(localId: number): Promise<LocalSafetySession | null>;
+  setReturnBy(clientId: string, returnBy: string | null): Promise<void>;
+  // Actividades en RECORDING que tienen sesión de seguridad (para cerrar las huérfanas).
+  listRecordingSessionIds(): Promise<number[]>;
+  enqueueOutbox(userId: string, entry: OutboxEntry): Promise<number>;
+  requestSend(): void;
+};
+
+export type ResultadoRegreso =
+  | { kind: 'guardada' }
+  | { kind: 'invalida'; error: string }
+  | { kind: 'sin-sesion' };
+
+export function createSessionActions(deps: SessionActionsDeps) {
+  // Al iniciar con contactos activos (CA-8). Una hora de regreso que ya no es válida (p. ej. se
+  // eligió y se tardó en iniciar) se descarta: el servidor rechazaría la sesión completa.
+  async function iniciar(localId: number, userId: string, regreso: number | null, ahora = Date.now()) {
+    const actividad = await deps.getActivity(localId);
+    if (!actividad) return false;
+    const inicio = new Date(actividad.startedAt).getTime();
+    const valida = regreso !== null && validarRegreso(regreso, inicio, ahora) === null;
+    const returnBy = valida ? new Date(regreso).toISOString() : null;
+
+    await deps.createSafetySession(localId, actividad.clientGeneratedId, userId, returnBy);
+    await deps.enqueueOutbox(userId, {
+      kind: 'session',
+      clientId: actividad.clientGeneratedId,
+      payload: { type: actividad.type, startedAt: actividad.startedAt, returnBy },
+    });
+    deps.requestSend();
+    return true;
+  }
+
+  // Cambiar o quitar la hora de regreso durante la actividad (CA-19, CA-23). Queda pendiente de
+  // enviar hasta que el servidor la reciba.
+  async function cambiarRegreso(
+    localId: number,
+    regreso: number | null,
+    ahora = Date.now()
+  ): Promise<ResultadoRegreso> {
+    const [sesion, actividad] = await Promise.all([
+      deps.getSafetySession(localId),
+      deps.getActivity(localId),
+    ]);
+    if (!sesion || !actividad) return { kind: 'sin-sesion' };
+
+    if (regreso !== null) {
+      const error = validarRegreso(regreso, new Date(actividad.startedAt).getTime(), ahora);
+      if (error) return { kind: 'invalida', error };
+    }
+    const returnBy = regreso === null ? null : new Date(regreso).toISOString();
+    await deps.setReturnBy(sesion.clientGeneratedId, returnBy);
+    await deps.enqueueOutbox(sesion.userId, {
+      kind: 'session',
+      clientId: sesion.clientGeneratedId,
+      payload: { type: actividad.type, startedAt: actividad.startedAt, returnBy },
+    });
+    deps.requestSend();
+    return { kind: 'guardada' };
+  }
+
+  // Al terminar la actividad: el servidor deja de esperar la hora de regreso (CA-19) y, si ya
+  // había avisado por ella, manda "ya terminó" (CA-22). Sin sesión no hay nada que avisar.
+  async function terminar(localId: number, endedAt: string) {
+    const sesion = await deps.getSafetySession(localId);
+    if (!sesion) return false;
+    await deps.enqueueOutbox(sesion.userId, {
+      kind: 'finish',
+      clientId: sesion.clientGeneratedId,
+      payload: { endedAt },
+    });
+    deps.requestSend();
+    return true;
+  }
+
+  // Al abrir la app se cierran las actividades que quedaron grabando (spec 003, CA-10). Sus
+  // sesiones también se terminan, con la misma hora de fin, para que el servidor no avise por la
+  // hora de regreso de una actividad que ya no sigue.
+  async function cerrarHuerfanas(cerrarActividades: () => Promise<unknown>) {
+    const ids = await deps.listRecordingSessionIds();
+    await cerrarActividades();
+    for (const id of ids) {
+      const actividad = await deps.getActivity(id);
+      if (actividad?.endedAt) await terminar(id, actividad.endedAt);
+    }
+  }
+
+  return { iniciar, cambiarRegreso, terminar, cerrarHuerfanas };
+}
+
+export type SessionActions = ReturnType<typeof createSessionActions>;

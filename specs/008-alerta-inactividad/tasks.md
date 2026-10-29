@@ -135,13 +135,15 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   (CA-11, CA-12, CA-13, CA-14, CA-15)
 
   Hecho el 2026-10-29. Pruebas: `inactivity.test.ts` (umbrales de depuración), `recording.test.ts` (reinicio en la cola) y `alertActions.test.ts` (crear con la última ubicación, una activa a la vez, cancelar). En el emulador: la app carga con los módulos nuevos; al iniciar con un contacto activo pide el permiso de notificaciones y después el de segundo plano; con los dos, el servicio que graba publica su notificación, y al detener se quita. La pregunta y la alerta necesitan la sesión de seguridad, que se crea al iniciar en T18: M4 a M6 se corren después de T18.
-- [ ] T18 — Seguridad durante la actividad, en `activityPage.tsx`:
+- [x] T18 — Seguridad durante la actividad, en `activityPage.tsx`:
   - antes de iniciar, `SafetyCard` (activa con los nombres, o el aviso sin contactos activos) y `ReturnTimePicker`;
   - al iniciar, encolar la sesión;
   - durante la grabación: la hora de regreso con "enviada" o "pendiente de enviar" y la opción de cambiarla; el SOS de mantener presionado 2 s; el aviso de alerta activa con la hora, a quiénes se envió y "Cancelar alerta";
   - al detener: preguntar si se cancela la alerta activa, y avisar si se termina sin red con hora de regreso.
 
   (CA-8, CA-9, CA-17, CA-19, CA-21, CA-22, CA-23, CA-24, CA-25, CA-26)
+
+  Hecho el 2026-10-29. `lib/safety/sessionActions.ts` crea la sesión al iniciar (con la actividad ya creada y antes de grabar, para que corra el detector), cambia la hora de regreso y encola `finish` al detener, al salir de la pantalla y al cerrar las actividades huérfanas al abrir la app. Pruebas: `sessionActions.test.ts` (iniciar, hora de regreso inválida, cambiar o quitar, terminar, huérfanas) y `messages.test.ts`. Pantalla: `SafetyCard`, `ReturnTimePicker` y `RecordingSafety` (hora de regreso enviada o pendiente, alerta activa con "Cancelar alerta" y SOS de 2 s). Falta correr M3 a M8 en el emulador.
 
 ## Documentación
 

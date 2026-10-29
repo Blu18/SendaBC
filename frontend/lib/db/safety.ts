@@ -74,6 +74,18 @@ export async function getSafetySessionByClientId(clientGeneratedId: string) {
   );
 }
 
+// Actividades que siguen en RECORDING con sesión de seguridad: al cerrarlas como huérfanas
+// también se termina su sesión (lib/safety/sessionActions).
+export async function listRecordingSessionIds() {
+  const db = await getDb();
+  const rows = await db.getAllAsync<{ id: number }>(
+    `SELECT s.activity_local_id AS id FROM safety_sessions s
+     JOIN activities a ON a.local_id = s.activity_local_id
+     WHERE a.status = 'RECORDING'`
+  );
+  return rows.map((r) => r.id);
+}
+
 // Cambiar la hora de regreso: queda pendiente de enviar hasta que el servidor la reciba (CA-23).
 export async function setReturnBy(clientGeneratedId: string, returnBy: string | null) {
   const db = await getDb();

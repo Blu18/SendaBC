@@ -35,25 +35,45 @@ export const SAFETY_MESSAGES = {
   // Notificación del servicio en primer plano de Android (plan, locationTask).
   grabandoTitulo: 'SendaBC está grabando tu actividad',
   grabandoCuerpo: 'La detección de inactividad está activa.',
-  // Hora de regreso (CA-23).
+  // Hora de regreso (CA-8, CA-19, CA-23).
+  regresoTitulo: 'Hora de regreso (opcional)',
+  regresoExplicacion:
+    'Si tu teléfono se queda sin señal y no terminas la actividad a tiempo, el servidor avisará a tus contactos.',
+  sinRegreso: 'Sin hora de regreso',
+  cambiarRegreso: 'Cambiar',
+  quitarRegreso: 'Quitar',
+  guardarRegreso: 'Guardar',
+  cancelar: 'Cancelar',
   regresoEnviado: 'Hora de regreso enviada.',
   regresoPendiente:
     'Hora de regreso pendiente de enviar: hasta que tengas conexión, el servidor no podrá avisar por ella.',
   // SOS (RN-7, CA-24).
   sos: 'Pedir ayuda',
   sosInstruccion: 'Mantén presionado 2 segundos para avisar a tus contactos.',
+  sosYaActiva: 'Ya hay una alerta activa: tus contactos ya fueron avisados.',
   // Alerta activa (CA-15, CA-17, CA-25).
+  alertaTitulo: 'Alerta activa',
   alertaPendiente: 'Alerta pendiente de enviar: se enviará en cuanto haya conexión.',
   cancelarAlerta: 'Cancelar alerta',
   cancelarConfirmacion: 'Tus contactos recibirán un mensaje de que estás bien.',
   // Al detener con una alerta activa (CA-26).
   terminarConAlertaTitulo: 'Tienes una alerta activa',
   terminarConAlertaPregunta: '¿Quieres cancelarla antes de terminar la actividad?',
+  terminarCancelando: 'Cancelar alerta y terminar',
+  terminarSinCancelar: 'Terminar sin cancelar',
+  seguirGrabando: 'Seguir grabando',
+  // Al terminar sin conexión con hora de regreso (CA-21).
+  sinRedTitulo: 'Sin conexión',
 } as const;
 
 // "Seguridad activa: avisaríamos a Mamá y Beto." (CA-8).
 export function textoSeguridadActiva(nombres: string[]): string {
   return `Seguridad activa: si te pasa algo, avisaríamos a ${listaNombres(nombres)}.`;
+}
+
+// "Regreso a las 14:05" (CA-8, CA-23).
+export function textoRegreso(regreso: number, timeZone?: string): string {
+  return `Regreso a las ${formatoHora(regreso, timeZone)}`;
 }
 
 // Modal y notificación "¿Estás bien?" (CA-11).

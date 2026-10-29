@@ -10,6 +10,7 @@ import {
   textoInvitacion,
   textoPregunta,
   textoPruebaFallida,
+  textoRegreso,
   textoQuitar,
   textoSeguridadActiva,
   textoTerminarSinRed,
@@ -78,6 +79,7 @@ describe('alerta y hora de regreso (CA-17, CA-21, CA-23)', () => {
       'Alerta enviada a las 09:05 a Mamá y Beto.'
     );
     expect(textoAlertaEnviada(T, [], TZ)).toBe('Alerta enviada a las 09:00.');
+    expect(textoRegreso(T + 3 * 60 * 60_000, TZ)).toBe('Regreso a las 12:00');
   });
 
   it('al terminar sin red avisa a qué hora llegaría el mensaje (regreso + 30 min)', () => {

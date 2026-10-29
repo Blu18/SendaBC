@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, Pressable, StyleSheet, Linking, Alert } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, Linking, Alert, Vibration } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
@@ -7,13 +7,20 @@ import BgBtn from "../../components/ui/buttons/BgBtn";
 import { useActivityTracker } from "../../hooks/activity/activityTracker.hook";
 import { useEmergencyContacts } from "../../hooks/safety/useEmergencyContacts";
 import { useAreYouOk } from "../../hooks/safety/useAreYouOk";
+import { useSafetySession } from "../../hooks/safety/useSafetySession";
+import { useAuth } from "../../context/AuthContext";
 import AreYouOkModal from "../../components/safety/AreYouOkModal";
+import SafetyCard from "../../components/safety/SafetyCard";
+import ReturnTimePicker from "../../components/safety/ReturnTimePicker";
+import RecordingSafety from "../../components/safety/RecordingSafety";
 import type { ActivityType } from "../../lib/db/activities";
 import { ACTIVITY_TYPE_LABELS } from "../../lib/format/activity";
 import { formatDuration } from "../../lib/format/duration";
 import { formatDistance, formatElevation } from "../../lib/format/metrics";
 import { contactosActivos } from "../../lib/safety/contacts";
-import { SAFETY_MESSAGES } from "../../lib/safety/messages";
+import { SAFETY_MESSAGES, textoTerminarSinRed } from "../../lib/safety/messages";
+import { sessionActions } from "../../lib/safety";
+import { isOnline } from "../../lib/sync";
 import { pedirPermisoNotificaciones } from "../../lib/safety/notifications";
 import { colors } from "../../lib/theme/colors";
 
@@ -30,6 +37,27 @@ function explicarSegundoPlano() {
             { text: 'Ahora no', style: 'cancel', onPress: () => resolve(false) },
             { text: 'Continuar', onPress: () => resolve(true) },
         ], { cancelable: true, onDismiss: () => resolve(false) })
+    );
+}
+
+// Al detener con una alerta activa se pregunta si se cancela antes (CA-26).
+type DecisionAlerta = 'cancelar' | 'mantener' | 'seguir';
+function preguntarPorAlerta() {
+    return new Promise<DecisionAlerta>((resolve) =>
+        Alert.alert(SAFETY_MESSAGES.terminarConAlertaTitulo, SAFETY_MESSAGES.terminarConAlertaPregunta, [
+            { text: SAFETY_MESSAGES.seguirGrabando, style: 'cancel', onPress: () => resolve('seguir') },
+            { text: SAFETY_MESSAGES.terminarSinCancelar, onPress: () => resolve('mantener') },
+            { text: SAFETY_MESSAGES.terminarCancelando, onPress: () => resolve('cancelar') },
+        ], { cancelable: true, onDismiss: () => resolve('seguir') })
+    );
+}
+
+// Aviso de CA-21: se termina sin conexión con hora de regreso.
+function avisarSinRed(regreso: number) {
+    return new Promise<void>((resolve) =>
+        Alert.alert(SAFETY_MESSAGES.sinRedTitulo, textoTerminarSinRed(regreso), [
+            { text: 'Entendido', onPress: () => resolve() },
+        ], { cancelable: true, onDismiss: () => resolve() })
     );
 }
 
@@ -68,8 +96,13 @@ export default function ActivityPage() {
     const recording = status === 'recording';
     // Con contactos activos hay a quién avisar: vale la pena pedir el permiso en segundo plano
     // (spec 008, CA-10). Sin red se usa la copia del teléfono.
-    const { contacts } = useEmergencyContacts();
-    const hayContactos = contactosActivos(contacts).length > 0;
+    const { contacts, status: contactsStatus } = useEmergencyContacts();
+    const nombresActivos = contactosActivos(contacts).map((c) => c.name);
+    const hayContactos = nombresActivos.length > 0;
+    const { userId } = useAuth();
+    // Hora de regreso elegida antes de iniciar (CA-8); durante la grabación vive en la sesión.
+    const [regreso, setRegreso] = useState<number | null>(null);
+    const seguridad = useSafetySession(activityLocalId, recording);
 
     // Sin permiso de notificaciones, "¿Estás bien?" solo se ve con la app abierta (plan, riesgos).
     const [sinNotificaciones, setSinNotificaciones] = useState(false);
@@ -80,7 +113,11 @@ export default function ActivityPage() {
         // Se pide junto con el de ubicación (plan): también muestra la notificación del servicio
         // que graba con la pantalla bloqueada (Android 13+).
         setSinNotificaciones(!(await pedirPermisoNotificaciones()));
-        return start(type, { explicarSegundoPlano });
+        // La sesión de seguridad se crea con la actividad y se encola para el servidor (T18).
+        return start(type, {
+            explicarSegundoPlano,
+            alCrear: (localId) => sessionActions.iniciar(localId, userId!, regreso),
+        });
     };
     const elapsed = useElapsedSeconds(startedAt, recording);
 
@@ -88,7 +125,18 @@ export default function ActivityPage() {
     // "Listo" y el botón atrás del resumen regresan a la pantalla principal (spec 004, CA-1, CA-2)
     const handleStop = async () => {
         try {
+            const sesion = seguridad.sesion;
+            if (seguridad.alertaActiva) {
+                const decision = await preguntarPorAlerta();
+                if (decision === 'seguir') return;
+                if (decision === 'cancelar') await seguridad.cancelarAlerta();
+            }
             const localId = await stop();
+            // Sin conexión, el fin de la sesión espera en la bandeja: si no sale antes de la hora
+            // de regreso más el margen, el servidor avisará (CA-21).
+            if (localId !== null && sesion?.returnBy && !(await isOnline())) {
+                await avisarSinRed(new Date(sesion.returnBy).getTime());
+            }
             if (localId !== null) {
                 navigation.replace('ActivitySummary', { localId, origin: 'recording' });
             }
@@ -97,8 +145,27 @@ export default function ActivityPage() {
         }
     };
 
+    // SOS (CA-24): con una alerta activa no se envía otra (CA-27).
+    const handleSos = async () => {
+        try {
+            const resultado = await seguridad.pedirAyuda();
+            if (resultado.kind === 'ya-activa') Alert.alert(SAFETY_MESSAGES.alertaTitulo, SAFETY_MESSAGES.sosYaActiva);
+            if (resultado.kind === 'creada') Vibration.vibrate(500);
+        } catch (e) {
+            console.log('Error pidiendo ayuda:', e);
+        }
+    };
+
+    const handleCancelarAlerta = async () => {
+        try {
+            await seguridad.cancelarAlerta();
+        } catch (e) {
+            console.log('Error cancelando la alerta:', e);
+        }
+    };
+
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
             <Text style={styles.title}>Actividad</Text>
 
             <View style={styles.selector}>
@@ -144,6 +211,32 @@ export default function ActivityPage() {
                     <Text style={styles.statLabel}>Puntos</Text>
                 </View>
             </View>
+
+            {/* Antes de iniciar: a quiénes se avisaría y la hora de regreso (CA-8, CA-9) */}
+            {!recording && !stopFailed && (
+                <>
+                    {/* Mientras cargan no se muestra el aviso sin contactos */}
+                    {contactsStatus !== 'loading' && (
+                        <SafetyCard
+                            nombres={nombresActivos}
+                            onConfigurar={() => navigation.navigate('EmergencyContacts')}
+                        />
+                    )}
+                    {hayContactos && <ReturnTimePicker value={regreso} onChange={setRegreso} />}
+                </>
+            )}
+
+            {/* Durante la grabación: hora de regreso, alerta activa y SOS (CA-17, CA-23 a CA-25) */}
+            {recording && seguridad.sesion && (
+                <RecordingSafety
+                    sesion={seguridad.sesion}
+                    alertaActiva={seguridad.alertaActiva}
+                    nombres={nombresActivos}
+                    onCambiarRegreso={seguridad.cambiarRegreso}
+                    onPedirAyuda={() => void handleSos()}
+                    onCancelarAlerta={() => void handleCancelarAlerta()}
+                />
+            )}
 
             {permissionError && (
                 <View style={styles.notice}>
@@ -197,18 +290,21 @@ export default function ActivityPage() {
                     style={[styles.mainBtn, recording && styles.stopBtn]}
                 />
             )}
-        </View>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    scroll: {
         flex: 1,
+        backgroundColor: colors.background,
+    },
+    container: {
+        flexGrow: 1,
         alignItems: 'center',
         justifyContent: 'center',
         gap: 24,
         padding: 24,
-        backgroundColor: colors.background,
     },
     title: {
         fontSize: 24,
