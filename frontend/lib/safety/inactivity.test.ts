@@ -6,6 +6,7 @@ import {
   reiniciar,
   restanteMs,
   UMBRALES,
+  umbralesDe,
   type EstadoDetector,
   type PuntoDetector,
 } from './inactivity';
@@ -209,5 +210,18 @@ describe('restanteMs', () => {
     expect(restanteMs(estado, T0 + 11.5 * MIN)).toBe(30_000);
     expect(restanteMs(estado, T0 + 13 * MIN)).toBe(0);
     expect(restanteMs(iniciarDetector(T0), T0)).toBeNull();
+  });
+});
+
+describe('umbralesDe (T17)', () => {
+  it('en desarrollo acorta los tiempos a N minutos', () => {
+    expect(umbralesDe('1', true)).toEqual({ ...UMBRALES, quietoMs: MIN, respuestaMs: MIN });
+    expect(umbralesDe('0.5', true)).toMatchObject({ quietoMs: 30_000, respuestaMs: 30_000 });
+  });
+
+  it('en producción, sin valor o con un valor inválido usa RN-4', () => {
+    expect(umbralesDe('1', false)).toBe(UMBRALES);
+    expect(umbralesDe(undefined, true)).toBe(UMBRALES);
+    for (const v of ['', 'abc', '0', '-3']) expect(umbralesDe(v, true)).toBe(UMBRALES);
   });
 });

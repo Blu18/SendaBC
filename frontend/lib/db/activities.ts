@@ -156,6 +156,26 @@ export async function getActivityPoints(localId: number) {
   );
 }
 
+// La actividad que se está grabando, si hay una (spec 008). La tarea de ubicación en segundo
+// plano la busca aquí y no en memoria, porque puede correr sin la pantalla montada.
+export async function getRecordingActivity() {
+  const db = await getDb();
+  return db.getFirstAsync<{ localId: number; userId: string | null; startedAt: string }>(
+    `SELECT local_id AS localId, user_id AS userId, startedAt
+     FROM activities WHERE status = 'RECORDING' ORDER BY local_id DESC LIMIT 1`
+  );
+}
+
+// Último punto guardado de una actividad, o null si todavía no tiene (spec 008).
+export async function getLastPoint(localId: number) {
+  const db = await getDb();
+  return db.getFirstAsync<ActivityPointInput>(
+    `SELECT sequence, latitude, longitude, altitude, accuracy, recordedAt
+     FROM activity_points WHERE activity_id = ? ORDER BY sequence DESC LIMIT 1`,
+    [localId]
+  );
+}
+
 // Lecturas del barómetro en el orden en que se registraron (spec 004, CA-14).
 export async function getBarometerReadings(localId: number) {
   const db = await getDb();

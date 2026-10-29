@@ -1,5 +1,10 @@
 import { registerRootComponent } from 'expo';
 
+// Define la tarea de ubicación en segundo plano antes de montar la app (spec 008, T16):
+// expo-task-manager lo exige en el ámbito global.
+import './lib/safety/locationTask';
+// "¿Estás bien?" y la alerta por inactividad, también sin pantallas montadas (spec 008, T17).
+import './lib/safety/areYouOk';
 import App from './App';
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);

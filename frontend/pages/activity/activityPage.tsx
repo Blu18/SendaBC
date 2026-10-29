@@ -1,20 +1,37 @@
 import { useEffect, useState } from "react";
-import { View, Text, Pressable, StyleSheet, Linking } from "react-native";
+import { View, Text, Pressable, StyleSheet, Linking, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import BgBtn from "../../components/ui/buttons/BgBtn";
 import { useActivityTracker } from "../../hooks/activity/activityTracker.hook";
+import { useEmergencyContacts } from "../../hooks/safety/useEmergencyContacts";
+import { useAreYouOk } from "../../hooks/safety/useAreYouOk";
+import AreYouOkModal from "../../components/safety/AreYouOkModal";
 import type { ActivityType } from "../../lib/db/activities";
 import { ACTIVITY_TYPE_LABELS } from "../../lib/format/activity";
 import { formatDuration } from "../../lib/format/duration";
 import { formatDistance, formatElevation } from "../../lib/format/metrics";
+import { contactosActivos } from "../../lib/safety/contacts";
+import { SAFETY_MESSAGES } from "../../lib/safety/messages";
+import { pedirPermisoNotificaciones } from "../../lib/safety/notifications";
 import { colors } from "../../lib/theme/colors";
 
 const TIPOS = (Object.keys(ACTIVITY_TYPE_LABELS) as ActivityType[]).map((value) => ({
     value,
     label: ACTIVITY_TYPE_LABELS[value],
 }));
+
+// Antes de pedir el permiso en segundo plano se explica para qué es; en Android 11 o más abre los
+// ajustes, donde hay que elegir "Permitir todo el tiempo" (spec 008, CA-10).
+function explicarSegundoPlano() {
+    return new Promise<boolean>((resolve) =>
+        Alert.alert(SAFETY_MESSAGES.permisoTitulo, SAFETY_MESSAGES.permisoExplicacion, [
+            { text: 'Ahora no', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Continuar', onPress: () => resolve(true) },
+        ], { cancelable: true, onDismiss: () => resolve(false) })
+    );
+}
 
 // Segundos desde startedAt, actualizados cada segundo mientras se graba (CA-5)
 function useElapsedSeconds(startedAt: string | null, running: boolean) {
@@ -37,6 +54,8 @@ export default function ActivityPage() {
     const navigation = useNavigation<NativeStackNavigationProp<ReactNavigation.RootParamList>>();
     const {
         status,
+        mode,
+        activityLocalId,
         pointCount,
         startedAt,
         permissionError,
@@ -47,6 +66,22 @@ export default function ActivityPage() {
         stop,
     } = useActivityTracker();
     const recording = status === 'recording';
+    // Con contactos activos hay a quién avisar: vale la pena pedir el permiso en segundo plano
+    // (spec 008, CA-10). Sin red se usa la copia del teléfono.
+    const { contacts } = useEmergencyContacts();
+    const hayContactos = contactosActivos(contacts).length > 0;
+
+    // Sin permiso de notificaciones, "¿Estás bien?" solo se ve con la app abierta (plan, riesgos).
+    const [sinNotificaciones, setSinNotificaciones] = useState(false);
+    const pregunta = useAreYouOk(activityLocalId, recording);
+
+    const handleStart = async () => {
+        if (!hayContactos) return start(type);
+        // Se pide junto con el de ubicación (plan): también muestra la notificación del servicio
+        // que graba con la pantalla bloqueada (Android 13+).
+        setSinNotificaciones(!(await pedirPermisoNotificaciones()));
+        return start(type, { explicarSegundoPlano });
+    };
     const elapsed = useElapsedSeconds(startedAt, recording);
 
     // Al detener se abre el resumen. replace saca esta pantalla del stack, así que
@@ -123,6 +158,27 @@ export default function ActivityPage() {
                 </View>
             )}
 
+            {/* Sin el permiso en segundo plano, la detección solo corre con la app abierta (CA-10) */}
+            {recording && mode === 'foreground' && hayContactos && (
+                <View style={styles.notice}>
+                    <Text style={styles.noticeText}>{SAFETY_MESSAGES.sinPermiso}</Text>
+                </View>
+            )}
+
+            {recording && hayContactos && sinNotificaciones && (
+                <View style={styles.notice}>
+                    <Text style={styles.noticeText}>{SAFETY_MESSAGES.sinNotificaciones}</Text>
+                </View>
+            )}
+
+            {/* "¿Estás bien?" (spec 008, CA-11, CA-12) */}
+            <AreYouOkModal
+                visible={pregunta.visible}
+                restanteMs={pregunta.restanteMs}
+                respondiendo={pregunta.respondiendo}
+                onEstoyBien={() => void pregunta.estoyBien()}
+            />
+
             {/* No se pudo cerrar la actividad al detener: no se ofrece iniciar otra mientras
                 quede una sin cerrar (spec 003, CA-12, RN-1) */}
             {stopFailed ? (
@@ -137,7 +193,7 @@ export default function ActivityPage() {
             ) : (
                 <PrimaryButton
                     text={recording ? 'Detener actividad' : 'Iniciar actividad'}
-                    onPress={recording ? handleStop : () => start(type)}
+                    onPress={recording ? handleStop : handleStart}
                     style={[styles.mainBtn, recording && styles.stopBtn]}
                 />
             )}

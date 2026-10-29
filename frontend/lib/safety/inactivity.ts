@@ -155,3 +155,11 @@ function programarSiToca(estado: EstadoDetector, ahora: number, umbrales: Umbral
     accion: 'programar-pregunta',
   };
 }
+
+// En desarrollo, EXPO_PUBLIC_SAFETY_DEBUG_MINUTES acorta los tiempos para los casos manuales
+// (T17): N minutos quieto y N minutos de cuenta regresiva. En producción se ignora siempre.
+export function umbralesDe(debugMinutos: string | undefined, desarrollo: boolean): Umbrales {
+  const minutos = Number(debugMinutos);
+  if (!desarrollo || !debugMinutos || !Number.isFinite(minutos) || minutos <= 0) return UMBRALES;
+  return { ...UMBRALES, quietoMs: minutos * 60_000, respuestaMs: minutos * 60_000 };
+}

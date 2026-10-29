@@ -117,20 +117,24 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   (CA-1, CA-2, CA-3, CA-4, CA-5, CA-6, CA-7)
 
   Probado el 2026-10-26 en el emulador, con el backend local en `TELEGRAM_MODE=log` y la aceptación simulada por el webhook: nombre vacío y de 41 caracteres (mensaje junto al campo); agregar, con la invitación lista para compartir en la hoja del sistema; el contacto pasa a "Activo" al volver a la pantalla; prueba enviada y la segunda da el aviso del `429`; con tres contactos ya no deja agregar; editar y quitar con confirmación; sin red se muestra la copia del teléfono (la migración v5 corrió en el dispositivo). Se corrigió que, con el teclado abierto, el primer toque en "Agregar" solo cerraba el teclado (`keyboardShouldPersistTaps`). Falta M1 completo con el bot real y otro emulador (pasos 3 y 8).
-- [ ] T16 — Grabación en segundo plano:
+- [x] T16 — Grabación en segundo plano:
   - `lib/safety/locationTask.ts`, con `defineTask` en `index.ts`: guarda puntos a 5 m o más del anterior, pasa cada punto por el detector y encola la ubicación cada 5 min (cada 1 min con alerta activa);
   - `activityTracker.hook.ts` elige el modo: con permiso en segundo plano, la tarea sin `keep-awake`; sin él, `watchPositionAsync` con `keep-awake` como hoy;
   - explicación antes de pedir el permiso;
   - la tarea se detiene al terminar o al salir de la grabación.
 
   (CA-10, CA-13, CA-20)
-- [ ] T17 — "¿Estás bien?":
+
+  Probado el 2026-10-26 en el emulador (development build de T12; hubo que reinstalarlo porque el emulador restauró un snapshot con el build anterior). Con un contacto activo, "Iniciar" explica el permiso antes de pedirlo. "Ahora no" graba con la pantalla encendida y el aviso de que la detección solo funciona con la app abierta. "Continuar" abre los ajustes de Android; con "Permitir todo el tiempo" graba con la tarea y, con la pantalla bloqueada, guardó los 4 puntos del GPS. Al detener o salir de la pantalla, el servicio se detiene. Pendiente para T17: sin el permiso de notificaciones (Android 13+), el servicio corre pero su notificación no se ve.
+- [x] T17 — "¿Estás bien?":
   - `lib/safety/notifications.ts`: canal `seguridad`, categoría con "Estoy bien", programar y reprogramar como máximo una vez por minuto, y permiso de notificaciones;
   - `hooks/safety/useAreYouOk.ts` y `components/safety/AreYouOkModal.tsx` (cuenta regresiva, vibración, botón grande);
   - a los 12 min sin respuesta, encolar la alerta con la última ubicación.
   - En desarrollo, `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES` acorta los tiempos para los casos manuales; en producción se ignora.
 
   (CA-11, CA-12, CA-13, CA-14, CA-15)
+
+  Hecho el 2026-10-29. Pruebas: `inactivity.test.ts` (umbrales de depuración), `recording.test.ts` (reinicio en la cola) y `alertActions.test.ts` (crear con la última ubicación, una activa a la vez, cancelar). En el emulador: la app carga con los módulos nuevos; al iniciar con un contacto activo pide el permiso de notificaciones y después el de segundo plano; con los dos, el servicio que graba publica su notificación, y al detener se quita. La pregunta y la alerta necesitan la sesión de seguridad, que se crea al iniciar en T18: M4 a M6 se corren después de T18.
 - [ ] T18 — Seguridad durante la actividad, en `activityPage.tsx`:
   - antes de iniciar, `SafetyCard` (activa con los nombres, o el aviso sin contactos activos) y `ReturnTimePicker`;
   - al iniciar, encolar la sesión;
