@@ -231,7 +231,7 @@ export default function ActivityPage() {
                 <RecordingSafety
                     sesion={seguridad.sesion}
                     alertaActiva={seguridad.alertaActiva}
-                    nombres={nombresActivos}
+                    nombres={seguridad.entregadaA ?? nombresActivos}
                     onCambiarRegreso={seguridad.cambiarRegreso}
                     onPedirAyuda={() => void handleSos()}
                     onCancelarAlerta={() => void handleCancelarAlerta()}

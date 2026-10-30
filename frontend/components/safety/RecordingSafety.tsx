@@ -13,7 +13,8 @@ const SOS_MS = 2000;
 type Props = {
     sesion: LocalSafetySession;
     alertaActiva: boolean;
-    // Contactos activos: a ellos se envía la alerta (RN-12, CA-17).
+    // A quiénes se entregó la alerta según el servidor o, mientras no responda, los contactos
+    // activos: a ellos se envía (RN-12, CA-17).
     nombres: string[];
     onCambiarRegreso: (regreso: number | null) => Promise<ResultadoRegreso>;
     onPedirAyuda: () => void;

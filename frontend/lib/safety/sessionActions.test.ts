@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, type Mock } from 'vitest';
 import type { LocalSafetySession } from '../db/safety';
-import { createSessionActions, type SessionActionsDeps } from './sessionActions';
+import { createSessionActions, debeAdoptarAlerta, type SessionActionsDeps } from './sessionActions';
 import { RETURN_TIME_MESSAGES } from './returnTime';
 
 const C = '55555555-5555-4555-8555-555555555555';
@@ -42,6 +42,8 @@ function montar(
     getSafetySession: vi.fn().mockResolvedValue(actual),
     setReturnBy: vi.fn().mockResolvedValue(undefined),
     listRecordingSessionIds: vi.fn().mockResolvedValue([]),
+    setAlert: vi.fn().mockResolvedValue(undefined),
+    markAlertSent: vi.fn().mockResolvedValue(undefined),
     enqueueOutbox: vi.fn().mockResolvedValue(1),
     requestSend: vi.fn(),
   };
@@ -178,5 +180,45 @@ describe('cerrarHuerfanas', () => {
     await actions.cerrarHuerfanas(cerrar);
     expect(cerrar).toHaveBeenCalled();
     expect(deps.enqueueOutbox).not.toHaveBeenCalled();
+  });
+});
+
+describe('alerta creada por el servidor (CA-17, CA-18)', () => {
+  const remota = { id: 'srv-1', triggeredAt: '2026-10-29T18:00:00.000Z' };
+
+  it('se adopta si la app no tiene una alerta activa', () => {
+    expect(debeAdoptarAlerta(sesion(), remota)).toBe(true);
+    // Una alerta anterior, ya cancelada y enviada, no impide ver la nueva.
+    expect(
+      debeAdoptarAlerta(
+        sesion({ alertClientId: 'a', alertServerId: 'srv-0', alertCancelledAt: 'x' }),
+        remota
+      )
+    ).toBe(true);
+  });
+
+  it('no se adopta sin alerta en el servidor, con una alerta local activa o si es la que se canceló', () => {
+    expect(debeAdoptarAlerta(sesion(), null)).toBe(false);
+    expect(debeAdoptarAlerta(sesion({ alertClientId: 'a', alertServerId: null }), remota)).toBe(false);
+    // Cancelada en el teléfono; la cancelación sigue en la bandeja.
+    expect(
+      debeAdoptarAlerta(
+        sesion({ alertClientId: 'srv-1', alertServerId: 'srv-1', alertCancelledAt: 'x' }),
+        remota
+      )
+    ).toBe(false);
+  });
+
+  it('la guarda como enviada, con el id del servidor como id local', async () => {
+    const { actions, deps } = montar();
+    expect(await actions.adoptarAlerta(7, remota)).toBe(true);
+    expect(deps.setAlert).toHaveBeenCalledWith(C, 'srv-1', remota.triggeredAt);
+    expect(deps.markAlertSent).toHaveBeenCalledWith('srv-1', 'srv-1');
+  });
+
+  it('sin sesión local no hace nada', async () => {
+    const { actions, deps } = montar(null);
+    expect(await actions.adoptarAlerta(7, remota)).toBe(false);
+    expect(deps.setAlert).not.toHaveBeenCalled();
   });
 });

@@ -143,7 +143,22 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
   (CA-8, CA-9, CA-17, CA-19, CA-21, CA-22, CA-23, CA-24, CA-25, CA-26)
 
-  Hecho el 2026-10-29. `lib/safety/sessionActions.ts` crea la sesión al iniciar (con la actividad ya creada y antes de grabar, para que corra el detector), cambia la hora de regreso y encola `finish` al detener, al salir de la pantalla y al cerrar las actividades huérfanas al abrir la app. Pruebas: `sessionActions.test.ts` (iniciar, hora de regreso inválida, cambiar o quitar, terminar, huérfanas) y `messages.test.ts`. Pantalla: `SafetyCard`, `ReturnTimePicker` y `RecordingSafety` (hora de regreso enviada o pendiente, alerta activa con "Cancelar alerta" y SOS de 2 s). Falta correr M3 a M8 en el emulador.
+  Hecho el 2026-10-29. `lib/safety/sessionActions.ts` crea la sesión al iniciar (con la actividad ya creada y antes de grabar, para que corra el detector), cambia la hora de regreso y encola `finish` al detener, al salir de la pantalla y al cerrar las actividades huérfanas al abrir la app. Pruebas: `sessionActions.test.ts` (iniciar, hora de regreso inválida, cambiar o quitar, terminar, huérfanas) y `messages.test.ts`. Pantalla: `SafetyCard`, `ReturnTimePicker` y `RecordingSafety` (hora de regreso enviada o pendiente, alerta activa con "Cancelar alerta" y SOS de 2 s).
+
+  Probado el 2026-10-30 en el emulador (build del 2026-10-29), con el backend local en `TELEGRAM_MODE=log` (lo que recibiría el contacto se revisó en el registro del backend y en la base, no en un Telegram real) y `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES=1`. Pasaron:
+  - **M3:** sin contactos activos, el aviso con "Configurar contactos" (abre "Seguridad") y el aviso del 911; con uno, "Seguridad activa: … a Mama Rosa" y la hora de regreso. Al iniciar pide el permiso de notificaciones y explica el de segundo plano; con "Ahora no" graba con el aviso de que la detección solo funciona con la app abierta; con "Permitir todo el tiempo" corre el servicio con la notificación "SendaBC está grabando tu actividad".
+  - **M4:** con la app abierta, el modal con la cuenta regresiva, vibración y la notificación en el canal `seguridad` (importancia alta); con la pantalla apagada llega la notificación, y "Estoy bien" desde ella la quita y no crea alerta.
+  - **M5:** sin responder, alerta `INACTIVITY_TIMEOUT` con el texto de RN-6; al abrir la app, "Alerta enviada a las HH:MM a Mama Rosa". Con la alerta activa, moverse más de 200 m reenvía la ubicación con el pin; al cancelar, el contacto recibe "está bien" y ya no recibe ubicaciones.
+  - **M6:** en modo avión la alerta queda "pendiente de enviar"; al volver la red sale en 11 s con su hora original.
+  - **M7:** un toque al SOS no hace nada; mantenerlo 2 s envía "pidió ayuda"; mantenerlo otra vez avisa que ya hay una alerta activa y no manda otro mensaje.
+  - **M8:** iniciada en modo avión, "pendiente de enviar"; con red, "enviada". Con `startedAt` y `returnBy` adelantados en la base, la tarea avisa "no ha confirmado su regreso" con la última ubicación y su hora. Cambiar la hora con red deja en el servidor solo la nueva.
+  - También: al detener con una alerta activa pregunta si se cancela (CA-26, de M9), y terminar con red resuelve la alerta por hora de regreso y avisa "terminó su actividad y está bien" (CA-22).
+
+  Observaciones:
+  - Una alerta por hora de regreso la crea el servidor y la app no la mostraba durante la grabación (CA-17). Corregido el mismo día: la app consulta la sesión al servidor y adopta su alerta (`sessionActions.test.ts`). Probado en el emulador: con la hora de regreso vencida en la base, la app muestra la alerta en menos de 30 s, "Cancelar alerta" la cancela en el servidor y el contacto recibe "está bien".
+  - El sistema muestra la app como "frontend" (nombre de `app.json`) en el permiso de notificaciones y en las notificaciones.
+  - Dos veces el primer toque en un diálogo no hizo nada ("OK" de "Ya hay una alerta activa" y la confirmación de "Cancelar alerta"); con el segundo funcionó y no volvió a pasar.
+  - La ubicación de la alerta puede ser de antes del inicio (el último punto del GPS del emulador); el mensaje dice de qué hora es (RN-5).
 
 ## Documentación
 

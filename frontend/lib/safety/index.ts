@@ -10,6 +10,7 @@ import {
   listRecordingSessionIds,
   markAlertSent,
   markSessionAck,
+  setAlert,
   setReturnBy,
 } from '../db/safety';
 import { isOnline } from '../sync';
@@ -42,6 +43,8 @@ export const sessionActions = createSessionActions({
   getSafetySession,
   setReturnBy,
   listRecordingSessionIds,
+  setAlert,
+  markAlertSent,
   enqueueOutbox: (userId, entry) => enqueueOutbox(userId, entry),
   requestSend: () => void safetySync.requestSend(),
 });

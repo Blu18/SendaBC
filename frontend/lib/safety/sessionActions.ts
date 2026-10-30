@@ -1,6 +1,8 @@
 import type { Activity } from '../db/activities';
 import type { LocalSafetySession } from '../db/safety';
+import type { SafetyAlert } from './api';
 import type { OutboxEntry } from './outbox';
+import { hayAlertaActiva } from './recording';
 import { validarRegreso } from './returnTime';
 
 // Sesión de seguridad de la actividad en curso (spec 008, plan D1): se crea al iniciar con el
@@ -15,6 +17,8 @@ export type SessionActionsDeps = {
   setReturnBy(clientId: string, returnBy: string | null): Promise<void>;
   // Actividades en RECORDING que tienen sesión de seguridad (para cerrar las huérfanas).
   listRecordingSessionIds(): Promise<number[]>;
+  setAlert(clientId: string, clientAlertId: string, triggeredAt: string): Promise<void>;
+  markAlertSent(clientAlertId: string, serverId: string): Promise<void>;
   enqueueOutbox(userId: string, entry: OutboxEntry): Promise<number>;
   requestSend(): void;
 };
@@ -23,6 +27,19 @@ export type ResultadoRegreso =
   | { kind: 'guardada' }
   | { kind: 'invalida'; error: string }
   | { kind: 'sin-sesion' };
+
+// La alerta activa que reporta el servidor y que la app no conoce: la creó el servidor por la hora
+// de regreso (CA-18). No se adopta si hay una alerta local activa (al enviarse, el servidor la
+// junta con la suya, CA-27) ni si es la que el usuario ya canceló y la cancelación sigue en la
+// bandeja.
+export function debeAdoptarAlerta(
+  local: Pick<LocalSafetySession, 'alertClientId' | 'alertServerId' | 'alertCancelledAt'>,
+  remota: Pick<SafetyAlert, 'id'> | null
+): boolean {
+  if (!remota) return false;
+  if (hayAlertaActiva(local)) return false;
+  return local.alertServerId !== remota.id;
+}
 
 export function createSessionActions(deps: SessionActionsDeps) {
   // Al iniciar con contactos activos (CA-8). Una hora de regreso que ya no es válida (p. ej. se
@@ -98,7 +115,21 @@ export function createSessionActions(deps: SessionActionsDeps) {
     }
   }
 
-  return { iniciar, cambiarRegreso, terminar, cerrarHuerfanas };
+  // Guarda en el teléfono la alerta que creó el servidor, para verla y cancelarla como las demás
+  // (CA-17, CA-25, CA-26). Su id del servidor hace también de id local: la cancelación se encola
+  // por ese id y la bandeja encuentra la alerta ya enviada.
+  async function adoptarAlerta(
+    localId: number,
+    remota: Pick<SafetyAlert, 'id' | 'triggeredAt'> | null
+  ) {
+    const sesion = await deps.getSafetySession(localId);
+    if (!sesion || !debeAdoptarAlerta(sesion, remota)) return false;
+    await deps.setAlert(sesion.clientGeneratedId, remota!.id, remota!.triggeredAt);
+    await deps.markAlertSent(remota!.id, remota!.id);
+    return true;
+  }
+
+  return { iniciar, cambiarRegreso, terminar, cerrarHuerfanas, adoptarAlerta };
 }
 
 export type SessionActions = ReturnType<typeof createSessionActions>;
