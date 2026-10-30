@@ -162,7 +162,13 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Documentación
 
-- [ ] T19 — Al cerrar: tabla de verificación, estado de la spec y `specs/roadmap.md`.
+- [x] T19 — Al cerrar: tabla de verificación, estado de la spec y `specs/roadmap.md`.
+
+  Hecho el 2026-10-30. Pasan 382 pruebas unitarias y 72 e2e del backend y 448 de Vitest del frontend. En el emulador se corrieron también:
+  - **M9:** al detener con una alerta activa pregunta si se cancela; con hora de regreso y en modo avión, al detener avisa "si tu teléfono no se conecta antes de las HH:MM…"; con la hora adelantada en la base, el contacto recibe "no ha confirmado su regreso" y, al quitar el modo avión, "terminó su actividad y está bien" con la hora real de fin.
+  - **M10:** con permiso en segundo plano y la pantalla bloqueada, 5 min moviendo el GPS dejan 16 puntos en el resumen; después de detener no llega pregunta ni mensaje en 2.5 min (con los tiempos de depuración), y se quitan la notificación y el servicio.
+
+  Quedan pendientes M1 paso 8 (ver los contactos desde otro dispositivo; el servidor ya lo cubre la e2e) y M2 (bloquear al bot desde un Telegram real). Los avisos de alerta se revisaron con `TELEGRAM_MODE=log`; con el bot real solo se probaron la invitación y el mensaje de prueba (T11).
 
 ## Cobertura
 
@@ -172,34 +178,34 @@ Los 28 CA están cubiertos por al menos una tarea.
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | `emergency-contact.service.spec.ts` › límite de tres · e2e › cuarto contacto `409` · M1 | Ambas | Pendiente |
-| CA-2 | `create-emergency-contact.dto.spec.ts` · `contacts.test.ts` · e2e › nombre de 41 · M1 | Ambas | Pendiente |
-| CA-3 | `emergency-contact.service.spec.ts` › editar y borrar · M1 | Ambas | Pendiente |
-| CA-4 | e2e › contactos de otro usuario `404` | Automatizada | Pendiente |
-| CA-5 | `updates.service.spec.ts` · `messages.spec.ts` › bienvenida · e2e › webhook · M1 | Ambas | Pendiente |
-| CA-6 | `emergency-contact.service.spec.ts` › prueba `409` y `429` · e2e · M1 | Ambas | Pendiente |
-| CA-7 | `bot-api.sender.spec.ts` › `403` · `alerts.service.spec.ts` › `UNREACHABLE` · e2e · M2 | Ambas | Pendiente |
-| CA-8 | `contacts.test.ts` › `contactosActivos` · M3 | Ambas | Pendiente |
-| CA-9 | `contacts.test.ts` · M3 | Ambas | Pendiente |
-| CA-10 | M3 (permiso concedido y negado) · M10 | Manual | Pendiente |
-| CA-11 | `inactivity.test.ts` › preguntar a los 10 min · M4 | Ambas | Pendiente |
-| CA-12 | `inactivity.test.ts` › "Estoy bien" reinicia · M4 | Ambas | Pendiente |
-| CA-13 | `inactivity.test.ts` · M10 | Ambas | Pendiente |
-| CA-14 | `alerts.service.spec.ts` › crear · `messages.spec.ts` › alerta · e2e · M5 | Ambas | Pendiente |
-| CA-15 | `safetySync.test.ts` › sin red queda en la bandeja · M6 | Ambas | Pendiente |
-| CA-16 | `alerts.service.spec.ts` › reenvío 15 min / 200 m · e2e · M5 | Ambas | Pendiente |
-| CA-17 | `alerts.service.spec.ts` › entregas · M5 | Ambas | Pendiente |
-| CA-18 | `return-time.job.spec.ts` · e2e › hora de regreso vencida · M8 | Ambas | Pendiente |
-| CA-19 | `return-time.job.spec.ts` › terminada y cambiada · `sessions.service.spec.ts` · M8 | Ambas | Pendiente |
-| CA-20 | `sessions.service.spec.ts` › ubicación más reciente · `outbox.test.ts` · M8 | Ambas | Pendiente |
-| CA-21 | `returnTime.test.ts` › "avisaría a las" · M9 | Ambas | Pendiente |
-| CA-22 | `alerts.service.spec.ts` › resolver al terminar · e2e · M9 | Ambas | Pendiente |
-| CA-23 | `safetySync.test.ts` › marca la sesión recibida · M8 | Ambas | Pendiente |
-| CA-24 | M7 | Manual | Pendiente |
-| CA-25 | `alerts.service.spec.ts` › cancelar · e2e · M5 | Ambas | Pendiente |
-| CA-26 | M9 | Manual | Pendiente |
-| CA-27 | `alerts.service.spec.ts` › una activa · e2e › repetir alerta · M7 | Ambas | Pendiente |
-| CA-28 | `safety.controller.spec.ts` › guard · e2e › `401` y `404` | Automatizada | Pendiente |
+| CA-1 | `emergency-contact.service.spec.ts` › límite de tres · e2e › cuarto contacto `409` · M1 | Ambas | Verificada |
+| CA-2 | `create-emergency-contact.dto.spec.ts` · `contacts.test.ts` · e2e › nombre de 41 · M1 | Ambas | Verificada |
+| CA-3 | `emergency-contact.service.spec.ts` › editar y borrar · M1 | Ambas | Parcial: falta M1 paso 8 (otro dispositivo) |
+| CA-4 | e2e › contactos de otro usuario `404` | Automatizada | Verificada |
+| CA-5 | `updates.service.spec.ts` · `messages.spec.ts` › bienvenida · e2e › webhook · M1 | Ambas | Verificada |
+| CA-6 | `emergency-contact.service.spec.ts` › prueba `409` y `429` · e2e · M1 | Ambas | Verificada |
+| CA-7 | `bot-api.sender.spec.ts` › `403` · `alerts.service.spec.ts` › `UNREACHABLE` · e2e · M2 | Ambas | Parcial: falta M2 (bloquear al bot en Telegram real) |
+| CA-8 | `contacts.test.ts` › `contactosActivos` · M3 | Ambas | Verificada |
+| CA-9 | `contacts.test.ts` · M3 | Ambas | Verificada |
+| CA-10 | M3 (permiso concedido y negado) · M10 | Manual | Verificada |
+| CA-11 | `inactivity.test.ts` › preguntar a los 10 min · M4 | Ambas | Verificada |
+| CA-12 | `inactivity.test.ts` › "Estoy bien" reinicia · M4 | Ambas | Verificada |
+| CA-13 | `inactivity.test.ts` · M10 | Ambas | Verificada |
+| CA-14 | `alerts.service.spec.ts` › crear · `messages.spec.ts` › alerta · e2e · M5 | Ambas | Verificada |
+| CA-15 | `safetySync.test.ts` › sin red queda en la bandeja · M6 | Ambas | Verificada |
+| CA-16 | `alerts.service.spec.ts` › reenvío 15 min / 200 m · e2e · M5 | Ambas | Verificada |
+| CA-17 | `alerts.service.spec.ts` › entregas · `sessionActions.test.ts` › alerta del servidor · M5 · M8 | Ambas | Verificada |
+| CA-18 | `return-time.job.spec.ts` · e2e › hora de regreso vencida · M8 | Ambas | Verificada |
+| CA-19 | `return-time.job.spec.ts` › terminada y cambiada · `sessions.service.spec.ts` · M8 | Ambas | Verificada |
+| CA-20 | `sessions.service.spec.ts` › ubicación más reciente · `outbox.test.ts` · M8 | Ambas | Verificada |
+| CA-21 | `returnTime.test.ts` › "avisaría a las" · M9 | Ambas | Verificada |
+| CA-22 | `alerts.service.spec.ts` › resolver al terminar · e2e · M9 | Ambas | Verificada |
+| CA-23 | `safetySync.test.ts` › marca la sesión recibida · M8 | Ambas | Verificada |
+| CA-24 | M7 | Manual | Verificada |
+| CA-25 | `alerts.service.spec.ts` › cancelar · e2e · M5 | Ambas | Verificada |
+| CA-26 | M9 | Manual | Verificada |
+| CA-27 | `alerts.service.spec.ts` › una activa · e2e › repetir alerta · M7 | Ambas | Verificada |
+| CA-28 | `safety.controller.spec.ts` › guard · e2e › `401` y `404` | Automatizada | Verificada |
 
 ### Casos manuales
 
