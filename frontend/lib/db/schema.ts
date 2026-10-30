@@ -75,6 +75,59 @@ export const MIGRATIONS: { version: number; sql: string }[] = [
       CREATE INDEX IF NOT EXISTS idx_activities_sync ON activities(user_id, status);
     `,
   },
+  // v5: seguridad (spec 008, plan "SQLite v5").
+  // - safety_sessions: la sesión de seguridad de una actividad. server_ack = 1 cuando el servidor
+  //   recibió la hora de regreso actual (CA-23). La última alerta se guarda aquí (una activa por
+  //   sesión, RN-8): alert_server_id es NULL mientras no se envía (CA-15) y alert_cancelled_at
+  //   marca que el usuario la canceló; los ids se conservan para poder enviar la cancelación.
+  // - safety_detector: estado del detector de inactividad, en JSON (lib/safety/inactivity.ts).
+  // - safety_outbox: bandeja de salida (lib/safety/outbox.ts); payload en JSON, created_at en ms.
+  // - emergency_contacts_cache: copia de los contactos para saber sin red si hay activos (CA-8).
+  {
+    version: 5,
+    sql: `
+      CREATE TABLE IF NOT EXISTS safety_sessions (
+        activity_local_id INTEGER PRIMARY KEY REFERENCES activities(local_id) ON DELETE CASCADE,
+        client_generated_id TEXT NOT NULL UNIQUE,
+        user_id TEXT NOT NULL,
+        return_by TEXT,
+        server_ack INTEGER NOT NULL DEFAULT 0,
+        location_queued_at INTEGER,
+        alert_client_id TEXT,
+        alert_server_id TEXT,
+        alert_triggered_at TEXT,
+        alert_cancelled_at TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS safety_detector (
+        activity_local_id INTEGER PRIMARY KEY REFERENCES activities(local_id) ON DELETE CASCADE,
+        state TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS safety_outbox (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        client_id TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        attempts INTEGER NOT NULL DEFAULT 0
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_safety_outbox_user ON safety_outbox(user_id, created_at);
+
+      CREATE TABLE IF NOT EXISTS emergency_contacts_cache (
+        user_id TEXT NOT NULL,
+        id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        status TEXT NOT NULL,
+        telegram_name TEXT,
+        invite_url TEXT,
+        created_at TEXT NOT NULL,
+        PRIMARY KEY (user_id, id)
+      );
+    `,
+  },
 ];
 
 // Versión del esquema local (PRAGMA user_version): la del último paso.

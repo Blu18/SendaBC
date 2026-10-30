@@ -27,7 +27,7 @@ Para guardar actividades, publicar rutas y configurar un contacto de emergencia,
 
 - RN-1: El correo es único. Se normaliza (minúsculas, sin espacios al inicio/fin) antes de guardarlo y de buscarlo.
 - RN-2: Contraseña mínima de 8 caracteres.
-- RN-3: En el registro solo se aceptan `email`, `displayName` y `password`. Avatar y contacto de emergencia se configuran después (spec 008).
+- RN-3: En el registro solo se aceptan `email`, `displayName` y `password`. El contacto de emergencia se configura en la spec 008 y el avatar, en la 009.
 - RN-4: Nombre visible mínimo de 5 caracteres, sin contar los espacios al inicio y al final (se guarda sin ellos).
 
 ## Requisitos no funcionales
@@ -38,10 +38,11 @@ Para guardar actividades, publicar rutas y configurar un contacto de emergencia,
 ## Fuera de alcance
 
 - Verificación de correo, recuperación de contraseña, login social.
-- Edición de perfil y contacto de emergencia (spec 008).
+- Contacto de emergencia (spec 008) y edición de perfil (spec 009).
 
 ## Historial
 
+- 2026-10-21 — La edición del perfil y de la cuenta pasa de la spec 008 a la 009 (spec 008, P7).
 - 2026-09-30 — Retro-spec creada a partir del código existente. Se detectan brechas (ver `tasks.md`).
 - 2026-09-30 — Corrección: el hash bcrypt lo hace un trigger en Supabase; CA-2 y CA-3 sí se cumplen.
 - 2026-10-08 — Tareas de backend T1, T3–T6 completadas: `POST /user` recibe `password`, normaliza el correo y responde `400` con mensajes por campo. La app debe enviar `password` (T7) para volver a registrar.

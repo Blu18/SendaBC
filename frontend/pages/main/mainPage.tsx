@@ -79,6 +79,13 @@ export default function MainPage() {
               onPress={() => navigation.navigate('Favorites')}
             />
 
+            {/* Contactos de emergencia (spec 008, plan) */}
+            <PrimaryButton
+              text="Seguridad"
+              style={styles.activityBtn}
+              onPress={() => navigation.navigate('EmergencyContacts')}
+            />
+
             <PrimaryButton text="Cerrar sesión" style={styles.logoutBtn} onPress={handleLogout} />
         </View>
     )

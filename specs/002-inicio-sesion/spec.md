@@ -34,10 +34,11 @@ Una persona con cuenta debe poder entrar a la app y no tener que volver a escrib
 ## Fuera de alcance
 
 - Refresh tokens, cierre de sesión en todos los dispositivos, recuperación de contraseña.
-- Edición de perfil (se especifica junto con el contacto de emergencia en la spec 008).
+- Edición de perfil (spec 009; el contacto de emergencia está en la 008).
 
 ## Historial
 
+- 2026-10-21 — La edición del perfil y de la cuenta pasa de la spec 008 a la 009 (spec 008, P7).
 - 2026-09-30 — Retro-spec creada a partir del código existente.
 - 2026-10-08 — CA-8: se quitan los stubs `PATCH /user/:id` y `DELETE /user/:id` (y `UpdateUserDto`). Editar o borrar la cuenta se especifica en la spec 008, con rutas `/user/me`.
 - 2026-10-08 — Tareas de backend T1–T4 completadas, con pruebas Vitest y e2e. Quedan las de frontend (T5–T7).

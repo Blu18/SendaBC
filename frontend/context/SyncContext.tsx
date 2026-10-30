@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 import * as Network from 'expo-network';
 import { useAuth } from './AuthContext';
 import { syncEngine } from '../lib/sync';
+import { safetySync } from '../lib/safety';
 import { createReconnectDetector } from '../lib/sync/network';
 import type { SyncOutcome, SyncState } from '../lib/sync/syncEngine';
 
@@ -34,7 +35,12 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const session = token && userId ? { token, userId } : null;
     syncEngine.configure(session);
-    if (session) void syncEngine.requestSync();
+    // La bandeja de seguridad comparte la sesión (spec 008, plan D6).
+    safetySync.configure(session);
+    if (session) {
+      void syncEngine.requestSync();
+      void safetySync.requestSend();
+    }
   }, [token, userId]);
 
   // Al recuperar la conexión (CA-1, CA-9).
@@ -44,7 +50,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       .then(recuperada)
       .catch(() => {});
     const subscription = Network.addNetworkStateListener((estado) => {
-      if (recuperada(estado)) void syncEngine.requestSync();
+      if (recuperada(estado)) {
+        void syncEngine.requestSync();
+        // Una alerta guardada sin conexión sale en cuanto vuelve la red (spec 008, CA-15).
+        void safetySync.requestSend();
+      }
     });
     return () => subscription.remove();
   }, []);
@@ -55,7 +65,10 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     const subscription = AppState.addEventListener('change', (siguiente) => {
       const volvio = appState.current !== 'active' && siguiente === 'active';
       appState.current = siguiente;
-      if (volvio) void syncEngine.requestSync();
+      if (volvio) {
+        void syncEngine.requestSync();
+        void safetySync.requestSend();
+      }
     });
     return () => subscription.remove();
   }, []);

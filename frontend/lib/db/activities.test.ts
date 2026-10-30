@@ -13,6 +13,8 @@ const {
   finishActivity,
   getActivity,
   getActivityPoints,
+  getLastPoint,
+  getRecordingActivity,
   insertDownloadedActivity,
   insertPoint,
   listClientIds,
@@ -205,5 +207,36 @@ describe('Recuperar actividades (spec 005, CA-20 a CA-22)', () => {
       n: number;
     };
     expect(puntos.n).toBe(3);
+  });
+});
+
+describe('getRecordingActivity y getLastPoint (spec 008)', () => {
+  it('devuelve la actividad en curso y su último punto', async () => {
+    expect(await getRecordingActivity()).toBeNull();
+    await terminada(A, '2026-10-09T10:00:00.000Z');
+    expect(await getRecordingActivity()).toBeNull();
+
+    const id = await createActivity(A, 'HIKING', 'GPS', '2026-10-26T10:00:00.000Z');
+    expect(await getRecordingActivity()).toEqual({
+      localId: id,
+      userId: A,
+      startedAt: '2026-10-26T10:00:00.000Z',
+    });
+    expect(await getLastPoint(id)).toBeNull();
+
+    for (const sequence of [1, 2]) {
+      await insertPoint(id, {
+        sequence,
+        latitude: 31.86 + sequence / 1000,
+        longitude: -116.59,
+        altitude: null,
+        accuracy: 5,
+        recordedAt: `2026-10-26T10:0${sequence}:00.000Z`,
+      });
+    }
+    expect(await getLastPoint(id)).toMatchObject({ sequence: 2, latitude: 31.862 });
+
+    await finishActivity(id);
+    expect(await getRecordingActivity()).toBeNull();
   });
 });
