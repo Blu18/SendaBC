@@ -1,6 +1,6 @@
 # Constitución de SendaBC
 
-Versión 1.6 · 2026-10-22 · **Aprobada**
+Versión 1.7 · 2026-10-30 · **Aprobada**
 
 Principios que toda spec, plan y línea de código debe respetar. Cambiar la constitución requiere acuerdo explícito del equipo y una entrada en el historial al final de este archivo.
 
@@ -61,8 +61,9 @@ Principios que toda spec, plan y línea de código debe respetar. Cambiar la con
 | Capa | Tecnología |
 |---|---|
 | App móvil | Expo SDK 57, React Native 0.86, TypeScript |
-| Navegación / datos remotos | React Navigation 7 (API estática), TanStack Query 5 |
+| Navegación / datos remotos | React Navigation 7 (API estática, stack nativo y pestañas inferiores), TanStack Query 5 |
 | Dispositivo | `expo-location`, `expo-sensors` (barómetro), `expo-sqlite`, `expo-secure-store`, `expo-keep-awake`, `expo-network`, `expo-notifications`, `expo-task-manager` (ubicación en segundo plano), `react-native-maps` |
+| Interfaz | `expo-font` (tipografía empaquetada), `@expo/vector-icons`, `expo-system-ui` (modo claro/oscuro en Android) |
 | Backend | NestJS 12, Passport (local + JWT), class-validator, `@nestjs/schedule` (tareas programadas) |
 | Mensajería | Bot API de Telegram, llamada con `fetch` (avisos a los contactos de emergencia) |
 | Datos | Prisma 7 con `@prisma/adapter-pg`, PostgreSQL + PostGIS en Supabase |
@@ -81,6 +82,7 @@ Diferencias respecto al plan original: se usa **Vitest** en lugar de Jest y **ox
 
 ## Historial
 
+- 2026-10-30 — v1.7. Se agregan al stack `@react-navigation/bottom-tabs`, `expo-font`, `@expo/vector-icons` y `expo-system-ui` (spec 009, plan D1 a D4). Aprobada junto con el plan de la spec 009.
 - 2026-09-30 — v1.0. Adopción de Spec-Driven Development en la semana 3.
 - 2026-09-30 — v1.1. 3.1: el hash lo genera un trigger en Supabase, no el código de NestJS. 5.1: triggers y funciones de la base también van en migraciones.
 - 2026-09-30 — v1.2. Aprobada por el equipo. Se agrega `expo-keep-awake` al stack (spec 003).

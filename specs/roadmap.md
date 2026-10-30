@@ -15,11 +15,12 @@ Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. L
 | 6 | Catálogo de rutas cercanas con PostGIS y mapa | [006-rutas-cercanas](006-rutas-cercanas/spec.md) | Implementada |
 | 7 | Publicar rutas, detalle y favoritas | [007-publicar-rutas](007-publicar-rutas/spec.md) | Implementada |
 | 8 | Seguridad: contacto de emergencia, inactividad y alerta por Telegram | [008-alerta-inactividad](008-alerta-inactividad/spec.md) | Implementada |
-| 9 | Pulido, prueba de campo, pruebas unitarias, bugs | 009-estabilidad | Por escribir |
-| 10 | Cierre: README, manual, EAS Build, despliegue, demo | 010-entrega | Por escribir |
+| 9 | Diseño de la interfaz: prototipo en Figma e implementación en la app | [009-diseno-interfaz](009-diseno-interfaz/spec.md) | Aprobada (plan aprobado) |
+| 9 | Pulido, prueba de campo, pruebas unitarias, bugs | 010-estabilidad | Por escribir |
+| 10 | Cierre: README, manual, EAS Build, despliegue, demo | 011-entrega | Por escribir |
 
 ## Notas
 
 - El modelo de datos de Prisma (semana 1) ya contempla actividades, puntos, rutas, favoritas, alertas y dispositivos. Las specs 004–008 deben partir de él y documentar en su `plan.md` cualquier cambio de esquema.
 - Las brechas de las specs 001 y 002 (ver sus `tasks.md`) conviene cerrarlas antes de la semana 5, porque la sincronización depende de que la autenticación funcione de punta a punta.
-- La spec 008 necesita, para la 010, un hospedaje del backend que no se duerma (la tarea de la hora de regreso corre cada minuto) y un development build nuevo (ubicación en segundo plano y notificaciones).
+- La spec 008 necesita, para la 011, un hospedaje del backend que no se duerma (la tarea de la hora de regreso corre cada minuto) y un development build nuevo (ubicación en segundo plano y notificaciones).
