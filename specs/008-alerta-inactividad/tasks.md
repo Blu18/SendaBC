@@ -168,7 +168,9 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - **M9:** al detener con una alerta activa pregunta si se cancela; con hora de regreso y en modo avión, al detener avisa "si tu teléfono no se conecta antes de las HH:MM…"; con la hora adelantada en la base, el contacto recibe "no ha confirmado su regreso" y, al quitar el modo avión, "terminó su actividad y está bien" con la hora real de fin.
   - **M10:** con permiso en segundo plano y la pantalla bloqueada, 5 min moviendo el GPS dejan 16 puntos en el resumen; después de detener no llega pregunta ni mensaje en 2.5 min (con los tiempos de depuración), y se quitan la notificación y el servicio.
 
-  Quedan pendientes M1 paso 8 (ver los contactos desde otro dispositivo; el servidor ya lo cubre la e2e) y M2 (bloquear al bot desde un Telegram real). Los avisos de alerta se revisaron con `TELEGRAM_MODE=log`; con el bot real solo se probaron la invitación y el mensaje de prueba (T11).
+  **M2**, el mismo día, con el bot real (`TELEGRAM_MODE=polling`) y Telegram en el teléfono del usuario: el contacto "Prueba M2" aceptó la invitación; con el bot bloqueado, el mensaje de prueba no se envió ("El contacto bloqueó a SendaBC o borró la conversación en Telegram") y el contacto quedó "No recibe mensajes" con una invitación nueva; al desbloquear y aceptarla, volvió a "Activo".
+
+  Queda pendiente M1 paso 8 (ver los contactos desde otro dispositivo; el servidor ya lo cubre la e2e). Los avisos de alerta se revisaron con `TELEGRAM_MODE=log`; con el bot real solo se probaron la invitación y el mensaje de prueba (T11).
 
 ## Cobertura
 
@@ -184,7 +186,7 @@ Los 28 CA están cubiertos por al menos una tarea.
 | CA-4 | e2e › contactos de otro usuario `404` | Automatizada | Verificada |
 | CA-5 | `updates.service.spec.ts` · `messages.spec.ts` › bienvenida · e2e › webhook · M1 | Ambas | Verificada |
 | CA-6 | `emergency-contact.service.spec.ts` › prueba `409` y `429` · e2e · M1 | Ambas | Verificada |
-| CA-7 | `bot-api.sender.spec.ts` › `403` · `alerts.service.spec.ts` › `UNREACHABLE` · e2e · M2 | Ambas | Parcial: falta M2 (bloquear al bot en Telegram real) |
+| CA-7 | `bot-api.sender.spec.ts` › `403` · `alerts.service.spec.ts` › `UNREACHABLE` · e2e · M2 | Ambas | Verificada |
 | CA-8 | `contacts.test.ts` › `contactosActivos` · M3 | Ambas | Verificada |
 | CA-9 | `contacts.test.ts` · M3 | Ambas | Verificada |
 | CA-10 | M3 (permiso concedido y negado) · M10 | Manual | Verificada |

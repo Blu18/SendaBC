@@ -146,6 +146,7 @@ Resueltas el 2026-10-22:
 
 ## Historial
 
+- 2026-10-30 — M2 aprobado con el bot real: CA-7 verificado. Solo queda CA-3 (M1 paso 8, otro dispositivo).
 - 2026-10-30 — Implementada con pendientes: T1–T19 hechas, pruebas automatizadas y casos M1 y M3–M10 en el emulador. Quedan CA-3 (M1 paso 8, otro dispositivo) y CA-7 (M2, bloquear al bot desde un Telegram real); los dos tienen pruebas automatizadas que pasan. Ver la tabla de verificación en `tasks.md`.
 - 2026-10-22 — En progreso: T1 (migración del módulo de seguridad) aplicada.
 - 2026-10-22 — Cambio de canal decidido por el usuario al revisar el plan (P15): los avisos pasan de WhatsApp a Telegram por costo. Los contactos ya no se registran por teléfono sino con una invitación que aceptan en Telegram (CA-1, CA-5, CA-7, RN-2, RN-3, RN-12, RN-13). P5 ya no aplica. Los CA se renumeran (ahora 28): CA-5 a CA-7 son los de la invitación, la prueba y el contacto que dejó de recibir, y la antigua CA-26 (hora de regreso pendiente) pasa a CA-23.
