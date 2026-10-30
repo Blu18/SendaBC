@@ -1,6 +1,6 @@
 # 008 — Contacto de emergencia y alerta por inactividad
 
-- **Estado:** Implementada con pendientes (2026-10-30)
+- **Estado:** Implementada (2026-10-30)
 - **Semana:** 8
 - **Autor(es):**
 - **Fecha:** 2026-10-21
@@ -146,6 +146,7 @@ Resueltas el 2026-10-22:
 
 ## Historial
 
+- 2026-10-30 — M1 paso 8 aprobado (los contactos se ven igual al entrar en un teléfono sin datos locales): CA-3 verificado. Los 28 CA están verificados; la spec pasa a Implementada.
 - 2026-10-30 — M2 aprobado con el bot real: CA-7 verificado. Solo queda CA-3 (M1 paso 8, otro dispositivo).
 - 2026-10-30 — Implementada con pendientes: T1–T19 hechas, pruebas automatizadas y casos M1 y M3–M10 en el emulador. Quedan CA-3 (M1 paso 8, otro dispositivo) y CA-7 (M2, bloquear al bot desde un Telegram real); los dos tienen pruebas automatizadas que pasan. Ver la tabla de verificación en `tasks.md`.
 - 2026-10-22 — En progreso: T1 (migración del módulo de seguridad) aplicada.

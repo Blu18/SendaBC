@@ -170,7 +170,9 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
   **M2**, el mismo día, con el bot real (`TELEGRAM_MODE=polling`) y Telegram en el teléfono del usuario: el contacto "Prueba M2" aceptó la invitación; con el bot bloqueado, el mensaje de prueba no se envió ("El contacto bloqueó a SendaBC o borró la conversación en Telegram") y el contacto quedó "No recibe mensajes" con una invitación nueva; al desbloquear y aceptarla, volvió a "Activo".
 
-  Queda pendiente M1 paso 8 (ver los contactos desde otro dispositivo; el servidor ya lo cubre la e2e). Los avisos de alerta se revisaron con `TELEGRAM_MODE=log`; con el bot real solo se probaron la invitación y el mensaje de prueba (T11).
+  **M1 paso 8**, el mismo día: se borraron los datos de la app en el emulador (`pm clear`, como un teléfono nuevo, sin la copia local de los contactos) y, al entrar con la misma cuenta, "Seguridad" mostró los mismos tres contactos con sus estados y nombres de Telegram, traídos del servidor.
+
+  Los 28 CA quedan verificados. Los avisos de alerta se revisaron con `TELEGRAM_MODE=log`; con el bot real solo se probaron la invitación y el mensaje de prueba (T11).
 
 ## Cobertura
 
@@ -182,7 +184,7 @@ Los 28 CA están cubiertos por al menos una tarea.
 |---|---|---|---|
 | CA-1 | `emergency-contact.service.spec.ts` › límite de tres · e2e › cuarto contacto `409` · M1 | Ambas | Verificada |
 | CA-2 | `create-emergency-contact.dto.spec.ts` · `contacts.test.ts` · e2e › nombre de 41 · M1 | Ambas | Verificada |
-| CA-3 | `emergency-contact.service.spec.ts` › editar y borrar · M1 | Ambas | Parcial: falta M1 paso 8 (otro dispositivo) |
+| CA-3 | `emergency-contact.service.spec.ts` › editar y borrar · M1 | Ambas | Verificada |
 | CA-4 | e2e › contactos de otro usuario `404` | Automatizada | Verificada |
 | CA-5 | `updates.service.spec.ts` · `messages.spec.ts` › bienvenida · e2e › webhook · M1 | Ambas | Verificada |
 | CA-6 | `emergency-contact.service.spec.ts` › prueba `409` y `429` · e2e · M1 | Ambas | Verificada |

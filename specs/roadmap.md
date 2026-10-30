@@ -14,7 +14,7 @@ Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. L
 | 5 | Sincronización offline-first (cola local, endpoint batch, reintentos) | [005-sincronizacion](005-sincronizacion/spec.md) | Implementada |
 | 6 | Catálogo de rutas cercanas con PostGIS y mapa | [006-rutas-cercanas](006-rutas-cercanas/spec.md) | Implementada |
 | 7 | Publicar rutas, detalle y favoritas | [007-publicar-rutas](007-publicar-rutas/spec.md) | Implementada |
-| 8 | Seguridad: contacto de emergencia, inactividad y alerta por Telegram | [008-alerta-inactividad](008-alerta-inactividad/spec.md) | Implementada con pendientes (falta M1 paso 8, otro dispositivo) |
+| 8 | Seguridad: contacto de emergencia, inactividad y alerta por Telegram | [008-alerta-inactividad](008-alerta-inactividad/spec.md) | Implementada |
 | 9 | Pulido, prueba de campo, pruebas unitarias, bugs | 009-estabilidad | Por escribir |
 | 10 | Cierre: README, manual, EAS Build, despliegue, demo | 010-entrega | Por escribir |
 
