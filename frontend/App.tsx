@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { StatusBar } from 'expo-status-bar';
 import Register from './pages/auth/register';
 import { QueryClientProvider } from '@tanstack/react-query'
 import Index from './pages/auth';
 import Login from './pages/auth/login';
-import {createNavigationContainerRef, createStaticNavigation} from '@react-navigation/native';
+import {createNavigationContainerRef, createStaticNavigation, DarkTheme, DefaultTheme, type Theme as NavigationTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import MainPage from './pages/main/mainPage';
 import ActivityPage from './pages/activity/activityPage';
@@ -25,6 +26,8 @@ import { sessionActions } from './lib/safety';
 import { computeMissingMetrics } from './lib/db/activityMetrics';
 import { setUnauthorizedHandler } from './lib/api/client';
 import { queryClient } from './lib/api/queryClient';
+import { fontFamilies, type Theme } from './lib/theme';
+import { useTheme, useThemedStyles } from './hooks/theme/useTheme';
 
 const RootStack = createNativeStackNavigator({
   initialRouteName: 'Index',
@@ -87,8 +90,34 @@ declare module '@react-navigation/native' {
 const Navigation = createStaticNavigation(RootStack)
 const navigationRef = createNavigationContainerRef()
 
+// Tema de React Navigation con los tokens (spec 009): fondo de pantallas, encabezados y
+// barra de pestañas. La familia ya lleva el peso, así que fontWeight queda en normal.
+function navigationTheme(t: Theme): NavigationTheme {
+  const base = t.scheme === 'dark' ? DarkTheme : DefaultTheme;
+  return {
+    ...base,
+    dark: t.scheme === 'dark',
+    colors: {
+      primary: t.colors.primary,
+      background: t.colors.background,
+      card: t.colors.surface,
+      text: t.colors.text,
+      border: t.colors.border,
+      notification: t.colors.error,
+    },
+    fonts: {
+      regular: { fontFamily: fontFamilies.regular, fontWeight: 'normal' },
+      medium: { fontFamily: fontFamilies.semibold, fontWeight: 'normal' },
+      bold: { fontFamily: fontFamilies.bold, fontWeight: 'normal' },
+      heavy: { fontFamily: fontFamilies.bold, fontWeight: 'normal' },
+    },
+  };
+}
+
 function Gate({ children }: { children: React.ReactNode }) {
   const { isLoading, logout } = useAuth();
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const [localDataReady, setLocalDataReady] = useState(false);
 
   // Al abrir la app, cerrar las actividades que quedaron en RECORDING (spec 003, CA-10) y
@@ -123,7 +152,7 @@ function Gate({ children }: { children: React.ReactNode }) {
   if (isLoading || !localDataReady) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#5C6B49" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -132,14 +161,19 @@ function Gate({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const navTheme = useMemo(() => navigationTheme(theme), [theme]);
+
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <SafeAreaView style={styles.safeArea}>
+          <StatusBar style="auto" />
           <Gate>
             {/* Dentro de Gate: la sincronización arranca con los datos locales listos (spec 005) */}
             <SyncProvider>
-              <Navigation ref={navigationRef}/>
+              <Navigation ref={navigationRef} theme={navTheme}/>
             </SyncProvider>
           </Gate>
         </SafeAreaView>
@@ -148,14 +182,14 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#5C6B49",
+    backgroundColor: t.colors.background,
   },
   container: {
     flex: 1,
-    backgroundColor: "#EDEAE1",
+    backgroundColor: t.colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },

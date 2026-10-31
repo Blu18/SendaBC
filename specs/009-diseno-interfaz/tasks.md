@@ -115,12 +115,22 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
   - **Modo del sistema:** `userInterfaceStyle` pasa de `light` a `automatic` y se agrega el plugin `expo-system-ui`. Comprobado en el proyecto nativo: `strings.xml` tiene `expo_system_ui_user_interface_style` = `automatic` y `MainActivity` incluye `uiMode` en `configChanges`.
   - **Build:** se regeneró con `npx expo prebuild --platform android --clean` y `npx expo run:android --no-bundler` (BUILD SUCCESSFUL), y quedó instalado en `Pixel_10_Pro` el 2026-10-30. Las tres fuentes están dentro del APK.
   - El cambio de modo en vivo se prueba en M2, cuando la app use el tema (T11).
-- [ ] T11 — `frontend/hooks/theme/useTheme.ts` con `useTheme()` y `useThemedStyles(makeStyles)`. En `App.tsx`:
+- [x] T11 — `frontend/hooks/theme/useTheme.ts` con `useTheme()` y `useThemedStyles(makeStyles)`. En `App.tsx`:
   - tema de React Navigation construido con los tokens;
   - `SafeAreaView` y el `Gate` con colores del tema;
   - `StatusBar` con `style="auto"`.
 
   (CA-10, CA-11)
+
+  Hecho:
+  - **Hook:** `useTheme()` devuelve `lightTheme` o `darkTheme` según `useColorScheme()`. `useThemedStyles(makeStyles)` memoriza el resultado por tema; `makeStyles` ya devuelve `StyleSheet.create(...)`.
+  - **`App.tsx`:**
+    - `navigationTheme(theme)` arma el tema de React Navigation sobre `DefaultTheme` o `DarkTheme`. Colores: `primary`, `background`, `card` = `surface`, `text`, `border` y `notification` = `error`.
+    - Las fuentes de React Navigation son Atkinson Hyperlegible Next, con `fontWeight` en normal porque cada archivo ya trae su peso.
+    - El fondo del `SafeAreaView` cambia: antes era `primary` (franja verde arriba) y ahora es `background`. El `Gate` también usa `background` y `primary`.
+    - `StatusBar` de `expo-status-bar` con `style="auto"`.
+  - **Colores sueltos:** `App.tsx` ya no tiene ninguno y salió de `PENDING_MIGRATION` (quedan 7).
+  - **Comprobado en el emulador (2026-10-30):** con `adb shell cmd uimode night yes/no` y la app abierta, las franjas de la barra de estado y de abajo cambian de color al instante, y los íconos de la barra de estado cambian a claro u oscuro. El pid de la app es el mismo antes y después, así que no se reinicia. Las pantallas siguen claras hasta migrarlas (T14–T17).
 - [ ] T12 — Componentes en `frontend/components/ui/`:
   - `PrimaryBtn`, `BgBtn` (secundario) y `TextBtn` con tokens, 48 dp de alto mínimo y variante `danger`;
   - `SyncBadge` con `secondaryText`;
