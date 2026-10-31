@@ -186,7 +186,31 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
     - Desde Actividades se abre el resumen, sin barra, y se vuelve a la lista.
   - **Sin comprobar:** "Configurar" desde la grabación. La cuenta de prueba ya tiene contactos activos, así que la tarjeta no muestra ese botón. Queda para M6.
   - Los pasos de navegación de los casos manuales de las specs 001 a 008 se actualizan en T19.
-- [ ] T14 — Grupo **cuenta**: `pages/auth/index.tsx` (con `Logo`), `login.tsx`, `register.tsx` y `pages/main/mainPage.tsx` a tokens, componentes e íconos como en Figma. Sacarlos de la lista temporal de T9. (CA-9, CA-10, CA-14)
+- [x] T14 — Grupo **cuenta**: `pages/auth/index.tsx` (con `Logo`), `login.tsx`, `register.tsx` y `pages/main/mainPage.tsx` a tokens, componentes e íconos como en Figma. Sacarlos de la lista temporal de T9. (CA-9, CA-10, CA-14)
+
+  Hecho (con los marcos 19:348 a 19:571 y 21:942 a 21:1029 de Figma):
+  - **Bienvenida (`index.tsx`):** `Logo` a 292 × 70, la descripción en `body` `textMuted` y abajo dos botones: "Iniciar sesión" (primario) y "Crear cuenta" (secundario).
+  - **Inicio de sesión y registro:**
+    - `ScreenHeader` secundario (volver), título `headline` y `TextField` con etiqueta ("Correo", "Contraseña", "Usuario", "Confirmar contraseña"). Ya no usan placeholder.
+    - Los botones van abajo y todo está en un `ScrollView` para el teclado.
+    - El error del servidor va en un `Notice` de error: "No se pudo iniciar sesión" o "No se pudo crear la cuenta", con el mensaje del servidor como descripción, sin cambiarlo (RN-1).
+    - La confirmación tras registrarse va en un `Notice` info ("Cuenta creada"), con el mismo mensaje de antes.
+    - La validación y la navegación no cambian.
+  - **Inicio (`mainPage.tsx`):**
+    - `ScreenHeader` raíz "Hola, <nombre>"; mientras carga o si falla dice "Inicio".
+    - Si el perfil no carga, aparece un `Notice` de error: "No se pudo cargar tu perfil" (el mensaje de antes, ahora como título), con la descripción nueva "Tus actividades se siguen grabando en el teléfono.".
+    - La tarjeta "Nueva actividad" es `primary`, con el ícono `hiking` y el botón "Empezar". Ese botón usa `primary` y `onPrimary` del modo contrario, como en Figma; los dos pares ya están en la tabla de contraste.
+    - La sección "Seguridad" muestra `SafetyCard`, solo con la lista de contactos ya cargada para no avisar "sin contactos" por un error de red. "Configurar contactos" lleva a la pestaña Seguridad.
+    - "Cerrar sesión" es un botón de texto.
+  - **Textos cambiados (los de T4):** "Iniciar sesión" con minúscula, "¿Aún no tienes cuenta? Crea una" y "Crear cuenta" en la bienvenida. Son textos nuevos del prototipo la descripción de la bienvenida, la ayuda "Así te verán en las rutas que publiques." en Usuario, los títulos de los avisos y la descripción del error de perfil.
+  - **`SafetyCard` se adelantó desde T17**, porque el Inicio la usa y con el alias `colors` no se leía en oscuro. Se rehízo como en Figma: `surface` con borde `primary` y escudo relleno si está activa; borde `alert`, escudo de contorno y enlace "Configurar contactos" (Bold, subrayado, 48 dp) si no hay contactos. También cambia en la grabación.
+  - **Colores sueltos:** `PENDING_MIGRATION` quedó vacía (los 4 archivos de cuenta salieron). Ojo: la prueba de T9 solo detecta literales. Todavía hay 17 archivos que importan el alias `colors` (solo modo claro); se migran en T15–T18.
+  - **Comprobado en el emulador (2026-10-30):**
+    - En claro y en oscuro: Inicio (cargando y con error de perfil, porque el backend estaba apagado), inicio de sesión vacío y con errores de validación, registro y bienvenida.
+    - Inicio con letra grande (`font_scale 1.3`): nada se corta.
+    - Para ver la bienvenida, el inicio de sesión y el registro sin cerrar la sesión, se cambió temporalmente la pantalla inicial y la redirección (revertido).
+    - La flecha de volver no se pudo tocar: en el development build la tapa el botón flotante de herramientas de Expo. Queda para M1.
+  - **Pasos de casos manuales:** los de las specs 001 y 002 que buscan "Registrarse" en la bienvenida o un placeholder ("Correo") se actualizan en T19.
 - [ ] T15 — Grupo **actividad**: `activityPage.tsx` (métricas con `metric` y `data`, "Puntos" en `bodySmall`, "Iniciar/Detener actividad" y "Pedir ayuda" en barra fija abajo), `activitySummaryPage.tsx` y `activityHistoryPage.tsx`. (CA-9, CA-10, CA-12, CA-13)
 - [ ] T16 — Grupo **rutas**: `exploreRoutesPage`, `routeDetailPage`, `publishRoutePage`, `editRoutePage`, `myRoutesPage`, `favoritesPage` y `components/routes/*`. (CA-9, CA-10)
 - [ ] T17 — Grupo **seguridad**: `emergencyContactsPage` y `components/safety/*`. `AreYouOkModal` y `RecordingSafety` con `alert` y `onAlert` y "Estoy bien" en la mitad inferior. (CA-9, CA-10, CA-13)

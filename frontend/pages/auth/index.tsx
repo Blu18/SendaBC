@@ -1,13 +1,17 @@
 import { useEffect } from 'react'
 import { View, StyleSheet, Text } from 'react-native'
+import PrimaryButton from '../../components/ui/buttons/PrimaryBtn'
 import BgBtn from '../../components/ui/buttons/BgBtn'
-import TextBtn from '../../components/ui/buttons/TextBtn'
+import Logo from '../../components/brand/Logo'
 import { useNavigation } from '@react-navigation/native'
 import { useAuth } from '../../context/AuthContext'
+import type { Theme } from '../../lib/theme'
+import { useThemedStyles } from '../../hooks/theme/useTheme'
 
 export default function Index() {
     const navigation = useNavigation()
     const { token } = useAuth()
+    const styles = useThemedStyles(makeStyles)
 
     useEffect(() => {
         if (token) {
@@ -19,42 +23,45 @@ export default function Index() {
 
     return(
         <View style={styles.container}>
-            <View style={{flex: 1, justifyContent: 'center'}}>
-                <Text style={styles.title}>SendaBC</Text>
+            <View style={styles.content}>
+                {/* El logo empaquetado se ve sin conexión (spec 009, CA-14) */}
+                <Logo style={styles.logo} />
+                <Text style={styles.description}>
+                    Registra tus recorridos de senderismo, trail running y ciclismo en Baja California, aunque no tengas señal.
+                </Text>
             </View>
-            <View style={styles.btnContainer}>
-                <BgBtn 
-                  text='Iniciar sesión' 
-                  textStyle={{fontSize: 24}} 
-                  onPress={() => navigation.navigate('Login')}
-                />
-                <TextBtn 
-                  text='Registrarse' 
-                  textStyle={{fontSize: 20, color: "#EDEAE1", textDecorationLine: 'underline'}} 
-                  onPress={() => navigation.navigate('Register')}
-                />
+            <View style={styles.actions}>
+                <PrimaryButton text='Iniciar sesión' onPress={() => navigation.navigate('Login')} />
+                <BgBtn text='Crear cuenta' onPress={() => navigation.navigate('Register')} />
             </View>
         </View>
-
     )
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
+        backgroundColor: t.colors.background,
+    },
+    content: {
+        flex: 1,
         alignItems: 'center',
-        backgroundColor: '#5C6B49',
-        alignSelf: 'stretch'
+        justifyContent: 'center',
+        gap: t.spacing.lg,
+        padding: t.spacing.lg,
     },
-    title: {
-        color: '#EDEAE1',
-        fontWeight: 'bold',
-        fontSize: 42
+    // Mismo tamaño que el logo de la bienvenida en Figma
+    logo: {
+        width: 292,
+        height: 70,
     },
-    btnContainer: {
-        padding: 32,
-        gap: 8,
-        alignSelf: 'stretch'
-    }
+    description: {
+        ...t.typography.body,
+        color: t.colors.textMuted,
+        textAlign: 'center',
+    },
+    actions: {
+        gap: t.spacing.sm,
+        padding: t.spacing.lg,
+    },
 })
