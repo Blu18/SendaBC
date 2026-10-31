@@ -100,13 +100,21 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
 - [x] T9 — `frontend/lib/theme/hardcodedColors.test.ts`: recorre `pages/`, `components/` y `App.tsx` y falla con cualquier literal `#RGB`, `#RRGGBB` o `rgb(`. Lleva una lista temporal de archivos aún sin migrar (hoy 8), que cada tarea de pantallas va vaciando. (CA-10)
 
   Hecho: la prueba recorre los `.ts` y `.tsx` y también detecta `#RGBA`, `#RRGGBBAA` y `rgba(`. `PENDING_MIGRATION` tiene los 8 archivos de hoy: `App.tsx`, los 3 botones de `components/ui/buttons/`, `pages/auth/index.tsx`, `login.tsx`, `register.tsx` y `pages/main/mainPage.tsx`. Una segunda prueba falla si un archivo de la lista ya no tiene colores sueltos (o ya no existe), para obligar a quitarlo al migrarlo. CA-10 queda cubierto cuando la lista esté vacía (T18).
-- [ ] T10 — Dependencias y configuración. Primero leer la documentación de Expo SDK 57 de `expo-font`, `expo-system-ui` y `userInterfaceStyle` (`frontend/AGENTS.md`). Después:
+- [x] T10 — Dependencias y configuración. Primero leer la documentación de Expo SDK 57 de `expo-font`, `expo-system-ui` y `userInterfaceStyle` (`frontend/AGENTS.md`). Después:
   - `npx expo install @react-navigation/bottom-tabs expo-font @expo/vector-icons expo-system-ui`;
   - fuente en `frontend/assets/fonts/` y plugin `expo-font` en `app.json`;
   - `userInterfaceStyle: "automatic"`;
   - compilar un development build nuevo.
 
   (CA-11, CA-14)
+
+  Hecho:
+  - **Dependencias:** quedaron instaladas `@react-navigation/bottom-tabs` 7.21, `expo-font` 57.0.4, `@expo/vector-icons` 15.0.2 y `expo-system-ui` 57.0.4. `expo install` no puede editar `app.config.ts`, así que los plugins se agregaron a mano en `app.json`.
+  - **Fuente:** Atkinson Hyperlegible Next 2.001 (Regular, SemiBold y Bold) está en `frontend/assets/fonts/`. Viene del paquete `@expo-google-fonts/atkinson-hyperlegible-next` 0.4.1, que no queda como dependencia. Cada archivo lleva su nombre PostScript, así que `fontFamily` es el mismo en Android y en iOS y coincide con `typography.ts`. La licencia (OFL 1.1) y el origen están en `assets/fonts/README.md`.
+  - **Cifras tabulares:** los tres archivos traen la función `tnum` (R3 en el plan). Falta confirmarlo en el teléfono (M3).
+  - **Modo del sistema:** `userInterfaceStyle` pasa de `light` a `automatic` y se agrega el plugin `expo-system-ui`. Comprobado en el proyecto nativo: `strings.xml` tiene `expo_system_ui_user_interface_style` = `automatic` y `MainActivity` incluye `uiMode` en `configChanges`.
+  - **Build:** se regeneró con `npx expo prebuild --platform android --clean` y `npx expo run:android --no-bundler` (BUILD SUCCESSFUL), y quedó instalado en `Pixel_10_Pro` el 2026-10-30. Las tres fuentes están dentro del APK.
+  - El cambio de modo en vivo se prueba en M2, cuando la app use el tema (T11).
 - [ ] T11 — `frontend/hooks/theme/useTheme.ts` con `useTheme()` y `useThemedStyles(makeStyles)`. En `App.tsx`:
   - tema de React Navigation construido con los tokens;
   - `SafeAreaView` y el `Gate` con colores del tema;
