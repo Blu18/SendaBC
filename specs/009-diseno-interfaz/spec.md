@@ -1,6 +1,6 @@
 # 009 — Diseño de la interfaz: prototipo en Figma e implementación en la app
 
-- **Estado:** Aprobada (2026-10-30)
+- **Estado:** En progreso
 - **Semana:** 9
 - **Autor(es):**
 - **Fecha:** 2026-10-30
@@ -41,7 +41,7 @@ Corresponde al objetivo de la semana 9 del roadmap (pulido).
 - **CA-10 (HU-3):** Dado el código de la app, cuando se revisan las pantallas y componentes, entonces los colores, tamaños de texto y espaciados se toman de una única definición compartida del sistema de diseño y no se repiten como valores sueltos.
 - **CA-11 (HU-5):** Dado el teléfono en modo oscuro, cuando se abre la app y se recorren sus pantallas, entonces todas se muestran en modo oscuro; y dado el teléfono en modo claro, todas se muestran en modo claro. Si el usuario cambia el modo del teléfono con la app abierta, la app cambia sin reiniciarse.
 - **CA-12 (HU-4):** Dada la pantalla de grabación de actividad, cuando el usuario la mira a la distancia de un brazo, entonces la distancia, el tiempo y la elevación son los textos más grandes de la pantalla y se leen sin acercar el teléfono.
-- **CA-13 (HU-4):** Dado cualquier elemento táctil de la app, cuando se mide, entonces su área de toque es de al menos 48 × 48 dp, y los controles de pausar/finalizar la grabación y "Estoy bien" quedan al alcance del pulgar en la mitad inferior de la pantalla.
+- **CA-13 (HU-4):** Dado cualquier elemento táctil de la app, cuando se mide, entonces su área de toque es de al menos 48 × 48 dp, y el botón de iniciar/detener la grabación, "Pedir ayuda" y "Estoy bien" quedan al alcance del pulgar en la mitad inferior de la pantalla.
 - **CA-14 (HU-1):** Dada la app instalada, cuando se abre, entonces la bienvenida muestra el logo aprobado y los textos usan la tipografía aprobada, también sin conexión.
 - **CA-15 (HU-3):** Dado el diseño implementado, cuando se repiten los casos manuales de las specs 001 a 008, entonces todos siguen pasando, adaptando solo los pasos de navegación que cambien; el rediseño no cambia ningún otro comportamiento ya especificado.
 
@@ -80,6 +80,9 @@ Ninguna. Ver las decisiones resueltas en el historial.
 
 ## Historial
 
+- 2026-10-30 — Prototipo en Figma aprobado por el usuario (CA-8): https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX. Sin cambios pedidos, salvo el estilo de los avisos, que ya se había aplicado en T3. Ya puede empezar la fase B (RN-7).
+- 2026-10-30 — CA-13 corregida al diseñar T4: la grabación no tiene pausa (spec 003), solo "Iniciar actividad" / "Detener actividad". El control que va abajo es ese botón, además de "Pedir ayuda" (spec 008).
+- 2026-10-30 — En progreso: T1 hecha (archivo de Figma con páginas, variables y estilos de texto).
 - 2026-10-30 — Plan aprobado por el usuario. Constitución v1.7.
 - 2026-10-30 — Aprobada por el usuario.
 - 2026-10-30 — Preguntas resueltas por el usuario: P1 se conserva la paleta de `colors.ts` y se propone logo y tipografía (RN-3, CA-4); P2 el prototipo lo hace Claude con el MCP de Figma; P3 modo claro y oscuro (HU-5, CA-11); P4 las 14 pantallas (CA-5); P5 se puede cambiar la navegación (RN-2); P6 sin preferencia de fuente ni íconos, se proponen en el sistema de diseño; P7 numeración 009 (semana 9), 010-estabilidad y 011-entrega; P8 los mapas quedan fuera. Se agrega RN-4 porque `secondary` y `alert` no alcanzan 4.5:1 sobre el fondo claro.

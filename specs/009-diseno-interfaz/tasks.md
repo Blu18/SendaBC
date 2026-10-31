@@ -12,33 +12,79 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
 
 ## Fase A — Prototipo en Figma
 
-- [ ] T1 — Crear el archivo **"SendaBC — Diseño"** con 3 páginas: Sistema de diseño, Pantallas y Prototipo. Confirmar el plan de la cuenta: si es Starter, el modo oscuro va como segunda colección `Color/Oscuro` (R1). Crear:
+- [x] T1 — Crear el archivo **"SendaBC — Diseño"** con 3 páginas: Sistema de diseño, Pantallas y Prototipo. Confirmar el plan de la cuenta: si es Starter, el modo oscuro va como segunda colección `Color/Oscuro` (R1). Crear:
   - la colección **Color** con los tokens de la tabla "Paleta" del plan, con los mismos nombres y los valores claros de `colors.ts`, y su equivalente oscuro;
   - las colecciones **Espaciado** y **Radio**;
   - los estilos de texto de la escala tipográfica.
 
   (CA-1, CA-3)
-- [ ] T2 — Identidad en la página Sistema de diseño:
+
+  Hecho: [archivo](https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX). Plan de la cuenta: estudiante (equivale a Professional), así que Color tiene los modos *Claro* y *Oscuro* en una sola colección. Color tiene 13 variables, Espaciado 8 (incluye `touchMin`) y Radio 4, cada una con alcance y sintaxis de código `theme.…`. Hay 7 estilos de texto en Atkinson Hyperlegible Next. `border` queda provisional (`#857F72` / `#807C72`, ≥ 3.3:1 sobre `background` y ≥ 3.2:1 sobre `surface` en los dos modos) hasta T3.
+- [x] T2 — Identidad en la página Sistema de diseño:
   - logo en tres versiones (fondo claro, fondo oscuro y cuadrada para ícono);
   - tipografía Atkinson Hyperlegible Next con su justificación y licencia (OFL);
   - comprobar si tiene cifras de ancho fijo; si no, cambiar a Inter y anotarlo en el plan (R3).
 
   (CA-4)
-- [ ] T3 — Componentes con variantes de estado, en modo claro y oscuro:
+
+  Hecho: hoja "Identidad" y componentes en "Marca — componentes" (`Logo/Símbolo`, `Logo/Horizontal` y `Logo/Ícono`). Los colores del logo son variables, así que el mismo componente sirve en claro y en oscuro. Cifras: en Figma, las de Atkinson Hyperlegible Next son proporcionales por defecto. El muestrario de la familia muestra una variante tabular, pero en Figma no se puede comprobar. Se mantiene la fuente; si en el teléfono `tabular-nums` no funciona (T10, M3), `metric` pasa a Atkinson Hyperlegible Mono, cuyas cifras miden igual. Eso reemplaza el cambio a Inter.
+- [x] T3 — Componentes con variantes de estado, en modo claro y oscuro:
   - botón primario, secundario, de texto y de peligro, cada uno normal, presionado y deshabilitado;
   - campo de texto normal, con foco y con error;
   - tarjeta, insignia de sincronización (sincronizada, pendiente, rechazada), aviso de estado, encabezado de pantalla y barra de 4 pestañas.
 
   Además, una tabla de contraste con cada par texto/fondo usado y su razón medida. Fijar el valor de `border`. (CA-2, CA-3)
-- [ ] T4 — Página Pantallas, grupos **cuenta** y **actividad**: bienvenida, inicio de sesión, registro, inicio, grabación, resumen e historial. Cada una en 360 × 800, en claro y en oscuro, con los estados que define su spec: carga, vacío, error, sin conexión y pendiente de sincronizar. En la grabación, métricas en `metric` y controles abajo. (CA-5, CA-7)
-- [ ] T5 — Página Pantallas, grupos **rutas** y **seguridad**: explorar rutas, detalle, publicar, editar, mis rutas, favoritas, contactos de emergencia y el aviso "¿Estás bien?", en los dos modos y con sus estados. (CA-5, CA-7)
-- [ ] T6 — Página Prototipo: conexiones de los flujos de CA-6, la barra de pestañas operativa y el punto de inicio en la bienvenida. (CA-6)
-- [ ] T7 — Pasar F1 y F2 contigo y compartir el enlace y las capturas. Con tu aprobación:
+
+  Hecho: en "Componentes — principales" están `Botón` (4 estilos × 3 estados), `Campo de texto` (3), `Tarjeta`, `Insignia de sincronización` (3), `Aviso` (Info, Sin conexión, Error, Alerta), `Encabezado` (Raíz, Secundaria), `Botón de ícono`, `Pestaña` (2) y `Barra de pestañas` (4 variantes, una por pestaña activa), más 15 íconos de Material Design Icons (`@mdi/svg` 7.4.47). La hoja "Componentes" muestra todo en claro y en oscuro, con la tabla de contraste: 19 pares, todos cumplen. `border` queda en `#857F72` / `#807C72`. Nota: Figma ignora la opacidad de un relleno ligado a variable, así que las capas de "presionado" y el indicador de pestaña son capas con opacidad propia; en código es un color con alfa.
+
+  Cambio pedido por el usuario (2026-10-30): `Aviso` pasa a estilo de aviso flotante, a partir de una imagen de referencia. Lleva fondo `surface` con un tinte del color del tipo al 10 %, el ícono dentro de un círculo, el título en Bold con el color del tipo, la descripción en `text`, la sombra `Sombra/Flotante` y la opción "Con cerrar" (botón de 48 dp). "Alerta" conserva el fondo `alert` sólido, porque `alert` sobre el tinte claro da 3.98:1 (RN-4). La tabla de contraste suma 5 pares sobre el tinte, y todos cumplen (el más justo es `data` en claro, con 4.62:1).
+- [x] T4 — Página Pantallas, grupos **cuenta** y **actividad**: bienvenida, inicio de sesión, registro, inicio, grabación, resumen e historial. Cada una en 360 × 800, en claro y en oscuro, con los estados que define su spec: carga, vacío, error, sin conexión y pendiente de sincronizar. En la grabación, métricas en `metric` y controles abajo. (CA-5, CA-7)
+
+  Hecho: secciones "Cuenta" y "Actividad" en la página Pantallas, con 18 marcos en claro (pantallas y estados) y 8 copias en oscuro (Bienvenida, Inicio de sesión, Registro, Inicio, Grabación antes de iniciar y grabando, Resumen y Mis actividades).
+  - **Estados:** inicio de sesión con error; registro con error; inicio con error de perfil; grabación antes de iniciar, grabando, con alerta activa y sin permiso de ubicación; resumen sincronizado, pendiente de subir y no encontrado; mis actividades con lista, sin conexión, vacía y cargando.
+  - **Componentes nuevos para estas pantallas:** `Chip`, `Métrica` (Grande y Mediana), `Fila de actividad`, `Tarjeta de seguridad` (Activa y Sin contactos) y `Cargando`, más los íconos run, bike y logout.
+  - **Textos visibles que cambian en T14 y T15** (solo redacción, sin cambiar comportamiento):
+    - "Inicio de Sesión" e "Iniciar Sesión" pasan a "Iniciar sesión".
+    - "¿Aun no tienes…" pasa a "¿Aún no tienes…".
+    - En la bienvenida, "Registrarse" pasa a "Crear cuenta".
+    - El título de la grabación pasa a "Nueva actividad" antes de iniciar y a "Grabando · <tipo>" al grabar.
+    - El vacío de Mis actividades dice "desde la pestaña Inicio" en lugar de "en la pantalla principal" (RN-2).
+  - **Inicio:** una tarjeta "Nueva actividad" con el botón "Empezar" y el resumen de seguridad, como dice el plan.
+  - **Mensaje "No se encontró la actividad":** queda igual. La descripción "Puede que se haya borrado de este teléfono." es texto nuevo; se puede quitar al implementar si no se quiere agregar.
+- [x] T5 — Página Pantallas, grupos **rutas** y **seguridad**: explorar rutas, detalle, publicar, editar, mis rutas, favoritas, contactos de emergencia y el aviso "¿Estás bien?", en los dos modos y con sus estados. (CA-5, CA-7)
+
+  Hecho: secciones "Rutas" y "Seguridad" en la página Pantallas, con 28 marcos en claro y 7 copias en oscuro (Explorar, Detalle, Publicar, Mis rutas, Mis favoritas, Seguridad y "¿Estás bien?").
+  - **Explorar rutas:** ruta seleccionada, mapa movido ("Buscar en esta zona"), buscando, sin rutas y sin conexión.
+  - **Detalle de ruta:** de otra persona, ya favorita, tuya (Editar, Archivar y Borrar), no disponible y sin conexión.
+  - **Publicar:** normal y con error. **Editar:** una pantalla.
+  - **Mis rutas:** lista, vacía y sin conexión. **Mis favoritas:** lista (con una ruta "Ya no disponible") y vacía.
+  - **Seguridad:** lista (Activo y Pendiente), sin contactos con el formulario abierto, sin conexión (con "No recibe mensajes") y error.
+  - **"¿Estás bien?":** hoja inferior sobre la grabación. Tiene la cuenta regresiva grande en `alert` y "Estoy bien" de 64 dp, en la mitad inferior (CA-13).
+  - **Componentes nuevos:** `Mapa (referencia)` (solo visual, colores fijos: el mapa no cambia de estilo), `Perfil de elevación` y `Contacto` (Activo, Pendiente y No recibe), más 11 íconos.
+  - **Encabezado de "Rutas":** lleva dos botones de ícono, Mis favoritas (corazón) y Mis rutas, en lugar de la acción única de `Encabezado`.
+  - **Textos que cambian en T16 y T17:**
+    - El vacío de favoritas dice En "Rutas" en lugar de En "Explorar rutas" (RN-2).
+    - Cada `Aviso` lleva un título corto nuevo ("Sin conexión", "Sin rutas cerca", "No se pudo publicar", etc.) y el mensaje actual va como descripción, sin cambiarlo.
+    - Son textos de ayuda nuevos: "Hasta 40 caracteres." y "Hasta 200 caracteres." en el formulario de ruta, y "Así lo verás en la app y en los avisos." en el de contacto. Si no se quieren, se quitan.
+- [x] T6 — Página Prototipo: conexiones de los flujos de CA-6, la barra de pestañas operativa y el punto de inicio en la bienvenida. (CA-6)
+
+  Hecho: la página Prototipo tiene copias de las 18 pantallas que usan los flujos, en modo claro. Hay 46 zonas tocables transparentes (botones, volver, pestañas y filas) y 6 puntos de inicio:
+  1. Registro e inicio de sesión (desde Bienvenida).
+  2. Grabar una actividad.
+  3. Explorar y guardar en favoritas.
+  4. Publicar una ruta.
+  5. Contactos de emergencia.
+  6. ¿Estás bien?
+
+  "¿Estás bien?" aparece sola a los 6 s de estar en "Grabando". Si al probarlo salta de inmediato, hay que subir el retraso en Figma: la API no aclara si la unidad son segundos o milisegundos. Comprobado leyendo las conexiones: desde Bienvenida se llega a las 18 pantallas (las 14 de la app y "¿Estás bien?", más las variantes de detalle y grabación). Las copias no se actualizan solas si se edita el marco original en Pantallas; sí se actualizan los componentes.
+- [x] T7 — Pasar F1 y F2 contigo y compartir el enlace y las capturas. Con tu aprobación:
   - anotarla en el historial de la spec (con las diferencias que pidas);
   - exportar el logo a PNG @1x/@2x/@3x, claro y oscuro, a `frontend/assets/brand/`;
   - copiar a la tabla "Paleta" del plan los valores finales si cambiaron.
 
   (CA-8)
+
+  Hecho: el usuario aprobó el prototipo el 2026-10-30, y la aprobación está en el historial de la spec. El logo está en `frontend/assets/brand/logo-{claro,oscuro}{,@2x,@3x}.png` (234 × 56 a 1x). La exportación del servidor de Figma no conserva la transparencia, así que cada PNG lleva de fondo el `background` de su modo (`#EDEAE1` y `#1A1B17`, comprobado). Como la bienvenida usa ese mismo fondo, se ve igual. Si se necesita sobre otro fondo, hay que exportarlo a mano desde Figma con fondo transparente. La paleta no cambió respecto al plan, salvo `border`, que ya está anotado.
 
 ## Fase B — App
 
@@ -66,7 +112,7 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
 - [ ] T12 — Componentes en `frontend/components/ui/`:
   - `PrimaryBtn`, `BgBtn` (secundario) y `TextBtn` con tokens, 48 dp de alto mínimo y variante `danger`;
   - `SyncBadge` con `secondaryText`;
-  - los componentes nuevos que use el prototipo: `TextField`, `Card`, `ScreenHeader`, `Notice` e `Icon` (con `accessibilityLabel` obligatorio sin texto);
+  - los componentes nuevos que use el prototipo: `TextField`, `Card`, `ScreenHeader`, `Notice`, `IconButton` e `Icon` (estos dos con `accessibilityLabel` obligatorio cuando no llevan texto);
   - `components/brand/Logo.tsx`.
 
   (CA-9, CA-13, CA-14)
@@ -79,7 +125,7 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
 
   (CA-6, CA-9, CA-15)
 - [ ] T14 — Grupo **cuenta**: `pages/auth/index.tsx` (con `Logo`), `login.tsx`, `register.tsx` y `pages/main/mainPage.tsx` a tokens, componentes e íconos como en Figma. Sacarlos de la lista temporal de T9. (CA-9, CA-10, CA-14)
-- [ ] T15 — Grupo **actividad**: `activityPage.tsx` (métricas con `metric` y `data`, "Puntos" en `bodySmall`, pausar y finalizar en barra fija abajo), `activitySummaryPage.tsx` y `activityHistoryPage.tsx`. (CA-9, CA-10, CA-12, CA-13)
+- [ ] T15 — Grupo **actividad**: `activityPage.tsx` (métricas con `metric` y `data`, "Puntos" en `bodySmall`, "Iniciar/Detener actividad" y "Pedir ayuda" en barra fija abajo), `activitySummaryPage.tsx` y `activityHistoryPage.tsx`. (CA-9, CA-10, CA-12, CA-13)
 - [ ] T16 — Grupo **rutas**: `exploreRoutesPage`, `routeDetailPage`, `publishRoutePage`, `editRoutePage`, `myRoutesPage`, `favoritesPage` y `components/routes/*`. (CA-9, CA-10)
 - [ ] T17 — Grupo **seguridad**: `emergencyContactsPage` y `components/safety/*`. `AreYouOkModal` y `RecordingSafety` con `alert` y `onAlert` y "Estoy bien" en la mitad inferior. (CA-9, CA-10, CA-13)
 - [ ] T18 — Limpieza:
@@ -99,14 +145,14 @@ Los 15 CA están cubiertos por al menos una tarea.
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | Caso F1 (variables y estilos en Figma) + `contrast.test.ts` usa los mismos nombres de token | Manual + Automatizada | Pendiente |
-| CA-2 | Caso F1 | Manual | Pendiente |
-| CA-3 | `frontend/lib/theme/contrast.test.ts` › "cada par cumple su mínimo en claro y oscuro" + tabla de contraste en F1 | Automatizada | Pendiente |
-| CA-4 | Caso F1 | Manual | Pendiente |
-| CA-5 | Caso F2 | Manual | Pendiente |
-| CA-6 | Caso F2 | Manual | Pendiente |
-| CA-7 | Caso F2 | Manual | Pendiente |
-| CA-8 | Entrada de aprobación en el historial de `spec.md` (T7) | Manual | Pendiente |
+| CA-1 | Caso F1 (variables y estilos en Figma) + `contrast.test.ts` usa los mismos nombres de token | Manual + Automatizada | F1 verificado; falta la prueba (T8) |
+| CA-2 | Caso F1 | Manual | Verificado (2026-10-30) |
+| CA-3 | `frontend/lib/theme/contrast.test.ts` › "cada par cumple su mínimo en claro y oscuro" + tabla de contraste en F1 | Automatizada | Tabla en Figma: 24 pares cumplen; falta la prueba (T8) |
+| CA-4 | Caso F1 | Manual | Verificado (2026-10-30) |
+| CA-5 | Caso F2 | Manual | Verificado (2026-10-30) |
+| CA-6 | Caso F2 | Manual | Verificado (2026-10-30) |
+| CA-7 | Caso F2 | Manual | Verificado (2026-10-30) |
+| CA-8 | Entrada de aprobación en el historial de `spec.md` (T7) | Manual | Verificado (2026-10-30) |
 | CA-9 | Caso manual M1 | Manual | Pendiente |
 | CA-10 | `frontend/lib/theme/hardcodedColors.test.ts` › "sin colores sueltos en pantallas y componentes" | Automatizada | Pendiente |
 | CA-11 | Caso manual M2 | Manual | Pendiente |
@@ -151,9 +197,9 @@ Los 15 CA están cubiertos por al menos una tarea.
 **M3 — Pantalla de grabación**
 1. Iniciar una actividad y simular movimiento.
 2. Sostener el teléfono (o la ventana del emulador a tamaño real) a la distancia de un brazo.
-3. Revisar qué textos son los más grandes y dónde quedan pausar y finalizar.
+3. Revisar qué textos son los más grandes y dónde quedan "Detener actividad" y "Pedir ayuda".
 4. Provocar el aviso "¿Estás bien?" (spec 008, caso M4) y revisar dónde queda "Estoy bien".
-- **Esperado:** distancia, tiempo y elevación son los textos más grandes y se leen sin acercarse. Las cifras no saltan al cambiar. Pausar, finalizar y "Estoy bien" quedan en la mitad inferior.
+- **Esperado:** distancia, tiempo y elevación son los textos más grandes y se leen sin acercarse. Las cifras no saltan al cambiar. "Detener actividad", "Pedir ayuda" y "Estoy bien" quedan en la mitad inferior.
 
 **M4 — Áreas de toque**
 1. Activar los límites de diseño: `adb shell setprop debug.layout true` y reabrir la app.

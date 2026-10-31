@@ -27,7 +27,7 @@ Sin cambios. No hay endpoints, módulos ni migraciones.
 
 ## Prototipo en Figma (fase A)
 
-Archivo nuevo **"SendaBC — Diseño"**, creado con `create_new_file` en la cuenta que devuelva `whoami` (ver riesgo R1). Se trabaja con `use_figma`, y el logo se exporta con `download_assets`.
+Archivo **["SendaBC — Diseño"](https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX)**, creado con `create_new_file` en el equipo de estudiante de la cuenta (riesgo R1 descartado). Se trabaja con `use_figma`, y el logo se exporta con `download_assets`.
 
 | Página | Contenido | CA |
 |---|---|---|
@@ -68,7 +68,7 @@ La grabación, el resumen, el detalle, publicar, editar, mis rutas y favoritas s
 | `alert` | `#C1432A` | `#EE7A5F` | Solo seguridad (RN-5) |
 | `onAlert` *(nuevo)* | `#FFFFFF` | `#1A1B17` | Texto sobre `alert` |
 | `error` | `#B3261E` | `#F2B8B5` | Validación y acciones destructivas |
-| `border` *(nuevo)* | por definir en Figma | por definir en Figma | Bordes de campos (3:1 contra el fondo) |
+| `border` *(nuevo)* | `#857F72` | `#807C72` | Bordes de campos (≥ 3:1 contra `background` y `surface`) |
 
 `primaryDark` desaparece: `BgBtn` pasa a ser el botón secundario con `primary`. Todos los pares de esta tabla ya miden 4.5:1 o más en su uso previsto (por ejemplo, `primary` oscuro sobre fondo oscuro 8.2:1 y `secondaryText` sobre fondo claro 4.7:1). Los valores finales se fijan en Figma y la prueba de contraste los vuelve a medir.
 
@@ -114,7 +114,7 @@ La insignia "pendiente" de `SyncBadge` usa hoy `secondary` en texto de 12 px (3.
 - **Seguridad en dos lugares.** `EmergencyContactsPage` se registra como pestaña (`Safety`) y como pantalla del stack (`EmergencyContacts`). Así, el "Configurar" de `SafetyCard` en la grabación (`activityPage.tsx:222`) la abre encima, y al volver se regresa a la grabación sin perder lo que el usuario estaba preparando, como hoy (spec 008).
 - **Navegaciones afectadas:** `pages/auth/index.tsx:14` y `login.tsx:66` resetean a `Home` en lugar de `MainPage`. Los botones "Mis actividades", "Explorar rutas" y "Seguridad" de `mainPage.tsx` desaparecen (las pestañas los reemplazan). "Mis rutas" y "Favoritas" pasan al encabezado de `exploreRoutesPage.tsx`. El resto (`goBack`, `replace('ActivitySummary')`, `navigate('RouteDetail')`, etc.) no cambia.
 - **Las 14 pantallas** se migran en cuatro grupos, en este orden: cuenta (`pages/auth/*`, `mainPage`), actividad (`activityPage`, `activitySummaryPage`, `activityHistoryPage`), rutas (`exploreRoutesPage`, `routeDetailPage`, `publishRoutePage`, `editRoutePage`, `myRoutesPage`, `favoritesPage`) y seguridad (`emergencyContactsPage`). En cada una: tokens, componentes, íconos, estados como en Figma y revisión con letra grande del sistema.
-- `activityPage.tsx` — distancia, tiempo y elevación con `metric` y color `data`. "Puntos" baja a `bodySmall` (CA-12). Pausar y finalizar van en una barra fija abajo (CA-13).
+- `activityPage.tsx` — distancia, tiempo y elevación con `metric` y color `data`. "Puntos" baja a `bodySmall` (CA-12). "Iniciar actividad" / "Detener actividad" y "Pedir ayuda" van en una barra fija abajo (CA-13).
 - Mapas (`react-native-maps`) sin cambios de estilo (fuera de alcance). En modo oscuro, el mapa se sigue viendo claro.
 
 ### Hooks / estado / almacenamiento local
@@ -130,7 +130,7 @@ La insignia "pendiente" de `SyncBadge` usa hoy `secondary` en texto de 12 px (3.
 | D2 | Modo del sistema con `useColorScheme()` + `userInterfaceStyle: "automatic"` + `expo-system-ui` | Selector propio con estado persistido | La spec pide seguir al sistema (RN-8). Sin `expo-system-ui`, Android ignora `userInterfaceStyle` y siempre reporta modo claro. |
 | D3 | Atkinson Hyperlegible Next, empaquetada con el plugin de `expo-font` | Inter; fuente del sistema (Roboto / San Francisco) | La diseñó el Braille Institute para distinguir bien letras parecidas (I/l/1, 0/O) con poca visión: justo lo que pide leer al sol y en movimiento. Licencia libre (OFL). Con el plugin se incrusta en el build, así que no se descarga ni hay que esperarla al abrir la app. Inter es la alternativa si no da el resultado esperado en Figma (R3). |
 | D4 | Íconos `@expo/vector-icons` (set MaterialCommunityIcons) | `react-native-svg` + Lucide; íconos en PNG | Tiene íconos de senderismo, carrera, bici, mapa y escudo; se colorean con el tema y van incluidos en la app (offline). Evita agregar `react-native-svg` solo para íconos. |
-| D5 | El logo se diseña vectorial en Figma y se exporta a PNG @1x/@2x/@3x, en versión clara y oscura | SVG en la app con `react-native-svg` | Se muestra en una sola pantalla (bienvenida). El PNG no agrega dependencias y el vector original queda en Figma para el ícono de la 011. |
+| D5 | El logo se diseña vectorial en Figma y se exporta a PNG @1x/@2x/@3x, en versión clara y oscura (con el `background` de su modo como fondo; ver T7) | SVG en la app con `react-native-svg` | Se muestra en una sola pantalla (bienvenida). El PNG no agrega dependencias y el vector original queda en Figma para el ícono de la 011. |
 | D6 | Las variables de Figma y los tokens del código tienen los mismos nombres | Nombrar libremente en Figma y mapear después | Para CA-1 y CA-9 basta comparar nombres; no hace falta una tabla de equivalencias. |
 | D7 | Estilos por pantalla con `makeStyles(theme)` + `useThemedStyles` | Librería de estilos (Restyle, Tamagui, NativeWind) | Cambia lo mínimo frente al `StyleSheet.create` actual y no agrega dependencias (Art. 7.2). |
 | D8 | Contraste y colores sueltos verificados con Vitest | Revisar a mano en cada PR | Son reglas que se rompen sin darse cuenta al tocar una pantalla. Una prueba las cuida en cada cambio. |
@@ -152,9 +152,9 @@ La insignia "pendiente" de `SyncBadge` usa hoy `secondary` en texto de 12 px (3.
 
 ## Riesgos
 
-- **R1 — Plan de Figma.** En el plan gratuito (Starter), las variables tienen un solo modo y los archivos un máximo de 3 páginas. Por eso la estructura usa exactamente 3 páginas. Si la cuenta es Starter, el modo oscuro se arma como una segunda colección de variables (`Color/Oscuro`) aplicada a copias de los marcos, en lugar de un modo de la misma colección. Se confirma con `whoami` al empezar la fase A.
+- **R1 — Plan de Figma.** En el plan gratuito (Starter), las variables tienen un solo modo y los archivos un máximo de 3 páginas. Por eso la estructura usa exactamente 3 páginas. Si la cuenta es Starter, el modo oscuro se arma como una segunda colección de variables (`Color/Oscuro`) aplicada a copias de los marcos, en lugar de un modo de la misma colección. Se confirma con `whoami` al empezar la fase A. *Resuelto en T1: la cuenta es de estudiante (equivale a Professional, hasta 4 modos), así que se usa una sola colección con los modos Claro y Oscuro.*
 - **R2 — Development build nuevo.** `expo-font` (plugin), `expo-system-ui` y `userInterfaceStyle` necesitan compilar de nuevo. Antes de escribir código hay que leer la documentación de Expo SDK 57 de esos paquetes (según `frontend/AGENTS.md`).
-- **R3 — Cifras de ancho fijo.** Si Atkinson Hyperlegible Next no tiene cifras tabulares, las métricas "saltan" al cambiar. Se revisa en Figma durante la fase A; si falla, se usa Inter (D3).
+- **R3 — Cifras de ancho fijo.** Si Atkinson Hyperlegible Next no tiene cifras tabulares, las métricas "saltan" al cambiar. *Revisado en T2:* en Figma sus cifras son proporcionales por defecto y la variante tabular no se puede comprobar ahí. Se verifica en el teléfono (T10, M3). Si `tabular-nums` no funciona, solo el estilo `metric` pasa a Atkinson Hyperlegible Mono (misma familia y licencia, cifras de igual ancho), en lugar de cambiar toda la app a Inter.
 - **R4 — Navegación anidada.** En React Navigation 7, navegar a una pantalla dentro de las pestañas requiere `navigate('Home', { screen: ... })`. Las llamadas afectadas están listadas arriba; los casos manuales de las specs 001, 002, 005, 007 y 008 que dependen del menú del inicio se actualizan (CA-15).
 - **R5 — Tamaño del cambio.** Se tocan las 14 pantallas y casi todos los componentes. Migrar por grupos, con un commit y una pasada de regresión por grupo, evita una sola rama grande imposible de revisar.
 - **R6 — Mapa claro en modo oscuro.** Queda un contraste visual brusco en "Rutas" y en la grabación. Se acepta porque el estilo de mapas está fuera de alcance; se anota como diferencia aceptada (CA-9).
