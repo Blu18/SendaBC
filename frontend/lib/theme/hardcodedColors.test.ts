@@ -12,9 +12,6 @@ const COLOR_LITERAL = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})\b|\br
 // Archivos aún sin migrar a tokens. Cada tarea de pantallas (T12, T14–T18) quita los suyos;
 // al terminar la spec la lista queda vacía.
 const PENDING_MIGRATION = [
-  'components/ui/buttons/BgBtn.tsx',
-  'components/ui/buttons/PrimaryBtn.tsx',
-  'components/ui/buttons/TextBtn.tsx',
   'pages/auth/index.tsx',
   'pages/auth/login.tsx',
   'pages/auth/register.tsx',

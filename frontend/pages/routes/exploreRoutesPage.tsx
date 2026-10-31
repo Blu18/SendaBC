@@ -4,6 +4,8 @@ import MapView, { Marker, Polyline, type MapPressEvent, type Region } from "reac
 import * as Location from "expo-location";
 import { useNavigation } from "@react-navigation/native";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
+import ScreenHeader from "../../components/ui/ScreenHeader";
+import IconButton from "../../components/ui/IconButton";
 import { useLocationPermission } from "../../hooks/activity/locationPermission.hook";
 import { useNearbyRoutes } from "../../hooks/routes/useNearbyRoutes";
 import type { ActivityType } from "../../lib/db/activities";
@@ -230,6 +232,25 @@ export default function ExploreRoutesPage() {
                   : null;
 
     return (
+        <View style={styles.screen}>
+            {/* Mis favoritas y Mis rutas pasan aquí desde el menú del inicio (spec 009, plan) */}
+            <ScreenHeader
+                title="Rutas"
+                actions={
+                    <>
+                        <IconButton
+                            icon="heart-outline"
+                            accessibilityLabel="Mis favoritas"
+                            onPress={() => navigation.navigate('Favorites')}
+                        />
+                        <IconButton
+                            icon="map-marker-path"
+                            accessibilityLabel="Mis rutas"
+                            onPress={() => navigation.navigate('MyRoutes')}
+                        />
+                    </>
+                }
+            />
         <View style={styles.container}>
             <MapView
                 ref={mapRef}
@@ -367,10 +388,14 @@ export default function ExploreRoutesPage() {
                 )}
             </View>
         </View>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    screen: {
+        flex: 1,
+    },
     container: {
         flex: 1,
         backgroundColor: colors.background,

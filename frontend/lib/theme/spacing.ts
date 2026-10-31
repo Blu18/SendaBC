@@ -19,5 +19,11 @@ export const radius = {
 // Área mínima de toque en dp (CA-13). Lo más chico lleva hitSlop hasta llegar a esto.
 export const touchMin = 48;
 
+// Sombra/Flotante de Figma: la del aviso flotante (Notice). Es igual en los dos modos.
+export const shadows = {
+  floating: { boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.1)' },
+} as const;
+
 export type SpacingTokens = typeof spacing;
 export type RadiusTokens = typeof radius;
+export type ShadowTokens = typeof shadows;

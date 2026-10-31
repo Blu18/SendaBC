@@ -89,7 +89,7 @@ La insignia "pendiente" de `SyncBadge` usa hoy `secondary` en texto de 12 px (3.
 - `colors.ts` — se conserva `colors` (modo claro) para no romper los imports actuales durante la migración. Se agregan `lightColors` (igual a `colors` más los tokens nuevos), `darkColors` y el tipo `ColorTokens`. Cuando no quede ningún import de `colors`, el alias se elimina.
 - `typography.ts` — escala tipográfica y nombres de las familias de la fuente.
 - `spacing.ts` — espaciado, radios y `touchMin`.
-- `index.ts` — `Theme = { scheme, colors, typography, spacing, radius }`, `lightTheme` y `darkTheme`.
+- `index.ts` — `Theme = { scheme, colors, typography, spacing, radius, shadows, touchMin }`, `lightTheme` y `darkTheme`. `shadows.floating` es la `Sombra/Flotante` de Figma (la del aviso), que lleva color y por eso vive en el tema y no en los componentes (CA-10).
 - `contrast.ts` — `contrastRatio(a, b)` (fórmula WCAG 2.1) y `CONTRAST_PAIRS`: la lista de pares texto/fondo y gráfico/fondo que usa la app, con el mínimo que exige cada uno (4.5 o 3).
 - `contrast.test.ts` — verifica que cada par de `CONTRAST_PAIRS` cumpla en los dos temas (CA-3).
 - `hardcodedColors.test.ts` — recorre `pages/`, `components/` y `App.tsx` y falla si encuentra un literal de color (`#RGB`, `#RRGGBB`, `rgb(`). Hoy lo tienen 8 archivos (CA-10).

@@ -54,37 +54,8 @@ export default function MainPage() {
               onPress={() => navigation.navigate('Activity')}
             />
 
-            <PrimaryButton
-              text="Mis actividades"
-              style={styles.activityBtn}
-              onPress={() => navigation.navigate('ActivityHistory')}
-            />
-
-            <PrimaryButton
-              text="Explorar rutas"
-              style={styles.activityBtn}
-              onPress={() => navigation.navigate('ExploreRoutes')}
-            />
-
-            {/* Por ahora se entra desde aquí (spec 007, P8) */}
-            <PrimaryButton
-              text="Mis rutas"
-              style={styles.activityBtn}
-              onPress={() => navigation.navigate('MyRoutes')}
-            />
-
-            <PrimaryButton
-              text="Mis favoritas"
-              style={styles.activityBtn}
-              onPress={() => navigation.navigate('Favorites')}
-            />
-
-            {/* Contactos de emergencia (spec 008, plan) */}
-            <PrimaryButton
-              text="Seguridad"
-              style={styles.activityBtn}
-              onPress={() => navigation.navigate('EmergencyContacts')}
-            />
+            {/* Mis actividades, Rutas y Seguridad están en la barra de pestañas; Mis rutas y
+                Favoritas, en el encabezado de Rutas (spec 009). */}
 
             <PrimaryButton text="Cerrar sesión" style={styles.logoutBtn} onPress={handleLogout} />
         </View>

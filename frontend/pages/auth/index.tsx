@@ -11,7 +11,7 @@ export default function Index() {
 
     useEffect(() => {
         if (token) {
-            navigation.reset({ index: 0, routes: [{ name: 'MainPage' }] })
+            navigation.reset({ index: 0, routes: [{ name: 'Home' }] })
         }
     }, [token])
 

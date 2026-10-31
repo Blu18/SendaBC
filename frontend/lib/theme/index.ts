@@ -1,5 +1,13 @@
 import { darkColors, lightColors, type ColorTokens } from './colors';
-import { radius, spacing, touchMin, type RadiusTokens, type SpacingTokens } from './spacing';
+import {
+  radius,
+  shadows,
+  spacing,
+  touchMin,
+  type RadiusTokens,
+  type ShadowTokens,
+  type SpacingTokens,
+} from './spacing';
 import { typography, type TypographyTokens } from './typography';
 
 export type ColorScheme = 'light' | 'dark';
@@ -10,6 +18,7 @@ export type Theme = {
   typography: TypographyTokens;
   spacing: SpacingTokens;
   radius: RadiusTokens;
+  shadows: ShadowTokens;
   touchMin: number;
 };
 
@@ -19,6 +28,7 @@ export const lightTheme: Theme = {
   typography,
   spacing,
   radius,
+  shadows,
   touchMin,
 };
 
@@ -30,4 +40,4 @@ export const darkTheme: Theme = {
 
 export { colors, darkColors, lightColors, type ColorTokens } from './colors';
 export { fontFamilies, typography, type TypographyTokens } from './typography';
-export { radius, spacing, touchMin } from './spacing';
+export { radius, shadows, spacing, touchMin } from './spacing';

@@ -8,6 +8,9 @@ import Index from './pages/auth';
 import Login from './pages/auth/login';
 import {createNavigationContainerRef, createStaticNavigation, DarkTheme, DefaultTheme, type Theme as NavigationTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import TabBar from './components/navigation/TabBar';
 import MainPage from './pages/main/mainPage';
 import ActivityPage from './pages/activity/activityPage';
 import ActivitySummaryPage from './pages/activity/activitySummaryPage';
@@ -29,6 +32,51 @@ import { queryClient } from './lib/api/queryClient';
 import { fontFamilies, type Theme } from './lib/theme';
 import { useTheme, useThemedStyles } from './hooks/theme/useTheme';
 
+// Barra de 4 pestañas (spec 009, plan D1). Cada ícono tiene su versión rellena para la
+// pestaña activa y de contorno para las demás, como en Figma.
+const HomeTabs = createBottomTabNavigator({
+  tabBar: (props) => <TabBar {...props} />,
+  screenOptions: {
+    headerShown: false,
+  },
+  screens: {
+    MainPage: {
+      screen: MainPage,
+      options: {
+        title: 'Inicio',
+        tabBarIcon: ({ focused, color, size }) => (
+          <MaterialCommunityIcons name={focused ? 'home' : 'home-outline'} color={color} size={size} />
+        ),
+      },
+    },
+    ActivityHistory: {
+      screen: ActivityHistoryPage,
+      options: {
+        title: 'Actividades',
+        tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="hiking" color={color} size={size} />,
+      },
+    },
+    ExploreRoutes: {
+      screen: ExploreRoutesPage,
+      options: {
+        title: 'Rutas',
+        tabBarIcon: ({ focused, color, size }) => (
+          <MaterialCommunityIcons name={focused ? 'map-marker-path' : 'map-outline'} color={color} size={size} />
+        ),
+      },
+    },
+    Safety: {
+      screen: EmergencyContactsPage,
+      options: {
+        title: 'Seguridad',
+        tabBarIcon: ({ focused, color, size }) => (
+          <MaterialCommunityIcons name={focused ? 'shield-check' : 'shield-check-outline'} color={color} size={size} />
+        ),
+      },
+    },
+  },
+})
+
 const RootStack = createNativeStackNavigator({
   initialRouteName: 'Index',
   screenOptions: {
@@ -44,20 +92,15 @@ const RootStack = createNativeStackNavigator({
     Register: {
       screen: Register
     },
-    MainPage: {
-      screen: MainPage
+    // Inicio, Actividades, Rutas y Seguridad (spec 009)
+    Home: {
+      screen: HomeTabs
     },
     Activity: {
       screen: ActivityPage
     },
     ActivitySummary: {
       screen: ActivitySummaryPage
-    },
-    ActivityHistory: {
-      screen: ActivityHistoryPage
-    },
-    ExploreRoutes: {
-      screen: ExploreRoutesPage
     },
     PublishRoute: {
       screen: PublishRoutePage
@@ -74,7 +117,8 @@ const RootStack = createNativeStackNavigator({
     Favorites: {
       screen: FavoritesPage
     },
-    // Contactos de emergencia (spec 008, CA-1 a CA-7)
+    // Contactos de emergencia (spec 008, CA-1 a CA-7). También es la pestaña Seguridad; aquí
+    // se abre encima de la grabación desde "Configurar" y se vuelve a ella (spec 009, plan).
     EmergencyContacts: {
       screen: EmergencyContactsPage
     }

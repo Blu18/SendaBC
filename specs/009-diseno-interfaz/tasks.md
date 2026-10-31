@@ -131,14 +131,38 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
     - `StatusBar` de `expo-status-bar` con `style="auto"`.
   - **Colores sueltos:** `App.tsx` ya no tiene ninguno y salió de `PENDING_MIGRATION` (quedan 7).
   - **Comprobado en el emulador (2026-10-30):** con `adb shell cmd uimode night yes/no` y la app abierta, las franjas de la barra de estado y de abajo cambian de color al instante, y los íconos de la barra de estado cambian a claro u oscuro. El pid de la app es el mismo antes y después, así que no se reinicia. Las pantallas siguen claras hasta migrarlas (T14–T17).
-- [ ] T12 — Componentes en `frontend/components/ui/`:
+- [x] T12 — Componentes en `frontend/components/ui/`:
   - `PrimaryBtn`, `BgBtn` (secundario) y `TextBtn` con tokens, 48 dp de alto mínimo y variante `danger`;
   - `SyncBadge` con `secondaryText`;
   - los componentes nuevos que use el prototipo: `TextField`, `Card`, `ScreenHeader`, `Notice`, `IconButton` e `Icon` (estos dos con `accessibilityLabel` obligatorio cuando no llevan texto);
   - `components/brand/Logo.tsx`.
 
   (CA-9, CA-13, CA-14)
-- [ ] T13 — Navegación:
+
+  Hecho (medidas tomadas de los componentes de Figma con `get_design_context`):
+  - **Botones:** `buttons/BaseBtn.tsx` es el botón común. Mide 48 dp de alto y ancho mínimos, con relleno `xl`/`md`, radio `md` y etiqueta SemiBold 16/24.
+    - Presionado: capa de `text` al 16 % en primario y peligro, y de `primary` al 12 % en secundario y de texto. Deshabilitado: opacidad del 40 %.
+    - `PrimaryBtn` (con `variant="danger"`, en `error`), `BgBtn` (secundario: borde de 2 dp en `primary`, sin relleno) y `TextBtn` lo envuelven y conservan sus props. Los tres aceptan ahora `disabled`.
+    - Llevan `accessibilityRole="button"` y `accessibilityState`.
+    - Ojo en T14–T17: `TextBtn` pasa de unos 30 dp de alto a 48, y `BgBtn` ya no tiene fondo propio.
+  - **`SyncBadge`:** ícono y texto (`cloud-check-outline`, `cloud-upload-outline`, `cloud-alert-outline`). Usa `secondaryText` para "pendiente", texto Caption SemiBold y borde de 1.5 dp en forma de píldora.
+  - **`Icon`:** `MaterialCommunityIcons`, con el color como nombre de token. El tipo exige `accessibilityLabel` o `decorative`.
+  - **`IconButton`:** botón de 48 × 48 con ícono de 24 y `accessibilityLabel` obligatorio en el tipo.
+  - **`TextField`:** etiqueta, campo de 48 dp y mensaje de ayuda o de error.
+    - Borde: 1 dp en `border` en estado normal, y 2 dp en `primary` con foco o en `error` con error. Al engrosar el borde se descuenta del relleno, así que el texto no se mueve.
+    - El error lleva ícono y se anuncia (`accessibilityLiveRegion`).
+  - **`Card`:** `surface` con borde y radio `lg`. Con `onPress` toda la tarjeta es tocable y lleva chevron. Acepta `children` para contenido propio.
+  - **`ScreenHeader`:** de 64 dp. Raíz: título `headline` y `actions`. Secundaria (con `onBack`): botón volver y título `title`.
+  - **`Notice`:** tipos `info`, `offline`, `error` y `alert`, con tinte del 10 %, ícono en círculo, título Bold y descripción.
+    - `alert` va sobre `alert` sólido y no se puede cerrar. Con `onClose` lleva el botón cerrar de 48 dp.
+    - Diferencia con Figma: sin botón cerrar, el relleno derecho es `lg` (16) en lugar de 4, para que el texto no toque el borde.
+    - El ícono del círculo usa `surface`, que contrasta con el círculo en los dos modos.
+  - **`components/brand/Logo.tsx`:** usa `logo-claro.png` u `logo-oscuro.png` según el modo, a 234 × 56.
+  - **Tema:** se agregó `shadows.floating` a `Theme` (plan actualizado), porque la sombra lleva un color y los componentes no pueden tener literales (CA-10).
+  - **Colores sueltos:** los 3 botones salieron de `PENDING_MIGRATION` (quedan 4 archivos).
+  - **Comprobado en el emulador (2026-10-30)** con un catálogo temporal de todos los componentes (no commiteado), en claro y en oscuro: los colores, la fuente Atkinson, los íconos, la sombra del aviso y el logo de cada modo coinciden con Figma.
+  - Los componentes de `components/safety/*` y `components/routes/*` se migran con su grupo de pantallas (T16 y T17).
+- [x] T13 — Navegación:
   - `HomeTabs` (Inicio, Actividades, Rutas, Seguridad) anidado como `Home` en `RootStack`;
   - `EmergencyContactsPage` registrada también como `EmergencyContacts` en el stack;
   - `index.tsx:14` y `login.tsx:66` resetean a `Home`;
@@ -146,6 +170,22 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
   - accesos a "Mis rutas" y "Favoritas" en el encabezado de `exploreRoutesPage.tsx`.
 
   (CA-6, CA-9, CA-15)
+
+  Hecho:
+  - **`HomeTabs`:** usa `createBottomTabNavigator` con la API estática, anidado en `RootStack` como `Home`. Tiene cuatro pestañas: `MainPage` (Inicio), `ActivityHistory` (Actividades), `ExploreRoutes` (Rutas) y `Safety` (Seguridad, con `EmergencyContactsPage`). `ActivityHistory` y `ExploreRoutes` salieron del stack.
+  - **Barra de pestañas:** `components/navigation/TabBar.tsx`, como la de Figma. Mide 64 dp de alto, con fondo `surface` y borde superior en `border`. La pestaña activa lleva un indicador de 56 × 32 en `primary` al 16 % y la etiqueta en Bold `primary`.
+    - Íconos: `home`/`home-outline`, `hiking`, `map-marker-path`/`map-outline` y `shield-check`/`shield-check-outline`.
+    - Accesibilidad: `accessibilityRole="tab"` y `selected`.
+  - **`EmergencyContacts`:** sigue en el stack, para que "Configurar" la abra encima de la grabación.
+  - **Inicio de sesión:** `index.tsx` y `login.tsx` resetean a `Home`.
+  - **`mainPage.tsx`:** quedan solo "Nueva actividad" y "Cerrar sesión". Lo demás está en las pestañas o en el encabezado de Rutas.
+  - **Rutas:** `exploreRoutesPage.tsx` lleva un `ScreenHeader` "Rutas" encima del mapa, con dos `IconButton`: Mis favoritas (`heart-outline`) y Mis rutas (`map-marker-path`). El contenido anterior queda dentro de un contenedor nuevo, sin cambios; la sangría se arregla al rediseñar la pantalla (T16).
+  - **Comprobado en el emulador (2026-10-30):**
+    - Las cuatro pestañas cambian y marcan la activa.
+    - Desde Rutas se abren Mis favoritas y Mis rutas, sin barra; el botón atrás regresa a Rutas.
+    - Desde Actividades se abre el resumen, sin barra, y se vuelve a la lista.
+  - **Sin comprobar:** "Configurar" desde la grabación. La cuenta de prueba ya tiene contactos activos, así que la tarjeta no muestra ese botón. Queda para M6.
+  - Los pasos de navegación de los casos manuales de las specs 001 a 008 se actualizan en T19.
 - [ ] T14 — Grupo **cuenta**: `pages/auth/index.tsx` (con `Logo`), `login.tsx`, `register.tsx` y `pages/main/mainPage.tsx` a tokens, componentes e íconos como en Figma. Sacarlos de la lista temporal de T9. (CA-9, CA-10, CA-14)
 - [ ] T15 — Grupo **actividad**: `activityPage.tsx` (métricas con `metric` y `data`, "Puntos" en `bodySmall`, "Iniciar/Detener actividad" y "Pedir ayuda" en barra fija abajo), `activitySummaryPage.tsx` y `activityHistoryPage.tsx`. (CA-9, CA-10, CA-12, CA-13)
 - [ ] T16 — Grupo **rutas**: `exploreRoutesPage`, `routeDetailPage`, `publishRoutePage`, `editRoutePage`, `myRoutesPage`, `favoritesPage` y `components/routes/*`. (CA-9, CA-10)

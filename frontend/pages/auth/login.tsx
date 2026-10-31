@@ -63,7 +63,7 @@ export default function Login({ route }: Props) {
         {
           // CA-1: reset para que el botón atrás no regrese a Login.
           onSuccess: (payload) => guardarSesion(payload.token, payload.id).then(() =>
-            navigation.reset({ index: 0, routes: [{ name: 'MainPage' }] })
+            navigation.reset({ index: 0, routes: [{ name: 'Home' }] })
           ),
           // CA-2: "Credenciales invalidas" (o el error genérico sin conexión) visible en pantalla.
           onError: (error) => setServerError(error.message)
