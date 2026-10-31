@@ -88,14 +88,18 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
 
 ## Fase B — App
 
-- [ ] T8 — Tokens en `frontend/lib/theme/`, con los valores aprobados en Figma:
+- [x] T8 — Tokens en `frontend/lib/theme/`, con los valores aprobados en Figma:
   - `colors.ts`: `lightColors`, `darkColors` y `ColorTokens`; el alias `colors` se conserva;
   - `typography.ts`, `spacing.ts` (con radios y `touchMin`) e `index.ts` (`Theme`, `lightTheme`, `darkTheme`);
   - `contrast.ts`, con `contrastRatio` y `CONTRAST_PAIRS`;
   - `contrast.test.ts`: la fórmula contra valores conocidos (negro/blanco 21:1; `#5C6B49` sobre `#EDEAE1` 4.78:1) y que cada par cumpla su mínimo en los dos temas.
 
   (CA-1, CA-3)
-- [ ] T9 — `frontend/lib/theme/hardcodedColors.test.ts`: recorre `pages/`, `components/` y `App.tsx` y falla con cualquier literal `#RGB`, `#RRGGBB` o `rgb(`. Lleva una lista temporal de archivos aún sin migrar (hoy 8), que cada tarea de pantallas va vaciando. (CA-10)
+
+  Hecho: `colors.ts` tiene los 13 tokens en `lightColors` y `darkColors`, con los mismos nombres y valores que la colección Color de Figma. El alias `colors` es el modo claro más `primaryDark`, que sigue ahí solo hasta rehacer `BgBtn` (T12). `index.ts` agrega `touchMin` a `Theme`, además de lo que pide el plan. Los nombres de familia de `typography.ts` (`AtkinsonHyperlegibleNext-Regular`, `-SemiBold`, `-Bold`) son provisionales: se ajustan en T10 a los archivos de fuente reales. `CONTRAST_PAIRS` son los 24 pares de la tabla de contraste de Figma, incluidos los 5 sobre el tinte del 10 % del `Aviso`. La prueba comprueba que cada par cumpla su mínimo en los dos temas y que su razón coincida con la de Figma (±0.05). La mezcla del tinte no se redondea a hex, porque Figma tampoco lo hace (redondeando, un par se desvía 0.07).
+- [x] T9 — `frontend/lib/theme/hardcodedColors.test.ts`: recorre `pages/`, `components/` y `App.tsx` y falla con cualquier literal `#RGB`, `#RRGGBB` o `rgb(`. Lleva una lista temporal de archivos aún sin migrar (hoy 8), que cada tarea de pantallas va vaciando. (CA-10)
+
+  Hecho: la prueba recorre los `.ts` y `.tsx` y también detecta `#RGBA`, `#RRGGBBAA` y `rgba(`. `PENDING_MIGRATION` tiene los 8 archivos de hoy: `App.tsx`, los 3 botones de `components/ui/buttons/`, `pages/auth/index.tsx`, `login.tsx`, `register.tsx` y `pages/main/mainPage.tsx`. Una segunda prueba falla si un archivo de la lista ya no tiene colores sueltos (o ya no existe), para obligar a quitarlo al migrarlo. CA-10 queda cubierto cuando la lista esté vacía (T18).
 - [ ] T10 — Dependencias y configuración. Primero leer la documentación de Expo SDK 57 de `expo-font`, `expo-system-ui` y `userInterfaceStyle` (`frontend/AGENTS.md`). Después:
   - `npx expo install @react-navigation/bottom-tabs expo-font @expo/vector-icons expo-system-ui`;
   - fuente en `frontend/assets/fonts/` y plugin `expo-font` en `app.json`;
@@ -145,16 +149,16 @@ Los 15 CA están cubiertos por al menos una tarea.
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | Caso F1 (variables y estilos en Figma) + `contrast.test.ts` usa los mismos nombres de token | Manual + Automatizada | F1 verificado; falta la prueba (T8) |
+| CA-1 | Caso F1 (variables y estilos en Figma) + `contrast.test.ts` usa los mismos nombres de token | Manual + Automatizada | Verificado (2026-10-30) |
 | CA-2 | Caso F1 | Manual | Verificado (2026-10-30) |
-| CA-3 | `frontend/lib/theme/contrast.test.ts` › "cada par cumple su mínimo en claro y oscuro" + tabla de contraste en F1 | Automatizada | Tabla en Figma: 24 pares cumplen; falta la prueba (T8) |
+| CA-3 | `frontend/lib/theme/contrast.test.ts` › "cada par cumple su mínimo en claro y oscuro" + tabla de contraste en F1 | Automatizada | Verificado (2026-10-30): 24 pares cumplen en claro y oscuro |
 | CA-4 | Caso F1 | Manual | Verificado (2026-10-30) |
 | CA-5 | Caso F2 | Manual | Verificado (2026-10-30) |
 | CA-6 | Caso F2 | Manual | Verificado (2026-10-30) |
 | CA-7 | Caso F2 | Manual | Verificado (2026-10-30) |
 | CA-8 | Entrada de aprobación en el historial de `spec.md` (T7) | Manual | Verificado (2026-10-30) |
 | CA-9 | Caso manual M1 | Manual | Pendiente |
-| CA-10 | `frontend/lib/theme/hardcodedColors.test.ts` › "sin colores sueltos en pantallas y componentes" | Automatizada | Pendiente |
+| CA-10 | `frontend/lib/theme/hardcodedColors.test.ts` › "sin colores sueltos en pantallas y componentes" | Automatizada | Prueba lista; quedan 8 archivos en `PENDING_MIGRATION` |
 | CA-11 | Caso manual M2 | Manual | Pendiente |
 | CA-12 | Caso manual M3 | Manual | Pendiente |
 | CA-13 | Casos manuales M3 y M4 | Manual | Pendiente |
