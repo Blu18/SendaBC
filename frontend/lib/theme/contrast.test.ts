@@ -18,6 +18,8 @@ const FIGMA_TABLE: Record<string, [number, number]> = {
   'data / background': [4.79, 7.87],
   'data / surface': [5.28, 6.84],
   'alert / background': [4.25, 6.25],
+  // Agregado en T17 (cuenta regresiva de "¿Estás bien?" sobre la hoja): falta la fila en Figma.
+  'alert / surface': [4.69, 5.43],
   'onAlert / alert': [5.12, 6.25],
   'error / background': [5.43, 10.14],
   'error / surface': [6.0, 8.81],

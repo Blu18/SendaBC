@@ -16,7 +16,7 @@ import { useAuth } from "../../context/AuthContext";
 import AreYouOkModal from "../../components/safety/AreYouOkModal";
 import SafetyCard from "../../components/safety/SafetyCard";
 import ReturnTimePicker from "../../components/safety/ReturnTimePicker";
-import RecordingSafety from "../../components/safety/RecordingSafety";
+import RecordingSafety, { ActiveAlert } from "../../components/safety/RecordingSafety";
 import SosButton from "../../components/safety/SosButton";
 import type { ActivityType } from "../../lib/db/activities";
 import { ACTIVITY_TYPE_LABELS } from "../../lib/format/activity";
@@ -177,6 +177,15 @@ export default function ActivityPage() {
         <View style={styles.screen}>
             <ScreenHeader title={titulo} onBack={() => navigation.goBack()} />
             <ScrollView contentContainerStyle={styles.content}>
+                {/* Alerta activa arriba, con "Cancelar alerta" (spec 008, CA-17, CA-25) */}
+                {recording && seguridad.sesion && seguridad.alertaActiva && (
+                    <ActiveAlert
+                        sesion={seguridad.sesion}
+                        nombres={seguridad.entregadaA ?? nombresActivos}
+                        onCancelarAlerta={() => void handleCancelarAlerta()}
+                    />
+                )}
+
                 <View style={styles.selector}>
                     {TIPOS.map((tipo) => (
                         <Chip
@@ -214,15 +223,9 @@ export default function ActivityPage() {
                     </>
                 )}
 
-                {/* Durante la grabación: hora de regreso y alerta activa (CA-17, CA-23, CA-25) */}
+                {/* Durante la grabación: hora de regreso (CA-19, CA-23) */}
                 {recording && seguridad.sesion && (
-                    <RecordingSafety
-                        sesion={seguridad.sesion}
-                        alertaActiva={seguridad.alertaActiva}
-                        nombres={seguridad.entregadaA ?? nombresActivos}
-                        onCambiarRegreso={seguridad.cambiarRegreso}
-                        onCancelarAlerta={() => void handleCancelarAlerta()}
-                    />
+                    <RecordingSafety sesion={seguridad.sesion} onCambiarRegreso={seguridad.cambiarRegreso} />
                 )}
 
                 {permissionError === 'blocked' && (

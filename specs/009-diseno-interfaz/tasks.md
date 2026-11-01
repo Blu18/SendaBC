@@ -270,7 +270,31 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
     - Mis rutas vacía y Mis favoritas vacía y con una ruta (oscuro). Se guardó una favorita y se quitó con "Quitar"; la cuenta quedó como estaba.
     - Ojo: si se cambia el tamaño de letra con la app abierta, los chips de Explorar se enciman hasta reiniciar la app. Con la app reiniciada se ven bien.
     - Sin probar: detalle de una ruta propia, publicar y editar (la cuenta de prueba no tiene rutas ni actividades publicables, y publicar deja una ruta visible para todos), y los avisos de sin conexión y sin permiso de Explorar. Quedan para M5 y M6 en T20.
-- [ ] T17 — Grupo **seguridad**: `emergencyContactsPage` y `components/safety/*`. `AreYouOkModal` y `RecordingSafety` con `alert` y `onAlert` y "Estoy bien" en la mitad inferior. (CA-9, CA-10, CA-13)
+- [x] T17 — Grupo **seguridad**: `emergencyContactsPage` y `components/safety/*`. `AreYouOkModal` y `RecordingSafety` con `alert` y `onAlert` y "Estoy bien" en la mitad inferior. (CA-9, CA-10, CA-13)
+
+  Hecho (con los marcos 26:1777 a 26:2194 de Figma):
+  - **Contactos de emergencia (`emergencyContactsPage.tsx`):**
+    - `ScreenHeader` raíz "Seguridad" en la pestaña y con volver cuando se abre encima de la grabación (`EmergencyContacts`).
+    - Cada contacto en un bloque `surface`: avatar con `account-outline`, nombre en `title` y estado con punto y texto. Activo va en `primary`, pendiente en `secondaryText` y "No recibe mensajes" en `error`, como en Figma.
+    - Botones: "Compartir invitación" primario, "Enviar mensaje de prueba" secundario, y Editar y Quitar de texto (Quitar ya no va en rojo, como en Figma; sigue pidiendo confirmación).
+    - "Agregar contacto" pasa a secundario. Sin conexión, error y sin contactos son `Notice` ("Sin conexión", "No se pudo cargar", "Sin contactos"). El mensaje sin conexión ya no empieza con "Sin conexión:", que pasó al título.
+  - **`ContactForm`:** `TextField` con la ayuda "Así lo verás en la app y en los avisos · n/40" y "Cancelar" + botón primario en una fila. Al agregar, el botón dice "Agregar contacto" (antes "Agregar").
+  - **`ReturnTimePicker`:** bloque `surface`, hora en `title` `data` y `Chip` de 48 dp; el error lleva ícono.
+  - **`RecordingSafety`:**
+    - La hora de regreso va en un bloque `surface`, con "Cambiar" como botón de texto. Al editar se ve el selector y abajo "Cancelar" y "Guardar". Arregla "Sin hora de regreso", que en oscuro no se leía (T15).
+    - La alerta activa sale a `ActiveAlert`: `Notice` tipo alerta y "Cancelar alerta" secundario, arriba de la grabación como en Figma. Así se cierra la diferencia que quedó en T15.
+  - **`AreYouOkModal`:**
+    - Pasa de pantalla completa en `alert` a hoja inferior `surface` sobre la grabación oscurecida: ícono en círculo `alert`, título `display`, cuenta regresiva en `metric` `alert` y "Estoy bien" primario de 64 dp abajo (CA-13).
+    - El fondo oscurecido es `lightColors.text` al 50 % en los dos modos.
+  - **Contraste:** se agregó el par `alert` / `surface` (cuenta regresiva, texto grande: 4.69 en claro y 5.43 en oscuro) a `CONTRAST_PAIRS` y a la tabla de la prueba. **Pendiente:** agregar esa fila a la tabla de contraste del archivo de Figma.
+  - **Colores sueltos:** ningún archivo de `pages/`, `components/` ni `App.tsx` importa ya el alias `colors`; queda quitarlo en T18.
+  - **Verificado:** `tsc` y `npm test` del frontend (509 pruebas) en verde.
+  - **Comprobado en el emulador (2026-11-01)**, con el backend local:
+    - Seguridad en claro y oscuro con 3 contactos (Activo y Pendiente), el límite de 3 y el formulario de editar abierto (se canceló sin guardar).
+    - Grabación en oscuro: el selector de hora de regreso antes de iniciar, "Sin hora de regreso" con "Cambiar" al grabar y la edición con "Cancelar" y "Guardar".
+    - "¿Estás bien?" en claro y oscuro: se forzó visible un momento en el código para verla, sin tocar "Estoy bien" (revertido). La recarga en caliente reinició la pantalla de grabación y la actividad quedó abierta; al reiniciar la app se cerró sola y se sincronizó (spec 003, CA-12).
+    - Un error de `react-native-maps` ("topUserLocationChange") salió una vez tras la recarga en caliente con el mapa de Explorar montado; no se repitió al reiniciar la app.
+    - Sin probar: la alerta activa, el SOS y "Estoy bien" de verdad (envían avisos reales a los contactos), los estados sin conexión y error de Seguridad, y "Configurar contactos" desde la grabación. Quedan para M6 con contactos de prueba.
 - [ ] T18 — Limpieza:
   - quitar el alias `colors` y `primaryDark`;
   - dejar vacía la lista temporal de T9;

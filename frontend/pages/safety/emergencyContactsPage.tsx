@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Alert, Share, ActivityIndicator } from "react-native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import ContactForm from "../../components/safety/ContactForm";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
+import BgBtn from "../../components/ui/buttons/BgBtn";
+import ScreenHeader from "../../components/ui/ScreenHeader";
+import Notice from "../../components/ui/Notice";
+import Icon from "../../components/ui/Icon";
 import TextBtn from "../../components/ui/buttons/TextBtn";
 import { useContactMutations, useEmergencyContacts } from "../../hooks/safety/useEmergencyContacts";
 import { erroresDeCampo, mensajeDeFallo, type RouteActionFailure } from "../../lib/routes/status";
@@ -21,11 +26,17 @@ import {
     textoPruebaFallida,
     textoQuitar,
 } from "../../lib/safety/messages";
-import { colors } from "../../lib/theme/colors";
+import { fontFamilies, type ColorTokens, type Theme } from "../../lib/theme";
+import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 
-// "Seguridad": los contactos de emergencia de la cuenta (spec 008, CA-1 a CA-7). Se entra desde
-// la pantalla principal. La lista se vuelve a pedir al regresar, para ver los que aceptaron.
+// "Seguridad": los contactos de emergencia de la cuenta (spec 008, CA-1 a CA-7). Es la pestaña
+// Seguridad y también se abre encima de la grabación con "Configurar contactos" (spec 009, plan);
+// ahí lleva volver. La lista se vuelve a pedir al regresar, para ver los que aceptaron.
 export default function EmergencyContactsPage() {
+    const navigation = useNavigation();
+    const encima = useRoute().name === 'EmergencyContacts';
+    const theme = useTheme();
+    const styles = useThemedStyles(makeStyles);
     const { contacts, offline, status, retry } = useEmergencyContacts();
     const { create, rename, remove, test } = useContactMutations();
 
@@ -116,97 +127,100 @@ export default function EmergencyContactsPage() {
     };
 
     return (
-        // "handled": con el teclado abierto, tocar "Agregar" o "Guardar" funciona a la primera.
-        <ScrollView
-            style={styles.screen}
-            contentContainerStyle={styles.container}
-            keyboardShouldPersistTaps="handled"
-        >
-            <Text style={styles.title}>{M.titulo}</Text>
-            <Text style={styles.subtitle}>{M.subtitulo}</Text>
-            <Text style={styles.text}>{M.explicacion}</Text>
+        <View style={styles.screen}>
+            <ScreenHeader title={M.titulo} onBack={encima ? () => navigation.goBack() : undefined} />
+            {/* "handled": con el teclado abierto, tocar "Agregar" o "Guardar" funciona a la primera. */}
+            <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+                <Text style={styles.explanation}>{M.explicacion}</Text>
+                <Text style={styles.subtitle} accessibilityRole="header">{M.subtitulo}</Text>
 
-            {offline && <Text style={styles.notice}>{M.sinConexion}</Text>}
+                {offline && <Notice type="offline" title="Sin conexión" description={M.sinConexion} />}
 
-            {status === 'loading' && <ActivityIndicator size="large" color={colors.primary} />}
-            {status === 'error' && (
-                <View style={styles.block}>
-                    <Text style={styles.text}>{M.error}</Text>
-                    <PrimaryButton text="Reintentar" style={styles.button} onPress={() => void retry()} />
-                </View>
-            )}
+                {status === 'loading' && <ActivityIndicator size="large" color={theme.colors.primary} />}
+                {status === 'error' && (
+                    <>
+                        <Notice type="error" title="No se pudo cargar" description={M.error} />
+                        <PrimaryButton text="Reintentar" onPress={() => void retry()} />
+                    </>
+                )}
 
-            {status === 'success' && contacts.length === 0 && <Text style={styles.text}>{M.vacio}</Text>}
+                {status === 'success' && contacts.length === 0 && (
+                    <Notice title="Sin contactos" description={M.vacio} />
+                )}
 
-            {status === 'success' &&
-                contacts.map((contacto) => {
-                    const acciones = accionesDe(contacto);
-                    const editando = editandoId === contacto.id;
-                    return (
-                        <View key={contacto.id} style={styles.card}>
-                            {editando ? (
-                                <ContactForm
-                                    value={editado}
-                                    onChange={setEditado}
-                                    error={editadoError}
-                                    submitText="Guardar"
-                                    submitting={rename.isPending}
-                                    onSubmit={() => guardarEdicion(contacto.id)}
-                                    onCancel={() => setEditandoId(null)}
-                                />
-                            ) : (
-                                <>
-                                    <View style={styles.cardHeader}>
-                                        <Text style={styles.name} numberOfLines={2}>{contacto.name}</Text>
-                                        <View style={[styles.badge, { backgroundColor: BADGE[contacto.status] }]}>
-                                            <Text style={styles.badgeText}>{CONTACT_STATUS_LABELS[contacto.status]}</Text>
+                {status === 'success' &&
+                    contacts.map((contacto) => {
+                        const acciones = accionesDe(contacto);
+                        const editando = editandoId === contacto.id;
+                        const estado = ESTADO[contacto.status];
+                        return (
+                            <View key={contacto.id} style={styles.card}>
+                                {editando ? (
+                                    <ContactForm
+                                        value={editado}
+                                        onChange={setEditado}
+                                        error={editadoError}
+                                        submitText="Guardar"
+                                        submitting={rename.isPending}
+                                        onSubmit={() => guardarEdicion(contacto.id)}
+                                        onCancel={() => setEditandoId(null)}
+                                    />
+                                ) : (
+                                    <>
+                                        <View style={styles.cardHeader}>
+                                            <View style={styles.avatar}>
+                                                <Icon name="account-outline" decorative />
+                                            </View>
+                                            <View style={styles.cardTexts}>
+                                                <Text style={styles.name} numberOfLines={2}>{contacto.name}</Text>
+                                                {/* Punto y texto: el estado no depende solo del color */}
+                                                <View style={styles.status}>
+                                                    <View style={[styles.dot, { backgroundColor: theme.colors[estado] }]} />
+                                                    <Text style={[styles.statusText, { color: theme.colors[estado] }]}>
+                                                        {CONTACT_STATUS_LABELS[contacto.status]}
+                                                    </Text>
+                                                </View>
+                                            </View>
                                         </View>
-                                    </View>
-                                    {contacto.status === 'ACTIVE' && contacto.telegramName && (
-                                        <Text style={styles.muted}>En Telegram: {contacto.telegramName}</Text>
-                                    )}
-                                    {contacto.status === 'PENDING' && <Text style={styles.muted}>{M.pendiente}</Text>}
-                                    {contacto.status === 'UNREACHABLE' && (
-                                        <Text style={styles.muted}>{M.inalcanzable}</Text>
-                                    )}
+                                        {contacto.status === 'ACTIVE' && contacto.telegramName && (
+                                            <Text style={styles.muted}>En Telegram: {contacto.telegramName}</Text>
+                                        )}
+                                        {contacto.status === 'PENDING' && <Text style={styles.muted}>{M.pendiente}</Text>}
+                                        {contacto.status === 'UNREACHABLE' && (
+                                            <Text style={styles.muted}>{M.inalcanzable}</Text>
+                                        )}
 
-                                    {acciones.compartir && (
-                                        <PrimaryButton text={M.compartir} style={styles.button} onPress={() => compartir(contacto)} />
-                                    )}
-                                    {acciones.probar && (
-                                        <PrimaryButton
-                                            text={test.isPending && test.variables === contacto.id ? 'Enviando…' : M.probar}
-                                            disabled={offline || test.isPending}
-                                            style={styles.button}
-                                            onPress={() => probar(contacto)}
-                                        />
-                                    )}
-                                    {!!pruebas[contacto.id] && <Text style={styles.result}>{pruebas[contacto.id]}</Text>}
-
-                                    {!offline && (
-                                        <View style={styles.row}>
-                                            <TextBtn text={M.editar} onPress={() => empezarEdicion(contacto)} />
-                                            <TextBtn
-                                                text={M.quitar}
-                                                textStyle={styles.remove}
-                                                onPress={() => quitar(contacto)}
+                                        {acciones.compartir && (
+                                            <PrimaryButton text={M.compartir} onPress={() => compartir(contacto)} />
+                                        )}
+                                        {acciones.probar && (
+                                            <BgBtn
+                                                text={test.isPending && test.variables === contacto.id ? 'Enviando…' : M.probar}
+                                                disabled={offline || test.isPending}
+                                                onPress={() => probar(contacto)}
                                             />
-                                        </View>
-                                    )}
-                                </>
-                            )}
-                        </View>
-                    );
-                })}
+                                        )}
+                                        {!!pruebas[contacto.id] && <Text style={styles.result}>{pruebas[contacto.id]}</Text>}
 
-            {status === 'success' && !offline && (
-                agregando ? (
-                    <View style={styles.card}>
+                                        {!offline && (
+                                            <View style={styles.row}>
+                                                <TextBtn text={M.editar} style={styles.textBtn} onPress={() => empezarEdicion(contacto)} />
+                                                <TextBtn text={M.quitar} style={styles.textBtn} onPress={() => quitar(contacto)} />
+                                            </View>
+                                        )}
+                                    </>
+                                )}
+                            </View>
+                        );
+                    })}
+
+                {status === 'success' && !offline && (
+                    agregando ? (
                         <ContactForm
                             value={nuevo}
                             onChange={setNuevo}
                             error={nuevoError}
-                            submitText="Agregar"
+                            submitText={M.agregar}
                             submitting={create.isPending}
                             onSubmit={agregar}
                             onCancel={() => {
@@ -215,113 +229,105 @@ export default function EmergencyContactsPage() {
                                 setNuevoError(undefined);
                             }}
                         />
-                    </View>
-                ) : puedeAgregar(contacts) ? (
-                    <PrimaryButton text={M.agregar} style={styles.button} onPress={() => setAgregando(true)} />
-                ) : (
-                    <Text style={styles.muted}>{CONTACT_MESSAGES.limite}</Text>
-                )
-            )}
+                    ) : puedeAgregar(contacts) ? (
+                        <BgBtn text={M.agregar} onPress={() => setAgregando(true)} />
+                    ) : (
+                        <Text style={styles.muted}>{CONTACT_MESSAGES.limite}</Text>
+                    )
+                )}
 
-            <Text style={styles.disclaimer}>{AVISO_911}</Text>
-        </ScrollView>
+                <Text style={styles.disclaimer}>{AVISO_911}</Text>
+            </ScrollView>
+        </View>
     );
 }
 
-// Activo en el primario, pendiente en ocre y "No recibe mensajes" apagado.
-const BADGE: Record<ContactStatus, string> = {
-    ACTIVE: colors.primary,
-    PENDING: colors.secondary,
-    UNREACHABLE: colors.textMuted,
+// Activo en primary, pendiente en ocre de texto (RN-4) y "No recibe mensajes" en error, como en
+// Figma.
+const ESTADO: Record<ContactStatus, keyof ColorTokens> = {
+    ACTIVE: 'primary',
+    PENDING: 'secondaryText',
+    UNREACHABLE: 'error',
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
     screen: {
         flex: 1,
-        backgroundColor: colors.background,
+        backgroundColor: t.colors.background,
     },
-    container: {
-        padding: 16,
-        paddingTop: 24,
-        gap: 12,
+    content: {
+        gap: t.spacing.md,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: colors.text,
-        textAlign: 'center',
+    explanation: {
+        ...t.typography.bodySmall,
+        color: t.colors.textMuted,
     },
     subtitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: colors.text,
-    },
-    text: {
-        fontSize: 15,
-        color: colors.text,
-    },
-    notice: {
-        fontSize: 14,
-        color: colors.text,
-        borderWidth: 1.5,
-        borderColor: colors.secondary,
-        padding: 10,
-        borderRadius: 8,
-    },
-    block: {
-        gap: 12,
+        ...t.typography.title,
+        color: t.colors.text,
     },
     card: {
-        gap: 8,
-        padding: 14,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: colors.primary,
+        gap: t.spacing.md,
+        padding: t.spacing.lg,
+        borderRadius: t.radius.lg,
+        backgroundColor: t.colors.surface,
     },
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 8,
+        gap: t.spacing.md,
+    },
+    avatar: {
+        width: 40,
+        height: 40,
+        borderRadius: t.radius.pill,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: t.colors.background,
+    },
+    cardTexts: {
+        flex: 1,
+        gap: 2,
     },
     name: {
-        flex: 1,
-        fontSize: 18,
-        fontWeight: '600',
-        color: colors.text,
+        ...t.typography.title,
+        color: t.colors.text,
     },
-    badge: {
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 10,
+    status: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: t.spacing.xs,
     },
-    badgeText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: colors.background,
+    dot: {
+        width: 8,
+        height: 8,
+        borderRadius: t.radius.pill,
+    },
+    statusText: {
+        ...t.typography.bodySmall,
+        fontFamily: fontFamilies.semibold,
     },
     muted: {
-        fontSize: 14,
-        color: colors.textMuted,
+        ...t.typography.bodySmall,
+        color: t.colors.textMuted,
     },
     result: {
-        fontSize: 14,
-        color: colors.data,
-    },
-    button: {
-        paddingVertical: 10,
+        ...t.typography.bodySmall,
+        color: t.colors.data,
     },
     row: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
+        gap: t.spacing.sm,
     },
-    remove: {
-        color: colors.error,
+    // Los botones de texto ocupan su etiqueta, alineados a la izquierda como en Figma.
+    textBtn: {
+        alignSelf: 'flex-start',
     },
     disclaimer: {
-        marginTop: 8,
-        fontSize: 13,
-        color: colors.textMuted,
+        ...t.typography.caption,
+        color: t.colors.textMuted,
         textAlign: 'center',
     },
 });

@@ -72,6 +72,7 @@ export const CONTRAST_PAIRS: ContrastPair[] = [
   { fg: 'data', bg: 'background', min: 4.5, use: 'Métricas' },
   { fg: 'data', bg: 'surface', min: 4.5, use: 'Métricas en tarjeta, aviso Info' },
   { fg: 'alert', bg: 'background', min: 3, use: 'Alerta: texto grande e íconos (RN-4)' },
+  { fg: 'alert', bg: 'surface', min: 3, use: 'Cuenta regresiva de "¿Estás bien?" (texto grande)' },
   { fg: 'onAlert', bg: 'alert', min: 4.5, use: 'Aviso de alerta, "Estoy bien"' },
   { fg: 'error', bg: 'background', min: 4.5, use: 'Mensajes de error' },
   { fg: 'error', bg: 'surface', min: 4.5, use: 'Error en campo' },

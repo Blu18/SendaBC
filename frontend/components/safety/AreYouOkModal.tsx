@@ -1,7 +1,11 @@
-import { Modal, View, Text, Pressable, StyleSheet } from "react-native";
+import { Modal, View, Text, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import PrimaryButton from "../ui/buttons/PrimaryBtn";
+import Icon from "../ui/Icon";
 import { formatoCuentaRegresiva, textoPregunta } from "../../lib/safety/messages";
 import { UMBRALES_APP } from "../../lib/safety/locationTask";
-import { colors } from "../../lib/theme/colors";
+import { lightColors, type Theme } from "../../lib/theme";
+import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 
 type Props = {
     visible: boolean;
@@ -10,74 +14,91 @@ type Props = {
     onEstoyBien: () => void;
 };
 
-// "¿Estás bien?" a pantalla completa (spec 008, CA-11, CA-12). El botón es grande para tocarlo
-// con guantes o con prisa (spec, accesibilidad). Usa el color de alerta, reservado a seguridad.
+// "¿Estás bien?" (spec 008, CA-11, CA-12) como hoja inferior sobre la grabación, como en Figma
+// (spec 009): la cuenta regresiva grande en alert (solo seguridad, RN-5) y "Estoy bien" de 64 dp
+// en la mitad inferior, al alcance del pulgar (CA-13).
 export default function AreYouOkModal({ visible, restanteMs, respondiendo, onEstoyBien }: Props) {
+    const theme = useTheme();
+    const styles = useThemedStyles(makeStyles);
+    const insets = useSafeAreaInsets();
     const { titulo, cuerpo, boton } = textoPregunta(UMBRALES_APP);
     return (
-        <Modal visible={visible} animationType="fade" statusBarTranslucent onRequestClose={() => {}}>
-            <View style={styles.container}>
-                <Text style={styles.title}>{titulo}</Text>
-                <Text style={styles.body}>{cuerpo}</Text>
-                <Text
-                    style={styles.countdown}
-                    accessibilityLabel={`Quedan ${formatoCuentaRegresiva(restanteMs)}`}
-                >
-                    {formatoCuentaRegresiva(restanteMs)}
-                </Text>
-                <Pressable
-                    onPress={onEstoyBien}
-                    disabled={respondiendo}
-                    accessibilityRole="button"
-                    style={({ pressed }) => [styles.button, (pressed || respondiendo) && styles.buttonPressed]}
-                >
-                    <Text style={styles.buttonText}>{boton}</Text>
-                </Pressable>
+        <Modal
+            visible={visible}
+            transparent
+            animationType="slide"
+            statusBarTranslucent
+            navigationBarTranslucent
+            onRequestClose={() => {}}
+        >
+            <View style={styles.screen}>
+                <View style={styles.scrim} />
+                <View style={[styles.sheet, { paddingBottom: theme.spacing.xl + insets.bottom }]}>
+                    <View style={styles.icon}>
+                        <Icon name="exclamation-thick" size={32} color="onAlert" decorative />
+                    </View>
+                    <Text style={styles.title} accessibilityRole="header">{titulo}</Text>
+                    <Text style={styles.body}>{cuerpo}</Text>
+                    <Text
+                        style={styles.countdown}
+                        accessibilityLabel={`Quedan ${formatoCuentaRegresiva(restanteMs)}`}
+                    >
+                        {formatoCuentaRegresiva(restanteMs)}
+                    </Text>
+                    <PrimaryButton
+                        text={boton}
+                        onPress={onEstoyBien}
+                        disabled={respondiendo}
+                        style={styles.button}
+                    />
+                </View>
             </View>
         </Modal>
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
+const makeStyles = (t: Theme) => StyleSheet.create({
+    screen: {
         flex: 1,
-        backgroundColor: colors.alert,
+        justifyContent: 'flex-end',
+    },
+    // Oscurece la grabación igual en los dos modos (en oscuro, text es claro y la aclararía).
+    scrim: {
+        ...StyleSheet.absoluteFill,
+        backgroundColor: lightColors.text,
+        opacity: 0.5,
+    },
+    sheet: {
+        alignItems: 'center',
+        gap: t.spacing.md,
+        padding: t.spacing.xl,
+        borderTopLeftRadius: t.radius.lg,
+        borderTopRightRadius: t.radius.lg,
+        backgroundColor: t.colors.surface,
+    },
+    icon: {
+        width: 56,
+        height: 56,
+        borderRadius: t.radius.pill,
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 24,
-        gap: 24,
+        backgroundColor: t.colors.alert,
     },
     title: {
-        fontSize: 40,
-        fontWeight: 'bold',
-        color: colors.background,
+        ...t.typography.display,
+        color: t.colors.text,
         textAlign: 'center',
     },
     body: {
-        fontSize: 18,
-        color: colors.background,
+        ...t.typography.body,
+        color: t.colors.text,
         textAlign: 'center',
     },
     countdown: {
-        fontSize: 72,
-        fontWeight: 'bold',
-        color: colors.background,
-        fontVariant: ['tabular-nums'],
+        ...t.typography.metric,
+        color: t.colors.alert,
     },
     button: {
-        alignSelf: 'stretch',
-        minHeight: 140,
-        borderRadius: 24,
-        backgroundColor: colors.background,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    buttonPressed: {
-        opacity: 0.7,
-    },
-    buttonText: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: colors.alert,
+        minHeight: 64,
     },
 });

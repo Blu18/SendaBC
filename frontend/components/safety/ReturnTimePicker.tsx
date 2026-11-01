@@ -1,4 +1,6 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import Chip from "../ui/Chip";
+import Icon from "../ui/Icon";
 import { SAFETY_MESSAGES, textoRegreso } from "../../lib/safety/messages";
 import {
     ajustarRegreso,
@@ -6,7 +8,8 @@ import {
     regresoDentroDe,
     textoAviso,
 } from "../../lib/safety/returnTime";
-import { colors } from "../../lib/theme/colors";
+import { fontFamilies, type Theme } from "../../lib/theme";
+import { useThemedStyles } from "../../hooks/theme/useTheme";
 
 type Props = {
     value: number | null; // ms, o null sin hora de regreso
@@ -15,8 +18,10 @@ type Props = {
 };
 
 // Hora de regreso opcional (spec 008, CA-8, RN-10): botones de duración y ajustes de ±15 min,
-// sin librería de selector de fecha (plan D9).
+// sin librería de selector de fecha (plan D9). Diseño de Figma (spec 009): bloque surface con la
+// hora en data y Chip de 48 dp.
 export default function ReturnTimePicker({ value, onChange, error }: Props) {
+    const styles = useThemedStyles(makeStyles);
     return (
         <View style={styles.container}>
             <Text style={styles.title}>{SAFETY_MESSAGES.regresoTitulo}</Text>
@@ -43,63 +48,52 @@ export default function ReturnTimePicker({ value, onChange, error }: Props) {
                     <Chip text={SAFETY_MESSAGES.quitarRegreso} onPress={() => onChange(null)} />
                 </View>
             )}
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {error ? (
+                <View style={styles.error} accessibilityLiveRegion="polite">
+                    <Icon name="alert-circle-outline" size={16} color="error" decorative />
+                    <Text style={styles.errorText}>{error}</Text>
+                </View>
+            ) : null}
         </View>
     );
 }
 
-function Chip({ text, onPress }: { text: string; onPress: () => void }) {
-    return (
-        <Pressable
-            onPress={onPress}
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}
-        >
-            <Text style={styles.chipText}>{text}</Text>
-        </Pressable>
-    );
-}
-
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
     container: {
         alignSelf: 'stretch',
-        gap: 8,
+        gap: t.spacing.sm,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
+        borderRadius: t.radius.lg,
+        backgroundColor: t.colors.surface,
     },
     title: {
-        color: colors.text,
-        fontSize: 15,
-        fontWeight: '600',
+        ...t.typography.body,
+        fontFamily: fontFamilies.bold,
+        color: t.colors.text,
     },
     value: {
-        color: colors.data,
-        fontSize: 20,
-        fontWeight: 'bold',
+        ...t.typography.title,
+        fontFamily: fontFamilies.bold,
+        color: t.colors.data,
     },
     hint: {
-        color: colors.textMuted,
-        fontSize: 13,
+        ...t.typography.caption,
+        color: t.colors.textMuted,
     },
     row: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
-    },
-    chip: {
-        paddingVertical: 8,
-        paddingHorizontal: 14,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: colors.primary,
-    },
-    chipPressed: {
-        opacity: 0.6,
-    },
-    chipText: {
-        color: colors.primary,
-        fontWeight: '600',
+        gap: t.spacing.sm,
     },
     error: {
-        color: colors.error,
-        fontSize: 13,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: t.spacing.xs,
+    },
+    errorText: {
+        ...t.typography.bodySmall,
+        flex: 1,
+        color: t.colors.error,
     },
 });

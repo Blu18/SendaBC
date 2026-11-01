@@ -115,7 +115,7 @@ export const CONTACTS_PAGE_MESSAGES = {
     'Si durante una actividad dejas de moverte y no respondes, o pides ayuda, avisaremos por Telegram a tus contactos activos con tu última ubicación.',
   vacio: 'Todavía no tienes contactos de emergencia. Agrega de uno a tres.',
   sinConexion:
-    'Sin conexión: estos son los contactos guardados en tu teléfono. Para cambiarlos o enviar una prueba necesitas conexión.',
+    'Estos son los contactos guardados en tu teléfono. Para cambiarlos o enviar una prueba necesitas conexión.',
   error: 'No se pudieron cargar tus contactos. Inténtalo de nuevo.',
   pendiente: 'Compártele la invitación. Cuando la acepte en Telegram, aparecerá como Activo.',
   inalcanzable:
