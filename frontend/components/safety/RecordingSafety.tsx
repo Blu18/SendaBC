@@ -1,14 +1,11 @@
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import BgBtn from "../ui/buttons/BgBtn";
 import ReturnTimePicker from "./ReturnTimePicker";
 import type { LocalSafetySession } from "../../lib/db/safety";
 import type { ResultadoRegreso } from "../../lib/safety/sessionActions";
 import { SAFETY_MESSAGES, textoAlertaEnviada, textoRegreso } from "../../lib/safety/messages";
 import { colors } from "../../lib/theme/colors";
-
-// Mantener presionado 2 s para pedir ayuda: evita un toque accidental (RN-7).
-const SOS_MS = 2000;
 
 type Props = {
     sesion: LocalSafetySession;
@@ -17,25 +14,23 @@ type Props = {
     // activos: a ellos se envía (RN-12, CA-17).
     nombres: string[];
     onCambiarRegreso: (regreso: number | null) => Promise<ResultadoRegreso>;
-    onPedirAyuda: () => void;
     onCancelarAlerta: () => void;
 };
 
 // Seguridad durante la grabación (spec 008, T18): hora de regreso enviada o pendiente y su cambio
-// (CA-19, CA-23), el aviso de alerta activa con "Cancelar alerta" (CA-17, CA-25) y el SOS (CA-24).
+// (CA-19, CA-23) y el aviso de alerta activa con "Cancelar alerta" (CA-17, CA-25). El SOS (CA-24)
+// está en la barra de abajo de la grabación (SosButton, spec 009, CA-13).
 export default function RecordingSafety({
     sesion,
     alertaActiva,
     nombres,
     onCambiarRegreso,
-    onPedirAyuda,
     onCancelarAlerta,
 }: Props) {
     const regreso = sesion.returnBy ? new Date(sesion.returnBy).getTime() : null;
     const [editando, setEditando] = useState(false);
     const [borrador, setBorrador] = useState<number | null>(regreso);
     const [error, setError] = useState<string | null>(null);
-    const [manteniendo, setManteniendo] = useState(false);
 
     const editar = () => {
         setBorrador(regreso);
@@ -96,22 +91,6 @@ export default function RecordingSafety({
                     <BgBtn text={SAFETY_MESSAGES.cambiarRegreso} onPress={editar} style={styles.changeBtn} />
                 </View>
             )}
-
-            <Pressable
-                delayLongPress={SOS_MS}
-                onPressIn={() => setManteniendo(true)}
-                onPressOut={() => setManteniendo(false)}
-                onLongPress={() => {
-                    setManteniendo(false);
-                    onPedirAyuda();
-                }}
-                accessibilityRole="button"
-                accessibilityHint={SAFETY_MESSAGES.sosInstruccion}
-                style={[styles.sos, manteniendo && styles.sosHolding]}
-            >
-                <Text style={styles.sosText}>{SAFETY_MESSAGES.sos}</Text>
-                <Text style={styles.sosHint}>{SAFETY_MESSAGES.sosInstruccion}</Text>
-            </Pressable>
         </View>
     );
 }
@@ -167,25 +146,5 @@ const styles = StyleSheet.create({
     alertText: {
         color: colors.background,
         fontSize: 15,
-    },
-    sos: {
-        alignItems: 'center',
-        gap: 4,
-        paddingVertical: 14,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: colors.alert,
-    },
-    sosHolding: {
-        backgroundColor: colors.alert,
-    },
-    sosText: {
-        color: colors.text,
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-    sosHint: {
-        color: colors.textMuted,
-        fontSize: 13,
     },
 });

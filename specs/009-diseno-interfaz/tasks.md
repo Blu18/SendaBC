@@ -211,7 +211,32 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
     - Para ver la bienvenida, el inicio de sesión y el registro sin cerrar la sesión, se cambió temporalmente la pantalla inicial y la redirección (revertido).
     - La flecha de volver no se pudo tocar: en el development build la tapa el botón flotante de herramientas de Expo. Queda para M1.
   - **Pasos de casos manuales:** los de las specs 001 y 002 que buscan "Registrarse" en la bienvenida o un placeholder ("Correo") se actualizan en T19.
-- [ ] T15 — Grupo **actividad**: `activityPage.tsx` (métricas con `metric` y `data`, "Puntos" en `bodySmall`, "Iniciar/Detener actividad" y "Pedir ayuda" en barra fija abajo), `activitySummaryPage.tsx` y `activityHistoryPage.tsx`. (CA-9, CA-10, CA-12, CA-13)
+- [x] T15 — Grupo **actividad**: `activityPage.tsx` (métricas con `metric` y `data`, "Puntos" en `bodySmall`, "Iniciar/Detener actividad" y "Pedir ayuda" en barra fija abajo), `activitySummaryPage.tsx` y `activityHistoryPage.tsx`. (CA-9, CA-10, CA-12, CA-13)
+
+  Hecho (con los marcos 20:533 a 20:1128 de Figma):
+  - **Componentes nuevos** (los usan dos o más pantallas):
+    - `components/ui/Chip.tsx`: 48 dp de alto, `surface` con borde `border`; seleccionado en `primary` con `onPrimary` Bold. Lo usará también `ReturnTimePicker` (T17).
+    - `components/ui/Metric.tsx`: `large` (`metric` en `data`, grabación) y `medium` (`display` en `text`, resumen). La unidad va más chica; el número se reduce solo si no cabe en media pantalla.
+    - `splitUnit()` en `lib/format/metrics.ts` separa número y unidad ("5.42 km"), con su prueba en `metrics.test.ts`.
+    - `components/safety/SosButton.tsx`: "Pedir ayuda" en `alert` con `onAlert` y escudo, mantener 2 s como antes (spec 008, RN-7). Salió de `RecordingSafety`, que conserva la hora de regreso y la alerta activa hasta su rediseño (T17).
+  - **Grabación (`activityPage.tsx`):**
+    - `ScreenHeader` secundario: "Nueva actividad" antes de iniciar y "Grabando · <tipo>" al grabar. La flecha hace `goBack`, igual que el botón atrás del sistema.
+    - Tipo de actividad con `Chip` (deshabilitados al grabar), tiempo en ancho completo y distancia y elevación lado a lado, todo con `Metric` grande (CA-12). "Puntos" pasa a "N puntos registrados" en `bodySmall`.
+    - Barra fija abajo (`surface`, borde superior): "Pedir ayuda" con su instrucción (solo al grabar con sesión de seguridad) y "Iniciar/Detener actividad" (CA-13). "Detener" ya no va en `text`: es el primario, como en Figma.
+    - Los avisos pasan a `Notice`, con el mensaje de antes como descripción: "Ubicación desactivada" (error, con "Abrir ajustes"), "Se necesita tu ubicación", "Detección solo con la app abierta", "Sin notificaciones" y "No se pudo cerrar la actividad" (error).
+  - **Resumen (`activitySummaryPage.tsx`):** `ScreenHeader` "Resumen" con volver; tipo en `headline`, fecha e insignia; las 5 métricas en `Metric` mediana dentro de un bloque `surface`; fuente de elevación y puntos en una línea. "Publicar como ruta" / "Ver ruta publicada" (secundario) y "Listo" van en la barra de abajo. "No se encontró la actividad" es un `Notice` de error con la descripción del prototipo y "Volver" abajo.
+  - **Mis actividades (`activityHistoryPage.tsx`):** `ScreenHeader` raíz. Fila de actividad como en Figma: `surface`, ícono del tipo (`hiking`, `run`, `bike`) en círculo, tipo en Bold, fecha, insignia y a la derecha la distancia en `data` y la duración. Los avisos de deslizar (spec 005, CA-16) son `Notice` "Sin conexión" y de error, con el mismo texto partido en título y descripción. El vacío es un `Notice` info (RN-2) y al pie va "Desliza hacia abajo para sincronizar.".
+  - **Textos nuevos del prototipo:** los títulos de los avisos, "Puede que se haya borrado de este teléfono." y "Desliza hacia abajo para sincronizar.". Mensajes, validaciones y navegación no cambian (RN-1).
+  - **Colores:** las tres pantallas ya no importan el alias `colors`. Todos los pares de color que usan ya están en la tabla de contraste.
+  - **Diferencia con Figma, temporal:** con alerta activa, el aviso sigue debajo de las métricas, dentro de `RecordingSafety`, y no arriba como en el prototipo. Se mueve en T17.
+  - **Verificado:** `tsc` y `npm test` del frontend (507 pruebas) en verde.
+  - **Comprobado en el emulador (2026-11-01)**, con el backend apagado:
+    - Grabación antes de iniciar (claro y con letra grande, `font_scale 1.3`: los chips bajan de línea y nada se corta) y grabando (claro y oscuro), con "Pedir ayuda" y "Detener actividad" abajo y el aviso "Detección solo con la app abierta" al elegir "Ahora no" en el permiso en segundo plano.
+    - Resumen al detener (oscuro, con "Listo" y el motivo de no publicar en la barra) y desde Mis actividades (claro, sin "Listo").
+    - Mis actividades en claro y oscuro, y el aviso de error al deslizar sin servidor.
+    - "Pedir ayuda" no se mantuvo presionado: encolaría una alerta real para los contactos de la cuenta de prueba. Queda para M6 con contactos de prueba.
+    - Visto de paso: en oscuro, "Sin hora de regreso" de `RecordingSafety` casi no se lee porque aún usa el alias `colors`. Se arregla al migrarlo en T17.
+    - Sin probar: los avisos de permiso de ubicación negado, sin notificaciones y "No se pudo cerrar la actividad", y la lista vacía.
 - [ ] T16 — Grupo **rutas**: `exploreRoutesPage`, `routeDetailPage`, `publishRoutePage`, `editRoutePage`, `myRoutesPage`, `favoritesPage` y `components/routes/*`. (CA-9, CA-10)
 - [ ] T17 — Grupo **seguridad**: `emergencyContactsPage` y `components/safety/*`. `AreYouOkModal` y `RecordingSafety` con `alert` y `onAlert` y "Estoy bien" en la mitad inferior. (CA-9, CA-10, CA-13)
 - [ ] T18 — Limpieza:

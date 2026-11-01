@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { averagePace, averageSpeed } from '../metrics/summary';
-import { formatDistance, formatElevation, formatPace, formatSpeed } from './metrics';
+import { formatDistance, formatElevation, formatPace, formatSpeed, splitUnit } from './metrics';
 
 describe('formatDistance (RN-1)', () => {
   it('en metros por debajo de 1 km', () => {
@@ -72,5 +72,19 @@ describe('dato que no aplica (CA-6)', () => {
   it('distancia 0 da ritmo y velocidad "—"', () => {
     expect(formatPace(averagePace(0, 600))).toBe('—');
     expect(formatSpeed(averageSpeed(0, 600))).toBe('—');
+  });
+});
+
+describe('splitUnit (spec 009, CA-12)', () => {
+  it('separa la unidad del número', () => {
+    expect(splitUnit('5.42 km')).toEqual({ value: '5.42', unit: 'km' });
+    expect(splitUnit('312 m')).toEqual({ value: '312', unit: 'm' });
+    expect(splitUnit('12:30 /km')).toEqual({ value: '12:30', unit: '/km' });
+    expect(splitUnit('18.4 km/h')).toEqual({ value: '18.4', unit: 'km/h' });
+  });
+
+  it('sin unidad queda todo en value', () => {
+    expect(splitUnit('01:23:45')).toEqual({ value: '01:23:45', unit: '' });
+    expect(splitUnit('—')).toEqual({ value: '—', unit: '' });
   });
 });
