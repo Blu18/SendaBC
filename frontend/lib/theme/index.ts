@@ -38,6 +38,6 @@ export const darkTheme: Theme = {
   colors: darkColors,
 };
 
-export { colors, darkColors, lightColors, type ColorTokens } from './colors';
+export { darkColors, lightColors, type ColorTokens } from './colors';
 export { fontFamilies, typography, type TypographyTokens } from './typography';
 export { radius, shadows, spacing, touchMin } from './spacing';

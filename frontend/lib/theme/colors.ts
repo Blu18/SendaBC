@@ -47,10 +47,3 @@ export const darkColors: ColorTokens = {
   error: '#F2B8B5',
   border: '#807C72',
 };
-
-// Alias del modo claro para los imports actuales. Se elimina cuando todas las
-// pantallas usen useTheme() (plan, "Tema y tokens").
-export const colors = {
-  ...lightColors,
-  primaryDark: '#38412c', // borde/texto de BgBtn; desaparece al rehacer BgBtn (T12)
-} as const;

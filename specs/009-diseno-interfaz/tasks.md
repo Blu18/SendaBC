@@ -295,12 +295,18 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
     - "¿Estás bien?" en claro y oscuro: se forzó visible un momento en el código para verla, sin tocar "Estoy bien" (revertido). La recarga en caliente reinició la pantalla de grabación y la actividad quedó abierta; al reiniciar la app se cerró sola y se sincronizó (spec 003, CA-12).
     - Un error de `react-native-maps` ("topUserLocationChange") salió una vez tras la recarga en caliente con el mapa de Explorar montado; no se repitió al reiniciar la app.
     - Sin probar: la alerta activa, el SOS y "Estoy bien" de verdad (envían avisos reales a los contactos), los estados sin conexión y error de Seguridad, y "Configurar contactos" desde la grabación. Quedan para M6 con contactos de prueba.
-- [ ] T18 — Limpieza:
+- [x] T18 — Limpieza:
   - quitar el alias `colors` y `primaryDark`;
   - dejar vacía la lista temporal de T9;
   - `npm test` en verde.
 
   (CA-10)
+
+  Hecho:
+  - **Alias:** se quitaron `colors` y `primaryDark` de `lib/theme/colors.ts` y su export de `lib/theme/index.ts`.
+  - **Notificaciones:** los últimos usos estaban en `lib/safety/locationTask.ts` y `lib/safety/notifications.ts`, que dan el color de las notificaciones de Android. Ahora usan `lightColors.alert`, el mismo valor: el sistema pinta esas notificaciones y no siguen el modo de la app.
+  - **Lista temporal:** `PENDING_MIGRATION` ya estaba vacía desde T14, y ningún archivo de `pages/`, `components/` ni `App.tsx` tiene colores sueltos ni importa el alias.
+  - **Verificado:** `tsc` y `npm test` del frontend (509 pruebas, 37 archivos) en verde. CA-10 queda cubierto.
 - [ ] T19 — Actualizar los pasos de navegación ("desde la pantalla principal, tocar X" → "pestaña X") en los casos manuales de los `tasks.md` de las specs 001, 002, 005, 007 y 008, con nota en el historial de cada spec si cambia su texto. (CA-15)
 - [ ] T20 — Casos M1 a M6 en el emulador. Anotar en este archivo las diferencias aceptadas (CA-9) y actualizar el estado de la spec y `specs/roadmap.md`. (CA-9, CA-11 a CA-15)
 
@@ -321,7 +327,7 @@ Los 15 CA están cubiertos por al menos una tarea.
 | CA-7 | Caso F2 | Manual | Verificado (2026-10-30) |
 | CA-8 | Entrada de aprobación en el historial de `spec.md` (T7) | Manual | Verificado (2026-10-30) |
 | CA-9 | Caso manual M1 | Manual | Pendiente |
-| CA-10 | `frontend/lib/theme/hardcodedColors.test.ts` › "sin colores sueltos en pantallas y componentes" | Automatizada | Prueba lista; quedan 8 archivos en `PENDING_MIGRATION` |
+| CA-10 | `frontend/lib/theme/hardcodedColors.test.ts` › "sin colores sueltos en pantallas y componentes" | Automatizada | Pasa; `PENDING_MIGRATION` vacía y sin alias `colors` (T18) |
 | CA-11 | Caso manual M2 | Manual | Pendiente |
 | CA-12 | Caso manual M3 | Manual | Pendiente |
 | CA-13 | Casos manuales M3 y M4 | Manual | Pendiente |
