@@ -2,20 +2,23 @@ import { useState } from "react";
 import { View, Text, StyleSheet, type LayoutChangeEvent } from "react-native";
 import { formatDistance, formatElevation } from "../../lib/format/metrics";
 import { perfilParaGrafica, type Perfil } from "../../lib/routes/profile";
-import { colors } from "../../lib/theme/colors";
+import type { Theme } from "../../lib/theme";
+import { useThemedStyles } from "../../hooks/theme/useTheme";
 
 // Ancho de cada columna en puntos de pantalla y alto de la gráfica. Con ~4 pt por columna, un
 // teléfono de 360 pt dibuja unas 80, suficientes para 200 puntos de perfil (plan D2, D4).
 const ANCHO_COLUMNA = 4;
 const MAX_COLUMNAS = 100;
-const ALTO = 120;
+const ALTO = 96;
 // Una columna en la altitud mínima se ve igual, como una franja delgada.
 const ALTO_MINIMO = 3;
 
 // Perfil de elevación: altitud contra distancia recorrida (spec 007, CA-11). Cada columna es un
-// tramo de la ruta y su altura, la altitud máxima de ese tramo. Sin un mínimo de dos puntos se
-// explica que no hay datos (plan, riesgos).
+// tramo de la ruta y su altura, la altitud máxima de ese tramo. Como en Figma (spec 009), el área
+// va en data al 15 % y el borde de arriba de cada columna en data hace de línea. Sin un mínimo de
+// dos puntos se explica que no hay datos (plan, riesgos).
 export default function ElevationProfile({ perfil }: { perfil: Perfil | null }) {
+    const styles = useThemedStyles(makeStyles);
     const [ancho, setAncho] = useState(0);
     const onLayout = (e: LayoutChangeEvent) => setAncho(e.nativeEvent.layout.width);
 
@@ -50,7 +53,9 @@ export default function ElevationProfile({ perfil }: { perfil: Perfil | null }) 
                                 styles.column,
                                 { height: ALTO_MINIMO + columna.altura * (ALTO - ALTO_MINIMO) },
                             ]}
-                        />
+                        >
+                            <View style={styles.area} />
+                        </View>
                     ))}
                 </View>
             </View>
@@ -62,14 +67,14 @@ export default function ElevationProfile({ perfil }: { perfil: Perfil | null }) 
     );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
     container: {
         alignSelf: 'stretch',
-        gap: 4,
+        gap: t.spacing.xs,
     },
     chartRow: {
         flexDirection: 'row',
-        gap: 6,
+        gap: t.spacing.sm,
     },
     yAxis: {
         height: ALTO,
@@ -83,25 +88,30 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-end',
         borderBottomWidth: 1,
-        borderLeftWidth: 1,
-        borderColor: colors.textMuted,
+        borderColor: t.colors.border,
     },
     column: {
         flex: 1,
-        backgroundColor: colors.data,
+        borderTopWidth: 2,
+        borderTopColor: t.colors.data,
+    },
+    area: {
+        flex: 1,
+        backgroundColor: t.colors.data,
+        opacity: 0.15,
     },
     xAxis: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginLeft: 54,
+        marginLeft: 48 + t.spacing.sm,
     },
     axisText: {
-        fontSize: 12,
-        color: colors.textMuted,
+        ...t.typography.caption,
         fontVariant: ['tabular-nums'],
+        color: t.colors.textMuted,
     },
     empty: {
-        fontSize: 14,
-        color: colors.textMuted,
+        ...t.typography.bodySmall,
+        color: t.colors.textMuted,
     },
 });

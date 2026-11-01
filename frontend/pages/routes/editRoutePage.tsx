@@ -2,13 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert } from "react-native";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
+import ScreenHeader from "../../components/ui/ScreenHeader";
+import Notice from "../../components/ui/Notice";
 import RouteForm from "../../components/routes/RouteForm";
 import { useRouteDetail } from "../../hooks/routes/useRouteDetail";
 import { useRouteMutations } from "../../hooks/routes/useRouteMutations";
 import { DETAIL_MESSAGES } from "../../lib/routes/format";
 import { validarRuta, type RouteFormErrors, type RouteFormValues } from "../../lib/routes/publish";
 import { erroresDeCampo, mensajeDeFallo } from "../../lib/routes/status";
-import { colors } from "../../lib/theme/colors";
+import type { Theme } from "../../lib/theme";
+import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 
 type Props = StaticScreenProps<{ id: string }>;
 
@@ -20,6 +23,9 @@ export default function EditRoutePage({ route: navRoute }: Props) {
     const navigation = useNavigation();
     const { route, status, retry } = useRouteDetail(id);
     const { update } = useRouteMutations();
+    const theme = useTheme();
+    const styles = useThemedStyles(makeStyles);
+    const header = <ScreenHeader title="Editar ruta" onBack={() => navigation.goBack()} />;
 
     const [values, setValues] = useState<RouteFormValues | null>(null);
     const [fieldErrors, setFieldErrors] = useState<RouteFormErrors>({});
@@ -40,25 +46,31 @@ export default function EditRoutePage({ route: navRoute }: Props) {
     if (!values) {
         if (status === 'loading' || status === 'success') {
             return (
-                <View style={[styles.container, styles.centered]}>
-                    <ActivityIndicator size="large" color={colors.primary} />
+                <View style={styles.container}>
+                    {header}
+                    <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loading} />
                 </View>
             );
         }
-        const mensaje =
+        const aviso =
             status === 'offline'
-                ? DETAIL_MESSAGES.offline
+                ? { type: 'offline' as const, title: 'Sin conexión', description: DETAIL_MESSAGES.offline }
                 : status === 'unavailable'
-                  ? DETAIL_MESSAGES.unavailable
-                  : DETAIL_MESSAGES.error;
+                  ? { type: 'error' as const, title: 'Ruta no disponible', description: DETAIL_MESSAGES.unavailable }
+                  : { type: 'error' as const, title: 'No se pudo cargar', description: DETAIL_MESSAGES.error };
         return (
-            <View style={[styles.container, styles.centered]}>
-                <Text style={styles.notice}>{mensaje}</Text>
-                {status === 'unavailable' ? (
-                    <PrimaryButton text="Volver" style={styles.button} onPress={() => navigation.goBack()} />
-                ) : (
-                    <PrimaryButton text="Reintentar" style={styles.button} onPress={retry} />
-                )}
+            <View style={styles.container}>
+                {header}
+                <View style={styles.noticeArea}>
+                    <Notice {...aviso} />
+                </View>
+                <View style={styles.actions}>
+                    {status === 'unavailable' ? (
+                        <PrimaryButton text="Volver" onPress={() => navigation.goBack()} />
+                    ) : (
+                        <PrimaryButton text="Reintentar" onPress={retry} />
+                    )}
+                </View>
             </View>
         );
     }
@@ -94,63 +106,56 @@ export default function EditRoutePage({ route: navRoute }: Props) {
     };
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled"
-        >
-            <Text style={styles.title}>Editar ruta</Text>
-            <RouteForm values={values} onChange={setValues} errors={fieldErrors} />
-            <Text style={styles.nota}>
-                El tipo, la dificultad, la distancia, la elevación y el recorrido salen de la actividad y
-                no se pueden cambiar.
-            </Text>
-            {!!serverError && <Text style={styles.serverError}>{serverError}</Text>}
-            <PrimaryButton
-                text={update.isPending ? 'Guardando...' : 'Guardar cambios'}
-                style={styles.button}
-                onPress={guardar}
-                disabled={update.isPending}
-            />
-        </ScrollView>
+        <View style={styles.container}>
+            {header}
+            <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+                {!!serverError && (
+                    <Notice type="error" title="No se pudieron guardar los cambios" description={serverError} />
+                )}
+                <RouteForm values={values} onChange={setValues} errors={fieldErrors} />
+                <Text style={styles.nota}>
+                    El tipo, la dificultad, la distancia, la elevación y el recorrido salen de la actividad y
+                    no se pueden cambiar.
+                </Text>
+            </ScrollView>
+            <View style={styles.actions}>
+                <PrimaryButton
+                    text={update.isPending ? 'Guardando...' : 'Guardar cambios'}
+                    onPress={guardar}
+                    disabled={update.isPending}
+                />
+            </View>
+        </View>
     );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
+        backgroundColor: t.colors.background,
     },
-    centered: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 20,
-        padding: 24,
+    loading: {
+        marginTop: t.spacing.xxl,
+    },
+    noticeArea: {
+        flex: 1,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
     },
     content: {
-        padding: 24,
-        gap: 20,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: colors.text,
+        gap: t.spacing.md,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
     },
     nota: {
-        fontSize: 13,
-        color: colors.textMuted,
+        ...t.typography.caption,
+        color: t.colors.textMuted,
     },
-    notice: {
-        fontSize: 16,
-        color: colors.text,
-        textAlign: 'center',
-    },
-    serverError: {
-        color: colors.error,
-        fontSize: 14,
-        textAlign: 'center',
-    },
-    button: {
-        paddingVertical: 14,
+    actions: {
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
+        backgroundColor: t.colors.surface,
+        borderTopWidth: 1,
+        borderTopColor: t.colors.border,
     },
 });

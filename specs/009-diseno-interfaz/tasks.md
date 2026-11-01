@@ -237,7 +237,39 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
     - "Pedir ayuda" no se mantuvo presionado: encolaría una alerta real para los contactos de la cuenta de prueba. Queda para M6 con contactos de prueba.
     - Visto de paso: en oscuro, "Sin hora de regreso" de `RecordingSafety` casi no se lee porque aún usa el alias `colors`. Se arregla al migrarlo en T17.
     - Sin probar: los avisos de permiso de ubicación negado, sin notificaciones y "No se pudo cerrar la actividad", y la lista vacía.
-- [ ] T16 — Grupo **rutas**: `exploreRoutesPage`, `routeDetailPage`, `publishRoutePage`, `editRoutePage`, `myRoutesPage`, `favoritesPage` y `components/routes/*`. (CA-9, CA-10)
+- [x] T16 — Grupo **rutas**: `exploreRoutesPage`, `routeDetailPage`, `publishRoutePage`, `editRoutePage`, `myRoutesPage`, `favoritesPage` y `components/routes/*`. (CA-9, CA-10)
+
+  Hecho (con los marcos 24:1205 a 25:1872 de Figma):
+  - **Componentes de `components/routes/`:**
+    - `RouteListNotice`: `Notice` con título ("Nada por aquí todavía", "Sin conexión" o "No se pudo cargar") y el mensaje de antes como descripción, más "Reintentar".
+    - `RouteForm`: tres `TextField` en el orden de Figma (Nombre, Zona, Descripción). La ayuda dice "Hasta N caracteres · n/N", así que el contador de antes sigue a la vista.
+    - `ElevationProfile`: con tokens. En lugar de la línea y el área de Figma, las columnas de siempre en `data` al 15 % con un borde superior de 2 dp en `data`, sin agregar una librería de gráficas.
+  - **Explorar rutas:**
+    - Filtros con `Chip` flotante (sombra). Debajo, "Buscar en esta zona" al centro y "Centrar en mi ubicación" (`crosshairs-gps`) a la derecha, como en Figma (antes iba abajo).
+    - "Buscando…" en una píldora al centro del mapa.
+    - Avisos abajo, con `Notice`: "Sin rutas cerca", "Sin conexión", "No se pudo cargar" y "Sin tu ubicación".
+    - Tarjeta de la ruta en `surface` con sombra, la etiqueta "Tuya" de contorno y "A X km de ti" en `data` Bold.
+  - **Detalle:**
+    - `ScreenHeader` "Detalle de ruta" y métricas con `Metric` mediana.
+    - Abajo: "Guardar/Quitar de favoritas" en rutas ajenas; en rutas propias, "Tu ruta" con Editar, Archivar y Borrar en una fila (Borrar es el botón de peligro), y favoritas pasa al contenido.
+    - Sin conexión, no disponible y error son `Notice` con "Reintentar" o "Volver" abajo.
+  - **Publicar y editar:** encabezado secundario, formulario, "Datos de la actividad" en un bloque `surface`, y "Publicar" o "Guardar cambios" en la barra de abajo. El error del servidor es un `Notice` arriba ("No se pudo publicar" / "No se pudieron guardar los cambios"). El aviso de privacidad (spec 007, CA-4) pasa a un `Notice` info "Tu recorrido será público" con el mismo texto.
+  - **Mis rutas y Mis favoritas:** encabezado con volver y `Card` por ruta. La descripción de Mis rutas es "distancia · tipo · estado · fecha" (spec 007, CA-21). En favoritas es "distancia · tipo · +elevación", o "Ya no disponible · tipo", con "Quitar" en la tarjeta (CA-19).
+  - **Mapas:** recorridos y puntos con `lightColors`, porque el estilo del mapa no se toca.
+  - **Diferencias con Figma** (para T20):
+    - Sin chips de dificultad al publicar: la dificultad la calcula la app (spec 007, D1); se muestra en "Datos de la actividad".
+    - "Por <autor>" (spec 006, CA-19) y "Archivada: no aparece en "Rutas"." (spec 007) siguen en el detalle y en la tarjeta, aunque el prototipo no los tiene.
+    - "Quitar" en cada favorita (spec 007, CA-19), que el prototipo no tiene.
+    - El mapa del detalle mide 280 dp y no 200: a 200, Android no encuadraba el recorrido con el margen fijo y se quedaba en una vista muy lejana.
+  - **Textos:** "Explorar rutas" pasa a "Rutas" en el vacío de favoritas, en la confirmación de publicar y en la nota de archivada (RN-2). Son nuevos los títulos de los avisos y la ayuda de los campos.
+  - **Plan:** R6 actualizado. En Android, Google Maps se pone oscuro solo con el modo del sistema.
+  - **Verificado:** `tsc` y `npm test` del frontend (507 pruebas) en verde; ningún archivo de rutas importa ya el alias `colors`.
+  - **Comprobado en el emulador (2026-11-01)**, con el backend local:
+    - Explorar con rutas, filtros y botón de centrar (claro), y con una ruta seleccionada.
+    - Detalle de una ruta de ejemplo en oscuro, con perfil, "Por SendaBC" y "Guardar en favoritas" ("Guardando...").
+    - Mis rutas vacía y Mis favoritas vacía y con una ruta (oscuro). Se guardó una favorita y se quitó con "Quitar"; la cuenta quedó como estaba.
+    - Ojo: si se cambia el tamaño de letra con la app abierta, los chips de Explorar se enciman hasta reiniciar la app. Con la app reiniciada se ven bien.
+    - Sin probar: detalle de una ruta propia, publicar y editar (la cuenta de prueba no tiene rutas ni actividades publicables, y publicar deja una ruta visible para todos), y los avisos de sin conexión y sin permiso de Explorar. Quedan para M5 y M6 en T20.
 - [ ] T17 — Grupo **seguridad**: `emergencyContactsPage` y `components/safety/*`. `AreYouOkModal` y `RecordingSafety` con `alert` y `onAlert` y "Estoy bien" en la mitad inferior. (CA-9, CA-10, CA-13)
 - [ ] T18 — Limpieza:
   - quitar el alias `colors` y `primaryDark`;

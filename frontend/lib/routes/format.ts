@@ -67,7 +67,7 @@ export const MY_ROUTES_MESSAGES = {
 
 export const FAVORITES_MESSAGES = {
   empty:
-    'Aún no tienes rutas favoritas. En "Explorar rutas" toca una ruta, luego "Ver detalle" y "Guardar en favoritas".',
+    'Aún no tienes rutas favoritas. En "Rutas" toca una ruta, luego "Ver detalle" y "Guardar en favoritas".',
   offline:
     'Ver tus favoritas necesita conexión a internet. Revisa tu conexión e inténtalo de nuevo.',
   error: 'No se pudieron cargar tus favoritas. Inténtalo de nuevo.',
