@@ -188,6 +188,17 @@ function ExploreRoutes() {
     // Número de la búsqueda actual: cambia las keys de todo lo dibujado en cada búsqueda nueva.
     const busqueda = lastSearch?.n ?? 0;
 
+    // En Android, un marcador con vista propia y tracksViewChanges={false} se queda con la imagen
+    // tomada antes de dibujar sus hijos, y el punto dentro del área de 48 dp no se veía. Los
+    // marcadores siguen su vista mientras se dibujan y se congelan después, para no redibujarlos
+    // en cada cuadro del mapa.
+    const [dibujandoMarcadores, setDibujandoMarcadores] = useState(true);
+    useEffect(() => {
+        setDibujandoMarcadores(true);
+        const t = setTimeout(() => setDibujandoMarcadores(false), 1000);
+        return () => clearTimeout(t);
+    }, [routes]);
+
     const seleccionar = (id: string) => {
         lastOverlayPress.current = Date.now();
         setSelectedId(id);
@@ -311,10 +322,12 @@ function ExploreRoutes() {
                             zIndex={3}
                             // Vista propia y no pinColor: en Android pinColor solo toma el tono y el
                             // verde de la paleta salía claro.
-                            tracksViewChanges={false}
+                            tracksViewChanges={dibujandoMarcadores}
                             onPress={() => seleccionar(route.id)}
                         >
-                            <View style={styles.startDot} />
+                            <View style={styles.markerHit}>
+                                <View style={styles.startDot} />
+                            </View>
                         </Marker>
                     ))}
                     {selected && selected.path.length >= 2 && (
@@ -339,7 +352,9 @@ function ExploreRoutes() {
                             tracksViewChanges
                             onPress={() => seleccionar(selected.id)}
                         >
-                            <View style={styles.startRing} />
+                            <View style={styles.markerHit}>
+                                <View style={styles.startRing} />
+                            </View>
                         </Marker>
                     )}
                 </MapView>
@@ -491,6 +506,14 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         bottom: 0,
         padding: t.spacing.lg,
         gap: t.spacing.sm,
+    },
+    // Área de toque de los marcadores: el punto mide 18 dp, pero el marcador entero (esta vista
+    // transparente) se puede tocar, y debe medir 48 × 48 (spec 009, CA-13).
+    markerHit: {
+        width: t.touchMin,
+        height: t.touchMin,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     // Marcador del inicio de cada ruta (CA-2): punto con el color de la paleta.
     startDot: {
