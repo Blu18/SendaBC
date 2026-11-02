@@ -307,7 +307,25 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
   - **Notificaciones:** los últimos usos estaban en `lib/safety/locationTask.ts` y `lib/safety/notifications.ts`, que dan el color de las notificaciones de Android. Ahora usan `lightColors.alert`, el mismo valor: el sistema pinta esas notificaciones y no siguen el modo de la app.
   - **Lista temporal:** `PENDING_MIGRATION` ya estaba vacía desde T14, y ningún archivo de `pages/`, `components/` ni `App.tsx` tiene colores sueltos ni importa el alias.
   - **Verificado:** `tsc` y `npm test` del frontend (509 pruebas, 37 archivos) en verde. CA-10 queda cubierto.
-- [ ] T19 — Actualizar los pasos de navegación ("desde la pantalla principal, tocar X" → "pestaña X") en los casos manuales de los `tasks.md` de las specs 001, 002, 005, 007 y 008, con nota en el historial de cada spec si cambia su texto. (CA-15)
+- [x] T19 — Actualizar los pasos de navegación ("desde la pantalla principal, tocar X" → "pestaña X") en los casos manuales de los `tasks.md` de las specs 001, 002, 005, 007 y 008, con nota en el historial de cada spec si cambia su texto. (CA-15)
+
+  Hecho (2026-11-01):
+  - **Alcance:** también cambiaban casos de las specs 004 ("Mis actividades") y 006 ("Explorar rutas"), así que entran. También la 003, porque el botón de la tarjeta "Nueva actividad" dice "Empezar".
+  - **Casos actualizados** en 001 a 008:
+    - "pantalla principal" → pestaña Inicio, Actividades, Rutas o Seguridad.
+    - "pantalla de inicio" → bienvenida; el registro se abre con "Crear cuenta".
+    - "Nueva actividad" → "Empezar" en la pestaña Inicio.
+    - "Mis rutas" y "Mis favoritas" → encabezado de la pestaña Rutas.
+    - El enlace del aviso sin contactos (008, M3) → "Configurar contactos", que abre Seguridad encima de la grabación.
+  - **CA reescritos** (solo el punto de entrada, RN-2): 004 CA-20, 006 CA-1 y 007 CA-18 y CA-21. Cada spec tiene su nota en el historial.
+  - **Pestaña Rutas:** una pestaña no se desmonta al cambiar a otra. Antes, `ExploreRoutes` era del stack y se desmontaba al volver, así que ahora conservaba el radio, el filtro, el permiso y la última búsqueda. Eso chocaba con la spec 006, CA-11 ("cada vez que abro, 25 km"), y con CA-15 de esta spec. Decisión del usuario: reiniciarla al entrar.
+    - `exploreRoutesPage.tsx` vuelve a montar el mapa con `key` en `tabPress` si la pestaña no estaba enfocada. Al volver del detalle, de Mis rutas o de Mis favoritas conserva el estado, como antes (plan, R7).
+    - Pasos actualizados: 006 M4 (3) "Ir a otra pestaña y volver a Rutas", 006 M7 (1) y 007 M2 (6).
+    - Comprobado en el emulador: con 5 km y Senderismo, ir a Inicio y volver a Rutas regresa a 25 km y Todas, y vuelve a pedir la ubicación. Con 5 km, abrir Mis rutas y volver lo conserva. `tsc` y `npm test` (509) en verde.
+  - **`Chip` sin etiqueta, arreglado de paso:** al tocar un chip, el recién seleccionado quedaba como una píldora `primary` vacía, en Explorar y en la grabación. El texto seguía en la vista (`uiautomator`), pero Android no lo dibujaba.
+    - Causa: al seleccionar se quitaba el borde (1 → 0). Con la misma fuente pasaba igual, y con el borde puesto se arreglaba.
+    - Ahora el borde de 1 dp va en los dos estados: en `border` sin seleccionar y en `primary` al seleccionar, así que la medida no cambia.
+    - Comprobado en el emulador (2026-11-01): tipo de actividad en la grabación (claro) y tipo y radio en Explorar (oscuro).
 - [ ] T20 — Casos M1 a M6 en el emulador. Anotar en este archivo las diferencias aceptadas (CA-9) y actualizar el estado de la spec y `specs/roadmap.md`. (CA-9, CA-11 a CA-15)
 
 ## Cobertura

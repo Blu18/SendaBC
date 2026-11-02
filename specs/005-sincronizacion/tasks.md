@@ -138,12 +138,12 @@ Con el backend corriendo y una cuenta de prueba. Pueden hacerse en el emulador s
 
 **M2 — Varias actividades sin señal**
 1. Activar modo avión. Grabar 3 actividades cortas.
-2. Abrir "Mis actividades": las 3 dicen "Pendiente de subir".
+2. Abrir la pestaña Actividades: las 3 dicen "Pendiente de subir".
 3. Sin salir de la lista, desactivar el modo avión.
 - **Esperado:** en menos de 1 minuto, sin tocar nada, las 3 cambian a "Sincronizada" en la misma pantalla.
 
 **M3 — No bloquea**
-1. Con 3 o más actividades pendientes, recuperar la conexión e inmediatamente tocar "Nueva actividad" → "Iniciar".
+1. Con 3 o más actividades pendientes, recuperar la conexión e inmediatamente tocar "Empezar" en la pestaña Inicio → "Iniciar actividad".
 - **Esperado:** la grabación arranca normalmente mientras las otras se suben.
 
 **M4 — Servidor caído**
@@ -153,7 +153,7 @@ Con el backend corriendo y una cuenta de prueba. Pueden hacerse en el emulador s
 - **Esperado:** en el siguiente reintento (máximo ~2 minutos), o al deslizar en la lista, pasa a "Sincronizada". En ningún momento aparece como sincronizada mientras el backend está caído.
 
 **M5 — Sincronizar deslizando**
-1. Con una actividad pendiente y conexión, deslizar hacia abajo en "Mis actividades".
+1. Con una actividad pendiente y conexión, deslizar hacia abajo en la pestaña Actividades.
 2. Activar modo avión y volver a deslizar.
 3. Desactivar el modo avión, detener el backend y volver a deslizar.
 - **Esperado:** (1) aparece el indicador y la actividad pasa a "Sincronizada". (2) el indicador desaparece y se muestra "Sin conexión. Se sincronizará cuando vuelva la señal.". (3) se muestra "No se pudo conectar con el servidor. Se volverá a intentar en unos minutos.".
@@ -171,14 +171,14 @@ Cubierto por pruebas automáticas (T3, T6, T14): desde la app no se puede genera
 
 **M8 — Recuperar actividades**
 1. Con una cuenta que tenga 2 o más actividades sincronizadas, borrar los datos de la app (o usar otro emulador) e iniciar sesión.
-2. Abrir "Mis actividades" y el resumen de una de ellas.
+2. Abrir la pestaña Actividades y el resumen de una de ellas.
 3. Deslizar hacia abajo.
 4. Activar modo avión, cerrar y abrir la app, y volver a la lista.
 - **Esperado:** (2) aparecen las actividades como "Sincronizada" y el resumen coincide con el original (tipo, fecha, duración, distancia, elevaciones, ritmo o velocidad, puntos y fuente). (3) no se duplican. (4) siguen visibles sin conexión.
 
 **M9 — Otro usuario y aviso al cerrar sesión**
 1. Con la cuenta A, en modo avión, grabar 2 actividades.
-2. Presionar "Cerrar sesión".
+2. En la pestaña Inicio, presionar "Cerrar sesión".
 3. Presionar "Cerrar sesión" en el aviso. Desactivar el modo avión e iniciar sesión con la cuenta B.
 4. Consultar `GET /activities` con el token de B y con el de A.
 5. Cerrar sesión de B e iniciar sesión con A.

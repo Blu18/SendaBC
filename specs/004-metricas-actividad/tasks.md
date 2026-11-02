@@ -89,15 +89,15 @@ Requisito de rendimiento (< 1 s): `summary.test.ts` › 5 400 puntos + 10 800 le
 Hacerlos en un dispositivo físico (el barómetro no existe en emuladores y en web).
 
 **M1 — Flujo completo**
-1. "Nueva actividad" → "Senderismo" → "Iniciar". Caminar ~10 minutos con alguna subida (rampa o escaleras).
+1. Pestaña Inicio → "Empezar" (tarjeta "Nueva actividad") → "Senderismo" → "Iniciar". Caminar ~10 minutos con alguna subida (rampa o escaleras).
 2. Mirar la pantalla durante la grabación.
 3. Presionar "Detener actividad".
 4. Presionar "Listo" y luego el botón atrás.
-- **Esperado:** en (2), la distancia y la elevación ganada suben conforme avanzas. En (3), el resumen aparece en menos de 1 s con tipo, fecha y hora, duración, distancia, elevación ganada y perdida, ritmo en `min/km`, "N puntos registrados" y la etiqueta de la fuente. En (4), "Listo" lleva a la pantalla principal y atrás no regresa al resumen ni a la actividad. Repetir con "Ciclismo": se muestra velocidad en `km/h`.
+- **Esperado:** en (2), la distancia y la elevación ganada suben conforme avanzas. En (3), el resumen aparece en menos de 1 s con tipo, fecha y hora, duración, distancia, elevación ganada y perdida, ritmo en `min/km`, "N puntos registrados" y la etiqueta de la fuente. En (4), "Listo" lleva a la pestaña Inicio y atrás no regresa al resumen ni a la actividad. Repetir con "Ciclismo": se muestra velocidad en `km/h`.
 
 **M2 — Sin conexión**
 1. Activar modo avión. Grabar ~3 minutos y detener.
-2. Abrir "Mis actividades" y tocar la actividad.
+2. Abrir la pestaña Actividades y tocar la actividad.
 - **Esperado:** el resumen y la lista se muestran completos, igual que con conexión.
 
 **M3 — Elevación con barómetro**
@@ -114,18 +114,18 @@ Hacerlos en un dispositivo físico (el barómetro no existe en emuladores y en w
 
 **M6 — Actividad interrumpida**
 1. Iniciar una actividad, caminar ~2 minutos y cerrar la app a la fuerza.
-2. Abrir la app → "Mis actividades".
+2. Abrir la app → pestaña Actividades.
 - **Esperado:** la actividad aparece con duración y distancia calculadas; su resumen muestra todas las métricas.
 
 **M7 — Historial**
-1. Con una cuenta sin actividades, abrir "Mis actividades".
+1. Con una cuenta sin actividades, abrir la pestaña Actividades.
 2. Grabar dos actividades y volver a abrir la lista.
 3. Tocar la primera fila y luego el botón atrás.
 - **Esperado:** (1) mensaje invitando a iniciar una actividad. (2) dos filas con fecha, tipo, duración y distancia, la más reciente arriba. (3) se abre su resumen sin botón "Listo" y atrás regresa a la lista.
 
 **M8 — Otro usuario en el mismo teléfono**
 1. Con la cuenta A con actividades, cerrar sesión e iniciar sesión con la cuenta B.
-2. Abrir "Mis actividades".
+2. Abrir la pestaña Actividades.
 - **Esperado:** no aparece ninguna actividad de A.
 
 **M9 — Actividad sin movimiento**

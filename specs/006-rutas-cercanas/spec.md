@@ -26,7 +26,7 @@ Como publicar llega hasta la 007, esta semana el catálogo se alimenta con un co
 
 ### Mapa y rutas cercanas
 
-- **CA-1 (HU-1):** Desde la pantalla principal puedo abrir "Explorar rutas" y veo un mapa centrado en mi ubicación actual, con las rutas cercanas ya buscadas.
+- **CA-1 (HU-1):** Desde la pestaña Rutas puedo abrir "Explorar rutas" y veo un mapa centrado en mi ubicación actual, con las rutas cercanas ya buscadas.
 - **CA-2 (HU-1):** Dado que hay rutas publicadas dentro del radio de búsqueda alrededor del centro del mapa, cada una aparece dibujada sobre el mapa con su recorrido y un marcador en su punto de inicio.
 - **CA-3 (HU-1):** Solo aparecen rutas publicadas: los borradores y las rutas archivadas nunca se muestran.
 - **CA-4 (HU-1):** Una ruta cuyo punto de inicio está fuera del radio de búsqueda no aparece.
@@ -103,6 +103,7 @@ Resueltas el 2026-10-16:
 
 ## Historial
 
+- 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). CA-1: "Explorar rutas" es la pestaña Rutas (spec 009, RN-2). "Abrir" es entrar a la pestaña desde otra: vuelve a empezar centrada en el usuario, con 25 km y todas (CA-1, CA-11 y CA-12); al volver del detalle conserva el mapa. Casos M1, M4 y M7.
 - 2026-10-17 — Implementada: los 20 CA verificados (pruebas automáticas y casos manuales M1–M8). Las rutas de ejemplo salen de trazas GPX reales (plan D8) y la app se prueba con un development build (plan D7).
 - 2026-10-16 — En progreso: T1 (migración de `startPoint` a `geography`) aplicada.
 - 2026-10-16 — Aprobada por el usuario.

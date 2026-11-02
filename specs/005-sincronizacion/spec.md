@@ -107,6 +107,7 @@ Resueltas el 2026-10-08:
 
 ## Historial
 
+- 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). "Mis actividades" se abre desde la pestaña Actividades y "Cerrar sesión" está en la pestaña Inicio (M2, M3, M5, M8 y M9). Los CA no cambian.
 - 2026-10-15 — Casos manuales M1–M5 y M7–M10 aprobados en el emulador (M6 opcional, cubierto por pruebas automáticas). Los 24 CA verificados; la spec pasa a Implementada.
 - 2026-10-09 — Tareas T1–T19 implementadas. Faltan los casos manuales M1–M10 y el cierre (T20).
 - 2026-10-09 — CA-16: también se avisa cuando hay conexión pero el servidor no responde; antes, deslizar con el servidor caído no mostraba nada.

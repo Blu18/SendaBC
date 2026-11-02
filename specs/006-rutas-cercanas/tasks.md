@@ -90,7 +90,7 @@ Cierre (2026-10-17): los 20 CA están verificados. Pruebas finales: backend 86/8
 En el emulador (necesita Google Play Services para el mapa) o en el teléfono, con el backend corriendo y las rutas de ejemplo cargadas (`npm run seed:rutas`).
 
 **M1 — Abrir el mapa**
-1. Fijar la ubicación del emulador en Ensenada. Pantalla principal → "Explorar rutas".
+1. Fijar la ubicación del emulador en Ensenada. Tocar la pestaña Rutas.
 - **Esperado:** el mapa se centra en Ensenada y muestra las rutas de ejemplo cercanas, cada una con su recorrido y un marcador en su inicio.
 
 **M2 — Tarjeta y selección**
@@ -102,7 +102,7 @@ En el emulador (necesita Google Play Services para el mapa) o en el teléfono, c
 - **Esperado:** (1) aparece "Buscar en esta zona". (2) se muestran las rutas de Tecate. (3) el mapa vuelve a Ensenada con sus rutas.
 
 **M4 — Radio**
-1. En Ensenada, elegir 5 km. 2. Elegir 100 km. 3. Salir y volver a abrir "Explorar rutas".
+1. En Ensenada, elegir 5 km. 2. Elegir 100 km. 3. Ir a otra pestaña y volver a Rutas.
 - **Esperado:** (1) solo las rutas a menos de 5 km del centro. (2) aparecen también las de zonas más lejanas dentro de 100 km. (3) el radio vuelve a 25 km.
 
 **M5 — Filtro por tipo**
@@ -114,7 +114,7 @@ En el emulador (necesita Google Play Services para el mapa) o en el teléfono, c
 - **Esperado:** "No hay rutas publicadas cerca de aquí. Mueve el mapa o aumenta la distancia de búsqueda."
 
 **M7 — Sin permiso de ubicación**
-1. Negar el permiso de ubicación y abrir "Explorar rutas".
+1. Negar el permiso de ubicación y abrir la pestaña Rutas.
 2. Mover el mapa a Ensenada y tocar "Buscar en esta zona". Tocar una ruta.
 - **Esperado:** (1) el mapa muestra todo Baja California, sin rutas todavía, con el aviso del permiso y sin botón para volver a centrar. (2) aparecen las rutas; la tarjeta no muestra "A X km de ti".
 

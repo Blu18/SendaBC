@@ -149,11 +149,11 @@ Cierre (2026-10-21): los 27 CA están verificados. Pruebas finales: backend 223/
 En el emulador o el teléfono con el development build (spec 006, D7), el backend corriendo y las rutas de ejemplo cargadas (`npm run seed:rutas`). Hace falta una actividad sincronizada de más de 1.5 km y otra de menos; se pueden grabar en el emulador con una ruta GPX simulada.
 
 **M1 — Cuándo se puede publicar**
-1. Abrir el resumen de una actividad "Pendiente de subir". 2. El de una sincronizada de menos de 1.5 km. 3. El de una sincronizada de 3 km.
+1. En la pestaña Actividades, abrir el resumen de una actividad "Pendiente de subir". 2. El de una sincronizada de menos de 1.5 km. 3. El de una sincronizada de 3 km.
 - **Esperado:** (1) no hay "Publicar como ruta" y se explica que primero tiene que subirse. (2) se explica que una ruta debe medir al menos 1.5 km. (3) aparece "Publicar como ruta".
 
 **M2 — Publicar**
-1. En la de 3 km, tocar "Publicar como ruta". 2. Dejar el nombre vacío y publicar. 3. Escribir 41 caracteres. 4. Escribir un nombre válido, cambiar la zona y publicar. 5. Volver al resumen. 6. Abrir "Explorar rutas" cerca del inicio.
+1. En la de 3 km, tocar "Publicar como ruta". 2. Dejar el nombre vacío y publicar. 3. Escribir 41 caracteres. 4. Escribir un nombre válido, cambiar la zona y publicar. 5. Volver al resumen. 6. Abrir la pestaña Rutas cerca del inicio.
 - **Esperado:** (1) formulario con la zona ya llenada, dificultad, tipo, distancia y elevación de solo lectura y el aviso de que se publica completo. (2) y (3) mensaje junto al nombre, no se publica. (4) confirmación. (5) aparece "Ver ruta publicada". (6) la ruta aparece con la marca "Tuya".
 
 **M3 — Publicar sin conexión**
@@ -161,7 +161,7 @@ En el emulador o el teléfono con el development build (spec 006, D7), el backen
 - **Esperado:** (1) mensaje de que hace falta conexión; lo escrito sigue ahí. (2) se publica.
 
 **M4 — Detalle y favorita**
-1. En "Explorar rutas", tocar una ruta de ejemplo y "Ver detalle". 2. Tocar "Guardar en favoritas" y luego "Quitar de favoritas".
+1. En la pestaña Rutas, tocar una ruta de ejemplo y "Ver detalle". 2. Tocar "Guardar en favoritas" y luego "Quitar de favoritas".
 - **Esperado:** (1) mapa con el recorrido completo, nombre, tipo, zona, dificultad, distancia, elevación, "Por SendaBC", "A X km de ti" y el perfil de elevación. (2) el botón cambia en cada toque.
 
 **M5 — Detalle sin conexión**
@@ -169,15 +169,15 @@ En el emulador o el teléfono con el development build (spec 006, D7), el backen
 - **Esperado:** (1) mensaje con "Reintentar", sin carga infinita. (2) aparece el detalle.
 
 **M6 — Mis rutas: editar, archivar, volver a publicar y borrar**
-1. Pantalla principal → "Mis rutas". 2. Abrir la ruta publicada en M2 y editar el nombre. 3. Archivarla. 4. Volver a publicarla. 5. Borrarla y confirmar.
-- **Esperado:** (1) la lista muestra la ruta como "Publicada". (2) el nombre nuevo se ve en el detalle y en "Explorar rutas". (3) queda "Archivada" en "Mis rutas" y desaparece del mapa. (4) vuelve al mapa y queda "Publicada". (5) desaparece de "Mis rutas" y del mapa, y en el resumen de la actividad vuelve a aparecer "Publicar como ruta".
+1. Pestaña Rutas → "Mis rutas" (ícono del encabezado). 2. Abrir la ruta publicada en M2 y editar el nombre. 3. Archivarla. 4. Volver a publicarla. 5. Borrarla y confirmar.
+- **Esperado:** (1) la lista muestra la ruta como "Publicada". (2) el nombre nuevo se ve en el detalle y en la pestaña Rutas. (3) queda "Archivada" en "Mis rutas" y desaparece del mapa. (4) vuelve al mapa y queda "Publicada". (5) desaparece de "Mis rutas" y del mapa, y en el resumen de la actividad vuelve a aparecer "Publicar como ruta".
 
 **M7 — Favorita que deja de estar disponible**
-1. Con la cuenta B, guardar en favoritas una ruta de la cuenta A. 2. Con la cuenta A, archivarla. 3. Con la cuenta B, abrir "Mis favoritas" y tocarla. 4. Quitarla de favoritas.
+1. Con la cuenta B, guardar en favoritas una ruta de la cuenta A. 2. Con la cuenta A, archivarla. 3. Con la cuenta B, en la pestaña Rutas, abrir "Mis favoritas" (corazón del encabezado) y tocarla. 4. Quitarla de favoritas.
 - **Esperado:** (3) aparece con la marca "Ya no disponible" y al tocarla se ve "Esta ruta ya no está disponible". (4) desaparece de la lista.
 
 **M8 — Mis favoritas en otro teléfono**
-1. Con favoritas guardadas, cerrar sesión e iniciarla en otro emulador o teléfono. 2. Abrir "Mis favoritas".
+1. Con favoritas guardadas, cerrar sesión e iniciarla en otro emulador o teléfono. 2. En la pestaña Rutas, abrir "Mis favoritas" (corazón del encabezado).
 - **Esperado:** están las mismas favoritas, la más reciente primero. Sin favoritas, se ve el mensaje que explica cómo guardarlas.
 
 ### Resultado de los casos manuales (2026-10-21)

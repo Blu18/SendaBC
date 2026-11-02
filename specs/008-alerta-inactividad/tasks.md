@@ -216,7 +216,7 @@ Los 28 CA están cubiertos por al menos una tarea.
 En el emulador con el **development build nuevo** (T12), el backend local en `TELEGRAM_MODE=polling` con el bot de desarrollo, y Telegram en un teléfono que hace de contacto. Para no esperar los 10 minutos reales, `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES` acorta los tiempos (T17). Para la hora de regreso, un script de prueba adelanta `returnBy` en la base.
 
 **M1 — Contactos e invitación**
-1. Pantalla principal → "Seguridad". Agregar "Mamá" con el nombre vacío y luego con 41 caracteres. 2. Agregarlo con un nombre válido y compartir la invitación. 3. En el teléfono de prueba, abrir el enlace en Telegram y tocar "Iniciar". 4. Volver a "Seguridad". 5. "Enviar mensaje de prueba". 6. Agregar dos contactos más e intentar un cuarto. 7. Editar el nombre de uno y quitar otro. 8. Cerrar sesión y entrar en otro emulador.
+1. Pestaña Seguridad. Agregar "Mamá" con el nombre vacío y luego con 41 caracteres. 2. Agregarlo con un nombre válido y compartir la invitación. 3. En el teléfono de prueba, abrir el enlace en Telegram y tocar "Iniciar". 4. Volver a la pestaña Seguridad. 5. "Enviar mensaje de prueba". 6. Agregar dos contactos más e intentar un cuarto. 7. Editar el nombre de uno y quitar otro. 8. Cerrar sesión y entrar en otro emulador.
 - **Esperado:** (1) mensaje junto al campo, sin guardar. (2) "Pendiente de aceptar" y el menú de compartir del sistema. (3) el contacto recibe la bienvenida con mi nombre. (4) aparece "Activo". (5) llega la prueba y la app dice que se envió. (6) no deja agregar el cuarto. (7) los cambios se guardan. (8) se ven los mismos contactos.
 
 **M2 — Contacto que bloquea al bot**
@@ -224,8 +224,8 @@ En el emulador con el **development build nuevo** (T12), el backend local en `TE
 - **Esperado:** (2) falla y el contacto queda "No recibe mensajes". (3) vuelve a "Activo".
 
 **M3 — Al iniciar una actividad**
-1. Sin contactos activos, abrir "Nueva actividad". 2. Con un contacto activo, abrirla de nuevo. 3. Iniciar y negar el permiso en segundo plano. 4. Repetir y concederlo.
-- **Esperado:** (1) aviso de que no se puede avisar a nadie, con enlace a "Seguridad", y se puede iniciar igual. (2) "Seguridad activa" con el nombre del contacto y la hora de regreso opcional. (3) explicación previa; graba con la pantalla encendida y avisa que la detección solo funciona con la app abierta. (4) graba con la notificación "SendaBC está grabando tu actividad".
+1. Sin contactos activos, tocar "Empezar" en la pestaña Inicio. 2. Con un contacto activo, abrirla de nuevo. 3. Iniciar y negar el permiso en segundo plano. 4. Repetir y concederlo.
+- **Esperado:** (1) aviso de que no se puede avisar a nadie, con "Configurar contactos", que abre "Seguridad" encima de la grabación (atrás regresa a la grabación), y se puede iniciar igual. (2) "Seguridad activa" con el nombre del contacto y la hora de regreso opcional. (3) explicación previa; graba con la pantalla encendida y avisa que la detección solo funciona con la app abierta. (4) graba con la notificación "SendaBC está grabando tu actividad".
 
 **M4 — "¿Estás bien?"**
 1. Con una actividad en curso y el GPS fijo, esperar el tiempo de inactividad con la app abierta y responder "Estoy bien". 2. Bloquear la pantalla y esperar de nuevo. 3. Responder desde la notificación.

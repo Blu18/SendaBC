@@ -38,6 +38,7 @@ Una persona con cuenta debe poder entrar a la app y no tener que volver a escrib
 
 ## Historial
 
+- 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). La "pantalla principal" es la pestaña Inicio y la "pantalla de inicio" pasa a llamarse bienvenida (M1, M3, M4 y M5). Los CA no cambian.
 - 2026-10-21 — La edición del perfil y de la cuenta pasa de la spec 008 a la 009 (spec 008, P7).
 - 2026-09-30 — Retro-spec creada a partir del código existente.
 - 2026-10-08 — CA-8: se quitan los stubs `PATCH /user/:id` y `DELETE /user/:id` (y `UpdateUserDto`). Editar o borrar la cuenta se especifica en la spec 008, con rutas `/user/me`.

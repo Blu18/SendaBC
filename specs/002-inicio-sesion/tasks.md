@@ -45,14 +45,14 @@ En `frontend/`: `npm test` corre `lib/api/client.test.ts` (aviso de `401` con to
 
 M1–M6 ejecutados en dispositivo el 2026-10-08: todos pasan.
 
-**M1 — Login correcto:** iniciar sesión con una cuenta válida → llega a la pantalla principal con "Hola, <nombre>"; el botón atrás no regresa a Login.
+**M1 — Login correcto:** iniciar sesión con una cuenta válida → llega a la pestaña Inicio con "Hola, <nombre>"; el botón atrás no regresa a Login.
 
 **M2 — Login incorrecto:** contraseña equivocada → mensaje "Credenciales invalidas" visible; mientras espera, el botón dice "Iniciando sesión..." y no responde. Correo mal formado → error en el campo, sin petición.
 
-**M3 — Sesión persistente:** iniciar sesión, cerrar la app por completo, abrirla → spinner breve y entra directo a la pantalla principal.
+**M3 — Sesión persistente:** iniciar sesión, cerrar la app por completo, abrirla → spinner breve y entra directo a la pestaña Inicio.
 
-**M4 — Token expirado:** poner `JWT_EXPIRE_IN=30s`, iniciar sesión, esperar 1 min y reabrir → la app regresa a la pantalla de inicio y atrás no vuelve a la pantalla principal.
+**M4 — Token expirado:** poner `JWT_EXPIRE_IN=30s`, iniciar sesión, esperar 1 min y reabrir → la app regresa a la bienvenida y atrás no vuelve a la pestaña Inicio.
 
 **M6 — Sin conexión:** apagar el backend e iniciar sesión → en 10 s o menos aparece "Error al iniciar sesión. Inténtalo más tarde." y el botón vuelve a habilitarse.
 
-**M5 — Cerrar sesión:** presionar "Cerrar sesión" → pantalla de inicio; atrás no regresa; reabrir la app → sigue sin sesión.
+**M5 — Cerrar sesión:** en la pestaña Inicio, presionar "Cerrar sesión" → bienvenida; atrás no regresa; reabrir la app → sigue sin sesión.
