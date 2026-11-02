@@ -328,6 +328,37 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
     - Comprobado en el emulador (2026-11-01): tipo de actividad en la grabación (claro) y tipo y radio en Explorar (oscuro).
 - [ ] T20 — Casos M1 a M6 en el emulador. Anotar en este archivo las diferencias aceptadas (CA-9) y actualizar el estado de la spec y `specs/roadmap.md`. (CA-9, CA-11 a CA-15)
 
+  Avance (2026-11-01, emulador `Pixel_10_Pro`, backend local, cuenta de Postman):
+  - **M2 — pasa.** Con la app en Inicio, `night yes` la pasa a oscuro al instante. Actividades, Rutas, Seguridad y la grabación sin iniciar se ven en oscuro, y `night no` la regresa a claro sin salir de la grabación. El pid fue el mismo de principio a fin (no se reinició) y la barra de estado se lee en los dos modos.
+  - **M1 — recorrido hecho; faltan tu visto bueno a las diferencias (abajo) y algunas pantallas.**
+    - Vistas en claro y oscuro: bienvenida, inicio de sesión, registro (con errores), Inicio, grabación (antes y durante), resumen, Mis actividades, Rutas (con tarjeta), detalle, Mis rutas, Mis favoritas y Seguridad. Cada una ya se había comparado con su marco de Figma en T14 a T17.
+    - Con letra grande (`font_scale 1.3`), en oscuro: Inicio, resumen, Rutas y Seguridad no cortan ni enciman texto. La grabación ya se había visto así en T15.
+    - Sin ver aquí: publicar y editar ruta (no hay actividad publicable ni ruta propia) y "¿Estás bien?" de verdad (se vio forzado en T17).
+  - **M3 — pasos 1 a 3 pasan.** Se grabó 1 min 13 s con 15 puntos simulados (641 m). Tiempo, distancia y elevación son los textos más grandes, y "Pedir ayuda" y "Detener actividad" van en la barra de abajo. El resumen salió al detener y se sincronizó. **Paso 4 sin correr:** provocar "¿Estás bien?" pide 10 min quieto con los contactos reales de la cuenta activos (si no se responde, se les avisa). Queda para hacerlo con `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES` y contactos de prueba.
+  - **M4 — pasa.** Se midieron los elementos tocables con `uiautomator` (densidad 480, 3 px = 1 dp) en bienvenida, inicio de sesión, registro, Inicio, grabación, resumen, Mis actividades, Rutas con tarjeta, detalle, Mis rutas, Mis favoritas y Seguridad. Todo mide 48 dp o más: botones, campos, chips, pestañas (107 × 68), íconos del encabezado y "Volver".
+    - **Marcadores de Explorar, arreglados:** los de inicio de ruta medían 18 × 18 dp y costaba atinarles.
+      - El punto (y el anillo de la seleccionada) va ahora dentro de una vista transparente de 48 × 48 (`markerHit`), así que el marcador entero mide 48 dp sin cambiar cómo se ve.
+      - Con `tracksViewChanges={false}` fijo, Android tomaba la imagen antes de dibujar el punto y el marcador no se veía. Ahora los marcadores siguen su vista durante 1 s después de cada carga de rutas y luego se congelan.
+      - Comprobado (2026-11-01): 5 marcadores de 48 × 48; los puntos se ven en la primera carga y al cambiar de filtro; un toque a 12 dp del centro abre la tarjeta; el anillo de la seleccionada se ve. `tsc` y `npm test` (509) en verde.
+    - Los marcadores "Inicio" y "Final" del detalle (16 dp) solo se ven, no hacen nada al tocarlos.
+  - **M5 — pasa.** En modo avión, tras cerrar sesión y reabrir la app, la bienvenida muestra el logo en su versión clara y oscura, con Atkinson Hyperlegible Next e íconos.
+  - **M6 — parcial.** Pasan los casos que se pueden correr sin ayuda:
+    - 001 M1 (registro vacío).
+    - 002 M1 (Inicio y atrás sale de la app), M5 (cerrar sesión lleva a la bienvenida) y M6 (sin conexión: "Error al iniciar sesión. Inténtalo más tarde.").
+    - 003 y 004 M1: grabar, detener, resumen, y "Listo" lleva a Inicio sin poder volver.
+    - 005 M1 (se sincroniza al terminar) y M5 (2) (aviso "Sin conexión" al deslizar).
+    - 006 M1 y M4 (3) (la pestaña vuelve a 25 km).
+    - 007 M4 (guardar y quitar favorita; la cuenta quedó igual).
+    - 008 M3 (2) (tarjeta "Seguridad activa").
+    - **Sin correr:**
+      - Necesitan Telegram en un teléfono: 008 M1, M2 y M4 a M10.
+      - Necesitan un teléfono con barómetro: 004 M3.
+      - Necesitan una ruta publicable o propia: 007 M1 a M3 y M6.
+      - Necesitan una segunda cuenta: 007 M7.
+      - Necesitan `JWT_EXPIRE_IN=30s`: 002 M4 y 005 M7.
+      - "Configurar contactos" desde la grabación (009 M6, paso 2), porque la cuenta tiene contactos activos.
+  - Ojo, solo en el development build: el botón flotante "Tools" de Expo tapa la flecha de volver y el inicio del título. No existe en una compilación de producción.
+
 ## Cobertura
 
 Los 15 CA están cubiertos por al menos una tarea.
@@ -344,13 +375,13 @@ Los 15 CA están cubiertos por al menos una tarea.
 | CA-6 | Caso F2 | Manual | Verificado (2026-10-30) |
 | CA-7 | Caso F2 | Manual | Verificado (2026-10-30) |
 | CA-8 | Entrada de aprobación en el historial de `spec.md` (T7) | Manual | Verificado (2026-10-30) |
-| CA-9 | Caso manual M1 | Manual | Pendiente |
+| CA-9 | Caso manual M1 | Manual | Recorrido hecho (2026-11-01); falta aceptar las diferencias propuestas |
 | CA-10 | `frontend/lib/theme/hardcodedColors.test.ts` › "sin colores sueltos en pantallas y componentes" | Automatizada | Pasa; `PENDING_MIGRATION` vacía y sin alias `colors` (T18) |
-| CA-11 | Caso manual M2 | Manual | Pendiente |
-| CA-12 | Caso manual M3 | Manual | Pendiente |
-| CA-13 | Casos manuales M3 y M4 | Manual | Pendiente |
-| CA-14 | Caso manual M5 | Manual | Pendiente |
-| CA-15 | Caso manual M6 | Manual | Pendiente |
+| CA-11 | Caso manual M2 | Manual | Verificado (2026-11-01) |
+| CA-12 | Caso manual M3 | Manual | Verificado (2026-11-01), pasos 1 a 3 |
+| CA-13 | Casos manuales M3 y M4 | Manual | Pasa (2026-11-01); falta "Estoy bien" de verdad (M3, paso 4) |
+| CA-14 | Caso manual M5 | Manual | Verificado (2026-11-01) |
+| CA-15 | Caso manual M6 | Manual | Parcial (2026-11-01): pasan los casos corridos; faltan los que piden Telegram, barómetro, ruta publicable, segunda cuenta o JWT corto |
 
 ### Casos de revisión en Figma
 
@@ -410,7 +441,15 @@ Los 15 CA están cubiertos por al menos una tarea.
 
 ### Diferencias aceptadas con el prototipo
 
-(Se llena en T20. Ya prevista: los mapas se ven claros en modo oscuro; su estilo queda fuera de alcance, plan R6.)
+Propuestas en T20, pendientes del visto bueno del usuario (CA-9):
+
+1. **Mapas:** el estilo del mapa no se cambia (plan, R6). En Android, Google Maps se pone oscuro con el modo del sistema; recorridos y puntos usan `lightColors` en los dos modos.
+2. **`Notice` sin botón cerrar:** el relleno derecho es `lg` (16) en lugar de 4, para que el texto no toque el borde (T12).
+3. **Publicar:** no hay chips de dificultad, porque la calcula la app (spec 007, D1); se muestra en "Datos de la actividad" (T16).
+4. **Textos que se conservan de las specs aunque el prototipo no los tiene:** "Por <autor>" (spec 006, CA-19), "Archivada: no aparece en "Rutas"." (spec 007) y "Quitar" en cada favorita (spec 007, CA-19) (T16).
+5. **Mapa del detalle de 280 dp** en lugar de 200: a 200, Android no encuadraba el recorrido (T16).
+6. **Perfil de elevación en columnas** (`data` al 15 % con borde superior) en lugar de línea y área, para no agregar una librería de gráficas (T16).
+7. **Ayuda de los campos con contador:** "Hasta N caracteres · n/N", para conservar el contador de antes (T16 y T17).
 
 ## Commits propuestos
 
