@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 import MapView, { Marker, Polyline, type MapPressEvent, type Region } from "react-native-maps";
 import * as Location from "expo-location";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, type ParamListBase } from "@react-navigation/native";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import IconButton from "../../components/ui/IconButton";
@@ -101,8 +102,27 @@ function RouteCard({
     );
 }
 
-// Catálogo de rutas cercanas en un mapa (spec 006).
+// Como pestaña, la pantalla ya no se desmonta al cambiar de pestaña (spec 009). Para que cada
+// vez que se abre empiece igual que antes (centrada en el usuario, 25 km y todas; spec 006,
+// CA-1, CA-11 y CA-12), se vuelve a montar al entrar desde otra pestaña. Al volver del detalle,
+// de Mis rutas o de Mis favoritas conserva el mapa, como cuando era parte del stack.
 export default function ExploreRoutesPage() {
+    const navigation = useNavigation<BottomTabNavigationProp<ParamListBase>>();
+    const [apertura, setApertura] = useState(0);
+
+    useEffect(
+        () =>
+            navigation.addListener('tabPress', () => {
+                if (!navigation.isFocused()) setApertura((n) => n + 1);
+            }),
+        [navigation]
+    );
+
+    return <ExploreRoutes key={apertura} />;
+}
+
+// Catálogo de rutas cercanas en un mapa (spec 006).
+function ExploreRoutes() {
     const navigation = useNavigation();
     const mapRef = useRef<MapView>(null);
     const lastOverlayPress = useRef(0);
