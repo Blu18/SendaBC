@@ -35,8 +35,12 @@ export default function Chip({ text, selected = false, disabled, onPress, style 
 const makeStyles = (t: Theme) => StyleSheet.create({
     chip: {
         minHeight: t.touchMin,
-        paddingHorizontal: t.spacing.lg,
-        paddingVertical: t.spacing.sm,
+        // El borde ocupa 1 dp y se descuenta del relleno.
+        paddingHorizontal: t.spacing.lg - 1,
+        paddingVertical: t.spacing.sm - 1,
+        // Seleccionado también lleva borde, del color del relleno: en Android, quitar el borde
+        // (1 → 0) al seleccionar dejaba la etiqueta sin dibujar (spec 009, T19).
+        borderWidth: 1,
         borderRadius: t.radius.pill,
         alignItems: "center",
         justifyContent: "center",
@@ -44,14 +48,11 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     },
     normal: {
         backgroundColor: t.colors.surface,
-        borderWidth: 1,
         borderColor: t.colors.border,
-        // El borde ocupa 1 dp: se descuenta del relleno para medir lo mismo que el seleccionado.
-        paddingHorizontal: t.spacing.lg - 1,
-        paddingVertical: t.spacing.sm - 1,
     },
     selected: {
         backgroundColor: t.colors.primary,
+        borderColor: t.colors.primary,
     },
     disabled: {
         opacity: 0.4,
