@@ -80,6 +80,7 @@ Ninguna. Ver las decisiones resueltas en el historial.
 
 ## Historial
 
+- 2026-11-03 — El usuario acepta las 7 diferencias con el prototipo anotadas en `tasks.md` (CA-9).
 - 2026-10-30 — Prototipo en Figma aprobado por el usuario (CA-8): https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX. Sin cambios pedidos, salvo el estilo de los avisos, que ya se había aplicado en T3. Ya puede empezar la fase B (RN-7).
 - 2026-10-30 — CA-13 corregida al diseñar T4: la grabación no tiene pausa (spec 003), solo "Iniciar actividad" / "Detener actividad". El control que va abajo es ese botón, además de "Pedir ayuda" (spec 008).
 - 2026-10-30 — En progreso: T1 hecha (archivo de Figma con páginas, variables y estilos de texto).
