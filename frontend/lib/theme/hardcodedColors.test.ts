@@ -54,3 +54,35 @@ describe('colores sueltos', () => {
     expect('Ruta #12 ·  theme.colors.primary'.match(COLOR_LITERAL)).toBeNull();
   });
 });
+
+// CA-10: los espaciados y los tamaños de texto también salen del tema. Solo se aceptan 0 y
+// valores calculados; los anchos y altos de cada elemento no son parte de la escala.
+const SPACING_LITERAL = /\b(?:padding|margin|gap|rowGap|columnGap)\w*:\s*-?[1-9]/;
+const TEXT_SIZE_LITERAL = /\b(?:fontSize|lineHeight):\s*[0-9]/;
+
+function looseValues(file: string): string[] {
+  return readFileSync(join(ROOT, file), 'utf8')
+    .split('\n')
+    .flatMap((line, i) =>
+      SPACING_LITERAL.test(line) || TEXT_SIZE_LITERAL.test(line) ? [`${i + 1}: ${line.trim()}`] : [],
+    );
+}
+
+describe('espaciados y tamaños de texto sueltos', () => {
+  it('sin espaciados ni tamaños de texto sueltos en pantallas y componentes', () => {
+    const offenders = Object.fromEntries(
+      files.map((f) => [f.name, looseValues(f.name)]).filter(([, values]) => values.length > 0),
+    );
+    expect(offenders).toEqual({});
+  });
+
+  it('detecta los valores sueltos', () => {
+    for (const line of ['gap: 2,', 'paddingTop: 12,', 'marginLeft: 48 + t.spacing.sm,', 'marginTop: -4,']) {
+      expect(SPACING_LITERAL.test(line)).toBe(true);
+    }
+    expect(TEXT_SIZE_LITERAL.test('fontSize: 14,')).toBe(true);
+    for (const line of ['gap: t.spacing.xs,', 'padding: 0,', 'width: 40,', 'marginLeft: t.spacing.sm,']) {
+      expect(SPACING_LITERAL.test(line) || TEXT_SIZE_LITERAL.test(line)).toBe(false);
+    }
+  });
+});

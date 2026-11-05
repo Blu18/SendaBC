@@ -289,7 +289,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     },
     cardTexts: {
         flex: 1,
-        gap: 2,
+        gap: t.spacing.xxs,
     },
     name: {
         ...t.typography.title,

@@ -1,5 +1,6 @@
-// Espaciado (base 4) y radios: mismos nombres que las colecciones Espaciado y Radio de Figma.
+// Espaciado (base 4, más xxs para ajustes finos) y radios: mismos nombres que las colecciones Espaciado y Radio de Figma.
 export const spacing = {
+  xxs: 2,
   xs: 4,
   sm: 8,
   md: 12,

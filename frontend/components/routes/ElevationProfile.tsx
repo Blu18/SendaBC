@@ -80,7 +80,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         height: ALTO,
         justifyContent: 'space-between',
         alignItems: 'flex-end',
-        minWidth: 48,
+        minWidth: t.spacing.xxxl,
     },
     chart: {
         flex: 1,
@@ -103,7 +103,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     xAxis: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginLeft: 48 + t.spacing.sm,
+        marginLeft: t.spacing.xxxl + t.spacing.sm,
     },
     axisText: {
         ...t.typography.caption,

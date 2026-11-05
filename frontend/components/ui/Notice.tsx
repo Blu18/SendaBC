@@ -91,7 +91,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     texts: {
         flex: 1,
         gap: t.spacing.xs,
-        paddingTop: 2,
+        paddingTop: t.spacing.xxs,
     },
     title: {
         ...t.typography.body,

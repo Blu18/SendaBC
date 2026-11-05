@@ -134,7 +134,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     },
     texts: {
         flex: 1,
-        gap: 2,
+        gap: t.spacing.xxs,
     },
     returnValue: {
         ...t.typography.body,
