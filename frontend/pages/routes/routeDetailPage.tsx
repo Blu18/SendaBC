@@ -59,6 +59,14 @@ function RouteMap({ route }: { route: RouteDetail }) {
     const coordenadas = useMemo(() => pathToCoordinates(route.path), [route.path]);
     const final = coordenadas[coordenadas.length - 1];
 
+    // Igual que en Explorar: con tracksViewChanges={false} desde el inicio, Android toma la imagen
+    // antes de dibujar el punto dentro del área de 48 dp. Se sigue la vista un momento y se congela.
+    const [dibujandoMarcadores, setDibujandoMarcadores] = useState(true);
+    useEffect(() => {
+        const t = setTimeout(() => setDibujandoMarcadores(false), 1000);
+        return () => clearTimeout(t);
+    }, []);
+
     // initialRegion solo da el primer cuadro: en Android no respeta su margen y el extremo de un
     // recorrido largo quedaba en el borde (M4). Con el mapa listo se encuadra el recorrido completo
     // con un margen fijo en pantalla.
@@ -82,12 +90,16 @@ function RouteMap({ route }: { route: RouteDetail }) {
             {coordenadas.length >= 2 && (
                 <Polyline coordinates={coordenadas} strokeColor={MAPA.data} strokeWidth={5} zIndex={1} />
             )}
-            <Marker coordinate={route.start} anchor={{ x: 0.5, y: 0.5 }} zIndex={3} tracksViewChanges={false} title="Inicio">
-                <View style={styles.startDot} />
+            <Marker coordinate={route.start} anchor={{ x: 0.5, y: 0.5 }} zIndex={3} tracksViewChanges={dibujandoMarcadores} title="Inicio">
+                <View style={styles.markerHit}>
+                    <View style={styles.startDot} />
+                </View>
             </Marker>
             {final && coordenadas.length >= 2 && (
-                <Marker coordinate={final} anchor={{ x: 0.5, y: 0.5 }} zIndex={2} tracksViewChanges={false} title="Final">
-                    <View style={styles.endDot} />
+                <Marker coordinate={final} anchor={{ x: 0.5, y: 0.5 }} zIndex={2} tracksViewChanges={dibujandoMarcadores} title="Final">
+                    <View style={styles.markerHit}>
+                        <View style={styles.endDot} />
+                    </View>
                 </Marker>
             )}
         </MapView>
@@ -342,6 +354,13 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     map: {
         height: 280,
         alignSelf: 'stretch',
+    },
+    // Al tocar un marcador sale su etiqueta, así que el marcador entero mide 48 × 48 (CA-13).
+    markerHit: {
+        width: t.touchMin,
+        height: t.touchMin,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     startDot: {
         width: 16,
