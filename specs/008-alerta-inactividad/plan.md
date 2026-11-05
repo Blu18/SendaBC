@@ -314,7 +314,7 @@ model AlertMessage {                // alert_messages (nuevo): cada envío por T
   - la hora de regreso, con "enviada" o "pendiente de enviar" y la opción de cambiarla (CA-23, CA-19);
   - el botón SOS de mantener presionado 2 s (RN-7, CA-24);
   - con una alerta activa, un aviso con la hora, a quiénes se envió y "Cancelar alerta" (CA-17, CA-25).
-- `components/safety/AreYouOkModal.tsx`: modal a pantalla completa con la cuenta regresiva de 2 min, un botón grande "Estoy bien", vibración y sonido (CA-11, CA-12).
+- `components/safety/AreYouOkModal.tsx`: modal a pantalla completa (desde la spec 009, hoja inferior) con la cuenta regresiva de 2 min, un botón grande "Estoy bien", vibración y sonido (CA-11, CA-12).
 - **Al detener:** si hay una alerta activa, se pregunta si se cancela (CA-26). Sin red y con hora de regreso, se muestra el aviso de CA-21.
 - `App.tsx`: la ruta `EmergencyContacts` y el registro del manejador de notificaciones.
 

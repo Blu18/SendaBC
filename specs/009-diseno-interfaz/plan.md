@@ -18,7 +18,7 @@ El trabajo tiene dos fases y la segunda empieza solo después de que apruebes la
 - [x] **Art. 4 Contratos de API:** sin endpoints nuevos ni cambiados.
 - [x] **Art. 5 Datos:** sin cambios en Prisma ni en el esquema SQLite (`user_version` no cambia).
 - [x] **Art. 6 Verificación:** CA-3 y CA-10 con Vitest sobre `frontend/lib/theme/` (lógica pura). CA-1, CA-2 y CA-4 a CA-8 con revisión documentada del archivo de Figma. CA-9 y CA-11 a CA-15 con casos manuales en el emulador. Ver la tabla "Verificación".
-- [ ] **Art. 7 Stack:** se agregan `@react-navigation/bottom-tabs`, `expo-font`, `@expo/vector-icons` y `expo-system-ui` (D1, D3, D4, D2). Al aprobar este plan hay que subir la constitución a v1.7 y agregarlos a la tabla del stack.
+- [x] **Art. 7 Stack:** se agregan `@react-navigation/bottom-tabs`, `expo-font`, `@expo/vector-icons` y `expo-system-ui` (D1, D3, D4, D2). La constitución ya está en v1.7 con ellos en la tabla del stack.
 - [x] **Art. 8 Ritmo:** rama `009-diseno-interfaz`, commits `feat(009)`, `test(009)` y `docs(009)`.
 
 ## Backend
@@ -78,7 +78,7 @@ La insignia "pendiente" de `SyncBadge` usa hoy `secondary` en texto de 12 px (3.
 
 - **Fuente:** Atkinson Hyperlegible Next (D3), regular, semibold y bold.
 - **Escala tipográfica** (tamaño / interlineado): `caption` 12/16, `bodySmall` 14/20, `body` 16/24, `title` 20/28, `headline` 24/32, `display` 32/40, `metric` 48/56. Los 15 tamaños que hay hoy (de 12 a 72) se reducen a estos 7. `metric` es exclusivo de distancia, tiempo y elevación en la grabación (CA-12) y usa cifras de ancho fijo (`fontVariant: ['tabular-nums']`) para que no salten al cambiar.
-- **Espaciado** (base 4): `xs` 4, `sm` 8, `md` 12, `lg` 16, `xl` 24, `xxl` 32, `xxxl` 48.
+- **Espaciado** (base 4): `xxs` 2 (ajustes finos entre textos, agregado en la verificación), `xs` 4, `sm` 8, `md` 12, `lg` 16, `xl` 24, `xxl` 32, `xxxl` 48.
 - **Radios:** `sm` 8, `md` 12, `lg` 16, `pill` 999.
 - **Toque:** `touchMin` 48. Botones de 48 dp de alto como mínimo; los elementos más chicos llevan `hitSlop` (CA-13).
 
@@ -92,7 +92,7 @@ La insignia "pendiente" de `SyncBadge` usa hoy `secondary` en texto de 12 px (3.
 - `index.ts` — `Theme = { scheme, colors, typography, spacing, radius, shadows, touchMin }`, `lightTheme` y `darkTheme`. `shadows.floating` es la `Sombra/Flotante` de Figma (la del aviso), que lleva color y por eso vive en el tema y no en los componentes (CA-10).
 - `contrast.ts` — `contrastRatio(a, b)` (fórmula WCAG 2.1) y `CONTRAST_PAIRS`: la lista de pares texto/fondo y gráfico/fondo que usa la app, con el mínimo que exige cada uno (4.5 o 3).
 - `contrast.test.ts` — verifica que cada par de `CONTRAST_PAIRS` cumpla en los dos temas (CA-3).
-- `hardcodedColors.test.ts` — recorre `pages/`, `components/` y `App.tsx` y falla si encuentra un literal de color (`#RGB`, `#RRGGBB`, `rgb(`). Hoy lo tienen 8 archivos (CA-10).
+- `hardcodedColors.test.ts` — recorre `pages/`, `components/` y `App.tsx` y falla si encuentra un literal de color (`#RGB`, `#RRGGBB`, `rgb(`), un espaciado numérico o un tamaño de texto suelto. Hoy tienen colores sueltos 8 archivos (CA-10).
 
 ### Hook y aplicación del tema
 
@@ -154,7 +154,7 @@ La insignia "pendiente" de `SyncBadge` usa hoy `secondary` en texto de 12 px (3.
 
 - **R1 — Plan de Figma.** En el plan gratuito (Starter), las variables tienen un solo modo y los archivos un máximo de 3 páginas. Por eso la estructura usa exactamente 3 páginas. Si la cuenta es Starter, el modo oscuro se arma como una segunda colección de variables (`Color/Oscuro`) aplicada a copias de los marcos, en lugar de un modo de la misma colección. Se confirma con `whoami` al empezar la fase A. *Resuelto en T1: la cuenta es de estudiante (equivale a Professional, hasta 4 modos), así que se usa una sola colección con los modos Claro y Oscuro.*
 - **R2 — Development build nuevo.** `expo-font` (plugin), `expo-system-ui` y `userInterfaceStyle` necesitan compilar de nuevo. Antes de escribir código hay que leer la documentación de Expo SDK 57 de esos paquetes (según `frontend/AGENTS.md`).
-- **R3 — Cifras de ancho fijo.** Si Atkinson Hyperlegible Next no tiene cifras tabulares, las métricas "saltan" al cambiar. *Revisado en T2:* en Figma sus cifras son proporcionales por defecto y la variante tabular no se puede comprobar ahí. Se verifica en el teléfono (T10, M3). *Revisado en T10:* los archivos Regular, SemiBold y Bold traen la función OpenType `tnum`, así que `tabular-nums` tiene qué activar. Falta confirmarlo en el teléfono (M3). Si `tabular-nums` no funciona, solo el estilo `metric` pasa a Atkinson Hyperlegible Mono (misma familia y licencia, cifras de igual ancho), en lugar de cambiar toda la app a Inter.
+- **R3 — Cifras de ancho fijo.** Si Atkinson Hyperlegible Next no tiene cifras tabulares, las métricas "saltan" al cambiar. *Revisado en T2:* en Figma sus cifras son proporcionales por defecto y la variante tabular no se puede comprobar ahí. Se verifica en el teléfono (T10, M3). *Revisado en T10:* los archivos Regular, SemiBold y Bold traen la función OpenType `tnum`, así que `tabular-nums` tiene qué activar. Falta confirmarlo en el teléfono (M3). Si `tabular-nums` no funciona, solo el estilo `metric` pasa a Atkinson Hyperlegible Mono (misma familia y licencia, cifras de igual ancho), en lugar de cambiar toda la app a Inter. *Resuelto el 2026-11-05 (M3, en el emulador):* las cifras no saltan, así que no hace falta el cambio.
 - **R4 — Navegación anidada.** En React Navigation 7, navegar a una pantalla dentro de las pestañas requiere `navigate('Home', { screen: ... })`. Las llamadas afectadas están listadas arriba; los casos manuales de las specs 001, 002, 004, 005, 006, 007 y 008 que dependen del menú del inicio se actualizan (CA-15).
 - **R7 — Pestañas que no se desmontan.** Una pestaña sigue montada al cambiar a otra; `ExploreRoutes`, que antes era del stack, conservaría el radio, el filtro y la última búsqueda (spec 006, CA-11). `exploreRoutesPage.tsx` vuelve a montar el mapa (`key`) en el evento `tabPress` cuando la pestaña no estaba enfocada. No se usa `focus`, que también llega al volver del detalle, donde el mapa debe quedarse como estaba. Actividades y Seguridad ya recargan con `useFocusEffect`.
 - **R5 — Tamaño del cambio.** Se tocan las 14 pantallas y casi todos los componentes. Migrar por grupos, con un commit y una pasada de regresión por grupo, evita una sola rama grande imposible de revisar.

@@ -1,6 +1,6 @@
 # 009 — Diseño de la interfaz: prototipo en Figma e implementación en la app
 
-- **Estado:** En progreso
+- **Estado:** Implementada con pendientes
 - **Semana:** 9
 - **Autor(es):**
 - **Fecha:** 2026-10-30
@@ -80,6 +80,7 @@ Ninguna. Ver las decisiones resueltas en el historial.
 
 ## Historial
 
+- 2026-11-05 — Implementada con pendientes, confirmado por el usuario: 14 de 15 CA verificados. CA-15 queda parcial porque falta 004 M3 (teléfono con barómetro), pendiente desde antes del rediseño. El usuario acepta la diferencia 8 con el prototipo (Editar ruta sin chips de dificultad).
 - 2026-11-03 — El usuario acepta las 7 diferencias con el prototipo anotadas en `tasks.md` (CA-9).
 - 2026-10-30 — Prototipo en Figma aprobado por el usuario (CA-8): https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX. Sin cambios pedidos, salvo el estilo de los avisos, que ya se había aplicado en T3. Ya puede empezar la fase B (RN-7).
 - 2026-10-30 — CA-13 corregida al diseñar T4: la grabación no tiene pausa (spec 003), solo "Iniciar actividad" / "Detener actividad". El control que va abajo es ese botón, además de "Pedir ayuda" (spec 008).

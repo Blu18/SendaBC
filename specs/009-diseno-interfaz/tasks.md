@@ -326,7 +326,7 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
     - Causa: al seleccionar se quitaba el borde (1 → 0). Con la misma fuente pasaba igual, y con el borde puesto se arreglaba.
     - Ahora el borde de 1 dp va en los dos estados: en `border` sin seleccionar y en `primary` al seleccionar, así que la medida no cambia.
     - Comprobado en el emulador (2026-11-01): tipo de actividad en la grabación (claro) y tipo y radio en Explorar (oscuro).
-- [ ] T20 — Casos M1 a M6 en el emulador. Anotar en este archivo las diferencias aceptadas (CA-9) y actualizar el estado de la spec y `specs/roadmap.md`. (CA-9, CA-11 a CA-15)
+- [x] T20 — Casos M1 a M6 en el emulador. Anotar en este archivo las diferencias aceptadas (CA-9) y actualizar el estado de la spec y `specs/roadmap.md`. (CA-9, CA-11 a CA-15)
 
   Avance (2026-11-01, emulador `Pixel_10_Pro`, backend local, cuenta de Postman):
   - **M2 — pasa.** Con la app en Inicio, `night yes` la pasa a oscuro al instante. Actividades, Rutas, Seguridad y la grabación sin iniciar se ven en oscuro, y `night no` la regresa a claro sin salir de la grabación. El pid fue el mismo de principio a fin (no se reinició) y la barra de estado se lee en los dos modos.
@@ -340,7 +340,7 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
       - El punto (y el anillo de la seleccionada) va ahora dentro de una vista transparente de 48 × 48 (`markerHit`), así que el marcador entero mide 48 dp sin cambiar cómo se ve.
       - Con `tracksViewChanges={false}` fijo, Android tomaba la imagen antes de dibujar el punto y el marcador no se veía. Ahora los marcadores siguen su vista durante 1 s después de cada carga de rutas y luego se congelan.
       - Comprobado (2026-11-01): 5 marcadores de 48 × 48; los puntos se ven en la primera carga y al cambiar de filtro; un toque a 12 dp del centro abre la tarjeta; el anillo de la seleccionada se ve. `tsc` y `npm test` (509) en verde.
-    - Los marcadores "Inicio" y "Final" del detalle (16 dp) solo se ven, no hacen nada al tocarlos.
+    - Los marcadores "Inicio" y "Final" del detalle (16 dp) abren su etiqueta al tocarlos; arreglados en la quinta tanda (M6).
   - **M5 — pasa.** En modo avión, tras cerrar sesión y reabrir la app, la bienvenida muestra el logo en su versión clara y oscura, con Atkinson Hyperlegible Next e íconos.
   - **M6 — parcial.** Pasan los casos que se pueden correr sin ayuda:
     - 001 M1 (registro vacío).
@@ -358,7 +358,25 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
       - 006 M2, M3, M5, M6, M7 y M8.
       - 007 M1 a M3 y M5 a M8. Se publicó, editó, archivó y borró una ruta de prueba; también se vio el detalle de una ruta propia con Editar, Archivar y Borrar.
       - 008 M3 (1) y 009 M6, paso 2. Con la cuenta sin contactos, "Configurar contactos" abre Seguridad encima, y al volver la grabación conserva "Trail running".
-    - **Sin correr:** necesitan Telegram en un teléfono (008 M1, M2 y M4 a M10) o un teléfono con barómetro (004 M3).
+    - **Tercera tanda (2026-11-05):** con el bot real (`TELEGRAM_MODE=polling`), Telegram en el teléfono del usuario, el backend en `localhost` con `adb reverse` y una cuenta de prueba, borrada al final con sus contactos. Pasan:
+      - 008 M1. Nombre vacío y de 41 caracteres sin guardar; "Pendiente de aceptar" y menú de compartir; bienvenida en Telegram; "Activo" con "En Telegram: Blu CN"; llega el mensaje de prueba; con 3 contactos no deja agregar otro; editar y quitar se conservan al reiniciar. Paso 8 con `pm clear` en lugar de otro emulador: los contactos y sus estados vuelven del servidor.
+      - 008 M2. Con el bot bloqueado, "No se envió: El contacto bloqueó a SendaBC o borró la conversación en Telegram." y "No recibe mensajes"; con la invitación nueva, vuelve a "Activo".
+    - **Cuarta tanda (2026-11-05):** en el emulador, con `TELEGRAM_MODE=log`, `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES=1`, una cuenta de prueba y un contacto activo simulado en la base (lo que recibiría el contacto se revisó en el registro del backend). La cuenta se borró al final. Pasan:
+      - 008 M4. Hoja "¿Estás bien?" con cuenta regresiva y "Estoy bien" sin enviar nada; con la pantalla bloqueada llega la notificación, y "Estoy bien" desde ella la quita y no avisa. El sonido y la vibración no se pudieron comprobar en el emulador.
+      - 008 M5. Alerta con nombre, motivo, hora, tipo, enlace y pin; "Alerta activa" con hora y contacto; ubicación nueva al moverse más de 200 m; al cancelar llega "está bien" y ya no salen ubicaciones.
+      - 008 M6. En modo avión, "Alerta pendiente de enviar"; al volver la red sale a los 7 s.
+      - 008 M7. Un toque no hace nada; mantener 2 s envía "pidió ayuda"; mantener otra vez avisa "Ya hay una alerta activa" y no manda otro mensaje.
+      - 008 M8. "pendiente de enviar" y luego "enviada"; con `returnBy` adelantado llega "no ha confirmado su regreso" con ubicación, y la app adopta la alerta. Al cambiar la hora con red, la anterior a punto de vencer no avisó en 100 s.
+      - 008 M9. Al detener con alerta pregunta si se cancela; sin red avisa la hora límite; el contacto recibe "no ha confirmado su regreso" y, al conectarse, "terminó su actividad y está bien".
+      - 008 M10. 5 min con la pantalla bloqueada dejan 27 puntos y 1.47 km; tras detener, sin pregunta ni alerta en 2.5 min, y se quita la notificación.
+      - 009 M3, paso 4. "Estoy bien" mide 378 × 64 dp y queda en la mitad inferior. Las cifras no saltan: `00:00` y `00:29` miden 128 dp, y `00:11`, `10:42` y `09:36` ocupan lo mismo en las capturas (R3).
+    - **Quinta tanda (2026-11-05):** cierre de lo que faltaba de M1 y M4, con una cuenta de prueba, una ruta temporal y un contacto simulado, borrados al final:
+      - M1: Publicar y Editar en oscuro. Con letra grande (`font_scale 1.3`), en claro y con la app reiniciada: bienvenida, inicio de sesión, registro, Mis actividades, detalle, Publicar, Editar, Mis rutas, Mis favoritas (vacía) y "¿Estás bien?". Nada se corta ni se encima.
+      - M4: en Publicar y Editar todo mide 48 dp o más.
+      - **Marcadores del detalle, arreglados:** "Inicio" y "Final" sí eran tocables (abren su etiqueta) y medían 16 dp. Van dentro de un área de 48 × 48 (`markerHit`) y siguen su vista 1 s antes de congelarse, igual que en Explorar. Comprobado: miden 48 × 48 y se dibujan en claro y en oscuro.
+      - **Espaciados (CA-10):** token `xxs` (2) en `spacing.ts` y en la colección Espaciado de Figma. `hardcodedColors.test.ts` ahora también falla con espaciados y tamaños de texto sueltos.
+      - **Figma:** marco "Editar ruta (oscuro)" (CA-5) y fila `alert / surface` en la tabla de contraste (25 pares).
+    - **Sin correr:** 004 M3 (necesita un teléfono con barómetro).
     - **Observaciones** (ninguna parece del rediseño; quedan para la 010):
       - **Cambiar de una ruta a otra en el mapa:** una vez, tocar el marcador de La Tasajera con otra ruta seleccionada volvió a elegir la ya seleccionada (`marker-press` con su id). Al repetirlo, con distintas esperas, cambió bien 4 de 4 veces, así que no se pudo reproducir de forma estable.
       - **Perfil de elevación:** el perfil de la ruta de prueba medía 3.47 km y la ruta 1.86 km. El primer punto simulado estaba a 1.5 km del resto: la distancia de la actividad descarta ese salto (spec 004, CA-25) y el perfil (`perfilDe`, spec 007) no.
@@ -375,26 +393,26 @@ Los 15 CA están cubiertos por al menos una tarea.
 |---|---|---|---|
 | CA-1 | Caso F1 (variables y estilos en Figma) + `contrast.test.ts` usa los mismos nombres de token | Manual + Automatizada | Verificado (2026-10-30) |
 | CA-2 | Caso F1 | Manual | Verificado (2026-10-30) |
-| CA-3 | `frontend/lib/theme/contrast.test.ts` › "cada par cumple su mínimo en claro y oscuro" + tabla de contraste en F1 | Automatizada | Verificado (2026-10-30): 24 pares cumplen en claro y oscuro |
+| CA-3 | `frontend/lib/theme/contrast.test.ts` › "cada par cumple su mínimo en claro y oscuro" + tabla de contraste en F1 | Automatizada | Verificado (2026-11-05): 25 pares cumplen en claro y oscuro, en la prueba y en la tabla de Figma |
 | CA-4 | Caso F1 | Manual | Verificado (2026-10-30) |
-| CA-5 | Caso F2 | Manual | Verificado (2026-10-30) |
+| CA-5 | Caso F2 | Manual | Verificado (2026-11-05): las 14 pantallas y "¿Estás bien?" tienen marco oscuro |
 | CA-6 | Caso F2 | Manual | Verificado (2026-10-30) |
 | CA-7 | Caso F2 | Manual | Verificado (2026-10-30) |
 | CA-8 | Entrada de aprobación en el historial de `spec.md` (T7) | Manual | Verificado (2026-10-30) |
-| CA-9 | Caso manual M1 | Manual | Verificado (2026-11-03): recorrido hecho, incluidos publicar y editar ruta, y diferencias aceptadas |
-| CA-10 | `frontend/lib/theme/hardcodedColors.test.ts` › "sin colores sueltos en pantallas y componentes" | Automatizada | Pasa; `PENDING_MIGRATION` vacía y sin alias `colors` (T18) |
+| CA-9 | Caso manual M1 | Manual | Verificado (2026-11-05): M1 completo y 8 diferencias aceptadas |
+| CA-10 | `frontend/lib/theme/hardcodedColors.test.ts` › "sin colores sueltos…" y "sin espaciados ni tamaños de texto sueltos…" | Automatizada | Verificado (2026-11-05): colores, espaciados y tamaños de texto sin valores sueltos |
 | CA-11 | Caso manual M2 | Manual | Verificado (2026-11-01) |
-| CA-12 | Caso manual M3 | Manual | Verificado (2026-11-01), pasos 1 a 3 |
-| CA-13 | Casos manuales M3 y M4 | Manual | Pasa (2026-11-01); falta "Estoy bien" de verdad (M3, paso 4) |
+| CA-12 | Caso manual M3 | Manual | Verificado (2026-11-05): M3 completo; las cifras no saltan (R3) |
+| CA-13 | Casos manuales M3 y M4 | Manual | Verificado (2026-11-05): M3 y M4 completos, con las 14 pantallas, los marcadores del detalle y "Estoy bien" |
 | CA-14 | Caso manual M5 | Manual | Verificado (2026-11-01) |
-| CA-15 | Caso manual M6 | Manual | Parcial (2026-11-03): pasan todos los casos corridos; faltan los que piden Telegram (008) o barómetro (004 M3) |
+| CA-15 | Caso manual M6 | Manual | Parcial (2026-11-05): pasan todos los casos corridos, incluidos 008 M1 a M10; falta 004 M3 (barómetro) |
 
 ### Casos de revisión en Figma
 
 **F1 — Sistema de diseño e identidad**
 1. Abrir la página Sistema de diseño.
 2. Comparar la colección Color con la tabla "Paleta" del plan: mismos nombres y valores claros iguales a `colors.ts`; cada token tiene valor oscuro.
-3. Revisar estilos de texto (7), Espaciado (7) y Radio (4).
+3. Revisar estilos de texto (7), Espaciado (8, más `touchMin`) y Radio (4).
 4. Revisar cada componente de CA-2 con todas sus variantes, en claro y en oscuro.
 5. Revisar la tabla de contraste: ningún par por debajo de 4.5:1 (texto normal) o 3:1 (texto grande y gráficos).
 6. Revisar el logo (3 versiones) y la ficha de tipografía (justificación y licencia).
@@ -456,6 +474,7 @@ Propuestas en T20 y aceptadas por el usuario el 2026-11-03 (CA-9):
 5. **Mapa del detalle de 280 dp** en lugar de 200: a 200, Android no encuadraba el recorrido (T16).
 6. **Perfil de elevación en columnas** (`data` al 15 % con borde superior) en lugar de línea y área, para no agregar una librería de gráficas (T16).
 7. **Ayuda de los campos con contador:** "Hasta N caracteres · n/N", para conservar el contador de antes (T16 y T17).
+8. **Editar ruta (aceptada el 2026-11-05):** no hay chips de dificultad, aunque el marco de Figma los tiene. La dificultad la calcula la app y no se puede cambiar (spec 007, D1); en su lugar va la nota "El tipo, la dificultad, la distancia, la elevación y el recorrido salen de la actividad y no se pueden cambiar.".
 
 ## Commits propuestos
 
@@ -472,4 +491,6 @@ Propuestas en T20 y aceptadas por el usuario el 2026-11-03 (CA-9):
 
 ## Pendientes conocidos
 
-Ninguno por ahora.
+- **CA-15:** 004 M3, en un teléfono con barómetro. Ya estaba pendiente antes del rediseño.
+- **008 M4:** el sonido y la vibración de "¿Estás bien?" no se pueden comprobar en el emulador.
+- **Para la 010 (visto en T16 y T20):** los chips de Explorar se enciman si se cambia el tamaño de letra con la app abierta; cambio de ruta en el mapa no reproducible; el perfil de elevación no descarta saltos de GPS.
