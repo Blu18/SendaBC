@@ -16,11 +16,13 @@ Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. L
 | 7 | Publicar rutas, detalle y favoritas | [007-publicar-rutas](007-publicar-rutas/spec.md) | Implementada |
 | 8 | Seguridad: contacto de emergencia, inactividad y alerta por Telegram | [008-alerta-inactividad](008-alerta-inactividad/spec.md) | Implementada |
 | 9 | Diseño de la interfaz: prototipo en Figma e implementación en la app | [009-diseno-interfaz](009-diseno-interfaz/spec.md) | Implementada con pendientes (falta 004 M3 en dispositivo) |
-| 9 | Pulido, prueba de campo, pruebas unitarias, bugs | 010-estabilidad | Por escribir |
-| 10 | Cierre: README, manual, EAS Build, despliegue, demo | 011-entrega | Por escribir |
+| 9 | Mapa 3D al grabar y animaciones de la interfaz | [010-mapa-3d-animaciones](010-mapa-3d-animaciones/spec.md) | En progreso |
+| 9 | Pulido, prueba de campo, pruebas unitarias, bugs | 011-estabilidad | Por escribir |
+| 10 | Cierre: README, manual, EAS Build, despliegue, demo | 012-entrega | Por escribir |
 
 ## Notas
 
 - El modelo de datos de Prisma (semana 1) ya contempla actividades, puntos, rutas, favoritas, alertas y dispositivos. Las specs 004–008 deben partir de él y documentar en su `plan.md` cualquier cambio de esquema.
 - Las brechas de las specs 001 y 002 (ver sus `tasks.md`) conviene cerrarlas antes de la semana 5, porque la sincronización depende de que la autenticación funcione de punta a punta.
-- La spec 008 necesita, para la 011, un hospedaje del backend que no se duerma (la tarea de la hora de regreso corre cada minuto) y un development build nuevo (ubicación en segundo plano y notificaciones).
+- La spec 008 necesita, para la 012, un hospedaje del backend que no se duerma (la tarea de la hora de regreso corre cada minuto) y un development build nuevo (ubicación en segundo plano y notificaciones).
+- Numeración (2026-11-05): 010 es el mapa 3D y las animaciones, 011 es estabilidad y 012 es entrega. Antes, 009 y 010 eran estabilidad y entrega, y después 010 y 011. Las entradas fechadas de historiales y bitácoras conservan el número que tenían en su momento.

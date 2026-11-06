@@ -69,9 +69,9 @@ Corresponde al objetivo de la semana 9 del roadmap (pulido).
 - Cambios de funcionalidad o nuevos flujos (no hay spec futura prevista; irían en una spec propia).
 - Estilo de los mapas: las pantallas de grabación y de rutas conservan el mapa estándar.
 - Selector de tema dentro de la app (RN-8).
-- Ícono de la app y pantalla de arranque configurados en el build final: van con 011-entrega (EAS Build), usando el logo de CA-4.
-- Corrección de bugs, prueba de campo y pruebas unitarias pendientes: 010-estabilidad.
-- Manual de usuario y capturas para la demo: 011-entrega (se harán ya con el diseño nuevo).
+- Ícono de la app y pantalla de arranque configurados en el build final: van con 012-entrega (EAS Build), usando el logo de CA-4.
+- Corrección de bugs, prueba de campo y pruebas unitarias pendientes: 011-estabilidad.
+- Manual de usuario y capturas para la demo: 012-entrega (se harán ya con el diseño nuevo).
 - Versión para tableta o web.
 
 ## Preguntas abiertas
@@ -80,6 +80,7 @@ Ninguna. Ver las decisiones resueltas en el historial.
 
 ## Historial
 
+- 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-05 — Implementada con pendientes, confirmado por el usuario: 14 de 15 CA verificados. CA-15 queda parcial porque falta 004 M3 (teléfono con barómetro), pendiente desde antes del rediseño. El usuario acepta la diferencia 8 con el prototipo (Editar ruta sin chips de dificultad).
 - 2026-11-03 — El usuario acepta las 7 diferencias con el prototipo anotadas en `tasks.md` (CA-9).
 - 2026-10-30 — Prototipo en Figma aprobado por el usuario (CA-8): https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX. Sin cambios pedidos, salvo el estilo de los avisos, que ya se había aplicado en T3. Ya puede empezar la fase B (RN-7).

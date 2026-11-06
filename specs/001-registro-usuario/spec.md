@@ -38,10 +38,11 @@ Para guardar actividades, publicar rutas y configurar un contacto de emergencia,
 ## Fuera de alcance
 
 - Verificación de correo, recuperación de contraseña, login social.
-- Contacto de emergencia (spec 008) y edición de perfil (spec 009).
+- Contacto de emergencia (spec 008) y edición de perfil (spec 011).
 
 ## Historial
 
+- 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). Solo cambia M1: el registro se abre con "Crear cuenta" en la bienvenida.
 - 2026-10-21 — La edición del perfil y de la cuenta pasa de la spec 008 a la 009 (spec 008, P7).
 - 2026-09-30 — Retro-spec creada a partir del código existente. Se detectan brechas (ver `tasks.md`).

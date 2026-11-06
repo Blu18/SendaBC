@@ -104,7 +104,7 @@ Con la spec 006, el catálogo muestra rutas cercanas, pero solo tiene las rutas 
 
 ## Fuera de alcance
 
-- Mostrar el detalle o las favoritas sin conexión, y mapas sin conexión → **009-estabilidad**.
+- Mostrar el detalle o las favoritas sin conexión, y mapas sin conexión → **011-estabilidad**.
 - Recortar el inicio y el final del recorrido por privacidad → no está en el roadmap (decisión P6: se publica completo).
 - Avisos o notificaciones sobre rutas (por ejemplo, cuando alguien guarda una ruta mía) → no está en el roadmap.
 - Comentarios, calificaciones y fotos de rutas → no está en el roadmap.
@@ -139,6 +139,7 @@ No quedan preguntas abiertas.
 
 ## Historial
 
+- 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). CA-18 y CA-21: "Mis favoritas" y "Mis rutas" pasan de botones de la pantalla principal al encabezado de la pestaña Rutas (spec 009, RN-2; reemplaza P8). Casos M1, M2, M4, M6, M7 y M8.
 - 2026-10-21 — Implementada: los 27 CA verificados con pruebas automáticas (backend, e2e y frontend) y los casos manuales M1–M8 en el emulador.
 - 2026-10-20 — En progreso: T1 (migración `20261020000000_routes_publish`) aplicada.

@@ -93,7 +93,7 @@ Estas métricas corresponden a los campos de actividad del modelo de datos del s
 - Subir las métricas al backend → **005-sincronizacion**.
 - Mapa del recorrido y perfil de elevación en el resumen → **007-publicar-rutas** (vista de detalle).
 - Dificultad estimada de la ruta → **007-publicar-rutas**.
-- Validar la precisión de distancia y elevación en una ruta real → **009-estabilidad** (prueba de campo). Aquí la precisión se verifica con datos de prueba.
+- Validar la precisión de distancia y elevación en una ruta real → **011-estabilidad** (prueba de campo). Aquí la precisión se verifica con datos de prueba.
 - Borrar o editar actividades del historial (fuera del roadmap actual).
 - Pausar y reanudar una actividad (fuera del roadmap actual).
 - Altitud absoluta calibrada (altitud sobre el nivel del mar con barómetro).
@@ -112,6 +112,7 @@ Resueltas el 2026-10-05:
 
 ## Historial
 
+- 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). CA-20: "Mis actividades" se abre desde la pestaña Actividades, no desde un botón de la pantalla principal (spec 009, RN-2). La "pantalla principal" de CA-2 es la pestaña Inicio. Casos M1, M2 y M6 a M8.
 - 2026-10-05 — Aprobada por el usuario.
 

@@ -350,8 +350,8 @@ model AlertMessage {                // alert_messages (nuevo): cada envío por T
 
 - **Contactos sin Telegram:** en México mucha más gente usa WhatsApp. Si un contacto no instala Telegram o no acepta la invitación, no recibe avisos. La app lo deja claro con el estado "Pendiente de aceptar" y no considera la seguridad activa sin al menos un contacto activo (CA-9). Se aceptó al elegir Telegram (spec, P12 y P15).
 - **El contacto silencia o archiva el chat:** Telegram entrega el mensaje, pero la persona puede no verlo a tiempo. El mensaje de bienvenida recomienda no silenciar el chat de SendaBC.
-- **Webhook público:** en producción el backend necesita una URL con HTTPS para el webhook (la 010 lo despliega en Railway o Render). En desarrollo se usa `getUpdates`, y no puede haber un webhook activo al mismo tiempo para el mismo bot. Se recomienda un bot de desarrollo y otro de producción.
-- **Backend dormido:** si el hospedaje duerme el backend cuando no hay tráfico (como los planes gratuitos de Render), la tarea de la hora de regreso no corre y el webhook tarda en responder. Para la 010 hace falta un plan siempre encendido. Está anotado en el roadmap.
+- **Webhook público:** en producción el backend necesita una URL con HTTPS para el webhook (la 012 lo despliega en Railway o Render). En desarrollo se usa `getUpdates`, y no puede haber un webhook activo al mismo tiempo para el mismo bot. Se recomienda un bot de desarrollo y otro de producción.
+- **Backend dormido:** si el hospedaje duerme el backend cuando no hay tráfico (como los planes gratuitos de Render), la tarea de la hora de regreso no corre y el webhook tarda en responder. Para la 012 hace falta un plan siempre encendido. Está anotado en el roadmap.
 - **Segundo plano en el sistema:**
   - Android puede matar el servicio con el ahorro de batería de algunos fabricantes. Se mitiga con la notificación permanente del servicio y se revisa en la prueba de campo (009).
   - En iOS, la tarea puede recibir pocos puntos con la persona quieta. **No hay un iPhone para probar.**
