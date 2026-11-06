@@ -142,7 +142,18 @@ Se hace en una rama desechable y puede correr en paralelo con la fase A (plan, D
 
 ## Cierre
 
-- [ ] T25 — Repetir los casos manuales de las specs 001 a 009 y actualizar los pasos de grabación que cambien. Corregir en las specs 003 y 009 las notas sobre el mapa de grabación, con entrada en su historial. (CA-28)
+- [x] T25 — Repetir los casos manuales de las specs 001 a 009 y actualizar los pasos de grabación que cambien. Corregir en las specs 003 y 009 las notas sobre el mapa de grabación, con entrada en su historial. (CA-28)
+
+  Cerrada con pendientes por decisión del usuario (2026-11-06), en el emulador: CA-28 queda parcial. Notas de las specs 003 y 009 corregidas, y 003 M1 actualizado porque los chips ya no se muestran al grabar. Sin fallos en lo que se corrió, salvo el hallazgo de abajo. Varios se corrieron en versión corta, con recorridos simulados de pocos puntos, o se tomaron de los casos M10 y M14 de esta spec.
+  - **Pasan:** 001 M1. 002 M1, M2, M3 y M5. 003 M1, M4, M5, M6 y M7. 004 M2, M6 y M9, y M7 sin el paso de la cuenta vacía. 005 M1 y M5. 006 M1, M2, M4 y M5. 008 M4 y M7. 009 M2 y M3. También 007 M4 en lo que no cambia datos: el detalle abre y muestra todo, sin tocar la favorita. 008 M5 solo con `TELEGRAM_MODE=log`.
+  - **Hallazgo, corregido:** al salir de la grabación con "Terminar", la actividad quedaba sin métricas ni subida hasta reabrir la app. Ahora `closeOnUnmount` calcula las métricas y pide la sincronización, como al detener.
+  - **Segunda ronda, pasan:** 001 M4, 002 M4 y M6, 005 M2, M4, M5 (paso 3) y M7, 006 M3, M6, M7 y M8, 003 M3 y 004 M10 (dos saltos de unos 800 km no sumaron distancia). 009 M4 parcial: sin elementos menores de 48 dp en 5 pantallas, medido con `uiautomator`, sin contar `hitSlop`. 004 M5 corrido con GPS simulado fijo, que no tiene titubeo.
+  - **Tercera ronda, pasan:** 001 M2 y M3. 003 M2 (tras borrar los datos de la app) y M8 (con Metro `--no-dev`: encendida 65 s grabando y apagada menos de 18 s después de detener). 004 M8 y el paso de lista vacía de M7. 005 M8 (77 actividades recuperadas, igual que en el servidor; una comparada campo por campo), M9 y M10. 007 M2 a M5 y M7. 008 M6, M9 y M8 pasos 1 a 3 (`returnBy` adelantado con un script sobre esa sesión). 009 M5.
+  - **Pasan en parte:** 005 M3: la grabación arrancó bien, pero las 3 pendientes seguían sin subir a los 20 s y subieron después, sin comprobar si fue durante la grabación. 007 M1: faltó el resumen de una pendiente. 007 M6: editar, archivar, volver a publicar y borrar funcionan en "Mis rutas", pero no se revisó el mapa tras archivar ni que el resumen vuelva a ofrecer publicar. 008 M10: 29 puntos con la pantalla bloqueada, sin pregunta tras detener y sin solicitudes de ubicación, pero `LocationTaskService` sigue listado en `dumpsys` y el aviso de la notificación no se confirmó a la vista.
+  - **Hallazgo, corregido:** una actividad grabada antes de la spec 003 CA-13 conservaba su punto viejo al publicarse: la actividad 47 mide 1.56 km, pero su perfil llegaba a 148 km y el mapa dibujaba una línea recta de unos 140 km. Ahora la ruta, su inicio, el perfil y la zona propuesta empiezan en el primer punto real (spec 007, CA-28, RN-10). Ninguna ruta publicada estaba afectada. Límites: la distancia guardada de una actividad antigua no se recalcula, así que un punto viejo que sumó kilómetros los conserva; y un salto a media actividad sigue dibujando una línea en la ruta publicada.
+  - **Observado una vez:** un intento de publicar falló por `DatabaseNotReachable` entre el backend y Supabase, y funcionó al reintentar. El mensaje dijo que faltaba internet, aunque había red.
+  - **Sin correr:** 008 M1 y M2 (teléfono real con Telegram), 008 M3 (sin contactos, requiere quitar los tres), 008 M8 paso 4, 007 M8 en otro dispositivo (se probó cerrando sesión en el mismo) y 009 M1 (comparación con Figma, a cargo del usuario).
+  - **No aplican aquí:** 004 M3 y M4 (barómetro e iOS), 005 M6 (opcional).
 - [ ] T26 — Ejecutar `/spec-verify`, y actualizar el estado de la spec y `specs/roadmap.md`. Pasar a 011-estabilidad la medición de batería con los límites de 30 % y 15 %.
 
 ## Cobertura
@@ -329,4 +340,5 @@ Un commit por tarea cuando sea posible. Mínimo para la semana:
 - `database is locked` al iniciar una actividad justo tras abrir la app (T15, visto una vez con el emulador saturado): revisar en 011-estabilidad.
 - Sin red, una zona nunca vista se ve azul (T14): se resuelve con los mapas descargados de 011-estabilidad.
 - Al cambiar el tamaño de letra con la app abierta, los textos ya en pantalla quedan recortados hasta volver a abrir esa pantalla o la app (spec 003, CA-14). La grabación no se afecta.
+- CA-28 parcial (T25): sin correr 008 M1, M2 y M3, 008 M8 paso 4, 007 M8 en otro dispositivo y 009 M1; en parte 005 M3, 007 M1, 007 M6 y 008 M10.
 - Descarte de la ubicación vieja al iniciar (spec 003, CA-13): probado con Vitest, falta verlo en un teléfono real en la prueba de campo de la 011.
