@@ -1,6 +1,6 @@
 # 010 — Mapa 3D al grabar y animaciones de la interfaz
 
-- **Estado:** En progreso
+- **Estado:** Implementada con pendientes (2026-11-06)
 - **Semana:** 9
 - **Autor(es):**
 - **Fecha:** 2026-11-05
@@ -110,6 +110,7 @@ Ninguna. Ver las decisiones resueltas en el historial. El proveedor del mapa se 
 
 ## Historial
 
+- 2026-11-06 — Implementada con pendientes, confirmado por el usuario: 27 de 28 CA verificados. CA-28 queda parcial: faltan casos de regresión de las specs 007, 008 y 009 (ver T25). La medición de batería pasa a 011-estabilidad.
 - 2026-11-05 — Prototipo de la grabación con mapa aprobado por el usuario (CA-19): https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX. Ya se puede programar `activityPage` (RN-9).
 - 2026-11-05 — En progreso: T1 hecha (pantalla de grabación con mapa en Figma).
 - 2026-11-05 — Tareas escritas en `tasks.md`.

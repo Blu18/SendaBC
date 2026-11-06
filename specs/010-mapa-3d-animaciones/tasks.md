@@ -154,7 +154,7 @@ Se hace en una rama desechable y puede correr en paralelo con la fase A (plan, D
   - **Observado una vez:** un intento de publicar falló por `DatabaseNotReachable` entre el backend y Supabase, y funcionó al reintentar. El mensaje dijo que faltaba internet, aunque había red.
   - **Sin correr:** 008 M1 y M2 (teléfono real con Telegram), 008 M3 (sin contactos, requiere quitar los tres), 008 M8 paso 4, 007 M8 en otro dispositivo (se probó cerrando sesión en el mismo) y 009 M1 (comparación con Figma, a cargo del usuario).
   - **No aplican aquí:** 004 M3 y M4 (barómetro e iOS), 005 M6 (opcional).
-- [ ] T26 — Ejecutar `/spec-verify`, y actualizar el estado de la spec y `specs/roadmap.md`. Pasar a 011-estabilidad la medición de batería con los límites de 30 % y 15 %.
+- [x] T26 — Ejecutar `/spec-verify`, y actualizar el estado de la spec y `specs/roadmap.md`. Pasar a 011-estabilidad la medición de batería con los límites de 30 % y 15 %.
 
 ## Cobertura
 
@@ -164,36 +164,36 @@ Los 28 criterios tienen al menos una tarea y una forma de verificarse. RN-5 se c
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | Caso manual M1 | Manual | Pendiente |
-| CA-2 | Caso manual M2 | Manual | Pendiente |
-| CA-3 | `frontend/lib/map/heading.test.ts` y caso manual M2 | Automatizada y manual | Pendiente |
-| CA-4 | `frontend/lib/map/track.test.ts` y caso manual M2 | Automatizada y manual | Pendiente |
-| CA-5 | Caso manual M3 | Manual | Pendiente |
-| CA-6 | Caso manual M4 | Manual | Pendiente |
-| CA-7 | Caso manual M5 | Manual | Pendiente |
-| CA-8 | Caso manual M6 | Manual | Pendiente |
-| CA-9 | Caso manual M7 | Manual | Pendiente |
-| CA-10 | Caso manual M8 | Manual | Pendiente |
-| CA-11 | Caso manual M8 | Manual | Pendiente |
-| CA-12 | Caso manual M8 | Manual | Pendiente |
-| CA-13 | Caso manual M9 | Manual | Pendiente |
-| CA-14 | Caso manual M9 | Manual | Pendiente |
-| CA-15 | Caso manual M10 | Manual | Pendiente |
-| CA-16 | Caso manual M11 | Manual | Pendiente |
-| CA-17 | Caso manual M12 | Manual | Pendiente |
-| CA-18 | Caso manual M13 | Manual | Pendiente |
-| CA-19 | Caso de revisión F1 | Revisión | Pendiente |
-| CA-20 | Caso manual M14 | Manual | Pendiente |
-| CA-21 | Caso manual M14 | Manual | Pendiente |
-| CA-22 | Caso manual M14 | Manual | Pendiente |
-| CA-23 | Caso manual M15 | Manual | Pendiente |
-| CA-24 | Caso manual M16 | Manual | Pendiente |
-| CA-25 | Caso manual M17 | Manual | Pendiente |
-| CA-26 | Caso manual M18 | Manual | Pendiente |
-| CA-27 | Caso manual M19 | Manual | Pendiente |
-| CA-28 | Caso manual M20 | Manual | Pendiente |
-| RN-3 | `frontend/lib/map/track.test.ts` | Automatizada | Pendiente |
-| RN-5 | `frontend/lib/theme/motion.test.ts` y caso manual M15 | Automatizada y manual | Pendiente |
+| CA-1 | Caso manual M1 | Manual | Cumple (emulador, 2026-11-06) |
+| CA-2 | Caso manual M2 | Manual | Cumple (emulador) |
+| CA-3 | `frontend/lib/map/heading.test.ts` y caso manual M2 | Automatizada y manual | Cumple (Vitest y emulador) |
+| CA-4 | `frontend/lib/map/track.test.ts` y caso manual M2 | Automatizada y manual | Cumple (Vitest y emulador) |
+| CA-5 | Caso manual M3 | Manual | Cumple (emulador) |
+| CA-6 | Caso manual M4 | Manual | Cumple con observación: la alerta activa tapa el marcador con letra al 200 % o junto a otro aviso |
+| CA-7 | Caso manual M5 | Manual | Cumple (emulador) |
+| CA-8 | Caso manual M6 | Manual | Cumple (emulador, `dumpsys location`) |
+| CA-9 | Caso manual M7 | Manual | Cumple (emulador) |
+| CA-10 | Caso manual M8 | Manual | Cumple (emulador) |
+| CA-11 | Caso manual M8 | Manual | Cumple (emulador) |
+| CA-12 | Caso manual M8 | Manual | Cumple (emulador) |
+| CA-13 | Caso manual M9 | Manual | Cumple (arrastre con `adb`; dos dedos probados a mano por el usuario) |
+| CA-14 | Caso manual M9 | Manual | Cumple (emulador) |
+| CA-15 | Caso manual M10 | Manual | Cumple (emulador) |
+| CA-16 | Caso manual M11 | Manual | Cumple (emulador) |
+| CA-17 | Caso manual M12 | Manual | Cumple (emulador) |
+| CA-18 | Caso manual M13 | Manual | Cumple (emulador) |
+| CA-19 | Caso de revisión F1 | Revisión | Cumple: aprobación del usuario en el historial (2026-11-05) |
+| CA-20 | Caso manual M14 | Manual | Cumple (emulador) |
+| CA-21 | Caso manual M14 | Manual | Cumple (emulador) |
+| CA-22 | Caso manual M14 | Manual | Cumple (emulador) |
+| CA-23 | Caso manual M15 | Manual | Cumple con `ios_from_right`, de 250 a 267 ms. El sentido de la vuelta sale de la configuración nativa, no se vio en captura |
+| CA-24 | Caso manual M16 | Manual | Cumple (emulador) |
+| CA-25 | Caso manual M17 | Manual | Cumple con límites de T22: lo de abajo sube de golpe y `FlatList` puede repetir la entrada |
+| CA-26 | Caso manual M18 | Manual | Cumple (emulador). Un toque inmediato se perdió una vez, a repetir en la 011 |
+| CA-27 | Caso manual M19 | Manual | Cumple (emulador) |
+| CA-28 | Caso manual M20 | Manual | Parcial: ver T25 y "Pendientes conocidos" |
+| RN-3 | `frontend/lib/map/track.test.ts` | Automatizada | Cumple (Vitest) |
+| RN-5 | `frontend/lib/theme/motion.test.ts` y caso manual M15 | Automatizada y manual | Cumple: Vitest y medición en T20; las pestañas solo por valor nominal |
 
 ### Caso de revisión en Figma
 
