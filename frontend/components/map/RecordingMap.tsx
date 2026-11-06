@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import Mapbox from "@rnmapbox/maps";
+import Appear from "../ui/Appear";
 import IconButton from "../ui/IconButton";
 import Notice from "../ui/Notice";
 import MapViewToggle, { type MapViewMode } from "./MapViewToggle";
@@ -153,9 +154,9 @@ export default function RecordingMap({ activityLocalId, overlay }: Props) {
                 </Mapbox.MapView>
             </View>
             <View style={styles.top} pointerEvents="box-none">
-                {overlay}
-                {!online && <Notice type="offline" {...MAP_OFFLINE} />}
-                {online && styleFailed && <Notice {...MAP_UNAVAILABLE} />}
+                <Appear>{overlay}</Appear>
+                <Appear>{!online && <Notice type="offline" {...MAP_OFFLINE} />}</Appear>
+                <Appear>{online && styleFailed && <Notice {...MAP_UNAVAILABLE} />}</Appear>
                 {position && !styleFailed && (
                     <View style={styles.controls} pointerEvents="box-none">
                         <MapViewToggle view={view} onChange={setView} />
@@ -170,9 +171,7 @@ export default function RecordingMap({ activityLocalId, overlay }: Props) {
                     </View>
                 )}
             </View>
-            {!position && (
-                <Notice {...MAP_WAITING_GPS} style={styles.bottomNotice} />
-            )}
+            <Appear style={styles.bottomNotice}>{!position && <Notice {...MAP_WAITING_GPS} />}</Appear>
         </View>
     );
 }

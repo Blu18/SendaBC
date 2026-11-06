@@ -1,4 +1,5 @@
 import { View, StyleSheet, ActivityIndicator } from "react-native";
+import Appear from "../ui/Appear";
 import PrimaryButton from "../ui/buttons/PrimaryBtn";
 import Notice from "../ui/Notice";
 import type { RouteListStatus } from "../../lib/routes/status";
@@ -36,7 +37,9 @@ export default function RouteListNotice({
     }
     return (
         <View style={styles.container}>
-            <Notice type={TYPES[status]} title={TITLES[status]} description={messages[status]} />
+            <Appear>
+                <Notice type={TYPES[status]} title={TITLES[status]} description={messages[status]} />
+            </Appear>
             {status !== 'empty' && <PrimaryButton text="Reintentar" onPress={onRetry} />}
         </View>
     );

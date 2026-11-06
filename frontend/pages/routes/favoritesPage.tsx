@@ -1,11 +1,14 @@
 import { View, Text, FlatList, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import Appear from "../../components/ui/Appear";
 import RouteListNotice from "../../components/routes/RouteListNotice";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Card from "../../components/ui/Card";
 import Notice from "../../components/ui/Notice";
 import TextBtn from "../../components/ui/buttons/TextBtn";
 import { useFavorites } from "../../hooks/routes/useRouteLists";
+import { useLeavingItems } from "../../hooks/theme/useLeavingItems";
+import { byId } from "../../lib/lists/leaving";
 import { useRouteMutations } from "../../hooks/routes/useRouteMutations";
 import { ACTIVITY_TYPE_LABELS } from "../../lib/format/activity";
 import { formatDistance, formatElevation } from "../../lib/format/metrics";
@@ -21,6 +24,7 @@ export default function FavoritesPage() {
     const navigation = useNavigation();
     const { favorites, status, retry } = useFavorites();
     const { favorite } = useRouteMutations();
+    const rows = useLeavingItems(favorites, byId);
     const styles = useThemedStyles(makeStyles);
     // La que se está quitando, para que su botón diga "Quitando..." y no se toque dos veces.
     const quitando = favorite.isPending ? favorite.variables?.id : undefined;
@@ -28,46 +32,50 @@ export default function FavoritesPage() {
     return (
         <View style={styles.container}>
             <ScreenHeader title="Mis favoritas" onBack={() => navigation.goBack()} />
-            {favorite.isError && (
-                <Notice
-                    type="error"
-                    title="No se pudo quitar"
-                    description={mensajeDeFallo(favorite.error)}
-                    style={styles.error}
-                />
-            )}
+            <Appear>
+                {favorite.isError && (
+                    <Notice
+                        type="error"
+                        title="No se pudo quitar"
+                        description={mensajeDeFallo(favorite.error)}
+                        style={styles.error}
+                    />
+                )}
+            </Appear>
             {status === 'success' ? (
                 <FlatList
-                    data={favorites}
-                    keyExtractor={(f) => f.id}
+                    data={rows}
+                    keyExtractor={(row) => row.item.id}
                     contentContainerStyle={styles.list}
-                    renderItem={({ item }) => (
-                        <Card
-                            onPress={() => navigation.navigate('RouteDetail', { id: item.id })}
-                            accessibilityLabel={item.name}
-                        >
-                            <View style={styles.row}>
-                                <View style={styles.texts}>
-                                    <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
-                                    <Text style={styles.description}>
-                                        {item.available
-                                            ? [
-                                                  formatDistance(item.distanceMeters),
-                                                  ACTIVITY_TYPE_LABELS[item.type],
-                                                  `+${formatElevation(item.elevationGainMeters)}`,
-                                              ].join(' · ')
-                                            : `${UNAVAILABLE_LABEL} · ${ACTIVITY_TYPE_LABELS[item.type]}`}
-                                    </Text>
+                    renderItem={({ item: { item, leaving } }) => (
+                        <Appear>{!leaving && (
+                            <Card
+                                onPress={() => navigation.navigate('RouteDetail', { id: item.id })}
+                                accessibilityLabel={item.name}
+                            >
+                                <View style={styles.row}>
+                                    <View style={styles.texts}>
+                                        <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+                                        <Text style={styles.description}>
+                                            {item.available
+                                                ? [
+                                                      formatDistance(item.distanceMeters),
+                                                      ACTIVITY_TYPE_LABELS[item.type],
+                                                      `+${formatElevation(item.elevationGainMeters)}`,
+                                                  ].join(' · ')
+                                                : `${UNAVAILABLE_LABEL} · ${ACTIVITY_TYPE_LABELS[item.type]}`}
+                                        </Text>
+                                    </View>
+                                    <TextBtn
+                                        text={quitando === item.id ? 'Quitando...' : 'Quitar'}
+                                        style={styles.remove}
+                                        onPress={() => {
+                                            if (!favorite.isPending) favorite.mutate({ id: item.id, save: false });
+                                        }}
+                                    />
                                 </View>
-                                <TextBtn
-                                    text={quitando === item.id ? 'Quitando...' : 'Quitar'}
-                                    style={styles.remove}
-                                    onPress={() => {
-                                        if (!favorite.isPending) favorite.mutate({ id: item.id, save: false });
-                                    }}
-                                />
-                            </View>
-                        </Card>
+                            </Card>
+                        )}</Appear>
                     )}
                 />
             ) : (

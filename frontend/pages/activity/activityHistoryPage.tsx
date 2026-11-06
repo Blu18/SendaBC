@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import Appear from "../../components/ui/Appear";
 import { useActivityHistory } from "../../hooks/activity/activityHistory.hook";
 import { useSync } from "../../context/SyncContext";
 import type { Activity, ActivityType } from "../../lib/db/activities";
@@ -83,15 +84,19 @@ export default function ActivityHistoryPage() {
                         />
                     }
                     ListHeaderComponent={
-                        aviso ? <Notice type={aviso.type} title={aviso.title} description={aviso.description} /> : null
+                        <Appear>
+                            {aviso ? <Notice type={aviso.type} title={aviso.title} description={aviso.description} /> : null}
+                        </Appear>
                     }
                     ListEmptyComponent={
                         // Sin actividades terminadas: invitar a iniciar una (CA-22). Sin botón propio:
                         // grabar desde aquí haría que "Listo" regresara a esta lista y no al Inicio (CA-2)
-                        <Notice
-                            title="Aún no tienes actividades"
-                            description="Inicia una desde la pestaña Inicio y aquí verás su resumen."
-                        />
+                        <Appear>
+                            <Notice
+                                title="Aún no tienes actividades"
+                                description="Inicia una desde la pestaña Inicio y aquí verás su resumen."
+                            />
+                        </Appear>
                     }
                     ListFooterComponent={
                         activities.length > 0 ? (
@@ -99,27 +104,29 @@ export default function ActivityHistoryPage() {
                         ) : null
                     }
                     renderItem={({ item }) => (
-                        <PressableScale
-                            onPress={() => openSummary(item)}
-                            accessibilityRole="button"
-                            style={styles.row}
-                            pressedStyle={styles.rowPressed}
-                        >
-                            <View style={styles.typeIcon}>
-                                <Icon name={TYPE_ICONS[item.type]} decorative />
-                            </View>
-                            <View style={styles.rowMain}>
-                                <Text style={styles.rowType}>{ACTIVITY_TYPE_LABELS[item.type]}</Text>
-                                <Text style={styles.rowDate}>{formatStartedAt(item.startedAt)}</Text>
-                                <SyncBadge status={syncStatusOf(item)} />
-                            </View>
-                            <View style={styles.rowStats}>
-                                <Text style={styles.rowValue}>{formatDistance(item.distanceMeters)}</Text>
-                                <Text style={styles.rowMuted}>
-                                    {item.durationSeconds === null ? '—' : formatDuration(item.durationSeconds)}
-                                </Text>
-                            </View>
-                        </PressableScale>
+                        <Appear>
+                            <PressableScale
+                                onPress={() => openSummary(item)}
+                                accessibilityRole="button"
+                                style={styles.row}
+                                pressedStyle={styles.rowPressed}
+                            >
+                                <View style={styles.typeIcon}>
+                                    <Icon name={TYPE_ICONS[item.type]} decorative />
+                                </View>
+                                <View style={styles.rowMain}>
+                                    <Text style={styles.rowType}>{ACTIVITY_TYPE_LABELS[item.type]}</Text>
+                                    <Text style={styles.rowDate}>{formatStartedAt(item.startedAt)}</Text>
+                                    <SyncBadge status={syncStatusOf(item)} />
+                                </View>
+                                <View style={styles.rowStats}>
+                                    <Text style={styles.rowValue}>{formatDistance(item.distanceMeters)}</Text>
+                                    <Text style={styles.rowMuted}>
+                                        {item.durationSeconds === null ? '—' : formatDuration(item.durationSeconds)}
+                                    </Text>
+                                </View>
+                            </PressableScale>
+                        </Appear>
                     )}
                 />
             )}

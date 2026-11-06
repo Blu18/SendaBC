@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Linking, Alert, Vibration } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import BgBtn from "../../components/ui/buttons/BgBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
@@ -238,40 +239,50 @@ export default function ActivityPage() {
                     <RecordingSafety sesion={seguridad.sesion} onCambiarRegreso={seguridad.cambiarRegreso} />
                 )}
 
-                {permissionError === 'blocked' && (
-                    <>
+                <Appear style={styles.group}>
+                    {permissionError === 'blocked' && (
+                        <>
+                            <Notice
+                                type="error"
+                                title="Ubicación desactivada"
+                                description="El permiso de ubicación está desactivado. Actívalo en los ajustes de la app para registrar tu actividad."
+                            />
+                            <BgBtn text="Abrir ajustes" onPress={() => Linking.openSettings()} />
+                        </>
+                    )}
+                </Appear>
+                <Appear>
+                    {permissionError && permissionError !== 'blocked' && (
                         <Notice
-                            type="error"
-                            title="Ubicación desactivada"
-                            description="El permiso de ubicación está desactivado. Actívalo en los ajustes de la app para registrar tu actividad."
+                            title="Se necesita tu ubicación"
+                            description={'SendaBC necesita tu ubicación para registrar el recorrido. Presiona "Iniciar actividad" y permite el acceso.'}
                         />
-                        <BgBtn text="Abrir ajustes" onPress={() => Linking.openSettings()} />
-                    </>
-                )}
-                {permissionError && permissionError !== 'blocked' && (
-                    <Notice
-                        title="Se necesita tu ubicación"
-                        description={'SendaBC necesita tu ubicación para registrar el recorrido. Presiona "Iniciar actividad" y permite el acceso.'}
-                    />
-                )}
+                    )}
+                </Appear>
 
                 {/* Sin el permiso en segundo plano, la detección solo corre con la app abierta (CA-10) */}
-                {recording && mode === 'foreground' && hayContactos && (
-                    <Notice title="Detección solo con la app abierta" description={SAFETY_MESSAGES.sinPermiso} />
-                )}
+                <Appear>
+                    {recording && mode === 'foreground' && hayContactos && (
+                        <Notice title="Detección solo con la app abierta" description={SAFETY_MESSAGES.sinPermiso} />
+                    )}
+                </Appear>
 
-                {recording && hayContactos && sinNotificaciones && (
-                    <Notice title="Sin notificaciones" description={SAFETY_MESSAGES.sinNotificaciones} />
-                )}
+                <Appear>
+                    {recording && hayContactos && sinNotificaciones && (
+                        <Notice title="Sin notificaciones" description={SAFETY_MESSAGES.sinNotificaciones} />
+                    )}
+                </Appear>
 
                 {/* No se pudo cerrar la actividad al detener (spec 003, CA-12, RN-1) */}
-                {stopFailed && (
-                    <Notice
-                        type="error"
-                        title="No se pudo cerrar la actividad"
-                        description="Se completará automáticamente al volver a abrir la app."
-                    />
-                )}
+                <Appear>
+                    {stopFailed && (
+                        <Notice
+                            type="error"
+                            title="No se pudo cerrar la actividad"
+                            description="Se completará automáticamente al volver a abrir la app."
+                        />
+                    )}
+                </Appear>
             </ScrollView>
 
             {/* Controles abajo, al alcance del pulgar (spec 009, CA-13) */}
@@ -308,6 +319,9 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     panel: {
         flexGrow: 0,
         maxHeight: 280,
+    },
+    group: {
+        gap: t.spacing.md,
     },
     content: {
         gap: t.spacing.md,

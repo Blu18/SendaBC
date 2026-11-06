@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
+import Appear from "../ui/Appear";
 import Notice from "../ui/Notice";
 import { MAP_UNAVAILABLE } from "../../lib/map/messages";
 import { useThemedStyles } from "../../hooks/theme/useTheme";
@@ -34,7 +35,9 @@ function MapUnavailable({ overlay }: { overlay?: ReactNode }) {
     return (
         <View style={styles.area}>
             {overlay}
-            <Notice title={MAP_UNAVAILABLE.title} description={MAP_UNAVAILABLE.description} />
+            <Appear>
+                <Notice title={MAP_UNAVAILABLE.title} description={MAP_UNAVAILABLE.description} />
+            </Appear>
         </View>
     );
 }

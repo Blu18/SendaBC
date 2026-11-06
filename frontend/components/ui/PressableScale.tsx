@@ -10,12 +10,14 @@ type Props = Omit<PressableProps, "style" | "children"> & {
     style?: StyleProp<ViewStyle>;
     // Capa de presionado de Figma: aparece y desaparece con la animación.
     pressedStyle?: StyleProp<ViewStyle>;
+    // Capa de fondo, debajo de la de presionado (la selección del chip).
+    background?: ReactNode;
     children?: ReactNode;
 };
 
 // Pressable con animación de toque (spec 010, CA-20 a CA-22). Solo usa onPressIn y onPressOut:
 // onPress no espera a la animación (RN-4), y deshabilitado no recibe esos eventos (CA-21).
-export default function PressableScale({ style, pressedStyle, children, onPressIn, onPressOut, disabled, ...props }: Props) {
+export default function PressableScale({ style, pressedStyle, background, children, onPressIn, onPressOut, disabled, ...props }: Props) {
     const { motion } = useTheme();
     const reduced = useReducedMotion();
     const progress = useRef(new Animated.Value(0)).current;
@@ -48,6 +50,7 @@ export default function PressableScale({ style, pressedStyle, children, onPressI
                 },
             ]}
         >
+            {background}
             {pressedStyle && (
                 <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: progress }]}>
                     <View style={pressedStyle} />

@@ -1,6 +1,8 @@
-import { Text, StyleSheet, StyleProp, ViewStyle } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Text, StyleSheet, StyleProp, ViewStyle } from "react-native";
 import { fontFamilies, type Theme } from "../../lib/theme";
-import { useThemedStyles } from "../../hooks/theme/useTheme";
+import { useReducedMotion } from "../../hooks/theme/useReducedMotion";
+import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 import PressableScale from "./PressableScale";
 
 interface ChipProps {
@@ -15,13 +17,27 @@ interface ChipProps {
 // (CA-13). Seleccionado: primary con onPrimary y Bold, para no depender solo del color.
 export default function Chip({ text, selected = false, disabled, onPress, style }: ChipProps) {
     const styles = useThemedStyles(makeStyles);
+    const { motion } = useTheme();
+    const reduced = useReducedMotion();
+    const fill = useRef(new Animated.Value(selected ? 1 : 0)).current;
+
+    // El fondo cambia animado (spec 010, CA-25) y el texto de inmediato: durante esos 200 ms el contraste baja.
+    useEffect(() => {
+        Animated.timing(fill, {
+            toValue: selected ? 1 : 0,
+            duration: reduced ? 0 : motion.content,
+            useNativeDriver: true,
+        }).start();
+    }, [selected, reduced, motion.content, fill]);
+
     return (
         <PressableScale
             onPress={onPress}
             disabled={disabled}
             accessibilityRole="button"
             accessibilityState={{ selected, disabled: !!disabled }}
-            style={[styles.chip, selected ? styles.selected : styles.normal, disabled && !selected && styles.disabled, style]}
+            style={[styles.chip, selected ? styles.selectedBorder : styles.normal, disabled && !selected && styles.disabled, style]}
+            background={<Animated.View pointerEvents="none" style={[styles.selectedFill, { opacity: fill }]} />}
             pressedStyle={selected ? styles.pressedOnFill : styles.pressed}
         >
             <Text style={selected ? styles.textSelected : styles.text}>{text}</Text>
@@ -47,9 +63,13 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         backgroundColor: t.colors.surface,
         borderColor: t.colors.border,
     },
-    selected: {
-        backgroundColor: t.colors.primary,
+    selectedBorder: {
+        backgroundColor: t.colors.surface,
         borderColor: t.colors.primary,
+    },
+    selectedFill: {
+        ...StyleSheet.absoluteFill,
+        backgroundColor: t.colors.primary,
     },
     disabled: {
         opacity: 0.4,

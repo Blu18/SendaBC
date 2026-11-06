@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, ScrollView, StyleSheet, Text } from "react-native";
+import Appear from "../../components/ui/Appear";
 import { type RegistroFieldErrors, useRegistrar } from "../../hooks/auth/auth.hooks";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import TextBtn from "../../components/ui/buttons/TextBtn";
@@ -135,9 +136,11 @@ export default function Register() {
               error={fieldErrors.confirmPassword}
             />
             {/* CA-4: el mensaje del servidor (p. ej. el 409), como descripción del aviso */}
-            {!!serverError && (
-              <Notice type="error" title="No se pudo crear la cuenta" description={serverError} />
-            )}
+            <Appear>
+              {!!serverError && (
+                <Notice type="error" title="No se pudo crear la cuenta" description={serverError} />
+              )}
+            </Appear>
           </View>
           <View style={styles.actions}>
             <PrimaryButton

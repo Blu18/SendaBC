@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert, Platform } from "react-native";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import * as Location from "expo-location";
+import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Notice from "../../components/ui/Notice";
@@ -62,7 +63,9 @@ export default function PublishRoutePage({ route }: Props) {
         <View style={styles.container}>
             {header}
             <View style={styles.noticeArea}>
-                <Notice {...aviso} />
+                <Appear>
+                    <Notice {...aviso} />
+                </Appear>
             </View>
             <View style={styles.actions}>
                 <PrimaryButton text="Volver" onPress={() => navigation.goBack()} />
@@ -165,7 +168,9 @@ export default function PublishRoutePage({ route }: Props) {
         <View style={styles.container}>
             {header}
             <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-                {!!serverError && <Notice type="error" title="No se pudo publicar" description={serverError} />}
+                <Appear>
+                    {!!serverError && <Notice type="error" title="No se pudo publicar" description={serverError} />}
+                </Appear>
 
                 <RouteForm
                     values={values}
@@ -188,10 +193,12 @@ export default function PublishRoutePage({ route }: Props) {
                 </View>
 
                 {/* Aviso de privacidad (CA-4, requisitos no funcionales) */}
-                <Notice
-                    title="Tu recorrido será público"
-                    description={`Se publica el recorrido completo de la actividad (${pointCount} ${pointCount === 1 ? 'punto' : 'puntos'}), incluidos su inicio y su final. Cualquier persona con la app podrá verlo, junto con tu nombre.`}
-                />
+                <Appear>
+                    <Notice
+                        title="Tu recorrido será público"
+                        description={`Se publica el recorrido completo de la actividad (${pointCount} ${pointCount === 1 ? 'punto' : 'puntos'}), incluidos su inicio y su final. Cualquier persona con la app podrá verlo, junto con tu nombre.`}
+                    />
+                </Appear>
             </ScrollView>
 
             <View style={styles.actions}>

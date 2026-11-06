@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, ScrollView, StyleSheet, Text } from "react-native";
+import Appear from "../../components/ui/Appear";
 import { LoginFieldErrors, useLogin } from "../../hooks/auth/auth.hooks";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import TextBtn from "../../components/ui/buttons/TextBtn";
@@ -83,13 +84,15 @@ export default function Login({ route }: Props) {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.content}>
             <Text style={styles.title} accessibilityRole="header">Iniciar sesión</Text>
-            {!!emailRegistrado && (
-              <Notice
-                type="info"
-                title="Cuenta creada"
-                description="Tu cuenta se creó correctamente. Inicia sesión para continuar."
-              />
-            )}
+            <Appear>
+              {!!emailRegistrado && (
+                <Notice
+                  type="info"
+                  title="Cuenta creada"
+                  description="Tu cuenta se creó correctamente. Inicia sesión para continuar."
+                />
+              )}
+            </Appear>
             <TextField
               label="Correo"
               onChangeText={setEmail}
@@ -108,9 +111,11 @@ export default function Login({ route }: Props) {
               error={fieldErrors.password}
             />
             {/* CA-2: el mensaje del servidor, como descripción del aviso */}
-            {!!serverError && (
-              <Notice type="error" title="No se pudo iniciar sesión" description={serverError} />
-            )}
+            <Appear>
+              {!!serverError && (
+                <Notice type="error" title="No se pudo iniciar sesión" description={serverError} />
+              )}
+            </Appear>
           </View>
           <View style={styles.actions}>
             <PrimaryButton

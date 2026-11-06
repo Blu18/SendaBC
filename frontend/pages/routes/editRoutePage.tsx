@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert } from "react-native";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
+import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Notice from "../../components/ui/Notice";
@@ -62,7 +63,9 @@ export default function EditRoutePage({ route: navRoute }: Props) {
             <View style={styles.container}>
                 {header}
                 <View style={styles.noticeArea}>
-                    <Notice {...aviso} />
+                    <Appear>
+                        <Notice {...aviso} />
+                    </Appear>
                 </View>
                 <View style={styles.actions}>
                     {status === 'unavailable' ? (
@@ -109,9 +112,11 @@ export default function EditRoutePage({ route: navRoute }: Props) {
         <View style={styles.container}>
             {header}
             <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-                {!!serverError && (
-                    <Notice type="error" title="No se pudieron guardar los cambios" description={serverError} />
-                )}
+                <Appear>
+                    {!!serverError && (
+                        <Notice type="error" title="No se pudieron guardar los cambios" description={serverError} />
+                    )}
+                </Appear>
                 <RouteForm values={values} onChange={setValues} errors={fieldErrors} />
                 <Text style={styles.nota}>
                     El tipo, la dificultad, la distancia, la elevación y el recorrido salen de la actividad y
