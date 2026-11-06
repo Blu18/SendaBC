@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet, View, StyleProp, ViewStyle, GestureResponderEvent } from "react-native";
+import { StyleSheet, StyleProp, ViewStyle, GestureResponderEvent } from "react-native";
 import type { ColorTokens, Theme } from "../../lib/theme";
 import { useThemedStyles } from "../../hooks/theme/useTheme";
 import Icon, { type IconName } from "./Icon";
+import PressableScale from "./PressableScale";
 
 interface IconButtonProps {
     icon: IconName;
@@ -17,21 +18,17 @@ interface IconButtonProps {
 export default function IconButton({ icon, accessibilityLabel, onPress, color = "text", disabled, style }: IconButtonProps) {
     const styles = useThemedStyles(makeStyles);
     return (
-        <Pressable
+        <PressableScale
             onPress={onPress}
             disabled={disabled}
             accessibilityRole="button"
             accessibilityLabel={accessibilityLabel}
             accessibilityState={{ disabled: !!disabled }}
             style={[styles.btn, disabled && styles.disabled, style]}
+            pressedStyle={styles.pressed}
         >
-            {({ pressed }) => (
-                <>
-                    {pressed && <View style={styles.pressed} />}
-                    <Icon name={icon} color={color} decorative />
-                </>
-            )}
-        </Pressable>
+            <Icon name={icon} color={color} decorative />
+        </PressableScale>
     );
 }
 

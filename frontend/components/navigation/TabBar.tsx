@@ -1,7 +1,8 @@
-import { Pressable, View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { fontFamilies, type Theme } from "../../lib/theme";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
+import PressableScale from "../ui/PressableScale";
 
 // Barra de pestañas de Figma (spec 009, plan D1). La pestaña activa lleva el ícono relleno
 // sobre un indicador de primary al 16 % y la etiqueta en Bold primary; las demás, el ícono de
@@ -24,7 +25,7 @@ export default function TabBar({ state, descriptors, navigation }: BottomTabBarP
                 };
 
                 return (
-                    <Pressable
+                    <PressableScale
                         key={route.key}
                         onPress={onPress}
                         onLongPress={() => navigation.emit({ type: "tabLongPress", target: route.key })}
@@ -44,7 +45,7 @@ export default function TabBar({ state, descriptors, navigation }: BottomTabBarP
                         <Text style={[styles.label, focused && styles.labelActive]} numberOfLines={1}>
                             {label}
                         </Text>
-                    </Pressable>
+                    </PressableScale>
                 );
             })}
         </View>

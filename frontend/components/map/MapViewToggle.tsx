@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import { fontFamilies, type Theme } from "../../lib/theme";
 import { useThemedStyles } from "../../hooks/theme/useTheme";
+import PressableScale from "../ui/PressableScale";
 
 export type MapViewMode = "3D" | "2D";
 
@@ -14,19 +15,15 @@ export default function MapViewToggle({ view, onChange }: Props) {
     const styles = useThemedStyles(makeStyles);
     const next = view === "3D" ? "2D" : "3D";
     return (
-        <Pressable
+        <PressableScale
             onPress={() => onChange(next)}
             accessibilityRole="button"
             accessibilityLabel={`Cambiar el mapa a ${next}`}
             style={styles.btn}
+            pressedStyle={styles.pressed}
         >
-            {({ pressed }) => (
-                <>
-                    {pressed && <View style={styles.pressed} />}
-                    <Text style={styles.label}>{next}</Text>
-                </>
-            )}
-        </Pressable>
+            <Text style={styles.label}>{next}</Text>
+        </PressableScale>
     );
 }
 

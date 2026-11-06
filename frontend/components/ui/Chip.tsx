@@ -1,6 +1,7 @@
-import { Pressable, Text, View, StyleSheet, StyleProp, ViewStyle } from "react-native";
+import { Text, StyleSheet, StyleProp, ViewStyle } from "react-native";
 import { fontFamilies, type Theme } from "../../lib/theme";
 import { useThemedStyles } from "../../hooks/theme/useTheme";
+import PressableScale from "./PressableScale";
 
 interface ChipProps {
     text: string;
@@ -15,20 +16,16 @@ interface ChipProps {
 export default function Chip({ text, selected = false, disabled, onPress, style }: ChipProps) {
     const styles = useThemedStyles(makeStyles);
     return (
-        <Pressable
+        <PressableScale
             onPress={onPress}
             disabled={disabled}
             accessibilityRole="button"
             accessibilityState={{ selected, disabled: !!disabled }}
             style={[styles.chip, selected ? styles.selected : styles.normal, disabled && !selected && styles.disabled, style]}
+            pressedStyle={selected ? styles.pressedOnFill : styles.pressed}
         >
-            {({ pressed }) => (
-                <>
-                    {pressed && <View style={selected ? styles.pressedOnFill : styles.pressed} />}
-                    <Text style={selected ? styles.textSelected : styles.text}>{text}</Text>
-                </>
-            )}
-        </Pressable>
+            <Text style={selected ? styles.textSelected : styles.text}>{text}</Text>
+        </PressableScale>
     );
 }
 

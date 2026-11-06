@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { View, Text, Pressable, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useActivityHistory } from "../../hooks/activity/activityHistory.hook";
 import { useSync } from "../../context/SyncContext";
 import type { Activity, ActivityType } from "../../lib/db/activities";
+import PressableScale from "../../components/ui/PressableScale";
 import SyncBadge from "../../components/ui/SyncBadge";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Notice from "../../components/ui/Notice";
@@ -98,31 +99,27 @@ export default function ActivityHistoryPage() {
                         ) : null
                     }
                     renderItem={({ item }) => (
-                        <Pressable
+                        <PressableScale
                             onPress={() => openSummary(item)}
                             accessibilityRole="button"
                             style={styles.row}
+                            pressedStyle={styles.rowPressed}
                         >
-                            {({ pressed }) => (
-                                <>
-                                    {pressed && <View style={styles.rowPressed} />}
-                                    <View style={styles.typeIcon}>
-                                        <Icon name={TYPE_ICONS[item.type]} decorative />
-                                    </View>
-                                    <View style={styles.rowMain}>
-                                        <Text style={styles.rowType}>{ACTIVITY_TYPE_LABELS[item.type]}</Text>
-                                        <Text style={styles.rowDate}>{formatStartedAt(item.startedAt)}</Text>
-                                        <SyncBadge status={syncStatusOf(item)} />
-                                    </View>
-                                    <View style={styles.rowStats}>
-                                        <Text style={styles.rowValue}>{formatDistance(item.distanceMeters)}</Text>
-                                        <Text style={styles.rowMuted}>
-                                            {item.durationSeconds === null ? '—' : formatDuration(item.durationSeconds)}
-                                        </Text>
-                                    </View>
-                                </>
-                            )}
-                        </Pressable>
+                            <View style={styles.typeIcon}>
+                                <Icon name={TYPE_ICONS[item.type]} decorative />
+                            </View>
+                            <View style={styles.rowMain}>
+                                <Text style={styles.rowType}>{ACTIVITY_TYPE_LABELS[item.type]}</Text>
+                                <Text style={styles.rowDate}>{formatStartedAt(item.startedAt)}</Text>
+                                <SyncBadge status={syncStatusOf(item)} />
+                            </View>
+                            <View style={styles.rowStats}>
+                                <Text style={styles.rowValue}>{formatDistance(item.distanceMeters)}</Text>
+                                <Text style={styles.rowMuted}>
+                                    {item.durationSeconds === null ? '—' : formatDuration(item.durationSeconds)}
+                                </Text>
+                            </View>
+                        </PressableScale>
                     )}
                 />
             )}
