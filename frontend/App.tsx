@@ -1,12 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { StatusBar } from 'expo-status-bar';
 import Register from './pages/auth/register';
 import { QueryClientProvider } from '@tanstack/react-query'
 import Index from './pages/auth';
 import Login from './pages/auth/login';
-import {createNavigationContainerRef, createStaticNavigation} from '@react-navigation/native';
+import {createNavigationContainerRef, createStaticNavigation, DarkTheme, DefaultTheme, type Theme as NavigationTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import TabBar from './components/navigation/TabBar';
 import MainPage from './pages/main/mainPage';
 import ActivityPage from './pages/activity/activityPage';
 import ActivitySummaryPage from './pages/activity/activitySummaryPage';
@@ -25,6 +29,53 @@ import { sessionActions } from './lib/safety';
 import { computeMissingMetrics } from './lib/db/activityMetrics';
 import { setUnauthorizedHandler } from './lib/api/client';
 import { queryClient } from './lib/api/queryClient';
+import { fontFamilies, type Theme } from './lib/theme';
+import { useTheme, useThemedStyles } from './hooks/theme/useTheme';
+
+// Barra de 4 pestañas (spec 009, plan D1). Cada ícono tiene su versión rellena para la
+// pestaña activa y de contorno para las demás, como en Figma.
+const HomeTabs = createBottomTabNavigator({
+  tabBar: (props) => <TabBar {...props} />,
+  screenOptions: {
+    headerShown: false,
+  },
+  screens: {
+    MainPage: {
+      screen: MainPage,
+      options: {
+        title: 'Inicio',
+        tabBarIcon: ({ focused, color, size }) => (
+          <MaterialCommunityIcons name={focused ? 'home' : 'home-outline'} color={color} size={size} />
+        ),
+      },
+    },
+    ActivityHistory: {
+      screen: ActivityHistoryPage,
+      options: {
+        title: 'Actividades',
+        tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="hiking" color={color} size={size} />,
+      },
+    },
+    ExploreRoutes: {
+      screen: ExploreRoutesPage,
+      options: {
+        title: 'Rutas',
+        tabBarIcon: ({ focused, color, size }) => (
+          <MaterialCommunityIcons name={focused ? 'map-marker-path' : 'map-outline'} color={color} size={size} />
+        ),
+      },
+    },
+    Safety: {
+      screen: EmergencyContactsPage,
+      options: {
+        title: 'Seguridad',
+        tabBarIcon: ({ focused, color, size }) => (
+          <MaterialCommunityIcons name={focused ? 'shield-check' : 'shield-check-outline'} color={color} size={size} />
+        ),
+      },
+    },
+  },
+})
 
 const RootStack = createNativeStackNavigator({
   initialRouteName: 'Index',
@@ -41,20 +92,15 @@ const RootStack = createNativeStackNavigator({
     Register: {
       screen: Register
     },
-    MainPage: {
-      screen: MainPage
+    // Inicio, Actividades, Rutas y Seguridad (spec 009)
+    Home: {
+      screen: HomeTabs
     },
     Activity: {
       screen: ActivityPage
     },
     ActivitySummary: {
       screen: ActivitySummaryPage
-    },
-    ActivityHistory: {
-      screen: ActivityHistoryPage
-    },
-    ExploreRoutes: {
-      screen: ExploreRoutesPage
     },
     PublishRoute: {
       screen: PublishRoutePage
@@ -71,7 +117,8 @@ const RootStack = createNativeStackNavigator({
     Favorites: {
       screen: FavoritesPage
     },
-    // Contactos de emergencia (spec 008, CA-1 a CA-7)
+    // Contactos de emergencia (spec 008, CA-1 a CA-7). También es la pestaña Seguridad; aquí
+    // se abre encima de la grabación desde "Configurar" y se vuelve a ella (spec 009, plan).
     EmergencyContacts: {
       screen: EmergencyContactsPage
     }
@@ -87,8 +134,34 @@ declare module '@react-navigation/native' {
 const Navigation = createStaticNavigation(RootStack)
 const navigationRef = createNavigationContainerRef()
 
+// Tema de React Navigation con los tokens (spec 009): fondo de pantallas, encabezados y
+// barra de pestañas. La familia ya lleva el peso, así que fontWeight queda en normal.
+function navigationTheme(t: Theme): NavigationTheme {
+  const base = t.scheme === 'dark' ? DarkTheme : DefaultTheme;
+  return {
+    ...base,
+    dark: t.scheme === 'dark',
+    colors: {
+      primary: t.colors.primary,
+      background: t.colors.background,
+      card: t.colors.surface,
+      text: t.colors.text,
+      border: t.colors.border,
+      notification: t.colors.error,
+    },
+    fonts: {
+      regular: { fontFamily: fontFamilies.regular, fontWeight: 'normal' },
+      medium: { fontFamily: fontFamilies.semibold, fontWeight: 'normal' },
+      bold: { fontFamily: fontFamilies.bold, fontWeight: 'normal' },
+      heavy: { fontFamily: fontFamilies.bold, fontWeight: 'normal' },
+    },
+  };
+}
+
 function Gate({ children }: { children: React.ReactNode }) {
   const { isLoading, logout } = useAuth();
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const [localDataReady, setLocalDataReady] = useState(false);
 
   // Al abrir la app, cerrar las actividades que quedaron en RECORDING (spec 003, CA-10) y
@@ -123,7 +196,7 @@ function Gate({ children }: { children: React.ReactNode }) {
   if (isLoading || !localDataReady) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#5C6B49" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -132,14 +205,19 @@ function Gate({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const navTheme = useMemo(() => navigationTheme(theme), [theme]);
+
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <SafeAreaView style={styles.safeArea}>
+          <StatusBar style="auto" />
           <Gate>
             {/* Dentro de Gate: la sincronización arranca con los datos locales listos (spec 005) */}
             <SyncProvider>
-              <Navigation ref={navigationRef}/>
+              <Navigation ref={navigationRef} theme={navTheme}/>
             </SyncProvider>
           </Gate>
         </SafeAreaView>
@@ -148,14 +226,14 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#5C6B49",
+    backgroundColor: t.colors.background,
   },
   container: {
     flex: 1,
-    backgroundColor: "#EDEAE1",
+    backgroundColor: t.colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },

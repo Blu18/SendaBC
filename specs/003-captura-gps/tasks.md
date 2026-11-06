@@ -79,7 +79,7 @@ Revisión de código: 2026-10-05 (`tsc --noEmit` sin errores). "Código ok" = el
 ### Casos manuales
 
 **M1 — Flujo feliz**
-1. Iniciar sesión → "Nueva actividad" → elegir "Trail running" → "Iniciar".
+1. Iniciar sesión → "Empezar" en la tarjeta "Nueva actividad" de la pestaña Inicio → elegir "Trail running" → "Iniciar".
 2. Caminar ~2 minutos.
 - **Esperado:** el cronómetro avanza cada segundo; el contador de puntos sube; el selector de tipo está deshabilitado.
 

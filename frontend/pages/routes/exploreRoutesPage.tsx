@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, Pressable, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 import MapView, { Marker, Polyline, type MapPressEvent, type Region } from "react-native-maps";
 import * as Location from "expo-location";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, type ParamListBase } from "@react-navigation/native";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
+import ScreenHeader from "../../components/ui/ScreenHeader";
+import IconButton from "../../components/ui/IconButton";
+import Chip from "../../components/ui/Chip";
+import Notice, { type NoticeType } from "../../components/ui/Notice";
 import { useLocationPermission } from "../../hooks/activity/locationPermission.hook";
 import { useNearbyRoutes } from "../../hooks/routes/useNearbyRoutes";
 import type { ActivityType } from "../../lib/db/activities";
@@ -19,7 +24,8 @@ import {
     TYPE_FILTER_OPTIONS,
 } from "../../lib/routes/format";
 import { distanceFromUser, hasMovedEnough, pathToCoordinates, regionAround } from "../../lib/routes/geo";
-import { colors } from "../../lib/theme/colors";
+import { fontFamilies, lightColors, type Theme } from "../../lib/theme";
+import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 
 // Ubicación del permiso: 'pending' mientras se pide y se obtiene la posición al abrir.
 type LocationState = { kind: 'pending' } | { kind: 'denied' } | { kind: 'granted'; user: Coordinates };
@@ -44,18 +50,9 @@ async function currentPosition(): Promise<Coordinates> {
     return { latitude: coords.latitude, longitude: coords.longitude };
 }
 
-function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
-    return (
-        <Pressable
-            onPress={onPress}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
-            style={({ pressed }) => [styles.chip, selected && styles.chipSelected, { opacity: pressed ? 0.7 : 1 }]}
-        >
-            <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
-        </Pressable>
-    );
-}
+// El mapa no cambia de estilo con el modo (fuera de alcance, plan R6): sus marcas usan siempre
+// los colores del modo claro.
+const MAPA = lightColors;
 
 // Tarjeta de la ruta seleccionada (CA-6, CA-7, CA-19). Sin ubicación no hay "A X km de ti" (CA-14).
 // "Ver detalle" abre el recorrido completo y el perfil (spec 007, CA-10).
@@ -68,6 +65,7 @@ function RouteCard({
     user: Coordinates | null;
     onDetail: () => void;
 }) {
+    const styles = useThemedStyles(makeStyles);
     const distanciaATi = formatDistanceFromUser(distanceFromUser(route, user));
     const subtitulo = [
         ACTIVITY_TYPE_LABELS[route.type],
@@ -87,30 +85,51 @@ function RouteCard({
                 )}
             </View>
             <Text style={styles.cardSubtitle}>{subtitulo}</Text>
+            {distanciaATi && <Text style={styles.cardDistance}>{distanciaATi}</Text>}
             <View style={styles.cardStats}>
-                <View style={styles.cardStat}>
+                <View>
                     <Text style={styles.cardStatValue}>{formatDistance(route.distanceMeters)}</Text>
                     <Text style={styles.cardStatLabel}>Distancia</Text>
                 </View>
-                <View style={styles.cardStat}>
+                <View>
                     <Text style={styles.cardStatValue}>{formatElevation(route.elevationGainMeters)}</Text>
                     <Text style={styles.cardStatLabel}>Elevación ganada</Text>
                 </View>
             </View>
-            <Text style={styles.cardDetail}>Por {route.author}</Text>
-            {distanciaATi && <Text style={styles.cardDetail}>{distanciaATi}</Text>}
-            <PrimaryButton text="Ver detalle" style={styles.cardButton} onPress={onDetail} />
+            <Text style={styles.cardSubtitle}>Por {route.author}</Text>
+            <PrimaryButton text="Ver detalle" onPress={onDetail} />
         </View>
     );
 }
 
-// Catálogo de rutas cercanas en un mapa (spec 006).
+// Como pestaña, la pantalla ya no se desmonta al cambiar de pestaña (spec 009). Para que cada
+// vez que se abre empiece igual que antes (centrada en el usuario, 25 km y todas; spec 006,
+// CA-1, CA-11 y CA-12), se vuelve a montar al entrar desde otra pestaña. Al volver del detalle,
+// de Mis rutas o de Mis favoritas conserva el mapa, como cuando era parte del stack.
 export default function ExploreRoutesPage() {
+    const navigation = useNavigation<BottomTabNavigationProp<ParamListBase>>();
+    const [apertura, setApertura] = useState(0);
+
+    useEffect(
+        () =>
+            navigation.addListener('tabPress', () => {
+                if (!navigation.isFocused()) setApertura((n) => n + 1);
+            }),
+        [navigation]
+    );
+
+    return <ExploreRoutes key={apertura} />;
+}
+
+// Catálogo de rutas cercanas en un mapa (spec 006).
+function ExploreRoutes() {
     const navigation = useNavigation();
     const mapRef = useRef<MapView>(null);
     const lastOverlayPress = useRef(0);
     const { request } = useLocationPermission();
     const { routes, status, lastSearch, search, retry } = useNearbyRoutes();
+    const theme = useTheme();
+    const styles = useThemedStyles(makeStyles);
 
     const [mapReady, setMapReady] = useState(false);
     const [location, setLocation] = useState<LocationState>({ kind: 'pending' });
@@ -169,6 +188,17 @@ export default function ExploreRoutesPage() {
     // Número de la búsqueda actual: cambia las keys de todo lo dibujado en cada búsqueda nueva.
     const busqueda = lastSearch?.n ?? 0;
 
+    // En Android, un marcador con vista propia y tracksViewChanges={false} se queda con la imagen
+    // tomada antes de dibujar sus hijos, y el punto dentro del área de 48 dp no se veía. Los
+    // marcadores siguen su vista mientras se dibujan y se congelan después, para no redibujarlos
+    // en cada cuadro del mapa.
+    const [dibujandoMarcadores, setDibujandoMarcadores] = useState(true);
+    useEffect(() => {
+        setDibujandoMarcadores(true);
+        const t = setTimeout(() => setDibujandoMarcadores(false), 1000);
+        return () => clearTimeout(t);
+    }, [routes]);
+
     const seleccionar = (id: string) => {
         lastOverlayPress.current = Date.now();
         setSelectedId(id);
@@ -218,171 +248,212 @@ export default function ExploreRoutesPage() {
         status !== 'loading' &&
         hasMovedEnough(lastSearch?.center ?? null, mapCenter, radiusKm);
 
-    const aviso =
+    // Avisos de la búsqueda (CA-13 a CA-16), abajo sobre el mapa como en Figma.
+    const aviso: { type: NoticeType; title: string; description: string } | null =
         status === 'empty'
-            ? NEARBY_MESSAGES.empty
+            ? { type: 'info', title: 'Sin rutas cerca', description: NEARBY_MESSAGES.empty }
             : status === 'offline'
-              ? NEARBY_MESSAGES.offline
+              ? { type: 'offline', title: 'Sin conexión', description: NEARBY_MESSAGES.offline }
               : status === 'error'
-                ? NEARBY_MESSAGES.error
+                ? { type: 'error', title: 'No se pudo cargar', description: NEARBY_MESSAGES.error }
                 : location.kind === 'denied' && status === 'idle'
-                  ? NEARBY_MESSAGES.noPermission
+                  ? { type: 'info', title: 'Sin tu ubicación', description: NEARBY_MESSAGES.noPermission }
                   : null;
 
     return (
-        <View style={styles.container}>
-            <MapView
-                ref={mapRef}
-                style={StyleSheet.absoluteFill}
-                initialRegion={BAJA_CALIFORNIA_REGION}
-                showsUserLocation={user !== null}
-                showsMyLocationButton={false}
-                toolbarEnabled={false}
-                // Seleccionar una ruta no mueve la cámara: si no, aparecía "Buscar en esta zona"
-                // sin que el usuario moviera el mapa (CA-9).
-                moveOnMarkerPress={false}
-                onMapReady={() => setMapReady(true)}
-                onRegionChangeComplete={(region) => setMapCenter(centerOf(region))}
-                onPress={onMapPress}
-            >
-                {/* react-native-maps 1.27 en Android guarda cada elemento nuevo con
-                    features.set(index): si se inserta en medio de la lista, el que estaba ahí queda
-                    dibujado pero ya nadie lo borra (M2, M8). Por eso solo se agrega al final:
-                    - los recorridos y puntos de una búsqueda no cambian mientras dura (su key lleva
-                      el número de búsqueda; una búsqueda nueva quita todos y agrega los nuevos);
-                    - la selección es un recorrido y un punto extra, siempre los últimos (CA-8). */}
-                {routes
-                    .filter((route) => route.path.length >= 2)
-                    .map((route) => (
-                        <Polyline
-                            key={`${busqueda}-${route.id}-path`}
-                            coordinates={pathToCoordinates(route.path)}
-                            strokeColor={colors.primary}
-                            strokeWidth={3}
-                            zIndex={1}
-                            tappable
+        <View style={styles.screen}>
+            {/* Mis favoritas y Mis rutas pasan aquí desde el menú del inicio (spec 009, plan) */}
+            <ScreenHeader
+                title="Rutas"
+                actions={
+                    <>
+                        <IconButton
+                            icon="heart-outline"
+                            accessibilityLabel="Mis favoritas"
+                            onPress={() => navigation.navigate('Favorites')}
+                        />
+                        <IconButton
+                            icon="map-marker-path"
+                            accessibilityLabel="Mis rutas"
+                            onPress={() => navigation.navigate('MyRoutes')}
+                        />
+                    </>
+                }
+            />
+            <View style={styles.container}>
+                <MapView
+                    ref={mapRef}
+                    style={StyleSheet.absoluteFill}
+                    initialRegion={BAJA_CALIFORNIA_REGION}
+                    showsUserLocation={user !== null}
+                    showsMyLocationButton={false}
+                    toolbarEnabled={false}
+                    // Seleccionar una ruta no mueve la cámara: si no, aparecía "Buscar en esta zona"
+                    // sin que el usuario moviera el mapa (CA-9).
+                    moveOnMarkerPress={false}
+                    onMapReady={() => setMapReady(true)}
+                    onRegionChangeComplete={(region) => setMapCenter(centerOf(region))}
+                    onPress={onMapPress}
+                >
+                    {/* react-native-maps 1.27 en Android guarda cada elemento nuevo con
+                        features.set(index): si se inserta en medio de la lista, el que estaba ahí queda
+                        dibujado pero ya nadie lo borra (M2, M8). Por eso solo se agrega al final:
+                        - los recorridos y puntos de una búsqueda no cambian mientras dura (su key lleva
+                          el número de búsqueda; una búsqueda nueva quita todos y agrega los nuevos);
+                        - la selección es un recorrido y un punto extra, siempre los últimos (CA-8). */}
+                    {routes
+                        .filter((route) => route.path.length >= 2)
+                        .map((route) => (
+                            <Polyline
+                                key={`${busqueda}-${route.id}-path`}
+                                coordinates={pathToCoordinates(route.path)}
+                                strokeColor={MAPA.primary}
+                                strokeWidth={3}
+                                zIndex={1}
+                                tappable
+                                onPress={() => seleccionar(route.id)}
+                            />
+                        ))}
+                    {routes.map((route) => (
+                        <Marker
+                            key={`${busqueda}-${route.id}-start`}
+                            coordinate={route.start}
+                            anchor={{ x: 0.5, y: 0.5 }}
+                            zIndex={3}
+                            // Vista propia y no pinColor: en Android pinColor solo toma el tono y el
+                            // verde de la paleta salía claro.
+                            tracksViewChanges={dibujandoMarcadores}
                             onPress={() => seleccionar(route.id)}
+                        >
+                            <View style={styles.markerHit}>
+                                <View style={styles.startDot} />
+                            </View>
+                        </Marker>
+                    ))}
+                    {selected && selected.path.length >= 2 && (
+                        <Polyline
+                            key={`${busqueda}-${selected.id}-path-sel`}
+                            coordinates={pathToCoordinates(selected.path)}
+                            strokeColor={MAPA.data}
+                            strokeWidth={6}
+                            zIndex={2}
+                            tappable
+                            onPress={() => seleccionar(selected.id)}
                         />
-                    ))}
-                {routes.map((route) => (
-                    <Marker
-                        key={`${busqueda}-${route.id}-start`}
-                        coordinate={route.start}
-                        anchor={{ x: 0.5, y: 0.5 }}
-                        zIndex={3}
-                        // Vista propia y no pinColor: en Android pinColor solo toma el tono y el
-                        // verde de la paleta salía claro.
-                        tracksViewChanges={false}
-                        onPress={() => seleccionar(route.id)}
-                    >
-                        <View style={styles.startDot} />
-                    </Marker>
-                ))}
-                {selected && selected.path.length >= 2 && (
-                    <Polyline
-                        key={`${busqueda}-${selected.id}-path-sel`}
-                        coordinates={pathToCoordinates(selected.path)}
-                        strokeColor={colors.data}
-                        strokeWidth={6}
-                        zIndex={2}
-                        tappable
-                        onPress={() => seleccionar(selected.id)}
-                    />
-                )}
-                {selected && (
-                    <Marker
-                        key={`${busqueda}-${selected.id}-start-sel`}
-                        coordinate={selected.start}
-                        anchor={{ x: 0.5, y: 0.5 }}
-                        zIndex={4}
-                        // Es uno solo: puede seguir los cambios de su vista sin costo apreciable, y
-                        // así Android no se queda con una imagen tomada antes de dibujarla.
-                        tracksViewChanges
-                        onPress={() => seleccionar(selected.id)}
-                    >
-                        <View style={styles.startRing} />
-                    </Marker>
-                )}
-            </MapView>
+                    )}
+                    {selected && (
+                        <Marker
+                            key={`${busqueda}-${selected.id}-start-sel`}
+                            coordinate={selected.start}
+                            anchor={{ x: 0.5, y: 0.5 }}
+                            zIndex={4}
+                            // Es uno solo: puede seguir los cambios de su vista sin costo apreciable, y
+                            // así Android no se queda con una imagen tomada antes de dibujarla.
+                            tracksViewChanges
+                            onPress={() => seleccionar(selected.id)}
+                        >
+                            <View style={styles.markerHit}>
+                                <View style={styles.startRing} />
+                            </View>
+                        </Marker>
+                    )}
+                </MapView>
 
-            {/* Filtros arriba: tipo (CA-12) y radio (CA-11) */}
-            <View style={styles.top} pointerEvents="box-none">
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow} contentContainerStyle={styles.chips}>
-                    {TYPE_FILTER_OPTIONS.map((opcion) => (
-                        <Chip
-                            key={opcion.label}
-                            label={opcion.label}
-                            selected={type === opcion.value}
-                            onPress={() => cambiarTipo(opcion.value)}
-                        />
-                    ))}
-                </ScrollView>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow} contentContainerStyle={styles.chips}>
-                    {RADIUS_OPTIONS_KM.map((km) => (
-                        <Chip key={km} label={`${km} km`} selected={radiusKm === km} onPress={() => cambiarRadio(km)} />
-                    ))}
-                </ScrollView>
+                {/* Filtros arriba: tipo (CA-12) y radio (CA-11) */}
+                <View style={styles.top} pointerEvents="box-none">
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow} contentContainerStyle={styles.chips}>
+                        {TYPE_FILTER_OPTIONS.map((opcion) => (
+                            <Chip
+                                key={opcion.label}
+                                text={opcion.label}
+                                selected={type === opcion.value}
+                                style={styles.floating}
+                                onPress={() => cambiarTipo(opcion.value)}
+                            />
+                        ))}
+                    </ScrollView>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow} contentContainerStyle={styles.chips}>
+                        {RADIUS_OPTIONS_KM.map((km) => (
+                            <Chip
+                                key={km}
+                                text={`${km} km`}
+                                selected={radiusKm === km}
+                                style={styles.floating}
+                                onPress={() => cambiarRadio(km)}
+                            />
+                        ))}
+                    </ScrollView>
 
-                {mostrarBuscarAqui && (
-                    <PrimaryButton text="Buscar en esta zona" style={styles.searchHere} onPress={buscarAqui} />
-                )}
-
-                {(location.kind === 'pending' || status === 'loading') && (
-                    <View style={styles.loading}>
-                        <ActivityIndicator color={colors.primary} />
-                        <Text style={styles.loadingText}>
-                            {location.kind === 'pending' ? 'Buscando tu ubicación…' : 'Buscando rutas…'}
-                        </Text>
-                    </View>
-                )}
-
-                {aviso && (
-                    <View style={styles.notice}>
-                        <Text style={styles.noticeText}>{aviso}</Text>
-                        {(status === 'error' || status === 'offline') && (
-                            <PrimaryButton text="Reintentar" style={styles.retry} onPress={retry} />
+                    {/* "Buscar en esta zona" al centro (CA-9) y centrar en mi ubicación a la derecha,
+                        solo con permiso (CA-10) */}
+                    <View style={styles.mapActions} pointerEvents="box-none">
+                        {mostrarBuscarAqui && (
+                            <PrimaryButton text="Buscar en esta zona" style={[styles.searchHere, styles.floating]} onPress={buscarAqui} />
+                        )}
+                        {user && (
+                            <IconButton
+                                icon="crosshairs-gps"
+                                accessibilityLabel="Centrar en mi ubicación"
+                                onPress={recentrar}
+                                style={[styles.recenter, styles.floating]}
+                            />
                         )}
                     </View>
-                )}
-            </View>
+                </View>
 
-            {/* Abajo: botón para volver a centrar (solo con permiso, CA-10) y la tarjeta */}
-            <View style={styles.bottom} pointerEvents="box-none">
-                {user && (
-                    <Pressable
-                        onPress={recentrar}
-                        accessibilityRole="button"
-                        accessibilityLabel="Centrar en mi ubicación"
-                        style={({ pressed }) => [styles.recenter, { opacity: pressed ? 0.7 : 1 }]}
-                    >
-                        <Text style={styles.recenterText}>◎</Text>
-                    </Pressable>
+                {(location.kind === 'pending' || status === 'loading') && (
+                    <View style={styles.loadingArea} pointerEvents="none">
+                        <View style={[styles.loading, styles.floating]}>
+                            <ActivityIndicator color={theme.colors.primary} />
+                            <Text style={styles.loadingText}>
+                                {location.kind === 'pending' ? 'Buscando tu ubicación…' : 'Buscando rutas…'}
+                            </Text>
+                        </View>
+                    </View>
                 )}
-                {selected && (
-                    <RouteCard
-                        route={selected}
-                        user={user}
-                        onDetail={() => navigation.navigate('RouteDetail', { id: selected.id })}
-                    />
-                )}
+
+                {/* Abajo: el aviso o la tarjeta de la ruta seleccionada */}
+                <View style={styles.bottom} pointerEvents="box-none">
+                    {aviso && (
+                        <>
+                            <Notice {...aviso} />
+                            {(status === 'error' || status === 'offline') && (
+                                <PrimaryButton text="Reintentar" onPress={retry} />
+                            )}
+                        </>
+                    )}
+                    {selected && (
+                        <RouteCard
+                            route={selected}
+                            user={user}
+                            onDetail={() => navigation.navigate('RouteDetail', { id: selected.id })}
+                        />
+                    )}
+                </View>
             </View>
         </View>
     );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
+    screen: {
+        flex: 1,
+        backgroundColor: t.colors.background,
+    },
     container: {
         flex: 1,
-        backgroundColor: colors.background,
+        backgroundColor: t.colors.background,
+    },
+    floating: {
+        ...t.shadows.floating,
     },
     top: {
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
-        paddingTop: 12,
-        gap: 8,
-        alignItems: 'center',
+        paddingTop: t.spacing.md,
+        gap: t.spacing.sm,
     },
     // Ancho completo para que los chips se deslicen si no caben
     chipRow: {
@@ -390,86 +461,59 @@ const styles = StyleSheet.create({
         flexGrow: 0,
     },
     chips: {
-        paddingHorizontal: 12,
-        gap: 8,
+        paddingHorizontal: t.spacing.lg,
+        // Aire abajo para que no se corte la sombra
+        paddingBottom: t.spacing.xs,
+        gap: t.spacing.sm,
     },
-    chip: {
-        paddingHorizontal: 14,
-        paddingVertical: 6,
-        borderRadius: 16,
-        borderWidth: 1.5,
-        borderColor: colors.primary,
-        backgroundColor: colors.background,
-    },
-    chipSelected: {
-        backgroundColor: colors.primary,
-    },
-    chipText: {
-        fontSize: 14,
-        color: colors.primary,
-        fontWeight: '600',
-    },
-    chipTextSelected: {
-        color: colors.background,
+    mapActions: {
+        minHeight: t.touchMin,
+        paddingHorizontal: t.spacing.lg,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     searchHere: {
         alignSelf: 'center',
-        paddingHorizontal: 18,
-        paddingVertical: 8,
-        borderRadius: 18,
+    },
+    recenter: {
+        position: 'absolute',
+        right: t.spacing.lg,
+        backgroundColor: t.colors.surface,
+    },
+    loadingArea: {
+        ...StyleSheet.absoluteFill,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     loading: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 18,
-        backgroundColor: colors.background,
+        gap: t.spacing.sm,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.sm,
+        borderRadius: t.radius.pill,
+        backgroundColor: t.colors.surface,
     },
     loadingText: {
-        color: colors.text,
-    },
-    notice: {
-        marginHorizontal: 16,
-        padding: 14,
-        gap: 10,
-        borderRadius: 12,
-        backgroundColor: colors.background,
-        alignSelf: 'stretch',
-    },
-    noticeText: {
-        fontSize: 15,
-        color: colors.text,
-        textAlign: 'center',
-    },
-    retry: {
-        alignSelf: 'center',
-        paddingHorizontal: 18,
-        paddingVertical: 8,
+        ...t.typography.body,
+        fontFamily: fontFamilies.bold,
+        color: t.colors.text,
     },
     bottom: {
         position: 'absolute',
         left: 0,
         right: 0,
         bottom: 0,
-        padding: 16,
-        gap: 12,
+        padding: t.spacing.lg,
+        gap: t.spacing.sm,
     },
-    recenter: {
-        alignSelf: 'flex-end',
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+    // Área de toque de los marcadores: el punto mide 18 dp, pero el marcador entero (esta vista
+    // transparente) se puede tocar, y debe medir 48 × 48 (spec 009, CA-13).
+    markerHit: {
+        width: t.touchMin,
+        height: t.touchMin,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.background,
-        borderWidth: 1.5,
-        borderColor: colors.primary,
-    },
-    recenterText: {
-        fontSize: 24,
-        color: colors.primary,
     },
     // Marcador del inicio de cada ruta (CA-2): punto con el color de la paleta.
     startDot: {
@@ -477,8 +521,8 @@ const styles = StyleSheet.create({
         height: 18,
         borderRadius: 9,
         borderWidth: 3,
-        borderColor: colors.background,
-        backgroundColor: colors.primary,
+        borderColor: MAPA.surface,
+        backgroundColor: MAPA.primary,
     },
     // Anillo alrededor del punto de la ruta seleccionada: se ve igual quede encima o debajo del
     // punto normal (en Android el zIndex entre marcadores no siempre se respeta).
@@ -487,65 +531,61 @@ const styles = StyleSheet.create({
         height: 32,
         borderRadius: 16,
         borderWidth: 5,
-        borderColor: colors.data,
+        borderColor: MAPA.data,
         backgroundColor: 'transparent',
     },
     card: {
-        padding: 16,
-        gap: 6,
-        borderRadius: 16,
-        backgroundColor: colors.background,
+        padding: t.spacing.lg,
+        gap: t.spacing.sm,
+        borderRadius: t.radius.lg,
+        backgroundColor: t.colors.surface,
+        ...t.shadows.floating,
     },
     cardHeader: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: 8,
+        alignItems: 'center',
+        gap: t.spacing.sm,
     },
     cardTitle: {
+        ...t.typography.title,
+        fontFamily: fontFamilies.bold,
         flex: 1,
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: colors.text,
+        color: t.colors.text,
     },
+    // Etiqueta "Tuya" (spec 007, CA-12): borde y texto primary, como en el detalle.
     mineBadge: {
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 10,
-        backgroundColor: colors.secondary,
+        paddingHorizontal: t.spacing.sm,
+        paddingVertical: t.spacing.xs,
+        borderRadius: t.radius.pill,
+        borderWidth: 1.5,
+        borderColor: t.colors.primary,
     },
     mineBadgeText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: colors.background,
+        ...t.typography.caption,
+        fontFamily: fontFamilies.bold,
+        color: t.colors.primary,
     },
     cardSubtitle: {
-        fontSize: 15,
-        color: colors.textMuted,
+        ...t.typography.bodySmall,
+        color: t.colors.textMuted,
+    },
+    cardDistance: {
+        ...t.typography.bodySmall,
+        fontFamily: fontFamilies.bold,
+        color: t.colors.data,
     },
     cardStats: {
         flexDirection: 'row',
-        marginVertical: 4,
-    },
-    cardStat: {
-        flex: 1,
-        gap: 2,
+        gap: t.spacing.xl,
     },
     cardStatValue: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: colors.data,
+        ...t.typography.title,
+        fontFamily: fontFamilies.bold,
         fontVariant: ['tabular-nums'],
+        color: t.colors.text,
     },
     cardStatLabel: {
-        fontSize: 13,
-        color: colors.textMuted,
-    },
-    cardDetail: {
-        fontSize: 14,
-        color: colors.textMuted,
-    },
-    cardButton: {
-        marginTop: 8,
-        paddingVertical: 10,
+        ...t.typography.caption,
+        color: t.colors.textMuted,
     },
 });

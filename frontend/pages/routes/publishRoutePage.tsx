@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert, Platform 
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import * as Location from "expo-location";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
+import ScreenHeader from "../../components/ui/ScreenHeader";
+import Notice from "../../components/ui/Notice";
 import RouteForm from "../../components/routes/RouteForm";
 import { useActivitySummary } from "../../hooks/activity/activitySummary.hook";
 import { useMyRoutes } from "../../hooks/routes/useRouteLists";
@@ -20,7 +22,8 @@ import {
 } from "../../lib/routes/publish";
 import { zonaDe } from "../../lib/routes/region";
 import { erroresDeCampo, mensajeDeFallo } from "../../lib/routes/status";
-import { colors } from "../../lib/theme/colors";
+import { fontFamilies, type Theme } from "../../lib/theme";
+import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 
 type Props = StaticScreenProps<{ localId: number }>;
 
@@ -43,15 +46,6 @@ async function zonaPropuesta(localId: number): Promise<string> {
     return zonaDe(direcciones);
 }
 
-function Dato({ label, value }: { label: string; value: string }) {
-    return (
-        <View style={styles.dato}>
-            <Text style={styles.datoValue}>{value}</Text>
-            <Text style={styles.datoLabel}>{label}</Text>
-        </View>
-    );
-}
-
 // Publicar una actividad como ruta (spec 007, CA-4 a CA-7). Lo escrito vive en el estado de la
 // pantalla: si la publicación falla, sigue ahí para volver a intentarlo (CA-7).
 export default function PublishRoutePage({ route }: Props) {
@@ -60,6 +54,21 @@ export default function PublishRoutePage({ route }: Props) {
     const { activity, pointCount, loading } = useActivitySummary(localId);
     const { routes: misRutas } = useMyRoutes();
     const { publish } = useRouteMutations();
+    const theme = useTheme();
+    const styles = useThemedStyles(makeStyles);
+    const header = <ScreenHeader title="Publicar como ruta" onBack={() => navigation.goBack()} />;
+    // Pantalla sin formulario: un aviso y "Volver" abajo.
+    const soloAviso = (aviso: { type: 'error' | 'info'; title: string; description: string }) => (
+        <View style={styles.container}>
+            {header}
+            <View style={styles.noticeArea}>
+                <Notice {...aviso} />
+            </View>
+            <View style={styles.actions}>
+                <PrimaryButton text="Volver" onPress={() => navigation.goBack()} />
+            </View>
+        </View>
+    );
 
     const [values, setValues] = useState<RouteFormValues>(VACIO);
     const [fieldErrors, setFieldErrors] = useState<RouteFormErrors>({});
@@ -92,19 +101,19 @@ export default function PublishRoutePage({ route }: Props) {
 
     if (loading) {
         return (
-            <View style={[styles.container, styles.centered]}>
-                <ActivityIndicator size="large" color={colors.primary} />
+            <View style={styles.container}>
+                {header}
+                <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loading} />
             </View>
         );
     }
 
     if (!activity) {
-        return (
-            <View style={[styles.container, styles.centered]}>
-                <Text style={styles.notice}>No se encontró la actividad.</Text>
-                <PrimaryButton text="Volver" style={styles.button} onPress={() => navigation.goBack()} />
-            </View>
-        );
+        return soloAviso({
+            type: 'error',
+            title: 'No se encontró la actividad',
+            description: 'Puede que se haya borrado de este teléfono.',
+        });
     }
 
     // La misma revisión que el resumen (CA-1 a CA-3, CA-8); el servidor vuelve a validar. Después
@@ -113,16 +122,12 @@ export default function PublishRoutePage({ route }: Props) {
     const existente = misRutas.find((r) => r.sourceActivityId === activity.serverId);
     const publicable = motivoNoPublicable(activity, existente);
     if (publicable.kind !== 'publicable' && !publish.isSuccess) {
-        return (
-            <View style={[styles.container, styles.centered]}>
-                <Text style={styles.notice}>
-                    {publicable.kind === 'ya-publicada'
-                        ? 'Esta actividad ya tiene una ruta publicada.'
-                        : publicable.mensaje}
-                </Text>
-                <PrimaryButton text="Volver" style={styles.button} onPress={() => navigation.goBack()} />
-            </View>
-        );
+        return soloAviso({
+            type: 'info',
+            title: 'No se puede publicar',
+            description:
+                publicable.kind === 'ya-publicada' ? 'Esta actividad ya tiene una ruta publicada.' : publicable.mensaje,
+        });
     }
 
     const distancia = activity.distanceMeters ?? 0;
@@ -144,7 +149,7 @@ export default function PublishRoutePage({ route }: Props) {
             },
             {
                 onSuccess: () => {
-                    Alert.alert('Ruta publicada', 'Ya aparece en "Explorar rutas" para todos.', [
+                    Alert.alert('Ruta publicada', 'Ya aparece en "Rutas" para todos.', [
                         { text: 'Aceptar', onPress: () => navigation.goBack() },
                     ]);
                 },
@@ -157,129 +162,97 @@ export default function PublishRoutePage({ route }: Props) {
     };
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled"
-        >
-            <Text style={styles.title}>Publicar como ruta</Text>
+        <View style={styles.container}>
+            {header}
+            <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+                {!!serverError && <Notice type="error" title="No se pudo publicar" description={serverError} />}
 
-            <RouteForm
-                values={values}
-                onChange={onChange}
-                errors={fieldErrors}
-                regionPlaceholder={buscandoZona ? 'Buscando la zona...' : undefined}
-            />
+                <RouteForm
+                    values={values}
+                    onChange={onChange}
+                    errors={fieldErrors}
+                    regionPlaceholder={buscandoZona ? 'Buscando la zona...' : undefined}
+                />
 
-            {/* Datos que salen de la actividad y no se pueden cambiar (RN-1, RN-6) */}
-            <View style={styles.datos}>
-                <Text style={styles.sectionTitle}>Datos de la actividad</Text>
-                <View style={styles.datosRow}>
-                    <Dato label="Tipo" value={ACTIVITY_TYPE_LABELS[activity.type]} />
-                    <Dato label="Dificultad" value={DIFFICULTY_LABELS[dificultad]} />
+                {/* Datos que salen de la actividad y no se pueden cambiar (RN-1, RN-6) */}
+                <View style={styles.datos}>
+                    <Text style={styles.datosTitle}>Datos de la actividad</Text>
+                    <Text style={styles.datosText}>
+                        {ACTIVITY_TYPE_LABELS[activity.type]} · Dificultad {DIFFICULTY_LABELS[dificultad].toLowerCase()}
+                    </Text>
+                    <Text style={styles.datosData}>
+                        {formatDistance(activity.distanceMeters)} · {formatElevation(activity.elevationGainMeters)} de
+                        elevación ganada
+                    </Text>
+                    <Text style={styles.nota}>La dificultad la calcula la app con la distancia y la elevación.</Text>
                 </View>
-                <View style={styles.datosRow}>
-                    <Dato label="Distancia" value={formatDistance(activity.distanceMeters)} />
-                    <Dato label="Elevación ganada" value={formatElevation(activity.elevationGainMeters)} />
-                </View>
-                <Text style={styles.nota}>
-                    La dificultad la calcula la app con la distancia y la elevación.
-                </Text>
-            </View>
 
-            {/* Aviso de privacidad (CA-4, requisitos no funcionales) */}
-            <View style={styles.aviso}>
-                <Text style={styles.avisoText}>
-                    Se publica el recorrido completo de la actividad ({pointCount}{' '}
-                    {pointCount === 1 ? 'punto' : 'puntos'}), incluidos su inicio y su final.
-                    Cualquier persona con la app podrá verlo, junto con tu nombre.
-                </Text>
-            </View>
+                {/* Aviso de privacidad (CA-4, requisitos no funcionales) */}
+                <Notice
+                    title="Tu recorrido será público"
+                    description={`Se publica el recorrido completo de la actividad (${pointCount} ${pointCount === 1 ? 'punto' : 'puntos'}), incluidos su inicio y su final. Cualquier persona con la app podrá verlo, junto con tu nombre.`}
+                />
+            </ScrollView>
 
-            {!!serverError && <Text style={styles.serverError}>{serverError}</Text>}
-            <PrimaryButton
-                text={publish.isPending ? 'Publicando...' : 'Publicar'}
-                style={styles.button}
-                onPress={publicar}
-                disabled={publish.isPending}
-            />
-        </ScrollView>
+            <View style={styles.actions}>
+                <PrimaryButton
+                    text={publish.isPending ? 'Publicando...' : 'Publicar'}
+                    onPress={publicar}
+                    disabled={publish.isPending}
+                />
+            </View>
+        </View>
     );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
+        backgroundColor: t.colors.background,
     },
-    centered: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 20,
-        padding: 24,
+    loading: {
+        marginTop: t.spacing.xxl,
+    },
+    noticeArea: {
+        flex: 1,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
     },
     content: {
-        padding: 24,
-        gap: 20,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: colors.text,
-    },
-    sectionTitle: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: colors.text,
+        gap: t.spacing.md,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
     },
     datos: {
-        gap: 12,
+        gap: t.spacing.xs,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
+        borderRadius: t.radius.lg,
+        backgroundColor: t.colors.surface,
     },
-    datosRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
+    datosTitle: {
+        ...t.typography.body,
+        fontFamily: fontFamilies.bold,
+        color: t.colors.text,
     },
-    dato: {
-        flex: 1,
-        alignItems: 'center',
-        gap: 2,
+    datosText: {
+        ...t.typography.bodySmall,
+        color: t.colors.textMuted,
     },
-    datoValue: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: colors.data,
-        fontVariant: ['tabular-nums'],
-    },
-    datoLabel: {
-        fontSize: 13,
-        color: colors.textMuted,
+    datosData: {
+        ...t.typography.bodySmall,
+        fontFamily: fontFamilies.bold,
+        color: t.colors.data,
     },
     nota: {
-        fontSize: 13,
-        color: colors.textMuted,
-        textAlign: 'center',
+        ...t.typography.caption,
+        color: t.colors.textMuted,
     },
-    aviso: {
-        borderLeftWidth: 4,
-        borderLeftColor: colors.secondary,
-        paddingLeft: 12,
-        paddingVertical: 4,
-    },
-    avisoText: {
-        fontSize: 14,
-        color: colors.text,
-    },
-    notice: {
-        fontSize: 16,
-        color: colors.text,
-        textAlign: 'center',
-    },
-    serverError: {
-        color: colors.error,
-        fontSize: 14,
-        textAlign: 'center',
-    },
-    button: {
-        paddingVertical: 14,
+    actions: {
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
+        backgroundColor: t.colors.surface,
+        borderTopWidth: 1,
+        borderTopColor: t.colors.border,
     },
 });

@@ -1,8 +1,11 @@
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import BgBtn from "../../components/ui/buttons/BgBtn";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import SyncBadge from "../../components/ui/SyncBadge";
+import ScreenHeader from "../../components/ui/ScreenHeader";
+import Notice from "../../components/ui/Notice";
+import Metric from "../../components/ui/Metric";
 import { useActivitySummary } from "../../hooks/activity/activitySummary.hook";
 import { useMyRoutes } from "../../hooks/routes/useRouteLists";
 import {
@@ -17,20 +20,12 @@ import { formatDistance, formatElevation, formatPace, formatSpeed } from "../../
 import { averagePace, averageSpeed } from "../../lib/metrics/summary";
 import type { Activity } from "../../lib/db/activities";
 import { motivoNoPublicable } from "../../lib/routes/publish";
-import { colors } from "../../lib/theme/colors";
+import type { Theme } from "../../lib/theme";
+import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 
 // origin 'recording': se llega al detener y "Listo" regresa a la pantalla principal (CA-2).
 // origin 'history': se llega desde "Mis actividades" y atrás regresa a la lista (CA-21).
 type Props = StaticScreenProps<{ localId: number; origin: 'recording' | 'history' }>;
-
-function Stat({ value, label }: { value: string; label: string }) {
-    return (
-        <View style={styles.stat}>
-            <Text style={styles.statValue}>{value}</Text>
-            <Text style={styles.statLabel}>{label}</Text>
-        </View>
-    );
-}
 
 // "Publicar como ruta", el motivo por el que no se puede o "Ver ruta publicada" (spec 007,
 // CA-1 a CA-3, CA-8). Si la ruta ya existe se sabe por "Mis rutas" (plan D7); mientras carga no
@@ -38,6 +33,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 // tenía ruta.
 function PublishSection({ activity, localId }: { activity: Activity; localId: number }) {
     const navigation = useNavigation();
+    const styles = useThemedStyles(makeStyles);
     const { routes, status } = useMyRoutes();
 
     const existente = routes.find((r) => r.sourceActivityId === activity.serverId);
@@ -47,9 +43,8 @@ function PublishSection({ activity, localId }: { activity: Activity; localId: nu
     switch (publicable.kind) {
         case 'publicable':
             return (
-                <PrimaryButton
+                <BgBtn
                     text="Publicar como ruta"
-                    style={styles.doneBtn}
                     onPress={() => navigation.navigate('PublishRoute', { localId })}
                 />
             );
@@ -57,7 +52,6 @@ function PublishSection({ activity, localId }: { activity: Activity; localId: nu
             return (
                 <BgBtn
                     text="Ver ruta publicada"
-                    style={styles.doneBtn}
                     onPress={() => navigation.navigate('RouteDetail', { id: publicable.rutaId })}
                 />
             );
@@ -72,20 +66,34 @@ export default function ActivitySummaryPage({ route }: Props) {
     const { localId, origin } = route.params;
     const navigation = useNavigation();
     const { activity, pointCount, loading } = useActivitySummary(localId);
+    const theme = useTheme();
+    const styles = useThemedStyles(makeStyles);
+    const header = <ScreenHeader title="Resumen" onBack={() => navigation.goBack()} />;
 
     if (loading) {
         return (
-            <View style={styles.container}>
-                <ActivityIndicator size="large" color={colors.primary} />
+            <View style={styles.screen}>
+                {header}
+                <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loading} />
             </View>
         );
     }
 
     if (!activity) {
         return (
-            <View style={styles.container}>
-                <Text style={styles.notice}>No se encontró la actividad.</Text>
-                <PrimaryButton text="Volver" style={styles.doneBtn} onPress={() => navigation.goBack()} />
+            <View style={styles.screen}>
+                {header}
+                <View style={styles.content}>
+                    <Notice
+                        type="error"
+                        title="No se encontró la actividad"
+                        description="Puede que se haya borrado de este teléfono."
+                    />
+                </View>
+                <View style={styles.spacer} />
+                <View style={styles.actions}>
+                    <PrimaryButton text="Volver" onPress={() => navigation.goBack()} />
+                </View>
             </View>
         );
     }
@@ -98,108 +106,120 @@ export default function ActivitySummaryPage({ route }: Props) {
         ? formatSpeed(averageSpeed(distance, duration))
         : formatPace(averagePace(distance, duration));
 
+    const detalles = [
+        activity.elevationSource ? ELEVATION_SOURCE_LABELS[activity.elevationSource] : null,
+        `${pointCount} ${pointCount === 1 ? 'punto registrado' : 'puntos registrados'}`,
+    ].filter(Boolean).join(' · ');
+
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>{ACTIVITY_TYPE_LABELS[activity.type]}</Text>
-                <Text style={styles.subtitle}>{formatStartedAt(activity.startedAt)}</Text>
-                <SyncBadge status={syncStatusOf(activity)} style={styles.badge} />
-            </View>
+        <View style={styles.screen}>
+            {header}
+            <ScrollView contentContainerStyle={styles.content}>
+                <View style={styles.titles}>
+                    <Text style={styles.title} accessibilityRole="header">{ACTIVITY_TYPE_LABELS[activity.type]}</Text>
+                    <Text style={styles.subtitle}>{formatStartedAt(activity.startedAt)}</Text>
+                    <SyncBadge status={syncStatusOf(activity)} />
+                </View>
 
-            <View style={styles.stats}>
-                <Stat value={formatDuration(duration)} label="Duración" />
-                <Stat value={formatDistance(activity.distanceMeters)} label="Distancia" />
-                <Stat value={average} label={speed ? 'Velocidad promedio' : 'Ritmo promedio'} />
-            </View>
+                <View style={styles.metrics}>
+                    <View style={styles.row}>
+                        <Metric size="medium" value={formatDuration(duration)} label="Duración" style={styles.flex} />
+                        <Metric size="medium" value={formatDistance(activity.distanceMeters)} label="Distancia" style={styles.flex} />
+                    </View>
+                    <View style={styles.row}>
+                        <Metric
+                            size="medium"
+                            value={average}
+                            label={speed ? 'Velocidad promedio' : 'Ritmo promedio'}
+                            style={styles.flex}
+                        />
+                        <Metric
+                            size="medium"
+                            value={formatElevation(activity.elevationGainMeters)}
+                            label="Elevación ganada"
+                            style={styles.flex}
+                        />
+                    </View>
+                    <View style={styles.row}>
+                        <Metric
+                            size="medium"
+                            value={formatElevation(activity.elevationLossMeters)}
+                            label="Elevación perdida"
+                            style={styles.flex}
+                        />
+                        <View style={styles.flex} />
+                    </View>
+                </View>
 
-            <View style={styles.stats}>
-                <Stat value={formatElevation(activity.elevationGainMeters)} label="Elevación ganada" />
-                <Stat value={formatElevation(activity.elevationLossMeters)} label="Elevación perdida" />
-            </View>
+                <Text style={styles.detail}>{detalles}</Text>
+            </ScrollView>
 
-            <View style={styles.details}>
-                {activity.elevationSource && (
-                    <Text style={styles.detail}>{ELEVATION_SOURCE_LABELS[activity.elevationSource]}</Text>
+            <View style={styles.actions}>
+                <PublishSection activity={activity} localId={localId} />
+                {origin === 'recording' && (
+                    <PrimaryButton text="Listo" onPress={() => navigation.goBack()} />
                 )}
-                <Text style={styles.detail}>
-                    {pointCount} {pointCount === 1 ? 'punto registrado' : 'puntos registrados'}
-                </Text>
             </View>
-
-            <PublishSection activity={activity} localId={localId} />
-
-            {origin === 'recording' && (
-                <PrimaryButton text="Listo" style={styles.doneBtn} onPress={() => navigation.goBack()} />
-            )}
         </View>
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
+const makeStyles = (t: Theme) => StyleSheet.create({
+    screen: {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 28,
-        padding: 24,
-        backgroundColor: colors.background,
+        backgroundColor: t.colors.background,
     },
-    header: {
-        alignItems: 'center',
-        gap: 4,
+    loading: {
+        marginTop: t.spacing.xxl,
+    },
+    content: {
+        gap: t.spacing.lg,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
+    },
+    spacer: {
+        flex: 1,
+    },
+    titles: {
+        gap: t.spacing.xs,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: colors.text,
+        ...t.typography.headline,
+        color: t.colors.text,
     },
     subtitle: {
-        fontSize: 16,
-        color: colors.textMuted,
+        ...t.typography.bodySmall,
+        color: t.colors.textMuted,
     },
-    badge: {
-        alignSelf: 'center',
-        marginTop: 4,
+    metrics: {
+        gap: t.spacing.lg,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
+        borderRadius: t.radius.lg,
+        backgroundColor: t.colors.surface,
     },
-    stats: {
+    row: {
         flexDirection: 'row',
-        alignSelf: 'stretch',
-        justifyContent: 'space-around',
+        gap: t.spacing.lg,
     },
-    stat: {
+    flex: {
         flex: 1,
-        alignItems: 'center',
-        gap: 2,
-    },
-    statValue: {
-        fontSize: 26,
-        fontWeight: 'bold',
-        color: colors.data,
-        fontVariant: ['tabular-nums'],
-    },
-    statLabel: {
-        fontSize: 13,
-        color: colors.textMuted,
-        textAlign: 'center',
-    },
-    details: {
-        alignItems: 'center',
-        gap: 4,
     },
     detail: {
-        fontSize: 14,
-        color: colors.textMuted,
+        ...t.typography.bodySmall,
+        color: t.colors.textMuted,
     },
-    notice: {
-        fontSize: 16,
-        color: colors.text,
-    },
-    doneBtn: {
-        paddingVertical: 14,
+    actions: {
+        gap: t.spacing.sm,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
+        backgroundColor: t.colors.surface,
+        borderTopWidth: 1,
+        borderTopColor: t.colors.border,
     },
     publishNotice: {
-        fontSize: 14,
-        color: colors.textMuted,
+        ...t.typography.bodySmall,
+        color: t.colors.textMuted,
         textAlign: 'center',
     },
 });

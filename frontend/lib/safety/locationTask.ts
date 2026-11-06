@@ -8,7 +8,7 @@ import {
   saveDetectorState,
   setLocationQueuedAt,
 } from '../db/safety';
-import { colors } from '../theme/colors';
+import { lightColors } from '../theme/colors';
 import { safetySync } from '.';
 import { umbralesDe } from './inactivity';
 import { SAFETY_MESSAGES } from './messages';
@@ -91,7 +91,7 @@ export async function iniciarTarea() {
     foregroundService: {
       notificationTitle: SAFETY_MESSAGES.grabandoTitulo,
       notificationBody: SAFETY_MESSAGES.grabandoCuerpo,
-      notificationColor: colors.alert,
+      notificationColor: lightColors.alert,
       // Cerrar la app detiene la grabación, como hasta ahora (spec 003, CA-10).
       killServiceOnDestroy: true,
     },

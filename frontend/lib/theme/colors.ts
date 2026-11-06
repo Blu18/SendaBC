@@ -1,14 +1,49 @@
-// Paleta de SendaBC. Usa estos nombres en lugar de valores hex sueltos.
-export const colors = {
-  background: '#EDEAE1', // Polvo de granito — fondo
-  text: '#2B2A26', // Roca sombra — texto
-  primary: '#5C6B49', // Chaparral — primario (botones, encabezados)
-  secondary: '#A9762F', // Ocre de sendero — secundario / acentos
-  data: '#2E6E7E', // Azul Pacífico — datos y mapa (métricas, recorrido)
-  alert: '#C1432A', // Alerta — SOLO seguridad (inactividad, SOS); no usar para errores de formulario
+// Paleta de SendaBC (spec 009). Usa estos nombres en lugar de valores hex sueltos.
+// Los nombres coinciden con las variables de la colección Color en Figma (plan D6).
+export type ColorTokens = {
+  background: string; // Polvo de granito — fondo
+  surface: string; // Tarjetas, campos, barra de pestañas
+  text: string; // Roca sombra — texto
+  textMuted: string; // Texto secundario
+  primary: string; // Chaparral — botones, encabezados
+  onPrimary: string; // Texto sobre primary (y sobre error en el botón de peligro)
+  secondary: string; // Ocre de sendero — íconos, acentos, texto grande (RN-4)
+  secondaryText: string; // Ocre para texto normal (p. ej. insignia "pendiente")
+  data: string; // Azul Pacífico — métricas y recorrido
+  alert: string; // SOLO seguridad (inactividad, SOS); no usar para errores de formulario (RN-5)
+  onAlert: string; // Texto sobre alert
+  error: string; // Validación y acciones destructivas
+  border: string; // Bordes de campos (≥ 3:1 contra background y surface)
+};
 
-  // Tonos que ya usaba la app, fuera de la paleta base
-  textMuted: '#444444', // texto de inputs
-  primaryDark: '#38412c', // borde/texto de BgBtn
-  error: '#B3261E', // errores de validación de formularios
-} as const;
+export const lightColors: ColorTokens = {
+  background: '#EDEAE1',
+  surface: '#F7F5EF',
+  text: '#2B2A26',
+  textMuted: '#444444',
+  primary: '#5C6B49',
+  onPrimary: '#FFFFFF',
+  secondary: '#A9762F',
+  secondaryText: '#8A5F22',
+  data: '#2E6E7E',
+  alert: '#C1432A',
+  onAlert: '#FFFFFF',
+  error: '#B3261E',
+  border: '#857F72',
+};
+
+export const darkColors: ColorTokens = {
+  background: '#1A1B17',
+  surface: '#262722',
+  text: '#EDEAE1',
+  textMuted: '#B8B4A8',
+  primary: '#A7B98C',
+  onPrimary: '#1A1B17',
+  secondary: '#D9A75E',
+  secondaryText: '#D9A75E',
+  data: '#7DB8C7',
+  alert: '#EE7A5F',
+  onAlert: '#1A1B17',
+  error: '#F2B8B5',
+  border: '#807C72',
+};

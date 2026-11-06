@@ -47,7 +47,7 @@ En `frontend/`, `npm test` corre `lib/api/errors.test.ts` (lectura del error de 
 M1–M4 ejecutados en dispositivo el 2026-10-08: todos pasan.
 
 **M1 — Validación en cliente**
-1. Abrir Registro, dejar campos vacíos y presionar "Registrarse".
+1. En la bienvenida, tocar "Crear cuenta", dejar campos vacíos y presionar "Registrarse".
 2. Probar correo `abc`, usuario `Ana` (y `  Ana  `), contraseña `123`, confirmación distinta.
 - **Esperado:** cada campo muestra su error; no hay petición de red.
 

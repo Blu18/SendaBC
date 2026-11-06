@@ -1,9 +1,20 @@
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import PrimaryButton from "../ui/buttons/PrimaryBtn";
+import Notice from "../ui/Notice";
 import type { RouteListStatus } from "../../lib/routes/status";
-import { colors } from "../../lib/theme/colors";
+import type { Theme } from "../../lib/theme";
+import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 
 type Messages = { empty: string; offline: string; error: string };
+
+// Títulos de los avisos (spec 009, prototipo); el mensaje de cada lista va como descripción.
+const TITLES = {
+    empty: 'Nada por aquí todavía',
+    offline: 'Sin conexión',
+    error: 'No se pudo cargar',
+} as const;
+
+const TYPES = { empty: 'info', offline: 'offline', error: 'error' } as const;
 
 // Lo que muestran "Mis rutas" y "Mis favoritas" cuando no hay lista que pintar: cargando, sin
 // conexión o error con "Reintentar", o el mensaje de lista vacía (spec 007, CA-18, CA-21).
@@ -17,34 +28,27 @@ export default function RouteListNotice({
     messages: Messages;
     onRetry: () => void;
 }) {
+    const theme = useTheme();
+    const styles = useThemedStyles(makeStyles);
     if (status === 'success') return null;
     if (status === 'loading') {
-        return <ActivityIndicator size="large" color={colors.primary} style={styles.loading} />;
+        return <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loading} />;
     }
     return (
         <View style={styles.container}>
-            <Text style={styles.text}>{messages[status]}</Text>
-            {status !== 'empty' && <PrimaryButton text="Reintentar" style={styles.retry} onPress={onRetry} />}
+            <Notice type={TYPES[status]} title={TITLES[status]} description={messages[status]} />
+            {status !== 'empty' && <PrimaryButton text="Reintentar" onPress={onRetry} />}
         </View>
     );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
     loading: {
-        marginTop: 32,
+        marginTop: t.spacing.xxl,
     },
     container: {
-        flex: 1,
-        justifyContent: 'center',
-        padding: 24,
-        gap: 16,
-    },
-    text: {
-        fontSize: 16,
-        color: colors.text,
-        textAlign: 'center',
-    },
-    retry: {
-        paddingVertical: 12,
+        gap: t.spacing.sm,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
     },
 });

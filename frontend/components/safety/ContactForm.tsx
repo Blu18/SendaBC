@@ -1,8 +1,10 @@
-import { View, Text, TextInput, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import PrimaryButton from "../ui/buttons/PrimaryBtn";
 import TextBtn from "../ui/buttons/TextBtn";
+import TextField from "../ui/TextField";
 import { MAX_NOMBRE_CONTACTO } from "../../lib/safety/contacts";
-import { colors } from "../../lib/theme/colors";
+import type { Theme } from "../../lib/theme";
+import { useThemedStyles } from "../../hooks/theme/useTheme";
 
 type Props = {
     value: string;
@@ -15,32 +17,26 @@ type Props = {
 };
 
 // Nombre de un contacto de emergencia, al agregarlo o editarlo (spec 008, CA-1 a CA-3). Como en
-// RouteForm, sin maxLength: el mensaje aparece junto al campo al guardar (CA-2) y el contador
-// avisa antes.
+// RouteForm, sin maxLength: el mensaje aparece junto al campo al guardar (CA-2) y el contador de
+// la ayuda avisa antes.
 export default function ContactForm({ value, onChange, error, submitText, submitting, onSubmit, onCancel }: Props) {
-    const largo = value.trim().length;
+    const styles = useThemedStyles(makeStyles);
     return (
         <View style={styles.form}>
-            <View style={styles.labelRow}>
-                <Text style={styles.label}>Nombre</Text>
-                <Text style={[styles.counter, largo > MAX_NOMBRE_CONTACTO && styles.counterOver]}>
-                    {largo}/{MAX_NOMBRE_CONTACTO}
-                </Text>
-            </View>
-            <TextInput
+            <TextField
+                label="Nombre"
                 value={value}
                 onChangeText={onChange}
+                error={error}
+                helper={`Así lo verás en la app y en los avisos · ${value.trim().length}/${MAX_NOMBRE_CONTACTO}`}
                 placeholder="Por ejemplo, Mamá"
-                placeholderTextColor={colors.textMuted}
                 autoFocus
                 returnKeyType="done"
                 onSubmitEditing={onSubmit}
-                style={[styles.input, !!error && styles.inputError]}
                 accessibilityLabel="Nombre del contacto"
             />
-            {!!error && <Text style={styles.errorText}>{error}</Text>}
             <View style={styles.actions}>
-                <TextBtn text="Cancelar" onPress={onCancel} />
+                <TextBtn text="Cancelar" style={styles.cancel} onPress={onCancel} />
                 <PrimaryButton
                     text={submitting ? 'Guardando…' : submitText}
                     disabled={submitting}
@@ -52,52 +48,19 @@ export default function ContactForm({ value, onChange, error, submitText, submit
     );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
     form: {
-        gap: 6,
-    },
-    labelRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'baseline',
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: colors.text,
-    },
-    counter: {
-        fontSize: 12,
-        color: colors.textMuted,
-        fontVariant: ['tabular-nums'],
-    },
-    counterOver: {
-        color: colors.error,
-    },
-    input: {
-        color: colors.textMuted,
-        fontSize: 16,
-        borderRadius: 8,
-        borderColor: colors.primary,
-        borderWidth: 1.5,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-    },
-    inputError: {
-        borderColor: colors.error,
-    },
-    errorText: {
-        color: colors.error,
-        fontSize: 13,
+        gap: t.spacing.sm,
     },
     actions: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-        marginTop: 4,
+        gap: t.spacing.sm,
+    },
+    cancel: {
+        flex: 1,
     },
     submit: {
         flex: 1,
-        paddingVertical: 10,
     },
 });

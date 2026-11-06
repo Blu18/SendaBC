@@ -1,8 +1,17 @@
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, Alert, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useProfile } from "../../hooks/auth/auth.hooks";
 import { useAuth } from "../../context/AuthContext";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
+import TextBtn from "../../components/ui/buttons/TextBtn";
+import ScreenHeader from "../../components/ui/ScreenHeader";
+import Notice from "../../components/ui/Notice";
+import Icon from "../../components/ui/Icon";
+import SafetyCard from "../../components/safety/SafetyCard";
+import { useEmergencyContacts } from "../../hooks/safety/useEmergencyContacts";
+import { contactosActivos } from "../../lib/safety/contacts";
+import { darkTheme, lightTheme, type Theme } from "../../lib/theme";
+import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 import { countPendingUploads } from "../../lib/db/activities";
 import { pendingUploadsWarning } from "../../lib/format/activity";
 
@@ -10,6 +19,10 @@ export default function MainPage() {
     const navigation = useNavigation();
     const { logout, userId } = useAuth();
     const profile = useProfile();
+    const { contacts, status: contactsStatus } = useEmergencyContacts();
+    const nombresActivos = contactosActivos(contacts).map((c) => c.name);
+    const theme = useTheme();
+    const styles = useThemedStyles(makeStyles);
 
     const cerrarSesion = async () => {
         await logout();
@@ -38,87 +51,78 @@ export default function MainPage() {
         ]);
     };
 
+    // "Empezar" va sobre la tarjeta primary: usa primary y onPrimary del modo contrario, como en
+    // Figma (los dos pares ya están en la tabla de contraste, CA-3).
+    const inverse = theme.scheme === 'dark' ? lightTheme.colors : darkTheme.colors;
+
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Pantalla principal</Text>
+            <ScreenHeader title={profile.data ? `Hola, ${profile.data.displayName}` : 'Inicio'} />
+            <ScrollView contentContainerStyle={styles.content}>
+                {profile.isLoading && <ActivityIndicator size="large" color={theme.colors.primary} />}
+                {profile.isError && (
+                    <Notice
+                        type="error"
+                        title="No se pudo cargar tu perfil"
+                        description="Tus actividades se siguen grabando en el teléfono."
+                    />
+                )}
 
-            {profile.isLoading && <ActivityIndicator size="large" color="#5C6B49" />}
-            {profile.isError && <Text style={styles.error}>No se pudo cargar tu perfil</Text>}
-            {profile.data && (
-                <Text style={styles.subtitle}>Hola, {profile.data.displayName}</Text>
-            )}
+                <View style={styles.newActivity}>
+                    <Icon name="hiking" size={40} color="onPrimary" decorative />
+                    <Text style={styles.newActivityTitle}>Nueva actividad</Text>
+                    <Text style={styles.newActivityText}>
+                        Graba tu recorrido aunque no tengas señal. Se sube solo cuando vuelva la conexión.
+                    </Text>
+                    <PrimaryButton
+                        text="Empezar"
+                        style={{ backgroundColor: inverse.primary }}
+                        textStyle={{ color: inverse.onPrimary }}
+                        onPress={() => navigation.navigate('Activity')}
+                    />
+                </View>
 
-            <PrimaryButton
-              text="Nueva actividad"
-              style={styles.activityBtn}
-              onPress={() => navigation.navigate('Activity')}
-            />
+                {/* Resumen de seguridad (spec 008, CA-8); solo con la lista ya cargada, para no
+                    avisar "sin contactos" por un error de red. */}
+                <Text style={styles.sectionTitle} accessibilityRole="header">Seguridad</Text>
+                {contactsStatus === 'success' && (
+                    <SafetyCard nombres={nombresActivos} onConfigurar={() => navigation.navigate('Home', { screen: 'Safety' })} />
+                )}
 
-            <PrimaryButton
-              text="Mis actividades"
-              style={styles.activityBtn}
-              onPress={() => navigation.navigate('ActivityHistory')}
-            />
-
-            <PrimaryButton
-              text="Explorar rutas"
-              style={styles.activityBtn}
-              onPress={() => navigation.navigate('ExploreRoutes')}
-            />
-
-            {/* Por ahora se entra desde aquí (spec 007, P8) */}
-            <PrimaryButton
-              text="Mis rutas"
-              style={styles.activityBtn}
-              onPress={() => navigation.navigate('MyRoutes')}
-            />
-
-            <PrimaryButton
-              text="Mis favoritas"
-              style={styles.activityBtn}
-              onPress={() => navigation.navigate('Favorites')}
-            />
-
-            {/* Contactos de emergencia (spec 008, plan) */}
-            <PrimaryButton
-              text="Seguridad"
-              style={styles.activityBtn}
-              onPress={() => navigation.navigate('EmergencyContacts')}
-            />
-
-            <PrimaryButton text="Cerrar sesión" style={styles.logoutBtn} onPress={handleLogout} />
+                <TextBtn text="Cerrar sesión" style={styles.logoutBtn} onPress={handleLogout} />
+            </ScrollView>
         </View>
     )
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 16,
-        backgroundColor: "#EDEAE1",
+        backgroundColor: t.colors.background,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: "#2B2A26",
+    content: {
+        gap: t.spacing.lg,
+        padding: t.spacing.lg,
     },
-    subtitle: {
-        fontSize: 18,
-        color: "#444444",
+    newActivity: {
+        gap: t.spacing.md,
+        padding: t.spacing.xl,
+        borderRadius: t.radius.lg,
+        backgroundColor: t.colors.primary,
     },
-    error: {
-        color: "#B3261E",
+    newActivityTitle: {
+        ...t.typography.headline,
+        color: t.colors.onPrimary,
     },
-    // PrimaryButton trae alignSelf: 'stretch'; con ancho fijo eso lo pega a la izquierda
-    activityBtn: {
-        width: '60%',
-        alignSelf: 'center',
+    newActivityText: {
+        ...t.typography.bodySmall,
+        color: t.colors.onPrimary,
+    },
+    sectionTitle: {
+        ...t.typography.title,
+        color: t.colors.text,
     },
     logoutBtn: {
-        width: '60%',
-        alignSelf: 'center',
-        marginTop: 24,
+        alignSelf: 'flex-start',
     },
 });

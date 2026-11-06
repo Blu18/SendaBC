@@ -57,13 +57,13 @@ Con la spec 006, el catálogo muestra rutas cercanas, pero solo tiene las rutas 
 - **CA-15 (HU-4):** Dado el detalle de una ruta publicada, cuando toco "Guardar en favoritas", entonces queda guardada en mi cuenta y el botón cambia a "Quitar de favoritas". Al tocarlo de nuevo, se quita.
 - **CA-16 (HU-4):** Guardar varias veces la misma ruta no la duplica, y quitar una que ya no está en favoritas no da error.
 - **CA-17 (HU-4):** Mis favoritas se guardan en mi cuenta: si inicio sesión en otro teléfono, las veo ahí.
-- **CA-18 (HU-5):** Cuando toco "Mis favoritas" en la pantalla principal, entonces veo mis rutas guardadas con nombre, tipo, distancia y elevación ganada, la más reciente primero, y al tocar una se abre su detalle. Sin favoritas veo un mensaje que explica cómo guardarlas.
+- **CA-18 (HU-5):** Cuando toco "Mis favoritas" en el encabezado de la pestaña Rutas, entonces veo mis rutas guardadas con nombre, tipo, distancia y elevación ganada, la más reciente primero, y al tocar una se abre su detalle. Sin favoritas veo un mensaje que explica cómo guardarlas.
 - **CA-19 (HU-5):** Dada una favorita cuya ruta se archivó o se borró, en "Mis favoritas" sigue en la lista con la marca "Ya no disponible". Al tocarla veo el mensaje de CA-14, y puedo quitarla de mis favoritas.
 - **CA-20 (HU-5):** Las favoritas de un usuario solo las ve ese usuario.
 
 ### Mis rutas publicadas
 
-- **CA-21 (HU-6):** Cuando toco "Mis rutas" en la pantalla principal, entonces veo las rutas que publiqué con nombre, tipo, distancia, fecha de publicación y su estado ("Publicada" o "Archivada"), la más reciente primero. Al tocar una se abre su detalle. Sin rutas veo un mensaje que explica cómo publicar una.
+- **CA-21 (HU-6):** Cuando toco "Mis rutas" en el encabezado de la pestaña Rutas, entonces veo las rutas que publiqué con nombre, tipo, distancia, fecha de publicación y su estado ("Publicada" o "Archivada"), la más reciente primero. Al tocar una se abre su detalle. Sin rutas veo un mensaje que explica cómo publicar una.
 - **CA-22 (HU-6):** Dada una ruta mía, cuando la edito, entonces puedo cambiar su nombre, su descripción y su zona, con las mismas validaciones que al publicar (CA-5). El tipo, la dificultad, la distancia, la elevación y el recorrido no se pueden editar (RN-1). Los cambios se ven en el catálogo y en el detalle para todos.
 - **CA-23 (HU-6):** Dada una ruta mía publicada, cuando la archivo, entonces deja de aparecer en "Explorar rutas" para todos y queda como "Archivada" en "Mis rutas". En las favoritas de los demás queda como "Ya no disponible" (CA-19).
 - **CA-24 (HU-6):** Dada una ruta mía archivada, cuando toco "Volver a publicar", entonces vuelve a aparecer en "Explorar rutas" con los mismos datos y queda como "Publicada" en "Mis rutas". En las favoritas de los demás vuelve a estar disponible.
@@ -139,6 +139,7 @@ No quedan preguntas abiertas.
 
 ## Historial
 
+- 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). CA-18 y CA-21: "Mis favoritas" y "Mis rutas" pasan de botones de la pantalla principal al encabezado de la pestaña Rutas (spec 009, RN-2; reemplaza P8). Casos M1, M2, M4, M6, M7 y M8.
 - 2026-10-21 — Implementada: los 27 CA verificados con pruebas automáticas (backend, e2e y frontend) y los casos manuales M1–M8 en el emulador.
 - 2026-10-20 — En progreso: T1 (migración `20261020000000_routes_publish`) aplicada.
 - 2026-10-20 — Corrección al escribir el plan: RN-8 decía que el perfil usa la altitud del barómetro o del GPS, pero en el servidor solo existe la del GPS de cada punto (spec 005, CA-8). El perfil usa esa.

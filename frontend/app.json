@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -54,7 +54,18 @@
           "motionPermission": "SendaBC usa el sensor de presión para medir el desnivel de tus actividades."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-system-ui",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/AtkinsonHyperlegibleNext-Regular.ttf",
+            "./assets/fonts/AtkinsonHyperlegibleNext-SemiBold.ttf",
+            "./assets/fonts/AtkinsonHyperlegibleNext-Bold.ttf"
+          ]
+        }
+      ]
     ]
   }
 }

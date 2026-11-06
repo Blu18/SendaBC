@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView, StyleSheet, Linking, Alert, Vibration } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Linking, Alert, Vibration } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import BgBtn from "../../components/ui/buttons/BgBtn";
+import ScreenHeader from "../../components/ui/ScreenHeader";
+import Notice from "../../components/ui/Notice";
+import Chip from "../../components/ui/Chip";
+import Metric from "../../components/ui/Metric";
 import { useActivityTracker } from "../../hooks/activity/activityTracker.hook";
 import { useEmergencyContacts } from "../../hooks/safety/useEmergencyContacts";
 import { useAreYouOk } from "../../hooks/safety/useAreYouOk";
@@ -12,7 +16,8 @@ import { useAuth } from "../../context/AuthContext";
 import AreYouOkModal from "../../components/safety/AreYouOkModal";
 import SafetyCard from "../../components/safety/SafetyCard";
 import ReturnTimePicker from "../../components/safety/ReturnTimePicker";
-import RecordingSafety from "../../components/safety/RecordingSafety";
+import RecordingSafety, { ActiveAlert } from "../../components/safety/RecordingSafety";
+import SosButton from "../../components/safety/SosButton";
 import type { ActivityType } from "../../lib/db/activities";
 import { ACTIVITY_TYPE_LABELS } from "../../lib/format/activity";
 import { formatDuration } from "../../lib/format/duration";
@@ -22,7 +27,8 @@ import { SAFETY_MESSAGES, textoTerminarSinRed } from "../../lib/safety/messages"
 import { sessionActions } from "../../lib/safety";
 import { isOnline } from "../../lib/sync";
 import { pedirPermisoNotificaciones } from "../../lib/safety/notifications";
-import { colors } from "../../lib/theme/colors";
+import type { Theme } from "../../lib/theme";
+import { useThemedStyles } from "../../hooks/theme/useTheme";
 
 const TIPOS = (Object.keys(ACTIVITY_TYPE_LABELS) as ActivityType[]).map((value) => ({
     value,
@@ -78,6 +84,7 @@ function useElapsedSeconds(startedAt: string | null, running: boolean) {
 
 export default function ActivityPage() {
     const [type, setType] = useState<ActivityType>('HIKING'); // por defecto Senderismo (CA-1)
+    const styles = useThemedStyles(makeStyles);
     // Navegación del stack raíz: replace solo existe en stacks
     const navigation = useNavigation<NativeStackNavigationProp<ReactNavigation.RootParamList>>();
     const {
@@ -164,105 +171,112 @@ export default function ActivityPage() {
         }
     };
 
-    return (
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Actividad</Text>
+    const titulo = recording ? `Grabando · ${ACTIVITY_TYPE_LABELS[type]}` : 'Nueva actividad';
 
-            <View style={styles.selector}>
-                {TIPOS.map((tipo) => {
-                    const selected = tipo.value === type;
-                    return (
-                        <Pressable
+    return (
+        <View style={styles.screen}>
+            <ScreenHeader title={titulo} onBack={() => navigation.goBack()} />
+            <ScrollView contentContainerStyle={styles.content}>
+                {/* Alerta activa arriba, con "Cancelar alerta" (spec 008, CA-17, CA-25) */}
+                {recording && seguridad.sesion && seguridad.alertaActiva && (
+                    <ActiveAlert
+                        sesion={seguridad.sesion}
+                        nombres={seguridad.entregadaA ?? nombresActivos}
+                        onCancelarAlerta={() => void handleCancelarAlerta()}
+                    />
+                )}
+
+                <View style={styles.selector}>
+                    {TIPOS.map((tipo) => (
+                        <Chip
                             key={tipo.value}
+                            text={tipo.label}
+                            selected={tipo.value === type}
                             disabled={recording}
                             onPress={() => setType(tipo.value)}
-                            style={[
-                                styles.option,
-                                selected && styles.optionSelected,
-                                recording && !selected && styles.optionDisabled,
-                            ]}
-                        >
-                            <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
-                                {tipo.label}
-                            </Text>
-                        </Pressable>
-                    );
-                })}
-            </View>
-
-            {/* Métricas en vivo: mismos umbrales que el resumen (spec 004, CA-15, CA-16) */}
-            <View style={styles.stats}>
-                <View style={styles.stat}>
-                    <Text style={styles.statValue}>{formatDuration(elapsed)}</Text>
-                    <Text style={styles.statLabel}>Tiempo</Text>
-                </View>
-                <View style={styles.stat}>
-                    <Text style={styles.statValue}>{formatDistance(liveDistance)}</Text>
-                    <Text style={styles.statLabel}>Distancia</Text>
-                </View>
-            </View>
-            <View style={styles.stats}>
-                <View style={styles.stat}>
-                    <Text style={styles.statValue}>{formatElevation(liveElevationGain)}</Text>
-                    <Text style={styles.statLabel}>Elevación ganada</Text>
-                </View>
-                <View style={styles.stat}>
-                    <Text style={styles.statValue}>{pointCount}</Text>
-                    <Text style={styles.statLabel}>Puntos</Text>
-                </View>
-            </View>
-
-            {/* Antes de iniciar: a quiénes se avisaría y la hora de regreso (CA-8, CA-9) */}
-            {!recording && !stopFailed && (
-                <>
-                    {/* Mientras cargan no se muestra el aviso sin contactos */}
-                    {contactsStatus !== 'loading' && (
-                        <SafetyCard
-                            nombres={nombresActivos}
-                            onConfigurar={() => navigation.navigate('EmergencyContacts')}
                         />
-                    )}
-                    {hayContactos && <ReturnTimePicker value={regreso} onChange={setRegreso} />}
-                </>
-            )}
+                    ))}
+                </View>
 
-            {/* Durante la grabación: hora de regreso, alerta activa y SOS (CA-17, CA-23 a CA-25) */}
-            {recording && seguridad.sesion && (
-                <RecordingSafety
-                    sesion={seguridad.sesion}
-                    alertaActiva={seguridad.alertaActiva}
-                    nombres={seguridad.entregadaA ?? nombresActivos}
-                    onCambiarRegreso={seguridad.cambiarRegreso}
-                    onPedirAyuda={() => void handleSos()}
-                    onCancelarAlerta={() => void handleCancelarAlerta()}
-                />
-            )}
+                {/* Métricas en vivo, los textos más grandes de la pantalla (spec 009, CA-12); mismos
+                    umbrales que el resumen (spec 004, CA-15, CA-16) */}
+                <Metric value={formatDuration(elapsed)} label="Tiempo" />
+                <View style={styles.row}>
+                    <Metric value={formatDistance(liveDistance)} label="Distancia" style={styles.flex} />
+                    <Metric value={formatElevation(liveElevationGain)} label="Elevación ganada" style={styles.flex} />
+                </View>
+                <Text style={styles.points}>
+                    {pointCount} {pointCount === 1 ? 'punto registrado' : 'puntos registrados'}
+                </Text>
 
-            {permissionError && (
-                <View style={styles.notice}>
-                    <Text style={styles.noticeText}>
-                        {permissionError === 'blocked'
-                            ? 'El permiso de ubicación está desactivado. Actívalo en los ajustes de la app para registrar tu actividad.'
-                            : 'SendaBC necesita tu ubicación para registrar el recorrido. Presiona "Iniciar actividad" y permite el acceso.'}
-                    </Text>
-                    {permissionError === 'blocked' && (
+                {/* Antes de iniciar: a quiénes se avisaría y la hora de regreso (CA-8, CA-9) */}
+                {!recording && !stopFailed && (
+                    <>
+                        {/* Mientras cargan no se muestra el aviso sin contactos */}
+                        {contactsStatus !== 'loading' && (
+                            <SafetyCard
+                                nombres={nombresActivos}
+                                onConfigurar={() => navigation.navigate('EmergencyContacts')}
+                            />
+                        )}
+                        {hayContactos && <ReturnTimePicker value={regreso} onChange={setRegreso} />}
+                    </>
+                )}
+
+                {/* Durante la grabación: hora de regreso (CA-19, CA-23) */}
+                {recording && seguridad.sesion && (
+                    <RecordingSafety sesion={seguridad.sesion} onCambiarRegreso={seguridad.cambiarRegreso} />
+                )}
+
+                {permissionError === 'blocked' && (
+                    <>
+                        <Notice
+                            type="error"
+                            title="Ubicación desactivada"
+                            description="El permiso de ubicación está desactivado. Actívalo en los ajustes de la app para registrar tu actividad."
+                        />
                         <BgBtn text="Abrir ajustes" onPress={() => Linking.openSettings()} />
-                    )}
-                </View>
-            )}
+                    </>
+                )}
+                {permissionError && permissionError !== 'blocked' && (
+                    <Notice
+                        title="Se necesita tu ubicación"
+                        description={'SendaBC necesita tu ubicación para registrar el recorrido. Presiona "Iniciar actividad" y permite el acceso.'}
+                    />
+                )}
 
-            {/* Sin el permiso en segundo plano, la detección solo corre con la app abierta (CA-10) */}
-            {recording && mode === 'foreground' && hayContactos && (
-                <View style={styles.notice}>
-                    <Text style={styles.noticeText}>{SAFETY_MESSAGES.sinPermiso}</Text>
-                </View>
-            )}
+                {/* Sin el permiso en segundo plano, la detección solo corre con la app abierta (CA-10) */}
+                {recording && mode === 'foreground' && hayContactos && (
+                    <Notice title="Detección solo con la app abierta" description={SAFETY_MESSAGES.sinPermiso} />
+                )}
 
-            {recording && hayContactos && sinNotificaciones && (
-                <View style={styles.notice}>
-                    <Text style={styles.noticeText}>{SAFETY_MESSAGES.sinNotificaciones}</Text>
-                </View>
-            )}
+                {recording && hayContactos && sinNotificaciones && (
+                    <Notice title="Sin notificaciones" description={SAFETY_MESSAGES.sinNotificaciones} />
+                )}
+
+                {/* No se pudo cerrar la actividad al detener (spec 003, CA-12, RN-1) */}
+                {stopFailed && (
+                    <Notice
+                        type="error"
+                        title="No se pudo cerrar la actividad"
+                        description="Se completará automáticamente al volver a abrir la app."
+                    />
+                )}
+            </ScrollView>
+
+            {/* Controles abajo, al alcance del pulgar (spec 009, CA-13) */}
+            <View style={styles.actions}>
+                {recording && seguridad.sesion && <SosButton onPedirAyuda={() => void handleSos()} />}
+                {/* Con una actividad sin cerrar no se ofrece iniciar otra (spec 003, CA-12, RN-1) */}
+                {stopFailed ? (
+                    <PrimaryButton text="Volver" onPress={() => navigation.goBack()} />
+                ) : (
+                    <PrimaryButton
+                        text={recording ? 'Detener actividad' : 'Iniciar actividad'}
+                        onPress={recording ? handleStop : handleStart}
+                    />
+                )}
+            </View>
 
             {/* "¿Estás bien?" (spec 008, CA-11, CA-12) */}
             <AreYouOkModal
@@ -271,108 +285,42 @@ export default function ActivityPage() {
                 respondiendo={pregunta.respondiendo}
                 onEstoyBien={() => void pregunta.estoyBien()}
             />
-
-            {/* No se pudo cerrar la actividad al detener: no se ofrece iniciar otra mientras
-                quede una sin cerrar (spec 003, CA-12, RN-1) */}
-            {stopFailed ? (
-                <>
-                    <View style={styles.notice}>
-                        <Text style={styles.noticeText}>
-                            No se pudo cerrar la actividad. Se completará automáticamente al volver a abrir la app.
-                        </Text>
-                    </View>
-                    <PrimaryButton text="Volver" onPress={() => navigation.goBack()} style={styles.mainBtn} />
-                </>
-            ) : (
-                <PrimaryButton
-                    text={recording ? 'Detener actividad' : 'Iniciar actividad'}
-                    onPress={recording ? handleStop : handleStart}
-                    style={[styles.mainBtn, recording && styles.stopBtn]}
-                />
-            )}
-        </ScrollView>
+        </View>
     );
 }
 
-const styles = StyleSheet.create({
-    scroll: {
+const makeStyles = (t: Theme) => StyleSheet.create({
+    screen: {
         flex: 1,
-        backgroundColor: colors.background,
+        backgroundColor: t.colors.background,
     },
-    container: {
-        flexGrow: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 24,
-        padding: 24,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: colors.text,
+    content: {
+        gap: t.spacing.md,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
     },
     selector: {
         flexDirection: 'row',
-        alignSelf: 'stretch',
-        gap: 8,
+        flexWrap: 'wrap',
+        gap: t.spacing.sm,
     },
-    option: {
-        flex: 1,
-        paddingVertical: 10,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: colors.primary,
-        alignItems: 'center',
-    },
-    optionSelected: {
-        backgroundColor: colors.primary,
-    },
-    optionDisabled: {
-        opacity: 0.4,
-    },
-    optionText: {
-        color: colors.primary,
-        fontWeight: '600',
-        fontSize: 14,
-    },
-    optionTextSelected: {
-        color: colors.background,
-    },
-    stats: {
+    row: {
         flexDirection: 'row',
-        alignSelf: 'stretch',
-        justifyContent: 'space-around',
+        gap: t.spacing.lg,
     },
-    stat: {
+    flex: {
         flex: 1,
-        alignItems: 'center',
     },
-    statValue: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: colors.data,
-        fontVariant: ['tabular-nums'],
+    points: {
+        ...t.typography.bodySmall,
+        color: t.colors.textMuted,
     },
-    statLabel: {
-        fontSize: 14,
-        color: colors.textMuted,
-    },
-    mainBtn: {
-        paddingVertical: 14,
-    },
-    notice: {
-        alignSelf: 'stretch',
-        gap: 12,
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: colors.secondary,
-    },
-    noticeText: {
-        color: colors.text,
-        fontSize: 15,
-    },
-    stopBtn: {
-        backgroundColor: colors.text, // Roca sombra: Alerta queda reservada a seguridad
+    actions: {
+        gap: t.spacing.sm,
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
+        backgroundColor: t.colors.surface,
+        borderTopWidth: 1,
+        borderTopColor: t.colors.border,
     },
 });

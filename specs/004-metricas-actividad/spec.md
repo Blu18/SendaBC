@@ -66,7 +66,7 @@ Estas métricas corresponden a los campos de actividad del modelo de datos del s
 
 - 2026-10-08 — Implementada con pendientes: T1–T20 hechas, 71 pruebas Vitest pasan y la mayoría de los CA se verificaron en el emulador. Faltan los casos M2, M3, M4, M5, M7 (paso 1) y M8 (ver `tasks.md`).
 - 2026-10-06 — Se agrega CA-25 (saltos de ubicación imposibles), hallado al probar en el emulador: el primer punto fue la ubicación por defecto del emulador y la distancia sumó ~789 km. Aprobado por el usuario.
-- **CA-20 (HU-6):** Desde la pantalla principal puedo abrir "Mis actividades": una lista de las actividades terminadas del usuario de la sesión, de la más reciente a la más antigua, con fecha, tipo, duración y distancia.
+- **CA-20 (HU-6):** Desde la pestaña Actividades puedo abrir "Mis actividades": una lista de las actividades terminadas del usuario de la sesión, de la más reciente a la más antigua, con fecha, tipo, duración y distancia.
 - **CA-21 (HU-6):** Cuando toco una actividad de la lista, veo su resumen con los mismos datos que en CA-1; el botón atrás me regresa a la lista.
 - **CA-22 (HU-6):** Si no tengo actividades terminadas, la lista muestra un mensaje que invita a iniciar una.
 - **CA-23 (HU-3, HU-6):** La lista y los resúmenes funcionan sin conexión.
@@ -112,6 +112,7 @@ Resueltas el 2026-10-05:
 
 ## Historial
 
+- 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). CA-20: "Mis actividades" se abre desde la pestaña Actividades, no desde un botón de la pantalla principal (spec 009, RN-2). La "pantalla principal" de CA-2 es la pestaña Inicio. Casos M1, M2 y M6 a M8.
 - 2026-10-05 — Aprobada por el usuario.
 
 - 2026-10-05 — Se resuelven las preguntas abiertas P1–P7: se agregan elevación perdida, ritmo/velocidad, métricas en vivo e historial.

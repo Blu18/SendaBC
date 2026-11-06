@@ -1,9 +1,14 @@
 import { useState } from "react";
-import { View, TextInput, StyleSheet, Text, Pressable } from "react-native";
+import { View, ScrollView, StyleSheet, Text } from "react-native";
 import { type RegistroFieldErrors, useRegistrar } from "../../hooks/auth/auth.hooks";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import TextBtn from "../../components/ui/buttons/TextBtn";
 import { StackActions, useNavigation } from "@react-navigation/native";
+import ScreenHeader from "../../components/ui/ScreenHeader";
+import TextField from "../../components/ui/TextField";
+import Notice from "../../components/ui/Notice";
+import type { Theme } from "../../lib/theme";
+import { useThemedStyles } from "../../hooks/theme/useTheme";
 
 type RegistroFieldError = Record<RegistroFieldErrors["field"], string>;
 
@@ -64,6 +69,7 @@ export default function Register() {
 
     const registrar = useRegistrar();
     const navigation = useNavigation();
+    const styles = useThemedStyles(makeStyles);
 
     const handleSubmit = () => {
       const errors = validarCampos({ displayName, email, password, confirmPassword });
@@ -92,57 +98,48 @@ export default function Register() {
 
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>SendaBC</Text>
-        </View>
-        <View style={styles.formContainer}>
-          <View style={styles.formHeader}>
-            <Text style={styles.headerFormText}>Crea tu cuenta</Text>
+        <ScreenHeader title="" onBack={() => navigation.goBack()} />
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <View style={styles.content}>
+            <Text style={styles.title} accessibilityRole="header">Crea tu cuenta</Text>
+            <TextField
+              label="Correo"
+              onChangeText={setEmail}
+              value={email}
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              error={fieldErrors.email}
+            />
+            <TextField
+              label="Usuario"
+              onChangeText={setDisplayName}
+              value={displayName}
+              helper="Así te verán en las rutas que publiques."
+              error={fieldErrors.displayName}
+            />
+            <TextField
+              label="Contraseña"
+              onChangeText={setPassword}
+              value={password}
+              secureTextEntry={true}
+              autoComplete="new-password"
+              error={fieldErrors.password}
+            />
+            <TextField
+              label="Confirmar contraseña"
+              onChangeText={setConfirmPassword}
+              value={confirmPassword}
+              secureTextEntry={true}
+              autoComplete="new-password"
+              error={fieldErrors.confirmPassword}
+            />
+            {/* CA-4: el mensaje del servidor (p. ej. el 409), como descripción del aviso */}
+            {!!serverError && (
+              <Notice type="error" title="No se pudo crear la cuenta" description={serverError} />
+            )}
           </View>
-          <View style={styles.inputContainer}>
-            <View>
-              <TextInput
-                placeholder="Correo"
-                onChangeText={setEmail}
-                value={email}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                style={styles.input}
-              />
-              {!!fieldErrors.email && <Text style={styles.errorText}>{fieldErrors.email}</Text>}
-            </View>
-            <View>
-              <TextInput
-                placeholder="Usuario"
-                onChangeText={setDisplayName}
-                value={displayName}
-                style={styles.input}
-              />
-              {!!fieldErrors.displayName && <Text style={styles.errorText}>{fieldErrors.displayName}</Text>}
-            </View>
-            <View>
-              <TextInput
-                placeholder="Contraseña"
-                onChangeText={setPassword}
-                value={password}
-                secureTextEntry={true}
-                style={styles.input}
-              />
-              {!!fieldErrors.password && <Text style={styles.errorText}>{fieldErrors.password}</Text>}
-            </View>
-            <View>
-              <TextInput
-                placeholder="Confirmar contraseña"
-                onChangeText={setConfirmPassword}
-                value={confirmPassword}
-                secureTextEntry={true}
-                style={styles.input}
-              />
-              {!!fieldErrors.confirmPassword && <Text style={styles.errorText}>{fieldErrors.confirmPassword}</Text>}
-            </View>
-          </View>
-          <View style={styles.formFooter}>
-            {!!serverError && <Text style={styles.serverErrorText}>{serverError}</Text>}
+          <View style={styles.actions}>
             <PrimaryButton
               text={registrar.isPending ? "Registrando..." : "Registrarse"}
               onPress={handleSubmit}
@@ -150,68 +147,31 @@ export default function Register() {
             />
             <TextBtn text="Ya tengo una cuenta" onPress={() => navigation.navigate('Login')}/>
           </View>
-        </View>
+        </ScrollView>
       </View>
     )
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#EDEAE1",
-      width: '100%',
-      alignItems: 'center',
-      gap: 24
+      backgroundColor: t.colors.background,
     },
-    header: {
-      width: '100%',
-      height: '25%',
-      backgroundColor: "#5C6B49",
-      borderBottomEndRadius: 15,
-      borderBottomStartRadius:15,
-      alignItems: 'center',
-      justifyContent: 'center'
+    // Los botones quedan abajo; con el teclado abierto todo se puede desplazar.
+    scroll: {
+      flexGrow: 1,
+      justifyContent: 'space-between',
     },
-    headerText: {
-      fontSize: 42,
-      color: "#EDEAE1",
-      fontWeight: 'bold'
+    content: {
+      gap: t.spacing.md,
+      padding: t.spacing.lg,
     },
-    formContainer: {
-      width: '90%',
-      padding: 12,
+    title: {
+      ...t.typography.headline,
+      color: t.colors.text,
     },
-    formHeader: {
-      paddingVertical: 18
-    },
-    headerFormText: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: "#2B2A26"
-    },  
-    inputContainer: {
-      gap: 16,
-    },  
-    input: {
-      color: '#444444',
-      fontSize: 16,
-      borderRadius: 8,
-      borderColor: "#5C6B49",
-      borderWidth: 1.5,
-    },
-    errorText: {
-      color: "#B3261E",
-      fontSize: 13,
-      marginTop: 4,
-    },
-    serverErrorText: {
-      color: "#B3261E",
-      fontSize: 14,
-      textAlign: 'center',
-    },
-    formFooter: {
-      alignItems: 'center',
-      gap: 12,
-      paddingVertical: 48
+    actions: {
+      gap: t.spacing.sm,
+      padding: t.spacing.lg,
     },
 });

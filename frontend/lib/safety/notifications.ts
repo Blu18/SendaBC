@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { colors } from '../theme/colors';
+import { lightColors } from '../theme/colors';
 import type { Umbrales } from './inactivity';
 import { textoPregunta } from './messages';
 
@@ -31,7 +31,7 @@ export function prepararNotificaciones(): Promise<void> {
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: VIBRACION,
           enableVibrate: true,
-          lightColor: colors.alert,
+          lightColor: lightColors.alert,
           lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
           // Sin `sound`: el canal usa el sonido de notificación del sistema. 'default' aquí se toma
           // como el nombre de un archivo propio, que no existe.
@@ -78,7 +78,7 @@ function contenido(umbrales: Umbrales): Notifications.NotificationContentInput {
     sound: 'default',
     vibrate: VIBRACION,
     priority: Notifications.AndroidNotificationPriority.MAX,
-    color: colors.alert,
+    color: lightColors.alert,
     sticky: true,
     autoDismiss: false,
     data: { tipo: 'pregunta' },

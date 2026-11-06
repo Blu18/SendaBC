@@ -57,6 +57,7 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 
 ## Historial
 
+- 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). La grabación se abre con "Empezar" en la tarjeta "Nueva actividad" de la pestaña Inicio. CA-1 no cambia: la pestaña Inicio es la pantalla principal.
 - 2026-10-16 — Casos M3 (permiso negado y bloqueado) y M8 (pantalla encendida, con Metro en `--no-dev`) aprobados en el emulador. Los 12 CA verificados; la spec pasa a Implementada.
 - 2026-10-15 — Se cierran las observaciones de la revisión: O2 se acepta como limitación conocida (CA-6 pasa de secuencia "consecutiva" a "creciente"; el servidor solo exige que no se repita) y O3 se corrige con el nuevo CA-12.
 - 2026-10-05 — Spec 004: el mensaje "Actividad guardada: N puntos" de CA-8 se reemplaza por la pantalla de resumen, que muestra el mismo N ("N puntos registrados"). La observación O1 queda corregida: `stop()` espera los guardados en curso antes de cerrar la actividad (004, T14).
