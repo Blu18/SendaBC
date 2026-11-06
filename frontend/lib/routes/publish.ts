@@ -1,4 +1,5 @@
 import type { Activity } from '../db/activities';
+import { MARGEN_UBICACION_VIEJA_MS } from '../safety/recording';
 
 // Reglas para publicar una actividad como ruta (spec 007). Son las mismas que valida el
 // servidor (backend/src/route/dto/create-route.dto.ts y RouteService.publish); la app las
@@ -58,4 +59,14 @@ export function motivoNoPublicable(
   }
   if (rutaExistente) return { kind: 'ya-publicada', rutaId: rutaExistente.id };
   return { kind: 'publicable' };
+}
+
+// Primer punto real del recorrido, para proponer la zona: el servidor quita del principio los de
+// antes del inicio de la actividad (CA-28, RN-10). Si quedarían menos de 2, el reloj estaba
+// desfasado y cuenta el primero. Sin puntos, undefined.
+export function inicioDelRecorrido<T extends { recordedAt: string }>(puntos: T[], startedAt: string) {
+  const limite = Date.parse(startedAt) - MARGEN_UBICACION_VIEJA_MS;
+  const primero = puntos.findIndex((p) => Date.parse(p.recordedAt) >= limite);
+  if (primero === -1 || puntos.length - primero < 2) return puntos[0];
+  return puntos[primero];
 }

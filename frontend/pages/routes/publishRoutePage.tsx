@@ -16,6 +16,7 @@ import { formatDistance, formatElevation } from "../../lib/format/metrics";
 import { dificultadDe } from "../../lib/routes/difficulty";
 import { DIFFICULTY_LABELS } from "../../lib/routes/format";
 import {
+    inicioDelRecorrido,
     motivoNoPublicable,
     validarRuta,
     type RouteFormErrors,
@@ -33,12 +34,12 @@ const VACIO: RouteFormValues = { name: '', description: '', region: '' };
 // Zona propuesta según dónde empieza el recorrido (RN-7, plan D6). En Android la geocodificación
 // pide el permiso de ubicación; publicar no lo solicita (constitución 3.5): sin él, o si el
 // servicio no responde, el campo queda vacío y se escribe a mano.
-async function zonaPropuesta(localId: number): Promise<string> {
+async function zonaPropuesta(localId: number, startedAt: string): Promise<string> {
     if (Platform.OS === 'android') {
         const { granted } = await Location.getForegroundPermissionsAsync();
         if (!granted) return '';
     }
-    const [inicio] = await getActivityPoints(localId);
+    const inicio = inicioDelRecorrido(await getActivityPoints(localId), startedAt);
     if (!inicio) return '';
     const direcciones = await Location.reverseGeocodeAsync({
         latitude: inicio.latitude,
@@ -80,9 +81,11 @@ export default function PublishRoutePage({ route }: Props) {
     // Si el usuario ya escribió la zona, la propuesta que llegue tarde no la reemplaza.
     const zonaEditada = useRef(false);
 
+    const startedAt = activity?.startedAt;
     useEffect(() => {
+        if (!startedAt) return;
         let vigente = true;
-        zonaPropuesta(localId)
+        zonaPropuesta(localId, startedAt)
             .catch((e) => {
                 console.log('No se pudo deducir la zona de la ruta:', e);
                 return '';
@@ -95,7 +98,7 @@ export default function PublishRoutePage({ route }: Props) {
         return () => {
             vigente = false;
         };
-    }, [localId]);
+    }, [localId, startedAt]);
 
     const onChange = (nuevos: RouteFormValues) => {
         if (nuevos.region !== values.region) zonaEditada.current = true;

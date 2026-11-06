@@ -73,10 +73,11 @@ Con la spec 006, el catálogo muestra rutas cercanas, pero solo tiene las rutas 
 ### Acceso
 
 - **CA-27 (HU-1, HU-3, HU-4, HU-6):** Publicar, ver el detalle, usar favoritas y administrar mis rutas requieren sesión iniciada, igual que el resto de la app.
+- **CA-28 (HU-1):** Dada una actividad cuyo recorrido empieza con una ubicación guardada de antes de iniciarla (spec 003, RN-5), cuando la publico, entonces la ruta, su punto de inicio, su perfil de elevación y la zona propuesta empiezan en el primer punto real (RN-10).
 
 ## Reglas de negocio y validaciones
 
-- RN-1: Una ruta publicada conserva el tipo, la distancia, la elevación ganada y el recorrido de la actividad de la que sale. El catálogo no los recalcula (spec 006, RN-3).
+- RN-1: Una ruta publicada conserva el tipo, la distancia, la elevación ganada y el recorrido de la actividad de la que sale, salvo lo que quita RN-10. El catálogo no los recalcula (spec 006, RN-3).
 - RN-2: Una actividad tiene como máximo una ruta a la vez, publicada o archivada. Si esa ruta se borra, la actividad se puede publicar de nuevo.
 - RN-3: La distancia y la elevación se muestran con el mismo formato que en el resumen de actividad (spec 004, RN-1).
 - RN-4: El nombre es obligatorio, sin contar los espacios del principio y del final, y tiene como máximo 40 caracteres. La descripción es opcional y tiene como máximo 200 caracteres.
@@ -94,6 +95,7 @@ Con la spec 006, el catálogo muestra rutas cercanas, pero solo tiene las rutas 
 - RN-7: La zona es opcional y tiene como máximo 40 caracteres. La app la propone según dónde empieza el recorrido; si no puede deducirla, el campo queda vacío.
 - RN-8: Todas las rutas tienen perfil de elevación: las publicadas desde una actividad, con la altitud que el GPS registró en cada punto (las lecturas del barómetro se quedan en el teléfono, spec 005, CA-8), y las de ejemplo, con las altitudes de su traza original.
 - RN-9: Las rutas de ejemplo de SendaBC se pueden ver a detalle y guardar en favoritas igual que cualquier otra ruta.
+- RN-10: Al publicar se quitan los puntos del principio con hora de más de 30 s antes del inicio de la actividad. Si quedaran menos de 2 puntos, se conserva el recorrido completo, porque significa que el reloj del teléfono estaba desfasado. La actividad no cambia y la distancia guardada tampoco.
 
 ## Requisitos no funcionales
 
@@ -139,6 +141,7 @@ No quedan preguntas abiertas.
 
 ## Historial
 
+- 2026-11-06 — Se agregan CA-28 y RN-10, y RN-1 admite esa excepción. En la spec 010 (T25), una actividad grabada antes de la spec 003 CA-13 se publicó con su punto viejo: una ruta de 1.56 km con un perfil de 148 km. Aprobado por el usuario.
 - 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). CA-18 y CA-21: "Mis favoritas" y "Mis rutas" pasan de botones de la pantalla principal al encabezado de la pestaña Rutas (spec 009, RN-2; reemplaza P8). Casos M1, M2, M4, M6, M7 y M8.
 - 2026-10-21 — Implementada: los 27 CA verificados con pruebas automáticas (backend, e2e y frontend) y los casos manuales M1–M8 en el emulador.
