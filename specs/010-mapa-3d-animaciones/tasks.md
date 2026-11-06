@@ -87,6 +87,25 @@ Se hace en una rama desechable y puede correr en paralelo con la fase A (plan, D
   Hecho (2026-11-05): `MapErrorBoundary`, textos en `lib/map/messages.ts` y aviso "Mapa no disponible". Probado en el emulador con dos fallos provocados y retirados después: un error de render (se ve el aviso, y la grabación, las métricas y los botones siguen) y un estilo inexistente (pasa al estilo local con trazo y posición). Con un token inválido no se ve fallo, porque el estilo sale de la caché: M12 debe usar un estilo inexistente o una instalación limpia. Observado una vez: al iniciar la actividad justo tras abrir la app, con el emulador saturado, falló con `database is locked` y al reintentar funcionó; revisar en la 011.
 - [ ] T16 — Correr los casos M1 a M13 y anotar los resultados. Revisar si los saltos cada 10 s son aceptables (R3). (CA-18)
 
+  Avance (2026-11-06), en el emulador con recorridos simulados. M1 a M13 corridos. T16 sigue abierta por dos puntos: M9 parcial y R3 sin confirmar a la vista. El hallazgo del punto viejo (ver M13) ya está corregido.
+  - **M1, pasa:** perspectiva y relieve real en la sierra (`-115.80 32.15`). En la Laguna Hanson, que es plana, casi no se nota.
+  - **M2, pasa:** sigue, gira con la dirección de avance y conserva la orientación al detenerse. El salto de más de 5 km no se une con una línea: con los puntos reales, `computeTrack` da dos segmentos, de 15 y 4 puntos. La distancia marcó 241 m contra unos 340 m caminados, y `computeDistance` da lo mismo con esos puntos: es el suavizado de la spec 004, no el mapa.
+  - **M3, pasa:** aviso y encuadre de Baja California sin marcador; con el primer punto aparece el marcador. El emulador repite la última posición, así que el primer punto llegó a los pocos segundos sin enviar otra.
+  - **M4, pasa con una observación:** probado con letra normal y al 200 %, con hora de regreso y con alerta activa. El panel se desplaza sin cortar texto y los botones siguen abajo. Al 200 %, "Alerta activa" y "Cancelar alerta" tapan el marcador. También lo tapan con letra normal si además está el aviso "Mapa no disponible". El panel conserva el desplazamiento de la pantalla previa, porque usan el mismo `ScrollView`.
+  - **M5, pasa:** de 23 a 29 puntos con la pantalla bloqueada. El trazo los incluye y se mantuvo el 2D.
+  - **M6, pasa:** sin solicitudes de ubicación antes de iniciar ni en el resumen. Durante la grabación el mismo filtro sí encuentra la solicitud, con una sola escucha cada 10 s.
+  - **M7, pasa:** 3D y 2D en oscuro, y regreso a claro sin detener la actividad. En 2D oscuro no hay sombreado (T11).
+  - **M8, pasa:** el cambio conserva posición, trazo y seguimiento, y el 2D se mantiene al volver del bloqueo. Una actividad terminada en 2D deja a la siguiente en 3D.
+  - **M9, parcial:** el arrastre deja de seguir mientras puntos y métricas siguen aumentando (29 a 33), y el botón regresa, vuelve a seguir y girar, y desaparece. **Sin probar: girar y acercar con dos dedos.** `sendevent` da `Permission denied` y los eventos de la consola del emulador no llegan a la pantalla. Se hace a mano con Ctrl + arrastre en la ventana del emulador. El doble toque simulado tampoco acercó el mapa, probablemente por lento.
+  - **M10, pasa:** con modo avión y Wi-Fi apagado, 13 puntos y 199 m. Aviso "Mapa sin conexión", resumen completo y `PENDING_SYNC`, y se sincronizó al volver la red. En zona ya vista se conserva el mapa, no el fondo liso (T14). En 3D una loma tapó el trazo; en 2D se ve completo.
+  - **M11, pasa:** sin bloqueos ni acciones pedidas, y el trazo se conserva. Al volver la red se quita el aviso y el mapa de una zona nueva se recuperó en unos 20 s, sin reiniciar la actividad.
+  - **M12, pasa:** con un estilo inexistente se ve "Mapa no disponible" sobre el estilo local, con trazo y posición. Las métricas aumentan, y "Pedir ayuda" (`TELEGRAM_MODE=log`), "Cancelar alerta" y "Detener actividad" funcionan. El cambio en `style.ts` se revirtió.
+  - **M13, pasa con un hallazgo:** 10 minutos con el mapa visible en 3D, 8 caminando y 2 a velocidad de bicicleta, más el GPS quieto: 62 puntos y 1.56 km. Entre puntos hubo 10 s en 58 casos, 11 s en uno y 20 s en otro; este último coincide con una captura que retrasó el GPS simulado, así que el punto se habría descartado por estar a menos de 5 m. El tiempo coincide con el reloj real (11:16 a los 677 s). "¿Estás bien?" apareció encima del mapa 57 s después de dejar el GPS quieto, y "Estoy bien" funcionó sin enviar alerta. Sin cierres de la app.
+  - **R3, aceptable de forma provisional:** el marcador se queda fijo y el mapa se desliza, con una transición de 1 s por punto, y el tiempo sigue en vivo. Solo se revisó con capturas, que no miden la suavidad. Falta verlo en movimiento, en el emulador o en la prueba de campo de la 011.
+  - **Hallazgo grave, punto viejo al iniciar:** el punto 1 de la actividad 47 fue una posición guardada del GPS, de 25 minutos antes de iniciar y a 146 km de distancia, y se guardó como parte del recorrido. `debeGuardarPunto` no revisa la antigüedad. Aquí no sumó distancia porque esos 94 m/s cuentan como salto, pero un traslado normal queda bajo el límite de 50 m/s. Con `computeDistance` y `computeTrack`, una caminata de 540 m con un punto viejo a unos 31 km da **31,675 m**, y el trazo une los dos lugares con una línea. También contradice CA-5, porque muestra una posición que no es la actual. No lo causa el mapa. **Corregido** con la spec 003 (CA-13, RN-5): `esUbicacionVieja` en `lib/safety/recording.ts` descarta la ubicación si es de más de 30 s antes de iniciar, mientras la actividad no tenga puntos y solo en su primer minuto, para que un reloj desfasado no pierda la grabación. Con 7 pruebas nuevas en `recording.test.ts`. Al repetir el caso en el emulador el primer punto salió correcto, pero no se puede saber si el GPS entregó una ubicación vieja esa vez, así que falta verlo en un teléfono real.
+  - **Hallazgo:** cambiar el tamaño de letra del sistema durante una grabación la corta sin avisar. `fontScale` no está en `configChanges`, Android recrea la pantalla, la app vuelve a Inicio y la actividad se cierra como huérfana (actividad 40, con 1 punto). Los puntos guardados se conservan, pero el GPS se detiene. No lo causa el mapa. M4 se corrió poniendo la letra antes de iniciar.
+  - **Hallazgo, solo en desarrollo:** el aviso rojo de LogBox por las teselas fallidas tapa "Detener actividad" y "Estoy bien", y reaparece. Salió sin red y también con red, por `ERR_NAME_NOT_RESOLVED` en el emulador (15 errores en M13), sin que el mapa dejara de cargar. No existe en un build de producción.
+
 ## Fase D — Animaciones
 
 - [ ] T17 — `lib/theme/motion.ts` con los tokens de duración, expuestos en `Theme`, y prueba de que ninguno pasa de 300 ms. (RN-5)
@@ -207,9 +226,9 @@ Se corren en el emulador con `adb` (`adb emu geo fix <lng> <lat>`). La Sierra de
 - **Esperado:** el mapa responde y deja de seguir, mientras los puntos y métricas siguen aumentando. El botón regresa a la posición actual y el mapa vuelve a seguir y girar. El botón desaparece al seguir de nuevo.
 
 **M10 — Modo avión desde el inicio**
-1. Activar el modo avión e iniciar una actividad.
+1. Activar el modo avión, apagar Wi-Fi y datos (en el emulador el modo avión deja el Wi-Fi encendido) e iniciar una actividad.
 2. Mover el GPS durante 2 minutos y detener la actividad.
-- **Esperado:** se ve el aviso de mapa no disponible y el trazo sobre fondo liso. Los puntos y métricas aumentan, y el resumen muestra la actividad completa.
+- **Esperado:** se ve el aviso "Mapa sin conexión" y el trazo, sobre el mapa guardado en caché si la zona ya se vio, o sobre un fondo sin mapa si no. Los puntos y métricas aumentan, y el resumen muestra la actividad completa.
 
 **M11 — Se pierde y vuelve la conexión**
 1. Grabar con conexión y activar el modo avión.
@@ -286,3 +305,7 @@ Un commit por tarea cuando sea posible. Mínimo para la semana:
 - 004 M3 sigue pendiente de un teléfono con barómetro (spec 009).
 - `database is locked` al iniciar una actividad justo tras abrir la app (T15, visto una vez con el emulador saturado): revisar en 011-estabilidad.
 - Sin red, una zona nunca vista se ve azul (T14): se resuelve con los mapas descargados de 011-estabilidad.
+- Cambiar el tamaño de letra del sistema durante una grabación la corta sin avisar (T16): falta decidir si se corrige aquí o en 011-estabilidad.
+- M9: falta probar girar y acercar con dos dedos, a mano en el emulador (T16).
+- Descarte de la ubicación vieja al iniciar (spec 003, CA-13): probado con Vitest, falta verlo en un teléfono real en la prueba de campo de la 011.
+- R3: falta ver el movimiento del mapa en vivo, porque solo se revisó con capturas (T16).
