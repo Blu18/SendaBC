@@ -51,7 +51,7 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 
 - Grabación en segundo plano / con pantalla bloqueada (posible extensión; requiere permiso de ubicación en segundo plano y `TaskManager`).
 - Pausar y reanudar.
-- Mapa del recorrido en vivo (spec 006/007).
+- Mapa del recorrido en vivo (spec 010).
 - Barómetro, distancia, elevación y resumen (spec 004).
 - Subir la actividad al backend (spec 005).
 
@@ -61,6 +61,7 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 
 ## Historial
 
+- 2026-11-06 — "Fuera de alcance": el mapa de grabación quedó en la spec 010, no en las 006 y 007 (spec 010, T25).
 - 2026-11-06 — Se agrega CA-15. En la spec 010 (T16) un toque accidental en la flecha terminó una actividad sin preguntar y sin forma de reanudarla. Aprobado por el usuario.
 - 2026-11-06 — Se agrega CA-14. La spec 010 (T16) encontró que cambiar el tamaño de letra del sistema recreaba la pantalla y cerraba la actividad como huérfana. Aprobado por el usuario.
 - 2026-11-06 — Se agregan CA-13 y RN-5, y RN-3 cambia para admitir esa excepción. La spec 010 (T16, M13) encontró que el GPS puede entregar al iniciar una ubicación guardada: quedaba como primer punto y, en un traslado en coche, sumaba kilómetros falsos. Aprobado por el usuario.
