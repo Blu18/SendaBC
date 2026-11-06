@@ -1,0 +1,204 @@
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { StyleSheet, View } from "react-native";
+import Mapbox from "@rnmapbox/maps";
+import IconButton from "../ui/IconButton";
+import Notice from "../ui/Notice";
+import MapViewToggle, { type MapViewMode } from "./MapViewToggle";
+import { useActivityMap } from "../../hooks/activity/activityMap.hook";
+import { useMapConnection } from "../../hooks/map/useMapConnection";
+import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
+import { CAMERA_MOVE_MS, LOOK_AHEAD_PADDING, PITCH_3D, ZOOM_FOLLOWING, ZOOM_OVERVIEW } from "../../lib/map/camera";
+import { MAP_OFFLINE, MAP_UNAVAILABLE, MAP_WAITING_GPS } from "../../lib/map/messages";
+import { localMapStyle, mapStyle } from "../../lib/map/style";
+import { BAJA_CALIFORNIA_REGION } from "../../lib/routes/constants";
+import type { Theme } from "../../lib/theme";
+
+// Datos de relieve de Mapbox, probados en la Sierra de Juárez (spec 010, T4).
+const TERRAIN_URL = "mapbox://mapbox.mapbox-terrain-dem-v1";
+const TERRAIN_EXAGGERATION = 1.5;
+
+const ICONS = {
+    "position-arrow": { image: require("../../assets/map/position-arrow.png"), sdf: true },
+    "position-disc": { image: require("../../assets/map/position-disc.png"), sdf: true },
+};
+
+// Detrás de una loma, el relieve ocultaría la posición y el trazo: se siguen dibujando (T9).
+const MARKER_STYLE = {
+    iconAllowOverlap: true,
+    iconIgnorePlacement: true,
+    iconOcclusionOpacity: 1,
+} as const;
+const TRACK_OCCLUSION_OPACITY = 0.6;
+
+// Sin estas dos propiedades, los gestos no llegaron a onCameraChanged en el emulador (T12).
+const GESTURE_QUIET_MS = 200;
+const noop = () => {};
+
+type Props = {
+    activityLocalId: number | null;
+    // Se muestra arriba del mapa, sobre los controles: la alerta activa (T1).
+    overlay?: ReactNode;
+};
+
+// Mapa con relieve de la grabación (spec 010, CA-1 a CA-4). Solo muestra lo que ya guardó la
+// grabación: no usa la ubicación del SDK, para no abrir otra escucha del GPS (RN-1).
+export default function RecordingMap({ activityLocalId, overlay }: Props) {
+    const { colors, scheme } = useTheme();
+    const { styleURL, hillshade } = mapStyle(scheme);
+    const { track, position, heading } = useActivityMap(activityLocalId, true);
+    const camera = useRef<Mapbox.Camera>(null);
+    const styles = useThemedStyles(makeStyles);
+    // Cada actividad monta este componente, así que siempre empieza en 3D (CA-12).
+    const [view, setView] = useState<MapViewMode>("3D");
+    const online = useMapConnection();
+    // Si el estilo no carga se usa uno local, para seguir viendo el trazo (CA-15). Se reintenta al
+    // volver la red (CA-16).
+    const [styleFailed, setStyleFailed] = useState(false);
+    useEffect(() => {
+        if (online) setStyleFailed(false);
+    }, [online]);
+    const is3D = view === "3D" && !styleFailed;
+    // Un gesto apaga el seguimiento hasta tocar "Volver a mi posición" (CA-13, CA-14).
+    const [following, setFollowing] = useState(true);
+
+    useEffect(() => {
+        if (!position || !following) return;
+        camera.current?.setCamera({
+            centerCoordinate: position,
+            heading: heading ?? 0,
+            pitch: is3D ? PITCH_3D : 0,
+            zoomLevel: ZOOM_FOLLOWING,
+            padding: LOOK_AHEAD_PADDING,
+            animationDuration: CAMERA_MOVE_MS,
+            animationMode: "easeTo",
+        });
+    }, [position, heading, is3D, following]);
+
+    // Sin seguimiento solo cambia la inclinación: no se mueve lo que el usuario está mirando (CA-10).
+    useEffect(() => {
+        if (!following) camera.current?.setCamera({ pitch: is3D ? PITCH_3D : 0, animationDuration: CAMERA_MOVE_MS });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [is3D]);
+
+    return (
+        <View style={styles.map}>
+            <View style={styles.map} accessible accessibilityRole="image" accessibilityLabel="Mapa de tu recorrido">
+                <Mapbox.MapView
+                    style={styles.map}
+                    {...(styleFailed ? { styleJSON: localMapStyle(colors.background) } : { styleURL })}
+                    scaleBarEnabled={false}
+                    onMapLoadingError={(error) => {
+                        if (error?.type === "style") setStyleFailed(true);
+                    }}
+                >
+                    <Mapbox.CameraGestureObserver
+                        quietPeriodMs={GESTURE_QUIET_MS}
+                        onMapSteady={noop}
+                        onCameraChanged={(event) => {
+                            if (event.nativeEvent.properties.isUserInteraction) setFollowing(false);
+                        }}
+                    />
+                    <Mapbox.Camera
+                        ref={camera}
+                        defaultSettings={{
+                            centerCoordinate: [BAJA_CALIFORNIA_REGION.longitude, BAJA_CALIFORNIA_REGION.latitude],
+                            zoomLevel: ZOOM_OVERVIEW,
+                        }}
+                    />
+                    <Mapbox.Images images={ICONS} />
+                    {!styleFailed && <Mapbox.RasterDemSource id="relieve" url={TERRAIN_URL} tileSize={514} />}
+                    {is3D && <Mapbox.Terrain sourceID="relieve" style={{ exaggeration: TERRAIN_EXAGGERATION }} />}
+                    {/* En 2D el sombreado se ve borroso y con rayas (T11). */}
+                    {is3D && hillshade && <Mapbox.HillshadeLayer id="sombreado" sourceID="relieve" style={hillshade} />}
+                    <Mapbox.ShapeSource id="trazo" shape={track}>
+                        <Mapbox.LineLayer
+                            id="trazo-borde"
+                            style={{ lineColor: colors.surface, lineWidth: 8, lineCap: "round", lineJoin: "round", lineOcclusionOpacity: TRACK_OCCLUSION_OPACITY }}
+                        />
+                        <Mapbox.LineLayer
+                            id="trazo-linea"
+                            style={{ lineColor: colors.data, lineWidth: 5, lineCap: "round", lineJoin: "round", lineOcclusionOpacity: TRACK_OCCLUSION_OPACITY }}
+                        />
+                    </Mapbox.ShapeSource>
+                    {position && (
+                        <Mapbox.ShapeSource
+                            id="posicion"
+                            shape={{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: position } }}
+                        >
+                            <Mapbox.SymbolLayer
+                                id="posicion-borde"
+                                style={{ ...MARKER_STYLE, iconImage: "position-disc", iconSize: 0.55, iconColor: colors.surface }}
+                            />
+                            <Mapbox.SymbolLayer
+                                id="posicion-fondo"
+                                style={{ ...MARKER_STYLE, iconImage: "position-disc", iconSize: 0.45, iconColor: colors.data }}
+                            />
+                            <Mapbox.SymbolLayer
+                                id="posicion-rumbo"
+                                style={{
+                                    ...MARKER_STYLE,
+                                    iconImage: "position-arrow",
+                                    iconSize: 0.3,
+                                    iconColor: colors.onPrimary,
+                                    iconRotate: heading ?? 0,
+                                    iconRotationAlignment: "map",
+                                    iconPitchAlignment: "map",
+                                }}
+                            />
+                        </Mapbox.ShapeSource>
+                    )}
+                </Mapbox.MapView>
+            </View>
+            <View style={styles.top} pointerEvents="box-none">
+                {overlay}
+                {!online && <Notice type="offline" {...MAP_OFFLINE} />}
+                {online && styleFailed && <Notice {...MAP_UNAVAILABLE} />}
+                {position && !styleFailed && (
+                    <View style={styles.controls} pointerEvents="box-none">
+                        <MapViewToggle view={view} onChange={setView} />
+                        {!following && (
+                            <IconButton
+                                icon="crosshairs-gps"
+                                accessibilityLabel="Volver a mi posición"
+                                onPress={() => setFollowing(true)}
+                                style={styles.control}
+                            />
+                        )}
+                    </View>
+                )}
+            </View>
+            {!position && (
+                <Notice {...MAP_WAITING_GPS} style={styles.bottomNotice} />
+            )}
+        </View>
+    );
+}
+
+const makeStyles = (t: Theme) => StyleSheet.create({
+    map: {
+        flex: 1,
+    },
+    control: {
+        backgroundColor: t.colors.surface,
+        overflow: "visible",
+        ...t.shadows.floating,
+    },
+    top: {
+        position: "absolute",
+        top: t.spacing.md,
+        left: t.spacing.lg,
+        right: t.spacing.lg,
+        gap: t.spacing.md,
+    },
+    controls: {
+        alignSelf: "flex-end",
+        gap: t.spacing.md,
+    },
+    // Por encima del logo de Mapbox, que sus términos piden conservar visible.
+    bottomNotice: {
+        position: "absolute",
+        left: t.spacing.lg,
+        right: t.spacing.lg,
+        bottom: t.touchMin,
+    },
+});

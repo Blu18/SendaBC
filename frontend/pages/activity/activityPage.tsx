@@ -13,6 +13,8 @@ import { useEmergencyContacts } from "../../hooks/safety/useEmergencyContacts";
 import { useAreYouOk } from "../../hooks/safety/useAreYouOk";
 import { useSafetySession } from "../../hooks/safety/useSafetySession";
 import { useAuth } from "../../context/AuthContext";
+import MapErrorBoundary from "../../components/map/MapErrorBoundary";
+import RecordingMap from "../../components/map/RecordingMap";
 import AreYouOkModal from "../../components/safety/AreYouOkModal";
 import SafetyCard from "../../components/safety/SafetyCard";
 import ReturnTimePicker from "../../components/safety/ReturnTimePicker";
@@ -171,32 +173,40 @@ export default function ActivityPage() {
         }
     };
 
+    const alertaActiva = seguridad.sesion && seguridad.alertaActiva ? (
+        <ActiveAlert
+            sesion={seguridad.sesion}
+            nombres={seguridad.entregadaA ?? nombresActivos}
+            onCancelarAlerta={() => void handleCancelarAlerta()}
+        />
+    ) : undefined;
+
     const titulo = recording ? `Grabando · ${ACTIVITY_TYPE_LABELS[type]}` : 'Nueva actividad';
 
     return (
         <View style={styles.screen}>
             <ScreenHeader title={titulo} onBack={() => navigation.goBack()} />
-            <ScrollView contentContainerStyle={styles.content}>
-                {/* Alerta activa arriba, con "Cancelar alerta" (spec 008, CA-17, CA-25) */}
-                {recording && seguridad.sesion && seguridad.alertaActiva && (
-                    <ActiveAlert
-                        sesion={seguridad.sesion}
-                        nombres={seguridad.entregadaA ?? nombresActivos}
-                        onCancelarAlerta={() => void handleCancelarAlerta()}
-                    />
+            {/* Mapa arriba y panel abajo (spec 010, CA-6). La alerta activa va sobre el mapa, con
+                "Cancelar alerta", para no empujar las métricas (spec 008, CA-17, CA-25) */}
+            {recording && (
+                <MapErrorBoundary overlay={alertaActiva}>
+                    <RecordingMap activityLocalId={activityLocalId} overlay={alertaActiva} />
+                </MapErrorBoundary>
+            )}
+            <ScrollView style={recording && styles.panel} contentContainerStyle={styles.content}>
+                {/* El tipo ya sale en el título mientras se graba (spec 010, T13) */}
+                {!recording && (
+                    <View style={styles.selector}>
+                        {TIPOS.map((tipo) => (
+                            <Chip
+                                key={tipo.value}
+                                text={tipo.label}
+                                selected={tipo.value === type}
+                                onPress={() => setType(tipo.value)}
+                            />
+                        ))}
+                    </View>
                 )}
-
-                <View style={styles.selector}>
-                    {TIPOS.map((tipo) => (
-                        <Chip
-                            key={tipo.value}
-                            text={tipo.label}
-                            selected={tipo.value === type}
-                            disabled={recording}
-                            onPress={() => setType(tipo.value)}
-                        />
-                    ))}
-                </View>
 
                 {/* Métricas en vivo, los textos más grandes de la pantalla (spec 009, CA-12); mismos
                     umbrales que el resumen (spec 004, CA-15, CA-16) */}
@@ -293,6 +303,11 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     screen: {
         flex: 1,
         backgroundColor: t.colors.background,
+    },
+    // Alto máximo del panel bajo el mapa (spec 010, T1).
+    panel: {
+        flexGrow: 0,
+        maxHeight: 280,
     },
     content: {
         gap: t.spacing.md,

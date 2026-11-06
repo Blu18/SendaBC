@@ -42,7 +42,7 @@ export function ActiveAlert({ sesion, nombres, onCancelarAlerta }: AlertProps) {
                         : textoAlertaEnviada(new Date(sesion.alertTriggeredAt).getTime(), nombres)
                 }
             />
-            <BgBtn text={SAFETY_MESSAGES.cancelarAlerta} onPress={confirmarCancelar} />
+            <BgBtn text={SAFETY_MESSAGES.cancelarAlerta} onPress={confirmarCancelar} style={styles.cancel} />
         </View>
     );
 }
@@ -112,6 +112,10 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         alignSelf: 'stretch',
         gap: t.spacing.sm,
     },
+    // Va sobre el mapa: sin fondo, el texto no se leería (spec 010, RN-7).
+    cancel: {
+        backgroundColor: t.colors.surface,
+    },
     editing: {
         alignSelf: 'stretch',
         gap: t.spacing.sm,
@@ -120,7 +124,6 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         alignSelf: 'stretch',
         paddingLeft: t.spacing.lg,
         paddingRight: t.spacing.xs,
-        paddingVertical: t.spacing.md,
         borderRadius: t.radius.lg,
         backgroundColor: t.colors.surface,
     },
