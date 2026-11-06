@@ -6,6 +6,7 @@ import Notice from "../ui/Notice";
 import MapViewToggle, { type MapViewMode } from "./MapViewToggle";
 import { useActivityMap } from "../../hooks/activity/activityMap.hook";
 import { useMapConnection } from "../../hooks/map/useMapConnection";
+import { useReducedMotion } from "../../hooks/theme/useReducedMotion";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 import { CAMERA_MOVE_MS, LOOK_AHEAD_PADDING, PITCH_3D, ZOOM_FOLLOWING, ZOOM_OVERVIEW } from "../../lib/map/camera";
 import { MAP_OFFLINE, MAP_UNAVAILABLE, MAP_WAITING_GPS } from "../../lib/map/messages";
@@ -60,6 +61,8 @@ export default function RecordingMap({ activityLocalId, overlay }: Props) {
     const is3D = view === "3D" && !styleFailed;
     // Un gesto apaga el seguimiento hasta tocar "Volver a mi posición" (CA-13, CA-14).
     const [following, setFollowing] = useState(true);
+    // Con la opción de reducir animaciones, la cámara se mueve sin transición (CA-27).
+    const cameraMoveMs = useReducedMotion() ? 0 : CAMERA_MOVE_MS;
 
     useEffect(() => {
         if (!position || !following) return;
@@ -69,14 +72,14 @@ export default function RecordingMap({ activityLocalId, overlay }: Props) {
             pitch: is3D ? PITCH_3D : 0,
             zoomLevel: ZOOM_FOLLOWING,
             padding: LOOK_AHEAD_PADDING,
-            animationDuration: CAMERA_MOVE_MS,
+            animationDuration: cameraMoveMs,
             animationMode: "easeTo",
         });
-    }, [position, heading, is3D, following]);
+    }, [position, heading, is3D, following, cameraMoveMs]);
 
     // Sin seguimiento solo cambia la inclinación: no se mueve lo que el usuario está mirando (CA-10).
     useEffect(() => {
-        if (!following) camera.current?.setCamera({ pitch: is3D ? PITCH_3D : 0, animationDuration: CAMERA_MOVE_MS });
+        if (!following) camera.current?.setCamera({ pitch: is3D ? PITCH_3D : 0, animationDuration: cameraMoveMs });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [is3D]);
 
