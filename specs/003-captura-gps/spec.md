@@ -30,6 +30,8 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 - **CA-11 (HU-2):** Mientras grabo, la pantalla no se apaga sola. Al detener la actividad (o salir de la pantalla), el teléfono vuelve a su comportamiento normal de apagado.
 - **CA-12 (HU-3):** Si al detener no se puede cerrar la actividad en el teléfono, la grabación se detiene igual, la pantalla deja de mostrar "Detener actividad" y muestra "No se pudo cerrar la actividad. Se completará automáticamente al volver a abrir la app." con un botón "Volver". No se puede iniciar otra actividad desde esa pantalla, y la actividad se cierra al abrir la app (CA-10).
 - **CA-13 (HU-3):** Si al iniciar el GPS entrega una ubicación guardada de antes de la actividad, no se guarda como punto, no suma distancia y no aparece en el recorrido (RN-5).
+- **CA-14 (HU-3):** Si cambio el tamaño de letra del sistema mientras grabo, la actividad sigue en curso y no se pierde ningún punto.
+- **CA-15 (HU-3):** Si intento salir de la pantalla mientras grabo, con la flecha o con el botón o gesto atrás del sistema, la app pregunta si quiero terminar la actividad. Si elijo seguir, la grabación continúa sin cambios; si elijo terminar, la actividad se cierra como en CA-10. "Detener actividad" no pregunta.
 
 ## Reglas de negocio
 
@@ -59,6 +61,8 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 
 ## Historial
 
+- 2026-11-06 — Se agrega CA-15. En la spec 010 (T16) un toque accidental en la flecha terminó una actividad sin preguntar y sin forma de reanudarla. Aprobado por el usuario.
+- 2026-11-06 — Se agrega CA-14. La spec 010 (T16) encontró que cambiar el tamaño de letra del sistema recreaba la pantalla y cerraba la actividad como huérfana. Aprobado por el usuario.
 - 2026-11-06 — Se agregan CA-13 y RN-5, y RN-3 cambia para admitir esa excepción. La spec 010 (T16, M13) encontró que el GPS puede entregar al iniciar una ubicación guardada: quedaba como primer punto y, en un traslado en coche, sumaba kilómetros falsos. Aprobado por el usuario.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). La grabación se abre con "Empezar" en la tarjeta "Nueva actividad" de la pestaña Inicio. CA-1 no cambia: la pestaña Inicio es la pantalla principal.
 - 2026-10-16 — Casos M3 (permiso negado y bloqueado) y M8 (pantalla encendida, con Metro en `--no-dev`) aprobados en el emulador. Los 12 CA verificados; la spec pasa a Implementada.

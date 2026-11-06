@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Linking, Alert, Vibration } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
@@ -104,6 +104,18 @@ export default function ActivityPage() {
         stop,
     } = useActivityTracker();
     const recording = status === 'recording';
+
+    // Salir termina la actividad y no se puede reanudar: se pregunta antes (spec 003, CA-15). No se
+    // pregunta en lo que no decidió el usuario aquí: replace al detener y reset si la sesión venció.
+    usePreventRemove(recording, ({ data }) => {
+        const salir = () => navigation.dispatch(data.action);
+        if (data.action.type === 'REPLACE' || data.action.type === 'RESET') return salir();
+        Alert.alert('¿Terminar la actividad?', 'Si sales, la grabación termina y no se puede reanudar. Lo grabado queda guardado.', [
+            { text: 'Seguir grabando', style: 'cancel' },
+            { text: 'Terminar', style: 'destructive', onPress: salir },
+        ]);
+    });
+
     // Con contactos activos hay a quién avisar: vale la pena pedir el permiso en segundo plano
     // (spec 008, CA-10). Sin red se usa la copia del teléfono.
     const { contacts, status: contactsStatus } = useEmergencyContacts();
