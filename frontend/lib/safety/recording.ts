@@ -26,6 +26,24 @@ export function debeGuardarPunto(ultimo: Coordinates | null, nuevo: Coordinates)
   return ultimo === null || haversineMeters(ultimo, nuevo) >= MIN_DISTANCIA_PUNTO_M;
 }
 
+// Al iniciar, el GPS puede entregar una ubicación guardada de antes de la actividad, incluso de
+// otro lugar (spec 003, RN-5). Solo se revisa durante el primer minuto: la hora del GPS puede venir
+// desfasada del reloj del teléfono y, sin ese límite, se perdería toda la grabación.
+export const MARGEN_UBICACION_VIEJA_MS = 30_000;
+export const REVISION_UBICACION_VIEJA_MS = 60_000;
+
+export function esUbicacionVieja(
+  ubicacion: { timestamp: number },
+  startedAt: string,
+  ahora: number
+) {
+  const inicio = Date.parse(startedAt);
+  return (
+    ahora - inicio < REVISION_UBICACION_VIEJA_MS &&
+    ubicacion.timestamp < inicio - MARGEN_UBICACION_VIEJA_MS
+  );
+}
+
 // La alerta está activa si hay una y no se canceló (lib/db/safety).
 export function hayAlertaActiva(
   sesion: Pick<LocalSafetySession, 'alertClientId' | 'alertCancelledAt'>
@@ -84,10 +102,14 @@ export function createLocationProcessor(deps: RecordingDeps) {
     ahora: number
   ) {
     const id = actividad.localId;
+    let vigente = ubicacion;
 
     if (ubicacion) {
       const ultimo = await deps.getLastPoint(id);
-      if (debeGuardarPunto(ultimo, ubicacion)) {
+      if (ultimo === null && esUbicacionVieja(ubicacion, actividad.startedAt, ahora)) {
+        // Tampoco cuenta para el detector ni va al servidor: es como si no hubiera llegado.
+        vigente = null;
+      } else if (debeGuardarPunto(ultimo, ubicacion)) {
         const point: ActivityPointInput = {
           sequence: (ultimo?.sequence ?? 0) + 1,
           latitude: ubicacion.latitude,
@@ -107,19 +129,19 @@ export function createLocationProcessor(deps: RecordingDeps) {
 
     const previo =
       (await deps.getDetectorState(id)) ?? iniciarDetector(new Date(actividad.startedAt).getTime());
-    const { estado, accion } = evaluar(previo, ubicacion, ahora, deps.umbrales ?? UMBRALES);
+    const { estado, accion } = evaluar(previo, vigente, ahora, deps.umbrales ?? UMBRALES);
     await deps.saveDetectorState(id, estado);
     if (accion !== 'nada') deps.emit({ type: 'detector', activityLocalId: id, accion, estado });
 
     // La ubicación va al servidor cada 5 min, o cada minuto con una alerta activa (CA-20, D7).
-    if (ubicacion && tocaEncolarUbicacion(sesion.locationQueuedAt, ahora, hayAlertaActiva(sesion))) {
+    if (vigente && tocaEncolarUbicacion(sesion.locationQueuedAt, ahora, hayAlertaActiva(sesion))) {
       await deps.enqueueOutbox(sesion.userId, {
         kind: 'location',
         clientId: sesion.clientGeneratedId,
         payload: {
-          latitude: ubicacion.latitude,
-          longitude: ubicacion.longitude,
-          recordedAt: new Date(ubicacion.timestamp).toISOString(),
+          latitude: vigente.latitude,
+          longitude: vigente.longitude,
+          recordedAt: new Date(vigente.timestamp).toISOString(),
         },
       });
       await deps.setLocationQueuedAt(sesion.clientGeneratedId, ahora);

@@ -29,13 +29,15 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 - **CA-10 (HU-3):** Si la app se cerró (o se salió de la pantalla) con una actividad en `RECORDING`, al volver a abrir la app esa actividad se cierra con `endedAt` igual a la hora de su último punto (o `startedAt` si no tiene puntos) y queda en `PENDING_SYNC`. Nunca quedan actividades huérfanas en `RECORDING`.
 - **CA-11 (HU-2):** Mientras grabo, la pantalla no se apaga sola. Al detener la actividad (o salir de la pantalla), el teléfono vuelve a su comportamiento normal de apagado.
 - **CA-12 (HU-3):** Si al detener no se puede cerrar la actividad en el teléfono, la grabación se detiene igual, la pantalla deja de mostrar "Detener actividad" y muestra "No se pudo cerrar la actividad. Se completará automáticamente al volver a abrir la app." con un botón "Volver". No se puede iniciar otra actividad desde esa pantalla, y la actividad se cierra al abrir la app (CA-10).
+- **CA-13 (HU-3):** Si al iniciar el GPS entrega una ubicación guardada de antes de la actividad, no se guarda como punto, no suma distancia y no aparece en el recorrido (RN-5).
 
 ## Reglas de negocio
 
 - RN-1: Solo puede haber una actividad en `RECORDING` a la vez.
 - RN-2: Configuración del GPS: precisión alta, mínimo 5 m entre puntos y, en Android, mínimo 2 s.
-- RN-3: Se guardan todos los puntos recibidos con su precisión; el filtrado de puntos imprecisos para calcular métricas es parte de la spec 004.
+- RN-3: Se guardan todos los puntos recibidos con su precisión, salvo la excepción de RN-5; el filtrado de puntos imprecisos para calcular métricas es parte de la spec 004.
 - RN-4: Las actividades locales pertenecen al usuario de la sesión, para no mezclar datos si otra persona inicia sesión en el mismo teléfono.
+- RN-5: Una ubicación con hora de más de 30 s antes de `startedAt` se descarta si la actividad aún no tiene puntos y lleva menos de 1 minuto en curso. Pasado ese minuto se acepta, para que un teléfono con el reloj desfasado respecto al GPS no pierda la grabación (constitución 2.1). Una ubicación descartada tampoco cuenta para la detección de inactividad ni se envía al servidor (spec 008).
 
 ## Requisitos no funcionales
 
@@ -57,6 +59,7 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 
 ## Historial
 
+- 2026-11-06 — Se agregan CA-13 y RN-5, y RN-3 cambia para admitir esa excepción. La spec 010 (T16, M13) encontró que el GPS puede entregar al iniciar una ubicación guardada: quedaba como primer punto y, en un traslado en coche, sumaba kilómetros falsos. Aprobado por el usuario.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). La grabación se abre con "Empezar" en la tarjeta "Nueva actividad" de la pestaña Inicio. CA-1 no cambia: la pestaña Inicio es la pantalla principal.
 - 2026-10-16 — Casos M3 (permiso negado y bloqueado) y M8 (pantalla encendida, con Metro en `--no-dev`) aprobados en el emulador. Los 12 CA verificados; la spec pasa a Implementada.
 - 2026-10-15 — Se cierran las observaciones de la revisión: O2 se acepta como limitación conocida (CA-6 pasa de secuencia "consecutiva" a "creciente"; el servidor solo exige que no se repita) y O3 se corrige con el nuevo CA-12.
