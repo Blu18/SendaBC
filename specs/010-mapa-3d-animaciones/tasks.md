@@ -117,9 +117,15 @@ Se hace en una rama desechable y puede correr en paralelo con la fase A (plan, D
 - [x] T19 — `components/ui/PressableScale.tsx` y migración de `BaseBtn`, `Card`, `Chip`, `IconButton`, `SosButton`, `TabBar` y la fila de `activityHistoryPage`. (CA-20, CA-21, CA-22, CA-27)
 
   Hecho (2026-11-06): `PressableScale` escala a 0.97 y anima la capa de presionado de cada componente, con `motion.press` y `motion.release`. Con movimiento reducido no escala y la capa cambia sin transición. También se migró `MapViewToggle`, que no estaba en la lista porque se creó en T11. `SosButton` ya no lleva estado propio: la capa de `PressableScale` hace de indicador. Probado en el emulador: "Empezar" y "Pedir ayuda" se animan y vuelven a su estado normal, deslizar fuera de "Iniciar actividad" cancela sin ejecutar la acción, el doble toque en "Iniciar actividad" crea una sola actividad, y "Pedir ayuda" no se activa al soltar antes de 2 s y sí al mantener. Falta M14 en T24: los demás tipos de elemento, el botón deshabilitado y el movimiento reducido.
-- [ ] T20 — `RootStack` con `animation: 'slide_from_right'`. Medir la duración real en Android (R4). (CA-23)
-- [ ] T21 — `HomeTabs` con `animation: 'fade'` y animación del indicador en `TabBar`, ambas sin movimiento con la opción reducida. (CA-24, CA-27)
-- [ ] T22 — `components/ui/Appear.tsx` en `Notice`, `Card` y las filas de las listas, con entrada y salida. Capa de selección animada en `Chip`. (CA-25, CA-27)
+- [x] T20 — `RootStack` con `animation: 'slide_from_right'`. Medir la duración real en Android (R4). (CA-23)
+
+  Hecho (2026-11-06) con `ios_from_right`, no `slide_from_right`, por R4. Medido en el emulador con `dumpsys gfxinfo framestats`, 3 veces de ida y 3 de vuelta entre Inicio y Nueva actividad: `slide_from_right` 450 ms, por encima de RN-5, e `ios_from_right` de 250 a 267 ms. Las dos entran por la derecha. Con movimiento reducido usa `none`. Sin comprobar a la vista el sentido de la vuelta ni el gesto del sistema: las capturas son demasiado lentas para atrapar la transición, y se ve en M15.
+- [x] T21 — `HomeTabs` con `animation: 'fade'` y animación del indicador en `TabBar`, ambas sin movimiento con la opción reducida. (CA-24, CA-27)
+
+  Hecho (2026-11-06): `fade` de `bottom-tabs` (150 ms de valor nominal) y `TabIndicator`, que crece a lo ancho y aparece con `motion.content`. Probado en el emulador: las 4 pestañas cambian, Rutas conserva su mapa y no hubo cierres. Con la opción reducida, un registro temporal, ya retirado, confirmó que la pestaña recibe `none`, y al apagarla vuelve a `fade` sin reiniciar. Medido con `framestats`, cada cambio da de 83 a 417 ms de cuadros seguidos, pero eso suma el toque, el fundido, el indicador y lo que dibuje cada pantalla, así que no mide cada animación por separado. Sin explicar: con la opción reducida quedan rachas irregulares de 17 a 267 ms, aunque un toque en una zona vacía no produce cuadros. Revisar en M19 si se ve movimiento. Sin comprobar: que el mapa de Rutas no parpadee, que se ve en M16.
+- [x] T22 — `components/ui/Appear.tsx` en `Notice`, `Card` y las filas de las listas, con entrada y salida. Capa de selección animada en `Chip`. (CA-25, CA-27)
+
+  Hecho (2026-11-06): `Appear` envuelve la condición en cada lugar de uso, no el componente, porque `{error && <Notice />}` lo desmonta antes de poder animar la salida. `useLeavingItems` y `lib/lists/leaving.ts`, con 7 pruebas, conservan la fila quitada en contactos y favoritas; en "Mis rutas" y el historial no se quita nada en pantalla, así que solo tienen entrada. Probado en el emulador con `motion.content` en 3 s y un contacto quitado solo en la lista local, ambos temporales y ya revertidos: las tarjetas entran, la fila sale en su lugar, la lista se acomoda sin hueco, y los chips cambian de fondo. Límites: `FlatList` vuelve a montar las filas al desplazarse, así que pueden repetir la entrada; las pantallas que devuelven otro contenido de inmediato (`RouteListNotice`, aviso de `RouteDetail`) solo tienen entrada; al salir un aviso, lo de abajo sube de golpe, sin animarse; y durante los 200 ms del chip el texto ya cambió y el contraste baja. Sin probar: quitar un contacto o favorita real, los avisos de `login` y `register`, y la opción reducida; se ven en M17 y M19.
 - [ ] T23 — `AreYouOkModal` con `animationType="none"` si la opción reducida está activa. (CA-26, CA-27)
 - [ ] T24 — Correr los casos M14 a M19 y anotar los resultados. (CA-20 a CA-27)
 
@@ -263,7 +269,7 @@ Se corren en el emulador con `adb` (`adb emu geo fix <lng> <lat>`). La Sierra de
 **M15 — Cambio de pantallas**
 1. Abrir el detalle de una ruta y volver con el botón.
 2. Abrirlo de nuevo y volver con el gesto del sistema.
-3. Grabar un video con `adb shell screenrecord` y medir la transición.
+3. Medir la transición con `adb shell dumpsys gfxinfo com.sendabc.app framestats`, reiniciando antes con `reset`, o con un video de `adb shell screenrecord`.
 - **Esperado:** la ida y la vuelta son animadas y van en sentido contrario. La duración es de 300 ms o menos, o queda anotada la diferencia para decisión del usuario (R4).
 
 **M16 — Pestañas**
