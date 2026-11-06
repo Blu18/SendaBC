@@ -108,9 +108,15 @@ Se hace en una rama desechable y puede correr en paralelo con la fase A (plan, D
 
 ## Fase D — Animaciones
 
-- [ ] T17 — `lib/theme/motion.ts` con los tokens de duración, expuestos en `Theme`, y prueba de que ninguno pasa de 300 ms. (RN-5)
-- [ ] T18 — `hooks/theme/useReducedMotion.ts` con `getReducedMotion()`. Con la opción activa, la cámara del mapa se mueve sin transición. (CA-27)
-- [ ] T19 — `components/ui/PressableScale.tsx` y migración de `BaseBtn`, `Card`, `Chip`, `IconButton`, `SosButton`, `TabBar` y la fila de `activityHistoryPage`. (CA-20, CA-21, CA-22, CA-27)
+- [x] T17 — `lib/theme/motion.ts` con los tokens de duración, expuestos en `Theme`, y prueba de que ninguno pasa de 300 ms. (RN-5)
+
+  Hecho (2026-11-06): `press` 100 ms, `release` 150, `content` 200 y `screen` 300, con 2 pruebas en `lib/theme/motion.test.ts`. Se empezó con T16 abierta por decisión del usuario, aunque RN-10 pide terminar antes el mapa. Aún no los usa ninguna pantalla. `screen` es solo una referencia: la duración real de la transición nativa se mide en T20 (R4).
+- [x] T18 — `hooks/theme/useReducedMotion.ts` con `getReducedMotion()`. Con la opción activa, la cámara del mapa se mueve sin transición. (CA-27)
+
+  Hecho (2026-11-06): el hook usa `AccessibilityInfo` y guarda el valor fuera de React, para que `getReducedMotion()` funcione en las opciones de navegación. `RecordingMap` usa duración 0 con la opción activa. Probado en el emulador con un registro temporal, ya retirado: la cámara pasó de 1000 a 0 durante una grabación, sin reiniciar, y usó 0 desde el inicio al abrir la app con la opción activa. Solo se comprobó la duración que se pide a la cámara, no el movimiento en pantalla; se ve en M19. M19 y el plan usaban `animator_duration_scale`, que React Native no lee: lee `transition_animation_scale`, y ya están corregidos.
+- [x] T19 — `components/ui/PressableScale.tsx` y migración de `BaseBtn`, `Card`, `Chip`, `IconButton`, `SosButton`, `TabBar` y la fila de `activityHistoryPage`. (CA-20, CA-21, CA-22, CA-27)
+
+  Hecho (2026-11-06): `PressableScale` escala a 0.97 y anima la capa de presionado de cada componente, con `motion.press` y `motion.release`. Con movimiento reducido no escala y la capa cambia sin transición. También se migró `MapViewToggle`, que no estaba en la lista porque se creó en T11. `SosButton` ya no lleva estado propio: la capa de `PressableScale` hace de indicador. Probado en el emulador: "Empezar" y "Pedir ayuda" se animan y vuelven a su estado normal, deslizar fuera de "Iniciar actividad" cancela sin ejecutar la acción, el doble toque en "Iniciar actividad" crea una sola actividad, y "Pedir ayuda" no se activa al soltar antes de 2 s y sí al mantener. Falta M14 en T24: los demás tipos de elemento, el botón deshabilitado y el movimiento reducido.
 - [ ] T20 — `RootStack` con `animation: 'slide_from_right'`. Medir la duración real en Android (R4). (CA-23)
 - [ ] T21 — `HomeTabs` con `animation: 'fade'` y animación del indicador en `TabBar`, ambas sin movimiento con la opción reducida. (CA-24, CA-27)
 - [ ] T22 — `components/ui/Appear.tsx` en `Notice`, `Card` y las filas de las listas, con entrada y salida. Capa de selección animada en `Chip`. (CA-25, CA-27)
@@ -277,9 +283,9 @@ Se corren en el emulador con `adb` (`adb emu geo fix <lng> <lat>`). La Sierra de
 - **Esperado:** el aviso entra con una animación y el toque se registra sin esperar a que termine.
 
 **M19 — Reducir animaciones**
-1. Activar la opción con `adb shell settings put global animator_duration_scale 0` y reiniciar la app.
+1. Activar la opción con `adb shell settings put global <ajuste> 0` para `transition_animation_scale`, `animator_duration_scale` y `window_animation_scale`, y reiniciar la app. React Native solo lee `transition_animation_scale`.
 2. Repetir M2 y M14 a M18.
-3. Restaurar con `animator_duration_scale 1`.
+3. Restaurar los tres ajustes a 1.
 - **Esperado:** no hay desplazamientos ni movimientos de cámara animados, y todo sigue funcionando.
 
 **M20 — Regresión**

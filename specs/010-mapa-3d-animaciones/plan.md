@@ -86,7 +86,7 @@ La aprobación del usuario se anota en el historial de la spec antes de programa
 
 **`hooks/theme/useReducedMotion.ts`.** Lee `AccessibilityInfo.isReduceMotionEnabled` y escucha `reduceMotionChanged`. También expone `getReducedMotion()` para las opciones de navegación, que no pueden usar hooks. Con la opción activa, las duraciones son 0 y no hay desplazamiento (CA-27).
 
-**Toques (CA-20 a CA-22).** `components/ui/PressableScale.tsx` envuelve `Pressable`: escala a 0.97 y anima la capa de presionado, con `useNativeDriver`, usando `onPressIn` y `onPressOut`. `onPress` no se toca, así que la acción no espera a la animación, y un `Pressable` deshabilitado no recibe esos eventos. La escala no cambia el área de toque. Se migran los siete componentes con elementos táctiles: `BaseBtn`, `Card`, `Chip`, `IconButton`, `SosButton`, `TabBar` y la fila de `activityHistoryPage`.
+**Toques (CA-20 a CA-22).** `components/ui/PressableScale.tsx` envuelve `Pressable`: escala a 0.97 y anima la capa de presionado, con `useNativeDriver`, usando `onPressIn` y `onPressOut`. `onPress` no se toca, así que la acción no espera a la animación, y un `Pressable` deshabilitado no recibe esos eventos. La escala no cambia el área de toque. Se migran los ocho componentes con elementos táctiles: `BaseBtn`, `Card`, `Chip`, `IconButton`, `SosButton`, `TabBar`, la fila de `activityHistoryPage` y `MapViewToggle`, que se creó en T11.
 
 **Pantallas (CA-23).** `RootStack` lleva `animation: 'slide_from_right'` en `screenOptions`. Es una transición nativa, y la vuelta con el botón o con el gesto del sistema va en sentido contrario.
 
@@ -130,7 +130,7 @@ La aprobación del usuario se anota en el historial de la spec antes de programa
 | CA-19 | Revisión documentada del archivo de Figma y aprobación en el historial |
 | CA-1 a CA-18 | Casos manuales en el emulador con `adb emu geo fix` y modo avión. CA-1 y CA-9 se repiten en un teléfono real si el emulador no dibuja bien el relieve |
 | CA-20 a CA-26 | Casos manuales en el emulador |
-| CA-27 | Caso manual con `adb shell settings put global animator_duration_scale 0` |
+| CA-27 | Caso manual con `transition_animation_scale`, `animator_duration_scale` y `window_animation_scale` en 0, como hace "Quitar animaciones". React Native solo lee el primero (T18) |
 | CA-28 | Repetir los casos manuales de las specs 001 a 009 |
 | Batería | Se mide en 011-estabilidad (spec, requisitos no funcionales) |
 
