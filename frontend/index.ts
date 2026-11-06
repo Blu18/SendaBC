@@ -5,6 +5,8 @@ import { registerRootComponent } from 'expo';
 import './lib/safety/locationTask';
 // "¿Estás bien?" y la alerta por inactividad, también sin pantallas montadas (spec 008, T17).
 import './lib/safety/areYouOk';
+// Token y telemetría de Mapbox, antes de montar el mapa de la grabación (spec 010, T5).
+import './lib/map/mapbox';
 import App from './App';
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
