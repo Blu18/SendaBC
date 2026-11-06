@@ -30,15 +30,17 @@ import { computeMissingMetrics } from './lib/db/activityMetrics';
 import { setUnauthorizedHandler } from './lib/api/client';
 import { queryClient } from './lib/api/queryClient';
 import { fontFamilies, type Theme } from './lib/theme';
+import { getReducedMotion } from './hooks/theme/useReducedMotion';
 import { useTheme, useThemedStyles } from './hooks/theme/useTheme';
 
 // Barra de 4 pestañas (spec 009, plan D1). Cada ícono tiene su versión rellena para la
 // pestaña activa y de contorno para las demás, como en Figma.
 const HomeTabs = createBottomTabNavigator({
   tabBar: (props) => <TabBar {...props} />,
-  screenOptions: {
+  screenOptions: () => ({
     headerShown: false,
-  },
+    animation: getReducedMotion() ? 'none' : 'fade',
+  }),
   screens: {
     MainPage: {
       screen: MainPage,
@@ -79,9 +81,11 @@ const HomeTabs = createBottomTabNavigator({
 
 const RootStack = createNativeStackNavigator({
   initialRouteName: 'Index',
-  screenOptions: {
+  // En Android, ios_from_right dura 200 ms y slide_from_right 400, más que el límite (spec 010, RN-5).
+  screenOptions: () => ({
     headerShown: false,
-  },
+    animation: getReducedMotion() ? 'none' : 'ios_from_right',
+  }),
   screens: {
     Index: {
       screen: Index,
