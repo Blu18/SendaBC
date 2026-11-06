@@ -126,8 +126,18 @@ Se hace en una rama desechable y puede correr en paralelo con la fase A (plan, D
 - [x] T22 — `components/ui/Appear.tsx` en `Notice`, `Card` y las filas de las listas, con entrada y salida. Capa de selección animada en `Chip`. (CA-25, CA-27)
 
   Hecho (2026-11-06): `Appear` envuelve la condición en cada lugar de uso, no el componente, porque `{error && <Notice />}` lo desmonta antes de poder animar la salida. `useLeavingItems` y `lib/lists/leaving.ts`, con 7 pruebas, conservan la fila quitada en contactos y favoritas; en "Mis rutas" y el historial no se quita nada en pantalla, así que solo tienen entrada. Probado en el emulador con `motion.content` en 3 s y un contacto quitado solo en la lista local, ambos temporales y ya revertidos: las tarjetas entran, la fila sale en su lugar, la lista se acomoda sin hueco, y los chips cambian de fondo. Límites: `FlatList` vuelve a montar las filas al desplazarse, así que pueden repetir la entrada; las pantallas que devuelven otro contenido de inmediato (`RouteListNotice`, aviso de `RouteDetail`) solo tienen entrada; al salir un aviso, lo de abajo sube de golpe, sin animarse; y durante los 200 ms del chip el texto ya cambió y el contraste baja. Sin probar: quitar un contacto o favorita real, los avisos de `login` y `register`, y la opción reducida; se ven en M17 y M19.
-- [ ] T23 — `AreYouOkModal` con `animationType="none"` si la opción reducida está activa. (CA-26, CA-27)
-- [ ] T24 — Correr los casos M14 a M19 y anotar los resultados. (CA-20 a CA-27)
+- [x] T23 — `AreYouOkModal` con `animationType="none"` si la opción reducida está activa. (CA-26, CA-27)
+
+  Hecho (2026-11-06): probado en el emulador con la opción activa y `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES=1`. Un registro temporal, ya retirado, confirmó `none`; el aviso salió completo en la primera captura, con la cuenta en 1:00, y "Estoy bien" funcionó. Con la opción apagada sigue `slide`, que no cambió; el toque durante la entrada se revisa en M18.
+- [x] T24 — Correr los casos M14 a M19 y anotar los resultados. (CA-20 a CA-27)
+
+  Hecho (2026-11-06), en el emulador. M14 a M19 pasan con las notas de abajo.
+  - **M14, pasa:** tarjeta de "Mis favoritas", fila, pestaña, chip y botón de ícono se animan y vuelven a su estado normal; botones, cancelar deslizando y doble toque se probaron en T19. "Enviar mensaje de prueba" deshabilitado no se anima.
+  - **M15, pasa:** la ida se ve en una captura a media transición: la pantalla nueva entra por la derecha. El botón y el gesto del sistema regresan, y la duración es la de T20. El sentido de la vuelta no se atrapó en captura; lo indica la configuración nativa.
+  - **M16, pasa:** las 4 pestañas cambian con fundido y el indicador se anima (T21). Al entrar a Rutas el mapa se ve vacío un momento y vuelve a buscar. No lo causan las animaciones: pasa igual sin `fade`, porque `exploreRoutesPage` vuelve a montar el mapa a propósito al entrar desde otra pestaña. El usuario lo aceptó y el resultado esperado de M16 se ajustó.
+  - **M17, pasa:** chips y avisos se animan, y "Sin conexión" aparece y desaparece. Con autorización del usuario se quitó y se volvió a agregar el contacto "Beto": la fila se desvanece en su lugar y después la lista sube de golpe, sin animarse (límite de T22). La entrada de la fila nueva no se atrapó en captura, porque la tapa el diálogo "Contacto agregado". Beto queda al final de la lista, pendiente y con una invitación nueva.
+  - **M18, pasa con una observación:** el aviso entra con `slide` y "Estoy bien" respondió a 150 y 400 ms de aparecer, sin enviar alerta. Un toque lanzado en cuanto cambió el foco de la ventana se perdió, y ese mismo toque repetido sí funcionó. Se vio una sola vez; probablemente llegó antes de que la hoja estuviera en su lugar, pero no se confirmó.
+  - **M19, pasa:** con los tres ajustes en 0, la fila no escala y solo cambia la capa, las pestañas y la ida a otra pantalla cambian en un solo paso en capturas cada 100 ms, y la grabación funciona (4 puntos, 330 m). Eso deja sin movimiento visible los cuadros sin explicar de T21, aunque las capturas no descartan algo más corto. La cámara se revisó en T18 y el aviso en T23.
 
 ## Cierre
 
@@ -274,7 +284,7 @@ Se corren en el emulador con `adb` (`adb emu geo fix <lng> <lat>`). La Sierra de
 
 **M16 — Pestañas**
 1. Cambiar entre las 4 pestañas, incluida Rutas con su mapa.
-- **Esperado:** el contenido cambia con una animación, el indicador se anima y el mapa de Rutas no parpadea.
+- **Esperado:** el contenido cambia con una animación y el indicador se anima. Al entrar a Rutas desde otra pestaña el mapa se recarga y busca de nuevo; es lo previsto (specs 006 y 009).
 
 **M17 — Contenido**
 1. Provocar un aviso de error y hacerlo desaparecer.
