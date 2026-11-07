@@ -1,6 +1,6 @@
 # Constitución de SendaBC
 
-Versión 1.8 · 2026-11-05 · **Aprobada**
+Versión 1.9 · 2026-11-06 · **Aprobada**
 
 Principios que toda spec, plan y línea de código debe respetar. Cambiar la constitución requiere acuerdo explícito del equipo y una entrada en el historial al final de este archivo.
 
@@ -22,7 +22,7 @@ Principios que toda spec, plan y línea de código debe respetar. Cambiar la con
 
 ## Artículo 3 — Seguridad y privacidad
 
-3.1. Las contraseñas se guardan solo como hash bcrypt, generado en el **servidor**, nunca en la app. Hoy lo genera un trigger de PostgreSQL en Supabase (`pgcrypto`) al insertar en `users`. El cliente envía la contraseña en texto plano solo por HTTPS en producción.
+3.1. Las contraseñas se guardan solo como hash bcrypt, generado en el **servidor**, nunca en la app. Hoy lo genera un trigger de PostgreSQL en Supabase (`pgcrypto`) al insertar en `users` o al cambiar la contraseña. El cliente envía la contraseña en texto plano solo por HTTPS en producción.
 3.2. Ninguna respuesta de la API incluye `passwordHash`.
 3.3. Todo endpoint que lea o modifique datos de un usuario usa `JwtAuthGuard` y obtiene el id del usuario **del token**, no de parámetros de la URL ni del body.
 3.4. En el dispositivo, el JWT se guarda solo en `expo-secure-store`.
@@ -32,7 +32,7 @@ Principios que toda spec, plan y línea de código debe respetar. Cambiar la con
 ## Artículo 4 — Contratos de API explícitos
 
 4.1. Toda entrada al backend se valida con DTOs de `class-validator`.
-4.2. Códigos HTTP consistentes: `400` validación, `401` no autenticado, `403` sin permiso, `404` no existe, `409` conflicto (p. ej. email duplicado).
+4.2. Códigos HTTP consistentes: `400` validación, `401` no autenticado, `403` sin permiso, `404` no existe, `409` conflicto (p. ej. email duplicado), `503` servicio no disponible (la base de datos no responde).
 4.3. Los mensajes de error para el usuario están en español.
 4.4. Cada endpoint nuevo se documenta en el `plan.md` de su spec (método, ruta, auth, request, response, errores).
 
@@ -82,6 +82,7 @@ Diferencias respecto al plan original: se usa **Vitest** en lugar de Jest y **ox
 
 ## Historial
 
+- 2026-11-06 — v1.9. 3.1: el trigger también genera el hash al cambiar la contraseña. 4.2: se agrega `503` (spec 011, plan D5 y D9). Aprobada junto con el plan de la spec 011.
 - 2026-11-05 — v1.8. Se agrega al stack `@rnmapbox/maps` (spec 010, plan D1). Aprobada junto con el plan de la spec 010.
 - 2026-10-30 — v1.7. Se agregan al stack `@react-navigation/bottom-tabs`, `expo-font`, `@expo/vector-icons` y `expo-system-ui` (spec 009, plan D1 a D4). Aprobada junto con el plan de la spec 009.
 - 2026-09-30 — v1.0. Adopción de Spec-Driven Development en la semana 3.

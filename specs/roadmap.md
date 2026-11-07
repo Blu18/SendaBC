@@ -17,7 +17,7 @@ Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. L
 | 8 | Seguridad: contacto de emergencia, inactividad y alerta por Telegram | [008-alerta-inactividad](008-alerta-inactividad/spec.md) | Implementada |
 | 9 | Diseño de la interfaz: prototipo en Figma e implementación en la app | [009-diseno-interfaz](009-diseno-interfaz/spec.md) | Implementada con pendientes (falta 004 M3 en dispositivo) |
 | 9 | Mapa 3D al grabar y animaciones de la interfaz | [010-mapa-3d-animaciones](010-mapa-3d-animaciones/spec.md) | Implementada con pendientes (CA-28 parcial) |
-| 9 | Pulido, prueba de campo, pruebas unitarias, bugs | 011-estabilidad | Por escribir |
+| 9 | Pulido, prueba de campo, pruebas unitarias, bugs | [011-estabilidad](011-estabilidad/spec.md) | Aprobada |
 | 10 | Cierre: README, manual, EAS Build, despliegue, demo | 012-entrega | Por escribir |
 
 ## Notas
