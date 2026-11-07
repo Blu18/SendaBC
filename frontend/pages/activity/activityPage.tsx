@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Linking, Alert, Vibration } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import BgBtn from "../../components/ui/buttons/BgBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
@@ -13,6 +14,8 @@ import { useEmergencyContacts } from "../../hooks/safety/useEmergencyContacts";
 import { useAreYouOk } from "../../hooks/safety/useAreYouOk";
 import { useSafetySession } from "../../hooks/safety/useSafetySession";
 import { useAuth } from "../../context/AuthContext";
+import MapErrorBoundary from "../../components/map/MapErrorBoundary";
+import RecordingMap from "../../components/map/RecordingMap";
 import AreYouOkModal from "../../components/safety/AreYouOkModal";
 import SafetyCard from "../../components/safety/SafetyCard";
 import ReturnTimePicker from "../../components/safety/ReturnTimePicker";
@@ -101,6 +104,18 @@ export default function ActivityPage() {
         stop,
     } = useActivityTracker();
     const recording = status === 'recording';
+
+    // Salir termina la actividad y no se puede reanudar: se pregunta antes (spec 003, CA-15). No se
+    // pregunta en lo que no decidió el usuario aquí: replace al detener y reset si la sesión venció.
+    usePreventRemove(recording, ({ data }) => {
+        const salir = () => navigation.dispatch(data.action);
+        if (data.action.type === 'REPLACE' || data.action.type === 'RESET') return salir();
+        Alert.alert('¿Terminar la actividad?', 'Si sales, la grabación termina y no se puede reanudar. Lo grabado queda guardado.', [
+            { text: 'Seguir grabando', style: 'cancel' },
+            { text: 'Terminar', style: 'destructive', onPress: salir },
+        ]);
+    });
+
     // Con contactos activos hay a quién avisar: vale la pena pedir el permiso en segundo plano
     // (spec 008, CA-10). Sin red se usa la copia del teléfono.
     const { contacts, status: contactsStatus } = useEmergencyContacts();
@@ -171,32 +186,40 @@ export default function ActivityPage() {
         }
     };
 
+    const alertaActiva = seguridad.sesion && seguridad.alertaActiva ? (
+        <ActiveAlert
+            sesion={seguridad.sesion}
+            nombres={seguridad.entregadaA ?? nombresActivos}
+            onCancelarAlerta={() => void handleCancelarAlerta()}
+        />
+    ) : undefined;
+
     const titulo = recording ? `Grabando · ${ACTIVITY_TYPE_LABELS[type]}` : 'Nueva actividad';
 
     return (
         <View style={styles.screen}>
             <ScreenHeader title={titulo} onBack={() => navigation.goBack()} />
-            <ScrollView contentContainerStyle={styles.content}>
-                {/* Alerta activa arriba, con "Cancelar alerta" (spec 008, CA-17, CA-25) */}
-                {recording && seguridad.sesion && seguridad.alertaActiva && (
-                    <ActiveAlert
-                        sesion={seguridad.sesion}
-                        nombres={seguridad.entregadaA ?? nombresActivos}
-                        onCancelarAlerta={() => void handleCancelarAlerta()}
-                    />
+            {/* Mapa arriba y panel abajo (spec 010, CA-6). La alerta activa va sobre el mapa, con
+                "Cancelar alerta", para no empujar las métricas (spec 008, CA-17, CA-25) */}
+            {recording && (
+                <MapErrorBoundary overlay={alertaActiva}>
+                    <RecordingMap activityLocalId={activityLocalId} overlay={alertaActiva} />
+                </MapErrorBoundary>
+            )}
+            <ScrollView style={recording && styles.panel} contentContainerStyle={styles.content}>
+                {/* El tipo ya sale en el título mientras se graba (spec 010, T13) */}
+                {!recording && (
+                    <View style={styles.selector}>
+                        {TIPOS.map((tipo) => (
+                            <Chip
+                                key={tipo.value}
+                                text={tipo.label}
+                                selected={tipo.value === type}
+                                onPress={() => setType(tipo.value)}
+                            />
+                        ))}
+                    </View>
                 )}
-
-                <View style={styles.selector}>
-                    {TIPOS.map((tipo) => (
-                        <Chip
-                            key={tipo.value}
-                            text={tipo.label}
-                            selected={tipo.value === type}
-                            disabled={recording}
-                            onPress={() => setType(tipo.value)}
-                        />
-                    ))}
-                </View>
 
                 {/* Métricas en vivo, los textos más grandes de la pantalla (spec 009, CA-12); mismos
                     umbrales que el resumen (spec 004, CA-15, CA-16) */}
@@ -228,40 +251,50 @@ export default function ActivityPage() {
                     <RecordingSafety sesion={seguridad.sesion} onCambiarRegreso={seguridad.cambiarRegreso} />
                 )}
 
-                {permissionError === 'blocked' && (
-                    <>
+                <Appear style={styles.group}>
+                    {permissionError === 'blocked' && (
+                        <>
+                            <Notice
+                                type="error"
+                                title="Ubicación desactivada"
+                                description="El permiso de ubicación está desactivado. Actívalo en los ajustes de la app para registrar tu actividad."
+                            />
+                            <BgBtn text="Abrir ajustes" onPress={() => Linking.openSettings()} />
+                        </>
+                    )}
+                </Appear>
+                <Appear>
+                    {permissionError && permissionError !== 'blocked' && (
                         <Notice
-                            type="error"
-                            title="Ubicación desactivada"
-                            description="El permiso de ubicación está desactivado. Actívalo en los ajustes de la app para registrar tu actividad."
+                            title="Se necesita tu ubicación"
+                            description={'SendaBC necesita tu ubicación para registrar el recorrido. Presiona "Iniciar actividad" y permite el acceso.'}
                         />
-                        <BgBtn text="Abrir ajustes" onPress={() => Linking.openSettings()} />
-                    </>
-                )}
-                {permissionError && permissionError !== 'blocked' && (
-                    <Notice
-                        title="Se necesita tu ubicación"
-                        description={'SendaBC necesita tu ubicación para registrar el recorrido. Presiona "Iniciar actividad" y permite el acceso.'}
-                    />
-                )}
+                    )}
+                </Appear>
 
                 {/* Sin el permiso en segundo plano, la detección solo corre con la app abierta (CA-10) */}
-                {recording && mode === 'foreground' && hayContactos && (
-                    <Notice title="Detección solo con la app abierta" description={SAFETY_MESSAGES.sinPermiso} />
-                )}
+                <Appear>
+                    {recording && mode === 'foreground' && hayContactos && (
+                        <Notice title="Detección solo con la app abierta" description={SAFETY_MESSAGES.sinPermiso} />
+                    )}
+                </Appear>
 
-                {recording && hayContactos && sinNotificaciones && (
-                    <Notice title="Sin notificaciones" description={SAFETY_MESSAGES.sinNotificaciones} />
-                )}
+                <Appear>
+                    {recording && hayContactos && sinNotificaciones && (
+                        <Notice title="Sin notificaciones" description={SAFETY_MESSAGES.sinNotificaciones} />
+                    )}
+                </Appear>
 
                 {/* No se pudo cerrar la actividad al detener (spec 003, CA-12, RN-1) */}
-                {stopFailed && (
-                    <Notice
-                        type="error"
-                        title="No se pudo cerrar la actividad"
-                        description="Se completará automáticamente al volver a abrir la app."
-                    />
-                )}
+                <Appear>
+                    {stopFailed && (
+                        <Notice
+                            type="error"
+                            title="No se pudo cerrar la actividad"
+                            description="Se completará automáticamente al volver a abrir la app."
+                        />
+                    )}
+                </Appear>
             </ScrollView>
 
             {/* Controles abajo, al alcance del pulgar (spec 009, CA-13) */}
@@ -293,6 +326,14 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     screen: {
         flex: 1,
         backgroundColor: t.colors.background,
+    },
+    // Alto máximo del panel bajo el mapa (spec 010, T1).
+    panel: {
+        flexGrow: 0,
+        maxHeight: 280,
+    },
+    group: {
+        gap: t.spacing.md,
     },
     content: {
         gap: t.spacing.md,

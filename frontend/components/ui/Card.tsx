@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { Pressable, View, Text, StyleSheet, StyleProp, ViewStyle, GestureResponderEvent } from "react-native";
+import { View, Text, StyleSheet, StyleProp, ViewStyle, GestureResponderEvent } from "react-native";
 import type { Theme } from "../../lib/theme";
 import { useThemedStyles } from "../../hooks/theme/useTheme";
 import Icon from "./Icon";
+import PressableScale from "./PressableScale";
 
 interface CardProps {
     title?: string;
@@ -35,19 +36,15 @@ export default function Card({ title, description, children, onPress, accessibil
     if (!onPress) return <View style={[styles.card, style]}>{content}</View>;
 
     return (
-        <Pressable
+        <PressableScale
             onPress={onPress}
             accessibilityRole="button"
             accessibilityLabel={accessibilityLabel}
             style={[styles.card, style]}
+            pressedStyle={styles.pressed}
         >
-            {({ pressed }) => (
-                <>
-                    {pressed && <View style={styles.pressed} />}
-                    {content}
-                </>
-            )}
-        </Pressable>
+            {content}
+        </PressableScale>
     );
 }
 

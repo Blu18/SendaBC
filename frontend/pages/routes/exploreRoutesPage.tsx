@@ -4,6 +4,7 @@ import MapView, { Marker, Polyline, type MapPressEvent, type Region } from "reac
 import * as Location from "expo-location";
 import { useNavigation, type ParamListBase } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import IconButton from "../../components/ui/IconButton";
@@ -414,14 +415,16 @@ function ExploreRoutes() {
 
                 {/* Abajo: el aviso o la tarjeta de la ruta seleccionada */}
                 <View style={styles.bottom} pointerEvents="box-none">
-                    {aviso && (
-                        <>
-                            <Notice {...aviso} />
-                            {(status === 'error' || status === 'offline') && (
-                                <PrimaryButton text="Reintentar" onPress={retry} />
-                            )}
-                        </>
-                    )}
+                    <Appear style={styles.avisoGroup}>
+                        {aviso && (
+                            <>
+                                <Notice {...aviso} />
+                                {(status === 'error' || status === 'offline') && (
+                                    <PrimaryButton text="Reintentar" onPress={retry} />
+                                )}
+                            </>
+                        )}
+                    </Appear>
                     {selected && (
                         <RouteCard
                             route={selected}
@@ -498,6 +501,9 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         ...t.typography.body,
         fontFamily: fontFamilies.bold,
         color: t.colors.text,
+    },
+    avisoGroup: {
+        gap: t.spacing.sm,
     },
     bottom: {
         position: 'absolute',

@@ -118,8 +118,8 @@ La spec 005 dejó para esta enviar la ubicación al servidor durante la activida
 - Detección de caídas con el acelerómetro → no está en el roadmap.
 - Mensajería satelital o por radio cuando no hay señal celular → no está en el roadmap.
 - Más de tres contactos de emergencia → no está en el roadmap (P4).
-- Ajustar los umbrales de RN-4 con lo aprendido en la prueba de campo, y dejar que el usuario los cambie → **009-estabilidad**.
-- Editar el perfil (nombre, avatar) y editar o borrar la cuenta, que las specs 001 y 002 habían dejado para esta → **009-estabilidad** (P7).
+- Ajustar los umbrales de RN-4 con lo aprendido en la prueba de campo, y dejar que el usuario los cambie → **011-estabilidad**.
+- Editar el perfil (nombre, avatar) y editar o borrar la cuenta, que las specs 001 y 002 habían dejado para esta → **011-estabilidad** (P7).
 
 ## Preguntas abiertas
 
@@ -146,6 +146,7 @@ Resueltas el 2026-10-22:
 
 ## Historial
 
+- 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). "Seguridad" es una pestaña y el enlace del aviso sin contactos dice "Configurar contactos" (M1 y M3). Los CA no cambian.
 - 2026-10-30 — M1 paso 8 aprobado (los contactos se ven igual al entrar en un teléfono sin datos locales): CA-3 verificado. Los 28 CA están verificados; la spec pasa a Implementada.
 - 2026-10-30 — M2 aprobado con el bot real: CA-7 verificado. Solo queda CA-3 (M1 paso 8, otro dispositivo).

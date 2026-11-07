@@ -1,5 +1,6 @@
 import { View, FlatList, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import Appear from "../../components/ui/Appear";
 import RouteListNotice from "../../components/routes/RouteListNotice";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Card from "../../components/ui/Card";
@@ -26,16 +27,18 @@ export default function MyRoutesPage() {
                     keyExtractor={(r) => r.id}
                     contentContainerStyle={styles.list}
                     renderItem={({ item }) => (
-                        <Card
-                            title={item.name}
-                            description={[
-                                formatDistance(item.distanceMeters),
-                                ACTIVITY_TYPE_LABELS[item.type],
-                                ROUTE_STATUS_LABELS[item.status],
-                                formatPublishedAt(item.publishedAt),
-                            ].join(' · ')}
-                            onPress={() => navigation.navigate('RouteDetail', { id: item.id })}
-                        />
+                        <Appear>
+                            <Card
+                                title={item.name}
+                                description={[
+                                    formatDistance(item.distanceMeters),
+                                    ACTIVITY_TYPE_LABELS[item.type],
+                                    ROUTE_STATUS_LABELS[item.status],
+                                    formatPublishedAt(item.publishedAt),
+                                ].join(' · ')}
+                                onPress={() => navigation.navigate('RouteDetail', { id: item.id })}
+                            />
+                        </Appear>
                     )}
                 />
             ) : (

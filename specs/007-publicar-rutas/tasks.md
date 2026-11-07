@@ -141,6 +141,7 @@ Los 27 CA están cubiertos por al menos una tarea.
 | CA-25 | `route-publish.e2e-spec.ts` › borrar · M6 | Ambas | Verificado (e2e; M6) |
 | CA-26 | `route.service.spec.ts` › `403` · `route-publish.e2e-spec.ts` › ajena y de ejemplo | Automatizada | Verificado (`route.service.spec.ts`, e2e con ruta ajena y de ejemplo) |
 | CA-27 | `route.controller.spec.ts` › guard · `route-publish.e2e-spec.ts` › `401` | Automatizada | Verificado (`route.controller.spec.ts`, e2e `401` en los 8 endpoints) |
+| CA-28 | `recorrido.spec.ts`, `route.service.spec.ts` › ubicación vieja y `frontend/lib/routes/publish.test.ts` | Automatizada | Verificado (2026-11-06). La consulta se comprobó solo con lectura sobre una actividad real: de 148 km a 1.68 km. El e2e de publicar pasa, pero no incluye un punto viejo |
 
 Cierre (2026-10-21): los 27 CA están verificados. Pruebas finales: backend 223/223, e2e 56/56 (6 suites, incluida `route-publish.e2e-spec.ts` con 22 casos), frontend 295/295. Colección de Postman validada en T11 contra la API local, 54/54, con un ejecutor en Node porque `newman` no está instalado (constitución 6.3). Casos manuales M1–M8 en el emulador con el development build de la 006 (ver "Resultado de los casos manuales").
 

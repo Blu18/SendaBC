@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert, PixelRati
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import * as Location from "expo-location";
+import Appear from "../../components/ui/Appear";
 import BgBtn from "../../components/ui/buttons/BgBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Notice from "../../components/ui/Notice";
@@ -248,7 +249,9 @@ export default function RouteDetailPage({ route: navRoute }: Props) {
             <View style={styles.container}>
                 {header}
                 <View style={styles.noticeArea}>
-                    <Notice {...aviso} />
+                    <Appear>
+                        <Notice {...aviso} />
+                    </Appear>
                 </View>
                 <View style={styles.actions}>
                     {status === 'unavailable' ? (

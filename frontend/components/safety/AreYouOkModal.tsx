@@ -5,6 +5,7 @@ import Icon from "../ui/Icon";
 import { formatoCuentaRegresiva, textoPregunta } from "../../lib/safety/messages";
 import { UMBRALES_APP } from "../../lib/safety/locationTask";
 import { lightColors, type Theme } from "../../lib/theme";
+import { useReducedMotion } from "../../hooks/theme/useReducedMotion";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 
 type Props = {
@@ -21,12 +22,13 @@ export default function AreYouOkModal({ visible, restanteMs, respondiendo, onEst
     const theme = useTheme();
     const styles = useThemedStyles(makeStyles);
     const insets = useSafeAreaInsets();
+    const reduced = useReducedMotion();
     const { titulo, cuerpo, boton } = textoPregunta(UMBRALES_APP);
     return (
         <Modal
             visible={visible}
             transparent
-            animationType="slide"
+            animationType={reduced ? "none" : "slide"}
             statusBarTranslucent
             navigationBarTranslucent
             onRequestClose={() => {}}

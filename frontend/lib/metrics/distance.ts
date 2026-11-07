@@ -8,6 +8,18 @@ export type DistancePoint = Coordinates & {
 
 type SmoothedPoint = Coordinates & { accuracy: number };
 
+// ¿La precisión del punto alcanza para contarlo? Sin precisión se acepta (CA-8).
+export function isAccurate(point: Pick<DistancePoint, 'accuracy'>) {
+  return point.accuracy === null || point.accuracy <= MAX_ACCURACY_M;
+}
+
+// ¿Ir de `previous` a `point` exige más velocidad que MAX_SPEED_MS? Es un salto de ubicación
+// (CA-25). El mapa de la grabación usa esta regla y la de arriba (spec 010, RN-3).
+export function isJump(previous: DistancePoint, point: DistancePoint) {
+  const seconds = Math.max(1, (Date.parse(point.recordedAt) - Date.parse(previous.recordedAt)) / 1000);
+  return haversineMeters(previous, point) / seconds > MAX_SPEED_MS;
+}
+
 // Promedio de posición y precisión de la ventana; sin precisión cuenta como 0 m.
 function average(points: DistancePoint[]): SmoothedPoint {
   let latitude = 0;
@@ -33,22 +45,18 @@ function average(points: DistancePoint[]): SmoothedPoint {
 export function createDistanceAccumulator() {
   const window: DistancePoint[] = [];
   let anchor: SmoothedPoint | null = null;
-  let previous: { point: DistancePoint; time: number } | null = null;
+  let previous: DistancePoint | null = null;
   let total = 0;
 
   return {
     add(point: DistancePoint) {
-      if (point.accuracy !== null && point.accuracy > MAX_ACCURACY_M) return;
+      if (!isAccurate(point)) return;
 
-      const time = Date.parse(point.recordedAt);
-      if (previous) {
-        const seconds = Math.max(1, (time - previous.time) / 1000);
-        if (haversineMeters(previous.point, point) / seconds > MAX_SPEED_MS) {
-          window.length = 0;
-          anchor = null;
-        }
+      if (previous && isJump(previous, point)) {
+        window.length = 0;
+        anchor = null;
       }
-      previous = { point, time };
+      previous = point;
 
       window.push(point);
       if (window.length > SMOOTHING_WINDOW) window.shift();

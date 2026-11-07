@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
+import Appear from "../../components/ui/Appear";
 import BgBtn from "../../components/ui/buttons/BgBtn";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import SyncBadge from "../../components/ui/SyncBadge";
@@ -84,11 +85,13 @@ export default function ActivitySummaryPage({ route }: Props) {
             <View style={styles.screen}>
                 {header}
                 <View style={styles.content}>
-                    <Notice
-                        type="error"
-                        title="No se encontró la actividad"
-                        description="Puede que se haya borrado de este teléfono."
-                    />
+                    <Appear>
+                        <Notice
+                            type="error"
+                            title="No se encontró la actividad"
+                            description="Puede que se haya borrado de este teléfono."
+                        />
+                    </Appear>
                 </View>
                 <View style={styles.spacer} />
                 <View style={styles.actions}>

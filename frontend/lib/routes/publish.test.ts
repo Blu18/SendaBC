@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MIN_PUBLISH_DISTANCE_M, motivoNoPublicable, validarRuta } from './publish';
+import { inicioDelRecorrido, MIN_PUBLISH_DISTANCE_M, motivoNoPublicable, validarRuta } from './publish';
 
 const valido = { name: 'Cañón de Doña Petra', description: '', region: 'Ensenada' };
 
@@ -92,5 +92,33 @@ describe('motivoNoPublicable (spec 007, CA-1 a CA-3, CA-8)', () => {
       kind: 'ya-publicada',
       rutaId: 'r-1',
     });
+  });
+});
+
+describe('inicioDelRecorrido (spec 007, CA-28, RN-10)', () => {
+  const INICIO = '2026-11-06T16:00:00.000Z';
+  const punto = (segundos: number) => ({
+    recordedAt: new Date(Date.parse(INICIO) + segundos * 1000).toISOString(),
+  });
+
+  it('salta la ubicación vieja del principio', () => {
+    const puntos = [punto(-1500), punto(5), punto(15)];
+    expect(inicioDelRecorrido(puntos, INICIO)).toBe(puntos[1]);
+  });
+
+  it('sin ubicación vieja es el primer punto', () => {
+    const puntos = [punto(5), punto(15)];
+    expect(inicioDelRecorrido(puntos, INICIO)).toBe(puntos[0]);
+  });
+
+  it('con el reloj desfasado, o si quedaría un solo punto, es el primero', () => {
+    const desfasado = [punto(-600), punto(-590)];
+    expect(inicioDelRecorrido(desfasado, INICIO)).toBe(desfasado[0]);
+    const unoSolo = [punto(-600), punto(5)];
+    expect(inicioDelRecorrido(unoSolo, INICIO)).toBe(unoSolo[0]);
+  });
+
+  it('sin puntos no hay inicio', () => {
+    expect(inicioDelRecorrido([], INICIO)).toBeUndefined();
   });
 });

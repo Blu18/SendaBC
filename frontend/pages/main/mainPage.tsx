@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ActivityIndicator, Alert, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import Appear from "../../components/ui/Appear";
 import { useProfile } from "../../hooks/auth/auth.hooks";
 import { useAuth } from "../../context/AuthContext";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
@@ -60,13 +61,15 @@ export default function MainPage() {
             <ScreenHeader title={profile.data ? `Hola, ${profile.data.displayName}` : 'Inicio'} />
             <ScrollView contentContainerStyle={styles.content}>
                 {profile.isLoading && <ActivityIndicator size="large" color={theme.colors.primary} />}
-                {profile.isError && (
-                    <Notice
-                        type="error"
-                        title="No se pudo cargar tu perfil"
-                        description="Tus actividades se siguen grabando en el teléfono."
-                    />
-                )}
+                <Appear>
+                    {profile.isError && (
+                        <Notice
+                            type="error"
+                            title="No se pudo cargar tu perfil"
+                            description="Tus actividades se siguen grabando en el teléfono."
+                        />
+                    )}
+                </Appear>
 
                 <View style={styles.newActivity}>
                     <Icon name="hiking" size={40} color="onPrimary" decorative />

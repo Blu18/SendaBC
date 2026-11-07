@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert, Platform } from "react-native";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import * as Location from "expo-location";
+import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Notice from "../../components/ui/Notice";
@@ -15,6 +16,7 @@ import { formatDistance, formatElevation } from "../../lib/format/metrics";
 import { dificultadDe } from "../../lib/routes/difficulty";
 import { DIFFICULTY_LABELS } from "../../lib/routes/format";
 import {
+    inicioDelRecorrido,
     motivoNoPublicable,
     validarRuta,
     type RouteFormErrors,
@@ -32,12 +34,12 @@ const VACIO: RouteFormValues = { name: '', description: '', region: '' };
 // Zona propuesta según dónde empieza el recorrido (RN-7, plan D6). En Android la geocodificación
 // pide el permiso de ubicación; publicar no lo solicita (constitución 3.5): sin él, o si el
 // servicio no responde, el campo queda vacío y se escribe a mano.
-async function zonaPropuesta(localId: number): Promise<string> {
+async function zonaPropuesta(localId: number, startedAt: string): Promise<string> {
     if (Platform.OS === 'android') {
         const { granted } = await Location.getForegroundPermissionsAsync();
         if (!granted) return '';
     }
-    const [inicio] = await getActivityPoints(localId);
+    const inicio = inicioDelRecorrido(await getActivityPoints(localId), startedAt);
     if (!inicio) return '';
     const direcciones = await Location.reverseGeocodeAsync({
         latitude: inicio.latitude,
@@ -62,7 +64,9 @@ export default function PublishRoutePage({ route }: Props) {
         <View style={styles.container}>
             {header}
             <View style={styles.noticeArea}>
-                <Notice {...aviso} />
+                <Appear>
+                    <Notice {...aviso} />
+                </Appear>
             </View>
             <View style={styles.actions}>
                 <PrimaryButton text="Volver" onPress={() => navigation.goBack()} />
@@ -77,9 +81,11 @@ export default function PublishRoutePage({ route }: Props) {
     // Si el usuario ya escribió la zona, la propuesta que llegue tarde no la reemplaza.
     const zonaEditada = useRef(false);
 
+    const startedAt = activity?.startedAt;
     useEffect(() => {
+        if (!startedAt) return;
         let vigente = true;
-        zonaPropuesta(localId)
+        zonaPropuesta(localId, startedAt)
             .catch((e) => {
                 console.log('No se pudo deducir la zona de la ruta:', e);
                 return '';
@@ -92,7 +98,7 @@ export default function PublishRoutePage({ route }: Props) {
         return () => {
             vigente = false;
         };
-    }, [localId]);
+    }, [localId, startedAt]);
 
     const onChange = (nuevos: RouteFormValues) => {
         if (nuevos.region !== values.region) zonaEditada.current = true;
@@ -165,7 +171,9 @@ export default function PublishRoutePage({ route }: Props) {
         <View style={styles.container}>
             {header}
             <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-                {!!serverError && <Notice type="error" title="No se pudo publicar" description={serverError} />}
+                <Appear>
+                    {!!serverError && <Notice type="error" title="No se pudo publicar" description={serverError} />}
+                </Appear>
 
                 <RouteForm
                     values={values}
@@ -188,10 +196,12 @@ export default function PublishRoutePage({ route }: Props) {
                 </View>
 
                 {/* Aviso de privacidad (CA-4, requisitos no funcionales) */}
-                <Notice
-                    title="Tu recorrido será público"
-                    description={`Se publica el recorrido completo de la actividad (${pointCount} ${pointCount === 1 ? 'punto' : 'puntos'}), incluidos su inicio y su final. Cualquier persona con la app podrá verlo, junto con tu nombre.`}
-                />
+                <Appear>
+                    <Notice
+                        title="Tu recorrido será público"
+                        description={`Se publica el recorrido completo de la actividad (${pointCount} ${pointCount === 1 ? 'punto' : 'puntos'}), incluidos su inicio y su final. Cualquier persona con la app podrá verlo, junto con tu nombre.`}
+                    />
+                </Appear>
             </ScrollView>
 
             <View style={styles.actions}>

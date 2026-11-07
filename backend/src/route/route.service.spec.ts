@@ -143,16 +143,20 @@ describe('RouteService.publish (spec 007)', () => {
   const dto = { activityId: ACTIVIDAD, name: 'Cañón de Doña Petra' };
 
   // 3 km hacia el este, en el ecuador, con altitud en cada punto.
+  const INICIO = new Date('2026-11-06T16:00:00Z');
   const PUNTOS = Array.from({ length: 28 }, (_, i) => ({
     lat: 0,
     lng: i / 1000,
     altitudeMeters: 100 + i,
+    sequence: i + 1,
+    recordedAt: new Date(INICIO.getTime() + i * 10_000),
   }));
 
   function actividad(overrides: Record<string, unknown> = {}) {
     return {
       id: ACTIVIDAD,
       type: 'HIKING',
+      startedAt: INICIO,
       distanceMeters: 3_000,
       elevationGainMeters: 800,
       route: null,
@@ -182,6 +186,41 @@ describe('RouteService.publish (spec 007)', () => {
     ];
     return { sql: textos.join('?'), valores };
   }
+
+  it('sin ubicación vieja, la ruta usa todos los puntos (CA-28)', async () => {
+    const { service, tx } = montarPublicar();
+
+    await service.publish(USUARIO, dto);
+
+    const { sql, valores } = insertDe(tx);
+    expect(sql).toContain('ST_MakeLine(location ORDER BY sequence)');
+    expect(sql).toContain('ST_StartPoint(recorrido.path)');
+    expect(valores).toContain(1);
+  });
+
+  it('quita la ubicación vieja del recorrido y del perfil (CA-28, RN-10)', async () => {
+    const { service, tx } = montarPublicar();
+    const viejo = {
+      lat: 5,
+      lng: 5,
+      altitudeMeters: 900,
+      sequence: 1,
+      recordedAt: new Date(INICIO.getTime() - 25 * 60_000),
+    };
+    tx.$queryRaw.mockResolvedValue([
+      viejo,
+      ...PUNTOS.map((p) => ({ ...p, sequence: p.sequence + 1 })),
+    ]);
+
+    await service.publish(USUARIO, dto);
+
+    const { valores } = insertDe(tx);
+    expect(valores).toContain(2);
+    const perfil = valores.find(
+      (v): v is string => typeof v === 'string' && v.startsWith('[['),
+    );
+    expect(JSON.parse(perfil!)[0]).toEqual([0, 100]);
+  });
 
   it('busca la actividad entre las sincronizadas del usuario del token (CA-9)', async () => {
     const { service, tx } = montarPublicar();
@@ -323,7 +362,9 @@ describe('RouteService.publish (spec 007)', () => {
     const { sql, valores } = insertDe(tx);
     // Tipo, recorrido e inicio se copian de la fila de la actividad (RN-1).
     expect(sql).toContain('a.type');
-    expect(sql).toContain('a.path, ST_StartPoint(a.path)::geography');
+    expect(sql).toContain(
+      'recorrido.path, ST_StartPoint(recorrido.path)::geography',
+    );
     expect(sql).toContain("'PUBLISHED'");
     expect(sql).toContain('FROM activities a');
 
@@ -338,6 +379,8 @@ describe('RouteService.publish (spec 007)', () => {
       800,
       expect.any(String),
       USUARIO,
+      ACTIVIDAD,
+      1,
       ACTIVIDAD,
     ]);
     const perfil = JSON.parse(valores[7] as string) as [number, number][];

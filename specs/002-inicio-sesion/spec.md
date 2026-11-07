@@ -34,10 +34,11 @@ Una persona con cuenta debe poder entrar a la app y no tener que volver a escrib
 ## Fuera de alcance
 
 - Refresh tokens, cierre de sesión en todos los dispositivos, recuperación de contraseña.
-- Edición de perfil (spec 009; el contacto de emergencia está en la 008).
+- Edición de perfil (spec 011; el contacto de emergencia está en la 008).
 
 ## Historial
 
+- 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). La "pantalla principal" es la pestaña Inicio y la "pantalla de inicio" pasa a llamarse bienvenida (M1, M3, M4 y M5). Los CA no cambian.
 - 2026-10-21 — La edición del perfil y de la cuenta pasa de la spec 008 a la 009 (spec 008, P7).
 - 2026-09-30 — Retro-spec creada a partir del código existente.

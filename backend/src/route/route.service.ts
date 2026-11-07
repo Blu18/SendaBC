@@ -18,11 +18,8 @@ import { dificultadDe } from './difficulty.js';
 import type { CreateRouteDto } from './dto/create-route.dto.js';
 import type { NearbyQueryDto } from './dto/nearby-query.dto.js';
 import type { UpdateRouteDto } from './dto/update-route.dto.js';
-import {
-  perfilDe,
-  type Perfil,
-  type PuntoPerfil,
-} from './elevation-profile.js';
+import { perfilDe, type Perfil } from './elevation-profile.js';
+import { sinPuntosViejos, type PuntoRecorrido } from './recorrido.js';
 
 // Como máximo 50 rutas, las más cercanas al centro (spec 006, CA-5).
 export const MAX_NEARBY_ROUTES = 50;
@@ -194,6 +191,7 @@ export class RouteService {
             select: {
               id: true,
               type: true,
+              startedAt: true,
               distanceMeters: true,
               elevationGainMeters: true,
               route: { select: { id: true } },
@@ -214,15 +212,18 @@ export class RouteService {
             throw new ConflictException(MENSAJES_PUBLICAR.yaPublicada);
           }
 
-          const puntos = await tx.$queryRaw<PuntoPerfil[]>`
-            SELECT ST_Y(location) AS lat, ST_X(location) AS lng, "altitudeMeters"
+          const guardados = await tx.$queryRaw<PuntoRecorrido[]>`
+            SELECT ST_Y(location) AS lat, ST_X(location) AS lng, "altitudeMeters",
+                   sequence, "recordedAt"
             FROM activity_points
             WHERE "activityId" = ${actividad.id}::uuid
             ORDER BY sequence`;
           // activities.path solo existe con 2 puntos o más (spec 005, CA-6).
-          if (puntos.length < 2) {
+          if (guardados.length < 2) {
             throw new BadRequestException(MENSAJES_PUBLICAR.sinRecorrido);
           }
+          // Sin la ubicación vieja que el GPS pudo entregar al iniciar (CA-28, RN-10).
+          const puntos = sinPuntosViejos(guardados, actividad.startedAt);
 
           const elevacion = actividad.elevationGainMeters ?? 0;
           const perfil = perfilDe(puntos);
@@ -234,10 +235,14 @@ export class RouteService {
                                 "sourceActivityId", "updatedAt")
             SELECT ${id}::uuid, ${dto.name}, ${dto.description ?? null}, ${dto.region ?? null},
                    a.type, ${dificultadDe(actividad.type, distancia, elevacion)}::"RouteDifficulty",
-                   ${distancia}, ${elevacion}, a.path, ST_StartPoint(a.path)::geography,
+                   ${distancia}, ${elevacion}, recorrido.path, ST_StartPoint(recorrido.path)::geography,
                    ${perfil === null ? null : JSON.stringify(perfil)}::jsonb, 'PUBLISHED',
                    ${userId}::uuid, a.id, now()
-            FROM activities a
+            FROM activities a,
+                 (SELECT ST_MakeLine(location ORDER BY sequence) AS path
+                  FROM activity_points
+                  WHERE "activityId" = ${actividad.id}::uuid
+                    AND sequence >= ${puntos[0].sequence}::int) recorrido
             WHERE a.id = ${actividad.id}::uuid`;
           return id;
         },

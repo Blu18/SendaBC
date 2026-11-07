@@ -377,7 +377,7 @@ La fase B no empieza hasta que T7 esté hecha: la aprobación del prototipo qued
       - **Espaciados (CA-10):** token `xxs` (2) en `spacing.ts` y en la colección Espaciado de Figma. `hardcodedColors.test.ts` ahora también falla con espaciados y tamaños de texto sueltos.
       - **Figma:** marco "Editar ruta (oscuro)" (CA-5) y fila `alert / surface` en la tabla de contraste (25 pares).
     - **Sin correr:** 004 M3 (necesita un teléfono con barómetro).
-    - **Observaciones** (ninguna parece del rediseño; quedan para la 010):
+    - **Observaciones** (ninguna parece del rediseño; quedan para la 011):
       - **Cambiar de una ruta a otra en el mapa:** una vez, tocar el marcador de La Tasajera con otra ruta seleccionada volvió a elegir la ya seleccionada (`marker-press` con su id). Al repetirlo, con distintas esperas, cambió bien 4 de 4 veces, así que no se pudo reproducir de forma estable.
       - **Perfil de elevación:** el perfil de la ruta de prueba medía 3.47 km y la ruta 1.86 km. El primer punto simulado estaba a 1.5 km del resto: la distancia de la actividad descarta ese salto (spec 004, CA-25) y el perfil (`perfilDe`, spec 007) no.
       - **Solo en el emulador:** Google Password Manager ofrece guardar la contraseña al iniciar sesión. Se cerró sin elegir "Never" para no dejar una preferencia guardada.
@@ -493,4 +493,4 @@ Propuestas en T20 y aceptadas por el usuario el 2026-11-03 (CA-9):
 
 - **CA-15:** 004 M3, en un teléfono con barómetro. Ya estaba pendiente antes del rediseño.
 - **008 M4:** el sonido y la vibración de "¿Estás bien?" no se pueden comprobar en el emulador.
-- **Para la 010 (visto en T16 y T20):** los chips de Explorar se enciman si se cambia el tamaño de letra con la app abierta; cambio de ruta en el mapa no reproducible; el perfil de elevación no descarta saltos de GPS.
+- **Para la 011 (visto en T16 y T20):** los chips de Explorar se enciman si se cambia el tamaño de letra con la app abierta; cambio de ruta en el mapa no reproducible; el perfil de elevación no descarta saltos de GPS.

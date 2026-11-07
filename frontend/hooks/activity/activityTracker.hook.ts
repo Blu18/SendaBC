@@ -296,9 +296,12 @@ export function useActivityTracker() {
     void detenerDetector(id);
     finishActivity(id, endedAt)
       .then(() => sessionActions.terminar(id, endedAt))
+      // Como al detener: sin esto se vería sin métricas y sin subir hasta reabrir la app.
+      .then(() => finalizeMetrics(id))
+      .then(() => void syncEngine.requestSync())
       .catch((e) => {
         // Si falla, closeOrphanActivities la cierra al volver a abrir la app (T12), junto con su
-        // sesión de seguridad
+        // sesión de seguridad, y computeMissingMetrics calcula lo que falte (spec 004, CA-19)
         console.log('Error cerrando actividad al salir:', e);
       });
   };

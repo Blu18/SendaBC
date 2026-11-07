@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Pressable, Text, View, StyleSheet } from "react-native";
+import { Text, View, StyleSheet } from "react-native";
 import Icon from "../ui/Icon";
+import PressableScale from "../ui/PressableScale";
 import { SAFETY_MESSAGES } from "../../lib/safety/messages";
 import { fontFamilies, type Theme } from "../../lib/theme";
 import { useThemedStyles } from "../../hooks/theme/useTheme";
@@ -12,26 +12,20 @@ const SOS_MS = 2000;
 // (spec 009, CA-13). Va en alert con onAlert: es del módulo de seguridad (RN-5).
 export default function SosButton({ onPedirAyuda }: { onPedirAyuda: () => void }) {
     const styles = useThemedStyles(makeStyles);
-    const [manteniendo, setManteniendo] = useState(false);
 
     return (
         <View style={styles.container}>
-            <Pressable
+            <PressableScale
                 delayLongPress={SOS_MS}
-                onPressIn={() => setManteniendo(true)}
-                onPressOut={() => setManteniendo(false)}
-                onLongPress={() => {
-                    setManteniendo(false);
-                    onPedirAyuda();
-                }}
+                onLongPress={onPedirAyuda}
                 accessibilityRole="button"
                 accessibilityHint={SAFETY_MESSAGES.sosInstruccion}
                 style={styles.sos}
+                pressedStyle={styles.holding}
             >
-                {manteniendo && <View style={styles.holding} />}
                 <Icon name="shield-check" color="onAlert" decorative />
                 <Text style={styles.sosText}>{SAFETY_MESSAGES.sos}</Text>
-            </Pressable>
+            </PressableScale>
             <Text style={styles.hint}>{SAFETY_MESSAGES.sosInstruccion}</Text>
         </View>
     );

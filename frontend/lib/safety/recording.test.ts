@@ -5,6 +5,7 @@ import { iniciarDetector, UMBRALES, type EstadoDetector } from './inactivity';
 import {
   createLocationProcessor,
   debeGuardarPunto,
+  esUbicacionVieja,
   hayAlertaActiva,
   type EventoGrabacion,
   type RecordingDeps,
@@ -86,6 +87,65 @@ describe('debeGuardarPunto (spec 003)', () => {
     expect(debeGuardarPunto(null, gps())).toBe(true);
     expect(debeGuardarPunto(gps(), gps(4.9))).toBe(false);
     expect(debeGuardarPunto(gps(), gps(5.1))).toBe(true);
+  });
+});
+
+describe('esUbicacionVieja (spec 003, RN-5)', () => {
+  const inicio = new Date(T0).toISOString();
+
+  it('es vieja si es de más de 30 s antes de iniciar, durante el primer minuto', () => {
+    expect(esUbicacionVieja({ timestamp: T0 - 25 * MIN }, inicio, T0 + 5_000)).toBe(true);
+    expect(esUbicacionVieja({ timestamp: T0 - 30_001 }, inicio, T0 + 59_999)).toBe(true);
+  });
+
+  it('acepta una ubicación reciente', () => {
+    expect(esUbicacionVieja({ timestamp: T0 - 30_000 }, inicio, T0 + 5_000)).toBe(false);
+    expect(esUbicacionVieja({ timestamp: T0 + 2_000 }, inicio, T0 + 5_000)).toBe(false);
+  });
+
+  it('pasado el primer minuto ya no se revisa, por si el reloj está desfasado', () => {
+    expect(esUbicacionVieja({ timestamp: T0 - 25 * MIN }, inicio, T0 + MIN)).toBe(false);
+  });
+});
+
+describe('ubicación guardada al iniciar (spec 003, CA-13)', () => {
+  it('no la guarda ni la emite, y el siguiente punto es el primero', async () => {
+    const { processor, puntos, eventos } = montar();
+
+    await processor.procesar([gps(30_000, T0 - 25 * MIN)], T0 + 2_000);
+    expect(puntos).toEqual([]);
+    expect(eventos.filter((e) => e.type === 'punto')).toEqual([]);
+
+    await processor.procesar([gps(0, T0 + 4_000)], T0 + 4_000);
+    expect(puntos.map((p) => p.sequence)).toEqual([1]);
+    expect(puntos[0].latitude).toBe(gps(0).latitude);
+  });
+
+  it('no la envía al servidor', async () => {
+    const { processor, deps } = montar();
+
+    await processor.procesar([gps(30_000, T0 - 25 * MIN)], T0 + 2_000);
+
+    expect(deps.enqueueOutbox).not.toHaveBeenCalled();
+  });
+
+  it('con puntos ya guardados no se descarta una hora atrasada', async () => {
+    const { processor, puntos } = montar();
+
+    await processor.procesar([gps(0, T0)], T0);
+    await processor.procesar([gps(20, T0 - MIN)], T0 + 10_000);
+
+    expect(puntos).toHaveLength(2);
+  });
+
+  it('con el reloj desfasado, la grabación empieza pasado el primer minuto', async () => {
+    const { processor, puntos } = montar();
+
+    await processor.procesar([gps(0, T0 - 5 * MIN)], T0 + 10_000);
+    expect(puntos).toEqual([]);
+
+    await processor.procesar([gps(20, T0 - 4 * MIN)], T0 + MIN);
+    expect(puntos).toHaveLength(1);
   });
 });
 

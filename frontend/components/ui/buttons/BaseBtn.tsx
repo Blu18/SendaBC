@@ -1,6 +1,7 @@
-import { Pressable, Text, StyleSheet, View, StyleProp, ViewStyle, TextStyle, GestureResponderEvent } from "react-native";
+import { Text, StyleSheet, StyleProp, ViewStyle, TextStyle, GestureResponderEvent } from "react-native";
 import { fontFamilies, type Theme } from "../../../lib/theme";
 import { useThemedStyles } from "../../../hooks/theme/useTheme";
+import PressableScale from "../PressableScale";
 
 export interface BtnProps {
     text: string;
@@ -20,22 +21,18 @@ export default function BaseBtn({ variant, ...props }: BtnProps & { variant: Btn
     const filled = variant === "primary" || variant === "danger";
 
     return (
-        <Pressable
+        <PressableScale
             onPress={props.onPress}
             disabled={props.disabled}
             accessibilityRole="button"
             accessibilityState={{ disabled: !!props.disabled }}
             style={[styles.btn, VARIANT_STYLE[variant](styles), props.disabled && styles.disabled, props.style]}
+            pressedStyle={filled ? styles.pressedOnFill : styles.pressedOnPrimary}
         >
-            {({ pressed }) => (
-                <>
-                    {pressed && <View style={filled ? styles.pressedOnFill : styles.pressedOnPrimary} />}
-                    <Text style={[styles.label, filled ? styles.labelOnFill : styles.labelPrimary, props.textStyle]}>
-                        {props.text}
-                    </Text>
-                </>
-            )}
-        </Pressable>
+            <Text style={[styles.label, filled ? styles.labelOnFill : styles.labelPrimary, props.textStyle]}>
+                {props.text}
+            </Text>
+        </PressableScale>
     );
 }
 

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Alert, Share, ActivityIndicator } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { byId } from "../../lib/lists/leaving";
+import { useLeavingItems } from "../../hooks/theme/useLeavingItems";
+import Appear from "../../components/ui/Appear";
 import ContactForm from "../../components/safety/ContactForm";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import BgBtn from "../../components/ui/buttons/BgBtn";
@@ -38,6 +41,7 @@ export default function EmergencyContactsPage() {
     const theme = useTheme();
     const styles = useThemedStyles(makeStyles);
     const { contacts, offline, status, retry } = useEmergencyContacts();
+    const filas = useLeavingItems(contacts, byId);
     const { create, rename, remove, test } = useContactMutations();
 
     const [agregando, setAgregando] = useState(false);
@@ -134,83 +138,91 @@ export default function EmergencyContactsPage() {
                 <Text style={styles.explanation}>{M.explicacion}</Text>
                 <Text style={styles.subtitle} accessibilityRole="header">{M.subtitulo}</Text>
 
-                {offline && <Notice type="offline" title="Sin conexión" description={M.sinConexion} />}
+                <Appear>
+                    {offline && <Notice type="offline" title="Sin conexión" description={M.sinConexion} />}
+                </Appear>
 
                 {status === 'loading' && <ActivityIndicator size="large" color={theme.colors.primary} />}
-                {status === 'error' && (
-                    <>
-                        <Notice type="error" title="No se pudo cargar" description={M.error} />
-                        <PrimaryButton text="Reintentar" onPress={() => void retry()} />
-                    </>
-                )}
+                <Appear style={styles.group}>
+                    {status === 'error' && (
+                        <>
+                            <Notice type="error" title="No se pudo cargar" description={M.error} />
+                            <PrimaryButton text="Reintentar" onPress={() => void retry()} />
+                        </>
+                    )}
+                </Appear>
 
-                {status === 'success' && contacts.length === 0 && (
-                    <Notice title="Sin contactos" description={M.vacio} />
-                )}
+                <Appear>
+                    {status === 'success' && contacts.length === 0 && (
+                        <Notice title="Sin contactos" description={M.vacio} />
+                    )}
+                </Appear>
 
                 {status === 'success' &&
-                    contacts.map((contacto) => {
+                    filas.map(({ item: contacto, leaving }) => {
                         const acciones = accionesDe(contacto);
                         const editando = editandoId === contacto.id;
                         const estado = ESTADO[contacto.status];
                         return (
-                            <View key={contacto.id} style={styles.card}>
-                                {editando ? (
-                                    <ContactForm
-                                        value={editado}
-                                        onChange={setEditado}
-                                        error={editadoError}
-                                        submitText="Guardar"
-                                        submitting={rename.isPending}
-                                        onSubmit={() => guardarEdicion(contacto.id)}
-                                        onCancel={() => setEditandoId(null)}
-                                    />
-                                ) : (
-                                    <>
-                                        <View style={styles.cardHeader}>
-                                            <View style={styles.avatar}>
-                                                <Icon name="account-outline" decorative />
-                                            </View>
-                                            <View style={styles.cardTexts}>
-                                                <Text style={styles.name} numberOfLines={2}>{contacto.name}</Text>
-                                                {/* Punto y texto: el estado no depende solo del color */}
-                                                <View style={styles.status}>
-                                                    <View style={[styles.dot, { backgroundColor: theme.colors[estado] }]} />
-                                                    <Text style={[styles.statusText, { color: theme.colors[estado] }]}>
-                                                        {CONTACT_STATUS_LABELS[contacto.status]}
-                                                    </Text>
+                            <Appear key={contacto.id}>{!leaving && (
+                                <View style={styles.card}>
+                                    {editando ? (
+                                        <ContactForm
+                                            value={editado}
+                                            onChange={setEditado}
+                                            error={editadoError}
+                                            submitText="Guardar"
+                                            submitting={rename.isPending}
+                                            onSubmit={() => guardarEdicion(contacto.id)}
+                                            onCancel={() => setEditandoId(null)}
+                                        />
+                                    ) : (
+                                        <>
+                                            <View style={styles.cardHeader}>
+                                                <View style={styles.avatar}>
+                                                    <Icon name="account-outline" decorative />
+                                                </View>
+                                                <View style={styles.cardTexts}>
+                                                    <Text style={styles.name} numberOfLines={2}>{contacto.name}</Text>
+                                                    {/* Punto y texto: el estado no depende solo del color */}
+                                                    <View style={styles.status}>
+                                                        <View style={[styles.dot, { backgroundColor: theme.colors[estado] }]} />
+                                                        <Text style={[styles.statusText, { color: theme.colors[estado] }]}>
+                                                            {CONTACT_STATUS_LABELS[contacto.status]}
+                                                        </Text>
+                                                    </View>
                                                 </View>
                                             </View>
-                                        </View>
-                                        {contacto.status === 'ACTIVE' && contacto.telegramName && (
-                                            <Text style={styles.muted}>En Telegram: {contacto.telegramName}</Text>
-                                        )}
-                                        {contacto.status === 'PENDING' && <Text style={styles.muted}>{M.pendiente}</Text>}
-                                        {contacto.status === 'UNREACHABLE' && (
-                                            <Text style={styles.muted}>{M.inalcanzable}</Text>
-                                        )}
+                                            {contacto.status === 'ACTIVE' && contacto.telegramName && (
+                                                <Text style={styles.muted}>En Telegram: {contacto.telegramName}</Text>
+                                            )}
+                                            {contacto.status === 'PENDING' && <Text style={styles.muted}>{M.pendiente}</Text>}
+                                            {contacto.status === 'UNREACHABLE' && (
+                                                <Text style={styles.muted}>{M.inalcanzable}</Text>
+                                            )}
 
-                                        {acciones.compartir && (
-                                            <PrimaryButton text={M.compartir} onPress={() => compartir(contacto)} />
-                                        )}
-                                        {acciones.probar && (
-                                            <BgBtn
-                                                text={test.isPending && test.variables === contacto.id ? 'Enviando…' : M.probar}
-                                                disabled={offline || test.isPending}
-                                                onPress={() => probar(contacto)}
-                                            />
-                                        )}
-                                        {!!pruebas[contacto.id] && <Text style={styles.result}>{pruebas[contacto.id]}</Text>}
+                                            {acciones.compartir && (
+                                                <PrimaryButton text={M.compartir} onPress={() => compartir(contacto)} />
+                                            )}
+                                            {acciones.probar && (
+                                                <BgBtn
+                                                    text={test.isPending && test.variables === contacto.id ? 'Enviando…' : M.probar}
+                                                    disabled={offline || test.isPending}
+                                                    onPress={() => probar(contacto)}
+                                                />
+                                            )}
+                                            {!!pruebas[contacto.id] && <Text style={styles.result}>{pruebas[contacto.id]}</Text>}
 
-                                        {!offline && (
-                                            <View style={styles.row}>
-                                                <TextBtn text={M.editar} style={styles.textBtn} onPress={() => empezarEdicion(contacto)} />
-                                                <TextBtn text={M.quitar} style={styles.textBtn} onPress={() => quitar(contacto)} />
-                                            </View>
-                                        )}
-                                    </>
-                                )}
-                            </View>
+                                            {!offline && (
+                                                <View style={styles.row}>
+                                                    <TextBtn text={M.editar} style={styles.textBtn} onPress={() => empezarEdicion(contacto)} />
+                                                    <TextBtn text={M.quitar} style={styles.textBtn} onPress={() => quitar(contacto)} />
+                                                </View>
+                                            )}
+                                        </>
+                                    )}
+                                </View>
+                            )}</Appear>
                         );
                     })}
 
@@ -254,6 +266,9 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     screen: {
         flex: 1,
         backgroundColor: t.colors.background,
+    },
+    group: {
+        gap: t.spacing.md,
     },
     content: {
         gap: t.spacing.md,
