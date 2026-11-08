@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { NearbyRoute, RouteDetail } from './api';
 import {
+  avisoDeGuardado,
+  detalleSinConexion,
   nearbyStatus,
+  noLlegoAlServidor,
+  sinConexion,
   erroresDeCampo,
   mensajeDeFallo,
   routeDetailOutcome,
@@ -151,6 +155,101 @@ describe('Detalle, listas y acciones de rutas (spec 007)', () => {
       expect(erroresDeCampo({ offline: true })).toEqual({});
       expect(erroresDeCampo(http(409))).toEqual({});
       expect(erroresDeCampo({ error: new Error('x') })).toEqual({});
+    });
+  });
+});
+
+describe('Datos guardados sin conexión (spec 011)', () => {
+  const ruta = { id: 'r-1', name: 'Ruta' } as RouteDetail;
+  const savedAt = '2026-11-08T19:30:00.000Z';
+  const rutas = [{ id: 'r-1' } as NearbyRoute];
+
+  describe('noLlegoAlServidor (plan, D3)', () => {
+    it('sin red o tiempo agotado no llegó; cualquier respuesta, incluido un 5xx, sí', () => {
+      expect(noLlegoAlServidor({ error: new TypeError('Network request failed') })).toBe(true);
+      expect(noLlegoAlServidor({ status: 500, apiError: { message: 'x', fieldErrors: {} } })).toBe(
+        false
+      );
+      expect(noLlegoAlServidor({ status: 404, apiError: { message: 'x', fieldErrors: {} } })).toBe(
+        false
+      );
+    });
+  });
+
+  describe('sinConexion y nearbyStatus (CA-53, CA-54)', () => {
+    const base = { requested: true, isFetching: false, isError: false };
+
+    it('con la última búsqueda guardada es saved', () => {
+      const data = sinConexion({ data: rutas, savedAt });
+      expect(data).toEqual({ offline: true, saved: { data: rutas, savedAt } });
+      expect(nearbyStatus({ ...base, data })).toBe('saved');
+    });
+
+    it('una búsqueda guardada sin resultados también es saved', () => {
+      expect(nearbyStatus({ ...base, data: sinConexion({ data: [], savedAt }) })).toBe('saved');
+    });
+
+    it('sin nada guardado es offline, el mensaje de que necesita internet (CA-54)', () => {
+      const data = sinConexion<NearbyRoute[]>(null);
+      expect(data).toEqual({ offline: true });
+      expect(nearbyStatus({ ...base, data })).toBe('offline');
+    });
+
+    it('una búsqueda nueva sigue mostrando "cargando" (spec 006, CA-16)', () => {
+      expect(nearbyStatus({ ...base, isFetching: true, data: sinConexion({ data: rutas, savedAt }) })).toBe(
+        'loading'
+      );
+    });
+  });
+
+  describe('detalleSinConexion y routeDetailStatus (CA-55, CA-57)', () => {
+    const base = { isFetching: false, isError: false };
+
+    it('con el detalle guardado es saved, con la ruta y su fecha', () => {
+      const data = detalleSinConexion({ data: ruta, savedAt });
+      expect(data).toEqual({ kind: 'saved', route: ruta, savedAt });
+      expect(routeDetailStatus({ ...base, data })).toBe('saved');
+    });
+
+    it('sin detalle guardado es offline y no se queda cargando (CA-57)', () => {
+      const data = detalleSinConexion(null);
+      expect(data).toEqual({ kind: 'offline' });
+      expect(routeDetailStatus({ ...base, data })).toBe('offline');
+    });
+
+    it('la ruta guardada se sigue mostrando mientras se reintenta', () => {
+      expect(
+        routeDetailStatus({ ...base, isFetching: true, data: detalleSinConexion({ data: ruta, savedAt }) })
+      ).toBe('saved');
+    });
+  });
+
+  describe('routeListStatus con favoritas guardadas (CA-56)', () => {
+    const base = { isFetching: false, isError: false };
+
+    it('con la lista guardada es saved, aunque esté vacía', () => {
+      expect(routeListStatus({ ...base, data: sinConexion({ data: [1], savedAt }) })).toBe('saved');
+      expect(routeListStatus({ ...base, data: sinConexion({ data: [], savedAt }) })).toBe('saved');
+    });
+
+    it('sin lista guardada es offline', () => {
+      expect(routeListStatus({ ...base, data: sinConexion<number[]>(null) })).toBe('offline');
+    });
+
+    it('la lista guardada se sigue mostrando mientras se refresca', () => {
+      expect(
+        routeListStatus({ ...base, isFetching: true, data: sinConexion({ data: [1], savedAt }) })
+      ).toBe('saved');
+    });
+  });
+
+  describe('avisoDeGuardado (CA-53, CA-55)', () => {
+    it('dice que son datos guardados y de cuándo son', () => {
+      const fecha = new Date(savedAt).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+      expect(avisoDeGuardado(savedAt)).toBe(
+        `Datos guardados el ${fecha}. Sin conexión no se pueden actualizar.`
+      );
+      expect(avisoDeGuardado(savedAt)).toMatch(/2026/);
     });
   });
 });
