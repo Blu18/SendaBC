@@ -22,6 +22,10 @@ import EditRoutePage from './pages/routes/editRoutePage';
 import MyRoutesPage from './pages/routes/myRoutesPage';
 import FavoritesPage from './pages/routes/favoritesPage';
 import EmergencyContactsPage from './pages/safety/emergencyContactsPage';
+import ProfilePage from './pages/account/profilePage';
+import ChangeEmailPage from './pages/account/changeEmailPage';
+import ChangePasswordPage from './pages/account/changePasswordPage';
+import DeleteAccountPage from './pages/account/deleteAccountPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
 import { closeOrphanActivities } from './lib/db/activities';
@@ -125,6 +129,19 @@ const RootStack = createNativeStackNavigator({
     // se abre encima de la grabación desde "Configurar" y se vuelve a ella (spec 009, plan).
     EmergencyContacts: {
       screen: EmergencyContactsPage
+    },
+    // Perfil y cuenta (spec 011, CA-41 a CA-46). Se abre desde el avatar de Inicio.
+    Profile: {
+      screen: ProfilePage
+    },
+    ChangeEmail: {
+      screen: ChangeEmailPage
+    },
+    ChangePassword: {
+      screen: ChangePasswordPage
+    },
+    DeleteAccount: {
+      screen: DeleteAccountPage
     }
   }
 })

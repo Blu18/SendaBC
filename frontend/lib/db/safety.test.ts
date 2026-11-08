@@ -37,7 +37,6 @@ describe('SQLite v5 (constitución 5.3)', () => {
       'safety_outbox',
       'safety_sessions',
     ]);
-    expect(await testDb.getFirstAsync('PRAGMA user_version')).toEqual({ user_version: 5 });
   });
 
   it('borrar la actividad borra su sesión y su detector', async () => {

@@ -8,6 +8,8 @@ import TextBtn from "../../components/ui/buttons/TextBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Notice from "../../components/ui/Notice";
 import Icon from "../../components/ui/Icon";
+import PressableScale from "../../components/ui/PressableScale";
+import Avatar from "../../components/account/Avatar";
 import SafetyCard from "../../components/safety/SafetyCard";
 import { useEmergencyContacts } from "../../hooks/safety/useEmergencyContacts";
 import { contactosActivos } from "../../lib/safety/contacts";
@@ -58,7 +60,21 @@ export default function MainPage() {
 
     return (
         <View style={styles.container}>
-            <ScreenHeader title={profile.data ? `Hola, ${profile.data.displayName}` : 'Inicio'} />
+            <ScreenHeader
+                title={profile.data ? `Hola, ${profile.data.displayName}` : 'Inicio'}
+                actions={
+                    // Avatar de la cuenta (spec 011, CA-42): abre el perfil.
+                    <PressableScale
+                        onPress={() => navigation.navigate('Profile')}
+                        accessibilityRole="button"
+                        accessibilityLabel="Tu perfil"
+                        style={styles.avatarBtn}
+                        pressedStyle={styles.avatarPressed}
+                    >
+                        <Avatar avatarId={profile.data?.avatarId} size={40} />
+                    </PressableScale>
+                }
+            />
             <ScrollView contentContainerStyle={styles.content}>
                 {profile.isLoading && <ActivityIndicator size="large" color={theme.colors.primary} />}
                 <Appear>
@@ -124,6 +140,20 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     sectionTitle: {
         ...t.typography.title,
         color: t.colors.text,
+    },
+    // Área de toque de 48 dp (touchMin) alrededor del avatar de 40.
+    avatarBtn: {
+        width: t.touchMin,
+        height: t.touchMin,
+        borderRadius: t.touchMin / 2,
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+    },
+    avatarPressed: {
+        ...StyleSheet.absoluteFill,
+        backgroundColor: t.colors.primary,
+        opacity: 0.12,
     },
     logoutBtn: {
         alignSelf: 'flex-start',
