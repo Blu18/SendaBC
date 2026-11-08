@@ -118,7 +118,9 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
 ## Fase 1C — Umbrales de inactividad
 
-- [ ] T23 — `lib/safety/thresholds.ts`: opciones de RN-9, lectura segura y `umbralesDeSesion`. (CA-50, CA-52)
+- [x] T23 — `lib/safety/thresholds.ts`: opciones de RN-9, lectura segura y `umbralesDeSesion`. (CA-50, CA-52)
+
+  Hecho (2026-11-07): opciones de RN-9 (5 a 30 min y 1 a 5 min) con 10 y 2 por defecto, tomados de `UMBRALES`. `leerEleccion` lee lo guardado en `app_settings` (clave `umbrales_inactividad`): sin nada, con JSON dañado o con un valor fuera de las opciones usa el de por defecto en ese campo; `guardarEleccion` no guarda valores fuera de las opciones. `aSesion` da los milisegundos que se copian a la sesión (T24). `umbralesDeSesion(sesion, base)` usa los de la sesión; una sesión de antes de v6 o un valor inválido usa la base, y si la base trae los minutos de `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES` mandan esos. La distancia de 30 m no cambia. `tsc` y 11 pruebas Vitest pasan; todavía nadie lo usa (T24, T25).
 - [ ] T24 — Copiar la elección a la sesión al iniciar, y usarla en `recording.ts`, `areYouOk.ts` y `useAreYouOk`. (CA-51, CA-52)
 - [ ] T25 — `InactivitySettings` en la pestaña Seguridad. (CA-50)
 - [ ] T26 — Correr M11 y anotar los resultados. (CA-50 a CA-52)
