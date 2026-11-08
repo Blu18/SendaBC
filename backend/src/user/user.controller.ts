@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Patch, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { UserService } from './user.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
+import { UpdateEmailDto } from './dto/update-email.dto.js';
+import { UpdatePasswordDto } from './dto/update-password.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard.js';
 import { AuthJwtPayload } from '../auth/types/auth-jwtPayload.js';
 
@@ -29,5 +31,24 @@ export class UserController {
     @Body() dto: UpdateProfileDto,
   ) {
     return this.userService.updateProfile(req.user.id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/email')
+  updateEmail(
+    @Req() req: Request & { user: AuthJwtPayload },
+    @Body() dto: UpdateEmailDto,
+  ) {
+    return this.userService.updateEmail(req.user.id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/password')
+  @HttpCode(204)
+  updatePassword(
+    @Req() req: Request & { user: AuthJwtPayload },
+    @Body() dto: UpdatePasswordDto,
+  ) {
+    return this.userService.updatePassword(req.user.id, dto);
   }
 }
