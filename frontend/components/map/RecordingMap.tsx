@@ -196,11 +196,12 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         alignSelf: "flex-end",
         gap: t.spacing.md,
     },
-    // Por encima del logo de Mapbox, que sus términos piden conservar visible.
+    // Por encima de los botones flotantes (spec 011, CA-36) y del logo de Mapbox, que sus términos
+    // piden conservar visible.
     bottomNotice: {
         position: "absolute",
         left: t.spacing.lg,
         right: t.spacing.lg,
-        bottom: t.touchMin,
+        bottom: t.spacing.md + t.touchMin + t.spacing.sm,
     },
 });

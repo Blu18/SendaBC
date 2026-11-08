@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Linking, Alert, Vibration } from "react-native";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -21,6 +21,7 @@ import SafetyCard from "../../components/safety/SafetyCard";
 import ReturnTimePicker from "../../components/safety/ReturnTimePicker";
 import RecordingSafety, { ActiveAlert } from "../../components/safety/RecordingSafety";
 import SosButton from "../../components/safety/SosButton";
+import StopButton from "../../components/activity/StopButton";
 import type { ActivityType } from "../../lib/db/activities";
 import { ACTIVITY_TYPE_LABELS } from "../../lib/format/activity";
 import { formatDuration } from "../../lib/format/duration";
@@ -85,9 +86,30 @@ function useElapsedSeconds(startedAt: string | null, running: boolean) {
     return (now - new Date(startedAt).getTime()) / 1000;
 }
 
+// Cuánto se ve la instrucción de "Pedir ayuda" tras un toque corto (spec 011, CA-38).
+const SOS_INSTRUCCION_MS = 3000;
+
+function useSosInstruccion() {
+    const [visible, setVisible] = useState(false);
+    const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => () => {
+        if (timer.current) clearTimeout(timer.current);
+    }, []);
+
+    const mostrar = useCallback(() => {
+        if (timer.current) clearTimeout(timer.current);
+        setVisible(true);
+        timer.current = setTimeout(() => setVisible(false), SOS_INSTRUCCION_MS);
+    }, []);
+
+    return { visible, mostrar };
+}
+
 export default function ActivityPage() {
     const [type, setType] = useState<ActivityType>('HIKING'); // por defecto Senderismo (CA-1)
     const styles = useThemedStyles(makeStyles);
+    const sosInstruccion = useSosInstruccion();
     // Navegación del stack raíz: replace solo existe en stacks
     const navigation = useNavigation<NativeStackNavigationProp<ReactNavigation.RootParamList>>();
     const {
@@ -194,6 +216,16 @@ export default function ActivityPage() {
         />
     ) : undefined;
 
+    // Lo que va arriba del mapa, y sigue visible aunque el mapa falle.
+    const avisosMapa = alertaActiva || sosInstruccion.visible ? (
+        <View style={styles.avisosMapa}>
+            {alertaActiva}
+            {sosInstruccion.visible && (
+                <Notice title={SAFETY_MESSAGES.sos} description={SAFETY_MESSAGES.sosInstruccion} />
+            )}
+        </View>
+    ) : undefined;
+
     const titulo = recording ? `Grabando · ${ACTIVITY_TYPE_LABELS[type]}` : 'Nueva actividad';
 
     return (
@@ -202,9 +234,22 @@ export default function ActivityPage() {
             {/* Mapa arriba y panel abajo (spec 010, CA-6). La alerta activa va sobre el mapa, con
                 "Cancelar alerta", para no empujar las métricas (spec 008, CA-17, CA-25) */}
             {recording && (
-                <MapErrorBoundary overlay={alertaActiva}>
-                    <RecordingMap activityLocalId={activityLocalId} overlay={alertaActiva} />
-                </MapErrorBoundary>
+                <View style={styles.mapa}>
+                    <MapErrorBoundary overlay={avisosMapa}>
+                        <RecordingMap activityLocalId={activityLocalId} overlay={avisosMapa} />
+                    </MapErrorBoundary>
+                    {/* Fuera de MapErrorBoundary: siguen ahí aunque el mapa falle (spec 011, CA-37) */}
+                    <View style={styles.flotantes} pointerEvents="box-none">
+                        <StopButton onPress={() => void handleStop()} />
+                        {seguridad.sesion && (
+                            <SosButton
+                                onPedirAyuda={() => void handleSos()}
+                                onToqueCorto={sosInstruccion.mostrar}
+                                style={styles.sos}
+                            />
+                        )}
+                    </View>
+                </View>
             )}
             <ScrollView style={recording && styles.panel} contentContainerStyle={styles.content}>
                 {/* El tipo ya sale en el título mientras se graba (spec 010, T13) */}
@@ -297,19 +342,18 @@ export default function ActivityPage() {
                 </Appear>
             </ScrollView>
 
-            {/* Controles abajo, al alcance del pulgar (spec 009, CA-13) */}
-            <View style={styles.actions}>
-                {recording && seguridad.sesion && <SosButton onPedirAyuda={() => void handleSos()} />}
-                {/* Con una actividad sin cerrar no se ofrece iniciar otra (spec 003, CA-12, RN-1) */}
-                {stopFailed ? (
-                    <PrimaryButton text="Volver" onPress={() => navigation.goBack()} />
-                ) : (
-                    <PrimaryButton
-                        text={recording ? 'Detener actividad' : 'Iniciar actividad'}
-                        onPress={recording ? handleStop : handleStart}
-                    />
-                )}
-            </View>
+            {/* Abajo, al alcance del pulgar (spec 009, CA-13). Al grabar, los controles flotan sobre
+                el mapa (spec 011, CA-40) */}
+            {!recording && (
+                <View style={styles.actions}>
+                    {/* Con una actividad sin cerrar no se ofrece iniciar otra (spec 003, CA-12, RN-1) */}
+                    {stopFailed ? (
+                        <PrimaryButton text="Volver" onPress={() => navigation.goBack()} />
+                    ) : (
+                        <PrimaryButton text="Iniciar actividad" onPress={handleStart} />
+                    )}
+                </View>
+            )}
 
             {/* "¿Estás bien?" (spec 008, CA-11, CA-12) */}
             <AreYouOkModal
@@ -334,6 +378,25 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     },
     group: {
         gap: t.spacing.md,
+    },
+    avisosMapa: {
+        gap: t.spacing.md,
+    },
+    mapa: {
+        flex: 1,
+    },
+    // "Detener" al centro y "Pedir ayuda" a la derecha, en la misma fila (spec 011, CA-30, CA-35).
+    flotantes: {
+        position: 'absolute',
+        left: t.spacing.lg,
+        right: t.spacing.lg,
+        bottom: t.spacing.md,
+        alignItems: 'center',
+    },
+    sos: {
+        position: 'absolute',
+        right: 0,
+        bottom: 0,
     },
     content: {
         gap: t.spacing.md,
