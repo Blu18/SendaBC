@@ -11,6 +11,7 @@ import {
   type Umbrales,
 } from './inactivity';
 import { tocaEncolarUbicacion, type OutboxEntry } from './outbox';
+import { umbralesDeSesion } from './thresholds';
 
 // Procesa las ubicaciones de una actividad en curso (spec 008, T16): las guarda, las pasa por el
 // detector de inactividad y encola la ubicación para el servidor. Lo usan la tarea en segundo
@@ -76,6 +77,7 @@ export type RecordingDeps = {
   setLocationQueuedAt(clientId: string, at: number): Promise<void>;
   requestSend(): void;
   emit(evento: EventoGrabacion): void;
+  // Umbrales de la app (RN-4, o los de depuración); los de la sesión mandan si los tiene.
   umbrales?: Umbrales;
   log?(mensaje: string, error?: unknown): void;
 };
@@ -129,7 +131,10 @@ export function createLocationProcessor(deps: RecordingDeps) {
 
     const previo =
       (await deps.getDetectorState(id)) ?? iniciarDetector(new Date(actividad.startedAt).getTime());
-    const { estado, accion } = evaluar(previo, vigente, ahora, deps.umbrales ?? UMBRALES);
+    // Los umbrales de la sesión, copiados al iniciar (spec 011, CA-51); una sesión de antes de v6
+    // usa los de la app (CA-52).
+    const umbrales = umbralesDeSesion(sesion, deps.umbrales ?? UMBRALES);
+    const { estado, accion } = evaluar(previo, vigente, ahora, umbrales);
     await deps.saveDetectorState(id, estado);
     if (accion !== 'nada') deps.emit({ type: 'detector', activityLocalId: id, accion, estado });
 

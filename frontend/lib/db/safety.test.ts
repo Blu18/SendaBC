@@ -65,8 +65,17 @@ describe('sesión de seguridad (CA-19, CA-23)', () => {
       alertServerId: null,
       alertTriggeredAt: null,
       alertCancelledAt: null,
+      quietMs: null,
+      responseMs: null,
     });
     expect((await db.getSafetySessionByClientId(clientId))?.activityLocalId).toBe(localId);
+  });
+
+  it('guarda los umbrales elegidos al crearla (spec 011, CA-51)', async () => {
+    const localId = await createActivity(A, 'HIKING', 'GPS', '2026-10-22T15:00:00.000Z');
+    await db.createSafetySession(localId, randomUUID(), A, null, { quietMs: 1_200_000, responseMs: 300_000 });
+
+    expect(await db.getSafetySession(localId)).toMatchObject({ quietMs: 1_200_000, responseMs: 300_000 });
   });
 
   it('queda recibida cuando el servidor confirma la misma hora de regreso', async () => {

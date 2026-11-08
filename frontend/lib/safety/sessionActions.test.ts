@@ -26,6 +26,8 @@ function sesion(overrides: Partial<LocalSafetySession> = {}): LocalSafetySession
     alertServerId: null,
     alertTriggeredAt: null,
     alertCancelledAt: null,
+    quietMs: null,
+    responseMs: null,
     ...overrides,
   };
 }
@@ -39,6 +41,7 @@ function montar(
   const deps: MockDeps = {
     getActivity: vi.fn().mockResolvedValue(act),
     createSafetySession: vi.fn().mockResolvedValue(undefined),
+    getEleccionUmbrales: vi.fn().mockResolvedValue({ quietoMin: 10, respuestaMin: 2 }),
     getSafetySession: vi.fn().mockResolvedValue(actual),
     setReturnBy: vi.fn().mockResolvedValue(undefined),
     listRecordingSessionIds: vi.fn().mockResolvedValue([]),
@@ -58,7 +61,7 @@ describe('iniciar (spec 008, CA-8, CA-23)', () => {
     expect(await actions.iniciar(7, 'u-1', regreso, INICIO)).toBe(true);
 
     const returnBy = new Date(regreso).toISOString();
-    expect(deps.createSafetySession).toHaveBeenCalledWith(7, C, 'u-1', returnBy);
+    expect(deps.createSafetySession).toHaveBeenCalledWith(7, C, 'u-1', returnBy, { quietMs: 600_000, responseMs: 120_000 });
     expect(deps.enqueueOutbox).toHaveBeenCalledWith('u-1', {
       kind: 'session',
       clientId: C,
@@ -70,14 +73,27 @@ describe('iniciar (spec 008, CA-8, CA-23)', () => {
   it('sin hora de regreso la sesión va con returnBy null', async () => {
     const { actions, deps } = montar(null);
     await actions.iniciar(7, 'u-1', null, INICIO);
-    expect(deps.createSafetySession).toHaveBeenCalledWith(7, C, 'u-1', null);
+    expect(deps.createSafetySession).toHaveBeenCalledWith(7, C, 'u-1', null, { quietMs: 600_000, responseMs: 120_000 });
   });
 
   it('descarta una hora de regreso que ya no es válida al iniciar', async () => {
     const { actions, deps } = montar(null);
     // Se eligió antes del inicio: el servidor rechazaría la sesión completa (RN-10).
     await actions.iniciar(7, 'u-1', INICIO - 1, INICIO);
-    expect(deps.createSafetySession).toHaveBeenCalledWith(7, C, 'u-1', null);
+    expect(deps.createSafetySession).toHaveBeenCalledWith(7, C, 'u-1', null, { quietMs: 600_000, responseMs: 120_000 });
+  });
+
+  it('copia a la sesión los umbrales que eligió la cuenta (spec 011, CA-51)', async () => {
+    const { actions, deps } = montar(null);
+    deps.getEleccionUmbrales.mockResolvedValue({ quietoMin: 20, respuestaMin: 5 });
+
+    await actions.iniciar(7, 'u-1', null, INICIO);
+
+    expect(deps.getEleccionUmbrales).toHaveBeenCalledWith('u-1');
+    expect(deps.createSafetySession).toHaveBeenCalledWith(7, C, 'u-1', null, {
+      quietMs: 20 * 60_000,
+      responseMs: 5 * 60_000,
+    });
   });
 
   it('sin la actividad no crea nada', async () => {

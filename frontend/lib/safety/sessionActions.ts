@@ -2,6 +2,7 @@ import type { Activity } from '../db/activities';
 import type { LocalSafetySession } from '../db/safety';
 import type { SafetyAlert } from './api';
 import type { OutboxEntry } from './outbox';
+import { aSesion, type EleccionUmbrales } from './thresholds';
 import { hayAlertaActiva } from './recording';
 import { validarRegreso } from './returnTime';
 
@@ -12,7 +13,15 @@ import { validarRegreso } from './returnTime';
 
 export type SessionActionsDeps = {
   getActivity(localId: number): Promise<Pick<Activity, 'clientGeneratedId' | 'type' | 'startedAt' | 'endedAt'> | null>;
-  createSafetySession(localId: number, clientId: string, userId: string, returnBy: string | null): Promise<void>;
+  createSafetySession(
+    localId: number,
+    clientId: string,
+    userId: string,
+    returnBy: string | null,
+    umbrales: { quietMs: number; responseMs: number }
+  ): Promise<void>;
+  // Umbrales de inactividad elegidos por la cuenta (spec 011, CA-50).
+  getEleccionUmbrales(userId: string): Promise<EleccionUmbrales>;
   getSafetySession(localId: number): Promise<LocalSafetySession | null>;
   setReturnBy(clientId: string, returnBy: string | null): Promise<void>;
   // Actividades en RECORDING que tienen sesión de seguridad (para cerrar las huérfanas).
@@ -51,7 +60,10 @@ export function createSessionActions(deps: SessionActionsDeps) {
     const valida = regreso !== null && validarRegreso(regreso, inicio, ahora) === null;
     const returnBy = valida ? new Date(regreso).toISOString() : null;
 
-    await deps.createSafetySession(localId, actividad.clientGeneratedId, userId, returnBy);
+    // Los umbrales elegidos se copian a la sesión: cambiarlos después no afecta a esta actividad
+    // (spec 011, CA-51).
+    const umbrales = aSesion(await deps.getEleccionUmbrales(userId));
+    await deps.createSafetySession(localId, actividad.clientGeneratedId, userId, returnBy, umbrales);
     await deps.enqueueOutbox(userId, {
       kind: 'session',
       clientId: actividad.clientGeneratedId,

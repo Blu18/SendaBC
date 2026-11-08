@@ -360,6 +360,7 @@ export default function ActivityPage() {
                 visible={pregunta.visible}
                 restanteMs={pregunta.restanteMs}
                 respondiendo={pregunta.respondiendo}
+                umbrales={pregunta.umbrales}
                 onEstoyBien={() => void pregunta.estoyBien()}
             />
         </View>

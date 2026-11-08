@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import PrimaryButton from "../ui/buttons/PrimaryBtn";
 import Icon from "../ui/Icon";
 import { formatoCuentaRegresiva, textoPregunta } from "../../lib/safety/messages";
-import { UMBRALES_APP } from "../../lib/safety/locationTask";
+import type { Umbrales } from "../../lib/safety/inactivity";
 import { lightColors, type Theme } from "../../lib/theme";
 import { useReducedMotion } from "../../hooks/theme/useReducedMotion";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
@@ -12,18 +12,20 @@ type Props = {
     visible: boolean;
     restanteMs: number;
     respondiendo: boolean;
+    // Los de la sesión de la actividad (spec 011, CA-51), para el texto de la pregunta.
+    umbrales: Umbrales;
     onEstoyBien: () => void;
 };
 
 // "¿Estás bien?" (spec 008, CA-11, CA-12) como hoja inferior sobre la grabación, como en Figma
 // (spec 009): la cuenta regresiva grande en alert (solo seguridad, RN-5) y "Estoy bien" de 64 dp
 // en la mitad inferior, al alcance del pulgar (CA-13).
-export default function AreYouOkModal({ visible, restanteMs, respondiendo, onEstoyBien }: Props) {
+export default function AreYouOkModal({ visible, restanteMs, respondiendo, umbrales, onEstoyBien }: Props) {
     const theme = useTheme();
     const styles = useThemedStyles(makeStyles);
     const insets = useSafeAreaInsets();
     const reduced = useReducedMotion();
-    const { titulo, cuerpo, boton } = textoPregunta(UMBRALES_APP);
+    const { titulo, cuerpo, boton } = textoPregunta(umbrales);
     return (
         <Modal
             visible={visible}

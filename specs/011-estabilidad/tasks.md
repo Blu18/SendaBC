@@ -121,9 +121,20 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 - [x] T23 — `lib/safety/thresholds.ts`: opciones de RN-9, lectura segura y `umbralesDeSesion`. (CA-50, CA-52)
 
   Hecho (2026-11-07): opciones de RN-9 (5 a 30 min y 1 a 5 min) con 10 y 2 por defecto, tomados de `UMBRALES`. `leerEleccion` lee lo guardado en `app_settings` (clave `umbrales_inactividad`): sin nada, con JSON dañado o con un valor fuera de las opciones usa el de por defecto en ese campo; `guardarEleccion` no guarda valores fuera de las opciones. `aSesion` da los milisegundos que se copian a la sesión (T24). `umbralesDeSesion(sesion, base)` usa los de la sesión; una sesión de antes de v6 o un valor inválido usa la base, y si la base trae los minutos de `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES` mandan esos. La distancia de 30 m no cambia. `tsc` y 11 pruebas Vitest pasan; todavía nadie lo usa (T24, T25).
-- [ ] T24 — Copiar la elección a la sesión al iniciar, y usarla en `recording.ts`, `areYouOk.ts` y `useAreYouOk`. (CA-51, CA-52)
-- [ ] T25 — `InactivitySettings` en la pestaña Seguridad. (CA-50)
-- [ ] T26 — Correr M11 y anotar los resultados. (CA-50 a CA-52)
+- [x] T24 — Copiar la elección a la sesión al iniciar, y usarla en `recording.ts`, `areYouOk.ts` y `useAreYouOk`. (CA-51, CA-52)
+
+  Hecho (2026-11-07): `lib/db/settings.ts` lee y guarda `app_settings`, y la elección de umbrales por cuenta, con su prueba. `LocalSafetySession` trae `quietMs` y `responseMs`, y `createSafetySession` los guarda. `sessionActions.iniciar` lee la elección de la cuenta y la copia a la sesión, así que cambiarla después no afecta a la actividad en curso. El procesador de ubicaciones, la notificación de "¿Estás bien?" (`umbralesDeActividad` en `areYouOk.ts`), la cuenta regresiva de `useAreYouOk` y el texto de `AreYouOkModal` usan `umbralesDeSesion`; `UMBRALES_APP` queda solo como base (RN-4 o los minutos de depuración). Pruebas nuevas: con 5 y 1 minutos el procesador pregunta y alerta antes de los 6 minutos, y una sesión de antes de v6 todavía no pregunta. `tsc` y Vitest pasan (637). Se prueba en la app en T26 (M11), con la pantalla de T25 y contactos activos para que se cree la sesión.
+- [x] T25 — `InactivitySettings` en la pestaña Seguridad. (CA-50)
+
+  Hecho (2026-11-07): `components/safety/InactivitySettings.tsx`, sección "Si dejo de moverme" antes del aviso del 911 en la pestaña Seguridad (también aparece al abrirla desde la grabación). Explica los 30 m y que los cambios se usan desde la siguiente actividad; las opciones de RN-9 son `Chip` en grupos de radio, y se guardan al tocar con `useInactivitySettings`, sin red. `tsc` y Vitest pasan (637). En el emulador, con la cuenta de M9: muestra 10 y 2 por defecto; con Wi-Fi y datos apagados se eligieron 20 y 5, y siguen elegidos tras cerrar y abrir la app. Después se volvió a 10 y 2. Durante las pruebas de T18 y T19 un toque automático dejó a M9 con el avatar `montana`; se regresó a `null`.
+- [x] T26 — Correr M11 y anotar los resultados. (CA-50 a CA-52)
+
+  Hecho (2026-11-07) en el emulador `Pixel_8_Pro`, con `TELEGRAM_MODE=log` y sin `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES`. Dos cuentas desechables (A y B), cada una con un contacto activo creado en la base para que se cree la sesión de seguridad; al terminar se borraron desde "Borrar cuenta" y no quedó nada en el servidor ni en el teléfono. Los umbrales de cada sesión se leyeron de `safety_sessions` en la base del teléfono. Se respondió "Ahora no" a la ubicación en segundo plano: la detección corre con la pantalla encendida.
+  - **Paso 1, pasa:** con la cuenta A se eligieron 5 y 1 y siguen elegidos tras cerrar y abrir la app.
+  - **Paso 2, pasa:** la actividad empezó a las 22:50:18 y "¿Estás bien?" salió a las 22:55:18, con "Llevas 5 minutos sin moverte. Si no respondes en 1 minuto…" y cuenta regresiva de 1:00. Se respondió "Estoy bien".
+  - **Paso 3, no se alcanza desde la app:** durante la grabación no hay forma de llegar a Seguridad, porque salir pide terminar la actividad. Se comprobó lo equivalente: después de elegir 30 y 5, la sesión de la primera actividad seguía con 300 000 y 60 000 ms. El procesador usa los de la sesión (`recording.test.ts`).
+  - **Paso 4, pasa:** con Wi-Fi y datos apagados, la siguiente actividad de A guardó 1 800 000 y 300 000 ms (30 y 5).
+  - **Paso 5, pasa:** la cuenta B, sin cambios, guardó 600 000 y 120 000 ms (10 y 2).
 
 ## Fase 1D — Rutas sin conexión
 
@@ -238,9 +249,9 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-47 | `user.service.spec.ts`, `user.e2e-spec.ts`, `frontend/lib/db/account.test.ts`, `frontend/lib/account/deletion.test.ts` y caso manual M9 | Automatizada y manual | Cumple (Vitest, e2e y emulador; M9 paso 1 no se alcanza desde la app) |
 | CA-48 | `route.service.spec.ts`, `user.e2e-spec.ts` y caso manual M8 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
 | CA-49 | `user.e2e-spec.ts`, `jwt.strategies.spec.ts` y caso manual M10 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
-| CA-50 | `frontend/lib/safety/thresholds.test.ts` y caso manual M11 | Automatizada y manual | Pendiente |
-| CA-51 | `frontend/lib/safety/recording.test.ts`, `sessionActions.test.ts` y caso manual M11 | Automatizada y manual | Pendiente |
-| CA-52 | `thresholds.test.ts` y caso manual M11 | Automatizada y manual | Pendiente |
+| CA-50 | `frontend/lib/safety/thresholds.test.ts`, `frontend/lib/db/settings.test.ts` y caso manual M11 | Automatizada y manual | Cumple (Vitest y emulador) |
+| CA-51 | `frontend/lib/safety/recording.test.ts`, `sessionActions.test.ts` y caso manual M11 | Automatizada y manual | Cumple (Vitest y emulador; M11 paso 3 no se alcanza desde la app) |
+| CA-52 | `thresholds.test.ts`, `recording.test.ts` y caso manual M11 | Automatizada y manual | Cumple (Vitest y emulador) |
 | CA-53 | `frontend/lib/db/routeCache.test.ts`, `status.test.ts` y caso manual M12 | Automatizada y manual | Pendiente |
 | CA-54 | `status.test.ts` y caso manual M12 | Automatizada y manual | Pendiente |
 | CA-55 | `routeCache.test.ts`, `status.test.ts` y caso manual M13 | Automatizada y manual | Pendiente |

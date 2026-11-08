@@ -18,6 +18,8 @@ function sesion(overrides: Partial<LocalSafetySession> = {}): LocalSafetySession
     alertServerId: null,
     alertTriggeredAt: null,
     alertCancelledAt: null,
+    quietMs: null,
+    responseMs: null,
     ...overrides,
   };
 }
