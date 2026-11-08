@@ -51,7 +51,7 @@ Cambios en endpoints que ya existen:
 **Cuenta (CA-41 a CA-49)**
 
 - `backend/src/user/dto/`: `update-profile.dto.ts`, `update-email.dto.ts`, `update-password.dto.ts` y `delete-account.dto.ts`, con los mensajes del registro. El nombre usa la regla de 5 caracteres sin espacios de los extremos (spec 001, RN-4).
-- `backend/src/user/avatars.ts`: `AVATAR_IDS`, para validar con `@IsIn`.
+- `backend/src/user/avatars.ts`: `AVATAR_IDS`, para validar con `@IsIn`. Son 8, elegidos por el usuario (2026-11-07): `montana`, `pino`, `cactus`, `sol`, `ola`, `senderismo`, `trail` y `bici`. En el frontend usan los íconos `image-filter-hdr`, `pine-tree`, `cactus`, `white-balance-sunny`, `waves`, `hiking`, `run` y `bike` de MaterialCommunityIcons (D4).
 - `backend/src/user/user.service.ts`: `updateProfile`, `updateEmail`, `updatePassword` y `deleteAccount`. La contraseña se compara con `bcrypt`, como en `AuthService`.
 - `backend/src/user/user.controller.ts`: las cuatro rutas, declaradas con el usuario del token.
 - `deleteAccount`, en una transacción:

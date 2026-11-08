@@ -81,7 +81,7 @@ enum DevicePlatform {
 }
 
 model User {
-  avatarUrl         String?
+  avatarId          String?
   createdAt         DateTime           @default(now()) @db.Timestamptz(6)
   displayName       String
   email             String             @unique
@@ -142,7 +142,7 @@ model ActivityPoint {
 
 model Route {
   createdAt           DateTime                                   @default(now()) @db.Timestamptz(6)
-  createdByUserId     String                                     @db.Uuid
+  createdByUserId     String?                                    @db.Uuid
   description         String?
   difficulty          RouteDifficulty?
   distanceMeters      Float?
@@ -158,8 +158,8 @@ model Route {
   type                ActivityType
   updatedAt           DateTime                                   @updatedAt @db.Timestamptz(6)
   favorites           RouteFavorite[]
-  createdBy           User                                       @relation("RouteCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  sourceActivity      Activity?                                  @relation(fields: [sourceActivityId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy           User?                                      @relation("RouteCreator", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  sourceActivity      Activity?                                  @relation(fields: [sourceActivityId], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   @@index([createdByUserId], map: "routes_createdByUserId_idx_93e8a540")
   @@index([status], map: "routes_status_idx_e98638ab")

@@ -34,14 +34,14 @@ describe('POST /user (e2e, spec 001)', () => {
         email: `  ${email.toUpperCase()} `,
         displayName: 'Prueba e2e',
         password,
-        avatarUrl: 'x',
+        avatarId: 'x',
       })
       .expect(201);
 
     expect(res.body).toMatchObject({
       email,
       displayName: 'Prueba e2e',
-      avatarUrl: null,
+      avatarId: null,
     });
     expect(res.body.id).toEqual(expect.any(String));
     expect(res.body).not.toHaveProperty('passwordHash');

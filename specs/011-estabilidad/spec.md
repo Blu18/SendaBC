@@ -180,6 +180,7 @@ Ninguna pendiente.
 
 ## Historial
 
+- 2026-11-07 — Al implementar T11, el plan no fijaba qué avatares hay. El usuario elige 8, y se anotan en el plan (D4). La spec no cambia.
 - 2026-11-06 — Marco de grabación aprobado por el usuario en Figma (T5).
 - 2026-11-06 — Al revisar el marco de Figma (T5), el usuario pide "Pedir ayuda" del tamaño del botón 3D/2D y en la esquina inferior derecha (CA-30, P9). Con esto se cumple la spec 009, CA-13, que ya no hace falta cambiar.
 - 2026-11-06 — Plan aprobado por el usuario, junto con la constitución v1.9.

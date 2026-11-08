@@ -1,9 +1,10 @@
-import { IsDate, IsEmail, IsInt, IsOptional, IsString, IsUrl, IsUUID, Min } from "class-validator";
+import { IsDate, IsEmail, IsInt, IsOptional, IsString, IsUUID, Min } from "class-validator";
 
 export class User {
+    // Id de un ícono de avatar (spec 011, D4); no es una URL.
     @IsOptional()
-    @IsUrl()
-    avatarUrl?: string | null
+    @IsString()
+    avatarId?: string | null
 
     @IsOptional()
     @IsDate()

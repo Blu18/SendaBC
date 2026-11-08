@@ -30,7 +30,7 @@ describe('ValidationPipe (spec 001, CA-6)', () => {
         email: ' Ana@Senda.BC',
         displayName: 'Ana Luz',
         password: '12345678',
-        avatarUrl: 'x',
+        avatarId: 'x',
         passwordHash: 'y',
       },
       meta,

@@ -63,8 +63,12 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
 ### Backend
 
-- [ ] T10 — Migración `20261107000000_cuenta_y_rutas_sin_autor`: `avatarUrl` a `avatarId`, `createdByUserId` opcional y `SET NULL` en `routes`. Actualizar los usos de `avatarUrl`. (CA-42, CA-48)
-- [ ] T11 — `avatars.ts`, `UpdateProfileDto`, `PATCH /user/me`. (CA-41, CA-42, RN-15)
+- [x] T10 — Migración `20261107000000_cuenta_y_rutas_sin_autor`: `avatarUrl` a `avatarId`, `createdByUserId` opcional y `SET NULL` en `routes`. Actualizar los usos de `avatarUrl`. (CA-42, CA-48)
+
+  Hecho (2026-11-07): antes de crearla, una consulta de solo lectura confirmó que ningún usuario tenía `avatarUrl` (0 de 6), así que la columna se renombra sin perder datos. `routes.createdByUserId` y `routes.sourceActivityId` quedan con `ON DELETE SET NULL`. Aplicada en Supabase con `migrate deploy`, y `migrate diff` contra `schema.prisma` sale vacío. `avatarUrl` cambia a `avatarId` en `User` (ya no es `@IsUrl`) y en las pruebas de usuario y del `ValidationPipe`. Las consultas de rutas siguen con `JOIN`: el `LEFT JOIN` es T13. Vitest (390) y e2e (72) pasan.
+- [x] T11 — `avatars.ts`, `UpdateProfileDto`, `PATCH /user/me`. (CA-41, CA-42, RN-15)
+
+  Hecho (2026-11-07): el plan no fijaba la lista de avatares; el usuario eligió 8 (`montana`, `pino`, `cactus`, `sol`, `ola`, `senderismo`, `trail`, `bici`) y quedaron en el plan, con nota en el historial de la spec. `UpdateProfileDto` valida el nombre con la regla del registro, rechaza `displayName: null` y acepta `avatarId: null` para quitar el avatar. `updateProfile` solo cambia los campos que vienen. Pruebas en `avatars.spec.ts`, `update-profile.dto.spec.ts` y `user.service.spec.ts`; Vitest pasa (401). Contra el backend local, con la cuenta de M9: `200` con avatar válido y con `null`, `400` con una URL, con un nombre corto y con `null`, y `401` sin token. La cuenta quedó sin avatar, como estaba. El e2e es T16.
 - [ ] T12 — `PATCH /user/me/email` y `PATCH /user/me/password`, con `403` para la contraseña incorrecta. (CA-43, CA-44, RN-13, D11)
 - [ ] T13 — `route.service`: `LEFT JOIN`, autor "Cuenta eliminada" e `isMine` con `IS NOT DISTINCT FROM`. (CA-48, RN-16)
 - [ ] T14 — `DELETE /user/me`: `409` con alerta activa, rutas no públicas a `DELETED` y borrado en una transacción. (CA-46, CA-47, CA-48)

@@ -2,6 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto.js';
+import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import { PrismaService } from '../prisma.service.js';
 import { normalizarEmail } from './normalizar-email.js';
 
@@ -35,6 +36,19 @@ export class UserService {
   async findOne(id: string): Promise<SafeUser | null> {
     return this.prisma.user.findFirst({
       where: { id: id },
+      omit: { passwordHash: true },
+    });
+  }
+
+  // PATCH /user/me (spec 011, CA-41, CA-42). Solo cambia los campos que vienen;
+  // avatarId null quita el avatar (RN-15).
+  async updateProfile(id: string, { displayName, avatarId }: UpdateProfileDto): Promise<SafeUser> {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(displayName !== undefined && { displayName }),
+        ...(avatarId !== undefined && { avatarId }),
+      },
       omit: { passwordHash: true },
     });
   }

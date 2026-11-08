@@ -20,7 +20,7 @@ describe('UserService.create (spec 001)', () => {
       email: 'prueba@senda.bc',
       displayName: 'Prueba',
       passwordHash: '$2a$06$hash',
-      avatarUrl: null,
+      avatarId: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -76,7 +76,7 @@ describe('UserService.create (spec 001)', () => {
       email: 'prueba@senda.bc',
       displayName: 'Prueba',
       password: '12345678',
-      avatarUrl: 'https://x.y/z.png',
+      avatarId: 'zorro',
     } as never);
 
     expect(create).toHaveBeenCalledWith({
@@ -116,5 +116,44 @@ describe('UserService.findByEmail (spec 001)', () => {
     expect(findFirst).toHaveBeenCalledWith({
       where: { email: 'ana@senda.bc' },
     });
+  });
+});
+
+describe('UserService.updateProfile (spec 011)', () => {
+  const guardado = { id: 'u1', email: 'prueba@senda.bc', displayName: 'Ana Luz', avatarId: 'pino' };
+
+  function serviceConUpdate() {
+    const update = vi.fn().mockResolvedValue(guardado);
+    const service = new UserService({ user: { update } } as unknown as PrismaService);
+    return { service, update };
+  }
+
+  it('guarda nombre y avatar en la cuenta del token, sin passwordHash (CA-41, CA-42)', async () => {
+    const { service, update } = serviceConUpdate();
+
+    const result = await service.updateProfile('u1', { displayName: 'Ana Luz', avatarId: 'pino' });
+
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+      data: { displayName: 'Ana Luz', avatarId: 'pino' },
+      omit: { passwordHash: true },
+    });
+    expect(result).toBe(guardado);
+  });
+
+  it('solo cambia los campos que vienen', async () => {
+    const { service, update } = serviceConUpdate();
+
+    await service.updateProfile('u1', { avatarId: 'sol' });
+
+    expect(update.mock.calls[0][0].data).toEqual({ avatarId: 'sol' });
+  });
+
+  it('avatarId null quita el avatar (RN-15)', async () => {
+    const { service, update } = serviceConUpdate();
+
+    await service.updateProfile('u1', { avatarId: null });
+
+    expect(update.mock.calls[0][0].data).toEqual({ avatarId: null });
   });
 });
