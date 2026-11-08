@@ -138,7 +138,9 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
 ## Fase 1D — Rutas sin conexión
 
-- [ ] T27 — `lib/db/routeCache.ts`: guardar, leer, borrar y recortar, separado por cuenta. (CA-53, CA-55, CA-56, CA-60, RN-14)
+- [x] T27 — `lib/db/routeCache.ts`: guardar, leer, borrar y recortar, separado por cuenta. (CA-53, CA-55, CA-56, CA-60, RN-14)
+
+  Hecho (2026-11-08): `saveNearby`/`getNearby` (clave `last`, solo la última búsqueda), `saveFavorites`/`getFavorites` (última lista) y `saveRouteDetail`/`getRouteDetail`/`deleteRouteDetail` (por id de ruta, para el `404` de CA-59). Leer devuelve `{ data, savedAt }` para el aviso con fecha, o `null` si no hay nada o el valor está dañado. `saveRouteDetail` recorta con `trimRouteDetails`: conserva las últimas 30 rutas abiertas (`MAX_DETALLES`) y, además, las que están en la lista de favoritas guardada; volver a abrir una ruta la pone al día. Todo filtra por `user_id`; cerrar sesión no borra nada y `deleteLocalAccount` ya borra la tabla. `routeCache.test.ts` (12 pruebas, `node:sqlite`) cubre guardar, reemplazar, valor dañado, recorte con favoritas y separación por cuenta. `tsc` y Vitest pasan (649). Todavía nadie lo usa (T29 a T31).
 - [ ] T28 — `lib/routes/status.ts`: resultados y estado `saved`. (CA-53 a CA-57)
 - [ ] T29 — `useNearbyRoutes` y `exploreRoutesPage`, incluido abrir sin red con la búsqueda guardada. (CA-53, CA-54, CA-59)
 - [ ] T30 — `useRouteDetail` y `routeDetailPage`: guardar, leer, borrar con `404` y aviso. (CA-55, CA-57, CA-59)
