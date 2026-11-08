@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { NearbyRoute } from './api';
-import { consultarConRespaldo, guardadasDelTipo, guardadasFueraDeVista } from './offline';
+import type { NearbyRoute, RouteDetail } from './api';
+import { consultarConRespaldo, consultarDetalle, guardadasDelTipo, guardadasFueraDeVista } from './offline';
 
 const savedAt = '2026-11-08T19:30:00.000Z';
 const sinRed = { error: new TypeError('Network request failed') };
@@ -113,5 +113,66 @@ describe('guardadasFueraDeVista (CA-53)', () => {
 
   it('sin rutas no hay a dónde moverlo', () => {
     expect(guardadasFueraDeVista([], tijuana, 25)).toBe(false);
+  });
+});
+
+describe('consultarDetalle (CA-55, CA-57, CA-59)', () => {
+  const detalle = { id: 'r-1', name: 'Ruta' } as RouteDetail;
+
+  function detalleDobles(o: Parameters<typeof dobles<RouteDetail>>[0]) {
+    return { ...dobles<RouteDetail>(o), borrar: vi.fn(async () => {}) };
+  }
+
+  it('con respuesta exitosa la guarda y es found', async () => {
+    const d = detalleDobles({ respuesta: { ok: true, data: detalle } });
+
+    expect(await consultarDetalle({ conectado: true, ...d })).toEqual({ kind: 'found', route: detalle });
+    expect(d.guardar).toHaveBeenCalledWith(detalle);
+  });
+
+  it('sin conexión, con el detalle guardado, es saved con su fecha (CA-55)', async () => {
+    const d = detalleDobles({ guardado: { data: detalle, savedAt } });
+
+    expect(await consultarDetalle({ conectado: false, ...d })).toEqual({
+      kind: 'saved',
+      route: detalle,
+      savedAt,
+    });
+    expect(d.pedir).not.toHaveBeenCalled();
+  });
+
+  it('sin conexión y sin detalle guardado es offline (CA-57)', async () => {
+    const d = detalleDobles({});
+
+    expect(await consultarDetalle({ conectado: false, ...d })).toEqual({ kind: 'offline' });
+  });
+
+  it('si la petición no llegó al servidor usa el guardado (D3)', async () => {
+    const d = detalleDobles({ respuesta: { ok: false, failure: sinRed }, guardado: { data: detalle, savedAt } });
+
+    expect((await consultarDetalle({ conectado: true, ...d })).kind).toBe('saved');
+  });
+
+  it('un 404 borra el guardado y es unavailable (CA-59)', async () => {
+    const d = detalleDobles({ respuesta: { ok: false, failure: { status: 404 } }, guardado: { data: detalle, savedAt } });
+
+    expect(await consultarDetalle({ conectado: true, ...d })).toEqual({ kind: 'unavailable' });
+    expect(d.borrar).toHaveBeenCalled();
+  });
+
+  it('si borrar falla, igual es unavailable', async () => {
+    const d = detalleDobles({ respuesta: { ok: false, failure: { status: 404 } } });
+    d.borrar.mockRejectedValueOnce(new Error('database is locked'));
+
+    expect(await consultarDetalle({ conectado: true, ...d })).toEqual({ kind: 'unavailable' });
+  });
+
+  it('un 5xx, o no llegar sin nada guardado, lanza el fallo para reintentar sin borrar', async () => {
+    const d5 = detalleDobles({ respuesta: { ok: false, failure: { status: 500 } }, guardado: { data: detalle, savedAt } });
+    await expect(consultarDetalle({ conectado: true, ...d5 })).rejects.toEqual({ status: 500 });
+    expect(d5.borrar).not.toHaveBeenCalled();
+
+    const dRed = detalleDobles({ respuesta: { ok: false, failure: sinRed } });
+    await expect(consultarDetalle({ conectado: true, ...dRed })).rejects.toBe(sinRed);
   });
 });

@@ -22,7 +22,8 @@ type Props = StaticScreenProps<{ id: string }>;
 export default function EditRoutePage({ route: navRoute }: Props) {
     const { id } = navRoute.params;
     const navigation = useNavigation();
-    const { route, status, retry } = useRouteDetail(id);
+    // Editar necesita conexión: nunca con los datos guardados (spec 011, CA-58).
+    const { route, status, retry } = useRouteDetail(id, { usarGuardado: false });
     const { update } = useRouteMutations();
     const theme = useTheme();
     const styles = useThemedStyles(makeStyles);

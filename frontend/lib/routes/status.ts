@@ -47,8 +47,8 @@ export function nearbyStatus(q: {
 
 // --- Publicar rutas, detalle y favoritas (spec 007) ---
 
-// Resultado de pedir el detalle: sin conexión no se hace la petición (CA-13), y un 404 es una
-// ruta que ya no está disponible, no un error (CA-14).
+// Resultado de pedir el detalle (lib/routes/offline.ts, consultarDetalle): sin conexión no se
+// hace la petición (CA-13), y un 404 es una ruta que ya no está disponible, no un error (CA-14).
 // Sin conexión, con el detalle guardado, es 'saved' (spec 011, CA-55); sin él, 'offline' (CA-57).
 export type RouteDetailOutcome =
   | { kind: 'offline' }
@@ -60,15 +60,6 @@ export type RouteDetailStatus = 'loading' | 'success' | 'offline' | 'saved' | 'e
 
 export function detalleSinConexion(saved: Guardado<RouteDetail> | null): RouteDetailOutcome {
   return saved ? { kind: 'saved', route: saved.data, savedAt: saved.savedAt } : { kind: 'offline' };
-}
-
-export function routeDetailOutcome(
-  result: { ok: true; data: RouteDetail } | { ok: false; failure: RouteFailure }
-): RouteDetailOutcome {
-  if (result.ok) return { kind: 'found', route: result.data };
-  if ('status' in result.failure && result.failure.status === 404) return { kind: 'unavailable' };
-  // Cualquier otro fallo se lanza para que la query quede en error y se pueda reintentar.
-  throw result.failure;
 }
 
 export function routeDetailStatus(q: {

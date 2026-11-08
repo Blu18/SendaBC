@@ -1,8 +1,8 @@
 import type { ActivityType } from '../db/activities';
 import type { Guardado } from '../db/routeCache';
 import { haversineMeters, type Coordinates } from '../metrics/geo';
-import type { NearbyRoute } from './api';
-import { noLlegoAlServidor, sinConexion } from './status';
+import type { NearbyRoute, RouteDetail } from './api';
+import { detalleSinConexion, noLlegoAlServidor, sinConexion, type RouteDetailOutcome } from './status';
 
 // Consulta con respaldo para usar sin conexión (spec 011, CA-53 a CA-59; plan, D3). La usan los
 // hooks de Explorar, el detalle y las favoritas. Sin imports de React Native, para probarla.
@@ -41,6 +41,35 @@ export async function consultarConRespaldo<T>(o: {
     if (saved) return { offline: true, saved };
   }
   throw result.failure;
+}
+
+// Detalle de una ruta (CA-55, CA-57, CA-59). Como consultarConRespaldo, y además un 404 (ruta
+// archivada o borrada) borra el detalle guardado y la muestra como no disponible (spec 007,
+// CA-14). Sin conexión y sin el detalle guardado es 'offline', con el mensaje de que necesita
+// internet (CA-57).
+export async function consultarDetalle(o: {
+  conectado: boolean;
+  pedir: () => Promise<Resultado<RouteDetail>>;
+  leer: () => Promise<Guardado<RouteDetail> | null>;
+  guardar: (route: RouteDetail) => Promise<void>;
+  borrar: () => Promise<void>;
+}): Promise<RouteDetailOutcome> {
+  try {
+    const r = await consultarConRespaldo(o);
+    return r.offline ? detalleSinConexion(r.saved ?? null) : { kind: 'found', route: r.data };
+  } catch (failure) {
+    if (!esNoEncontrada(failure)) throw failure;
+    try {
+      await o.borrar();
+    } catch (e) {
+      console.log('No se pudo borrar la ruta guardada:', e);
+    }
+    return { kind: 'unavailable' };
+  }
+}
+
+function esNoEncontrada(failure: unknown): boolean {
+  return typeof failure === 'object' && failure !== null && 'status' in failure && failure.status === 404;
 }
 
 // Leer lo guardado tampoco debe romper la pantalla: sin poder leer, es como no tener nada.

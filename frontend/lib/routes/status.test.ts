@@ -8,7 +8,6 @@ import {
   sinConexion,
   erroresDeCampo,
   mensajeDeFallo,
-  routeDetailOutcome,
   routeDetailStatus,
   routeListStatus,
 } from './status';
@@ -44,24 +43,6 @@ describe('Detalle, listas y acciones de rutas (spec 007)', () => {
   const http = (status: number, message = 'Motivo', fieldErrors: Record<string, string> = {}) => ({
     status,
     apiError: { message, fieldErrors },
-  });
-
-  describe('routeDetailOutcome (CA-13, CA-14)', () => {
-    it('una respuesta exitosa es la ruta', () => {
-      expect(routeDetailOutcome({ ok: true, data: ruta })).toEqual({ kind: 'found', route: ruta });
-    });
-
-    it('un 404 es una ruta que ya no está disponible, no un error', () => {
-      expect(routeDetailOutcome({ ok: false, failure: http(404) })).toEqual({
-        kind: 'unavailable',
-      });
-    });
-
-    it('cualquier otro fallo se lanza para que la query quede en error', () => {
-      const sinRed = { error: new TypeError('Network request failed') };
-      expect(() => routeDetailOutcome({ ok: false, failure: sinRed })).toThrow();
-      expect(() => routeDetailOutcome({ ok: false, failure: http(500) })).toThrow();
-    });
   });
 
   describe('routeDetailStatus', () => {
