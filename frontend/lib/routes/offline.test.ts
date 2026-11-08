@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { NearbyRoute, RouteDetail } from './api';
-import { consultarConRespaldo, consultarDetalle, guardadasDelTipo, guardadasFueraDeVista } from './offline';
+import type { FavoriteRoute, NearbyRoute, RouteDetail } from './api';
+import {
+  consultarConRespaldo,
+  consultarDetalle,
+  descargarDetallesDeFavoritas,
+  guardadasDelTipo,
+  guardadasFueraDeVista,
+} from './offline';
 
 const savedAt = '2026-11-08T19:30:00.000Z';
 const sinRed = { error: new TypeError('Network request failed') };
@@ -174,5 +180,59 @@ describe('consultarDetalle (CA-55, CA-57, CA-59)', () => {
 
     const dRed = detalleDobles({ respuesta: { ok: false, failure: sinRed } });
     await expect(consultarDetalle({ conectado: true, ...dRed })).rejects.toBe(sinRed);
+  });
+});
+
+describe('descargarDetallesDeFavoritas (CA-55)', () => {
+  const fav = (id: string, available = true) => ({ id, available }) as FavoriteRoute;
+  const det = (id: string) => ({ id }) as RouteDetail;
+
+  it('descarga y guarda solo las disponibles que no están guardadas', async () => {
+    const pedir = vi.fn(async (id: string) => ({ ok: true as const, data: det(id) }));
+    const guardar = vi.fn(async (_r: RouteDetail) => {});
+
+    const n = await descargarDetallesDeFavoritas({
+      favoritas: [fav('nueva'), fav('ya'), fav('archivada', false)],
+      guardadas: new Set(['ya']),
+      pedir,
+      guardar,
+    });
+
+    expect(n).toBe(1);
+    expect(pedir.mock.calls).toEqual([['nueva']]);
+    expect(guardar).toHaveBeenCalledWith(det('nueva'));
+  });
+
+  it('un 404 o un fallo al guardar no detiene las demás', async () => {
+    const pedir = vi.fn(async (id: string) =>
+      id === 'borrada' ? { ok: false as const, failure: { status: 404 } } : { ok: true as const, data: det(id) }
+    );
+    const guardar = vi.fn(async (r: RouteDetail) => {
+      if (r.id === 'b') throw new Error('database is locked');
+    });
+
+    const n = await descargarDetallesDeFavoritas({
+      favoritas: [fav('borrada'), fav('b'), fav('c')],
+      guardadas: new Set(),
+      pedir,
+      guardar,
+    });
+
+    expect(n).toBe(1);
+    expect(pedir).toHaveBeenCalledTimes(3);
+  });
+
+  it('si la red se cae, deja de pedir', async () => {
+    const pedir = vi.fn(async () => ({ ok: false as const, failure: sinRed }));
+
+    const n = await descargarDetallesDeFavoritas({
+      favoritas: [fav('a'), fav('b')],
+      guardadas: new Set(),
+      pedir,
+      guardar: vi.fn(async () => {}),
+    });
+
+    expect(n).toBe(0);
+    expect(pedir).toHaveBeenCalledTimes(1);
   });
 });

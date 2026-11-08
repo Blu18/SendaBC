@@ -1,7 +1,7 @@
 import type { ActivityType } from '../db/activities';
 import type { Guardado } from '../db/routeCache';
 import { haversineMeters, type Coordinates } from '../metrics/geo';
-import type { NearbyRoute, RouteDetail } from './api';
+import type { FavoriteRoute, NearbyRoute, RouteDetail } from './api';
 import { detalleSinConexion, noLlegoAlServidor, sinConexion, type RouteDetailOutcome } from './status';
 
 // Consulta con respaldo para usar sin conexión (spec 011, CA-53 a CA-59; plan, D3). La usan los
@@ -98,4 +98,33 @@ export function guardadasFueraDeVista(
   radiusKm: number
 ): boolean {
   return routes.length > 0 && routes.every((r) => haversineMeters(center, r.start) > radiusKm * 1000);
+}
+
+// Una favorita que nunca se abrió también debe verse sin conexión (CA-55): al refrescar la lista
+// con red se descarga el detalle de las favoritas disponibles que no estén guardadas. Una por una,
+// para no saturar la red; un fallo en una no detiene las demás. Una favorita que ya no está
+// disponible no tiene detalle (spec 007, CA-19). Devuelve cuántas se guardaron.
+export async function descargarDetallesDeFavoritas(o: {
+  favoritas: FavoriteRoute[];
+  guardadas: Set<string>;
+  pedir: (id: string) => Promise<Resultado<RouteDetail>>;
+  guardar: (route: RouteDetail) => Promise<void>;
+}): Promise<number> {
+  let guardadas = 0;
+  for (const f of o.favoritas) {
+    if (!f.available || o.guardadas.has(f.id)) continue;
+    try {
+      const r = await o.pedir(f.id);
+      if (!r.ok) {
+        // Sin red no tiene caso seguir pidiendo; las demás se intentan en el siguiente refresco.
+        if (noLlegoAlServidor(r.failure)) break;
+        continue;
+      }
+      await o.guardar(r.data);
+      guardadas++;
+    } catch (e) {
+      console.log('No se pudo guardar el detalle de una favorita:', e);
+    }
+  }
+  return guardadas;
 }

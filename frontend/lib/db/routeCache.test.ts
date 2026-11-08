@@ -12,6 +12,7 @@ const {
   getFavorites,
   getNearby,
   getRouteDetail,
+  getSavedDetailIds,
   saveFavorites,
   saveNearby,
   saveRouteDetail,
@@ -117,6 +118,15 @@ describe('detalle (CA-55, CA-59)', () => {
     expect(guardado?.data.name).toBe('Nuevo nombre');
     expect(guardado?.savedAt).toBe(minuto(1).toISOString());
     expect(await getRouteDetail('a', 'otra')).toBeNull();
+  });
+
+  it('lista los ids con detalle guardado de la cuenta', async () => {
+    await saveRouteDetail('a', detail('r1'), minuto(0));
+    await saveRouteDetail('a', detail('r2'), minuto(1));
+    await saveRouteDetail('b', detail('r3'), minuto(2));
+    await saveNearby('a', [nearby('r4')], minuto(3));
+
+    expect(await getSavedDetailIds('a')).toEqual(new Set(['r1', 'r2']));
   });
 
   it('borrar quita solo esa ruta (404, CA-59)', async () => {

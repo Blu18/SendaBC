@@ -76,6 +76,16 @@ export function getRouteDetail(userId: string, routeId: string) {
   return leer<RouteDetail>(userId, 'detail', routeId);
 }
 
+// Ids de las rutas con detalle guardado, para descargar solo el de las favoritas que falten.
+export async function getSavedDetailIds(userId: string): Promise<Set<string>> {
+  const db = await getDb();
+  const filas = await db.getAllAsync<{ cache_key: string }>(
+    `SELECT cache_key FROM route_cache WHERE user_id = ? AND kind = 'detail'`,
+    [userId]
+  );
+  return new Set(filas.map((f) => f.cache_key));
+}
+
 // Para una ruta archivada o borrada: el servidor respondió 404 (CA-59).
 export async function deleteRouteDetail(userId: string, routeId: string) {
   const db = await getDb();
