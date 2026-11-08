@@ -1,6 +1,6 @@
 # 011 — Estabilidad: prueba de campo, bugs, pruebas y pulido
 
-- **Estado:** Aprobada (2026-11-06)
+- **Estado:** En progreso (aprobada 2026-11-06)
 - **Semana:** 9
 - **Autor(es):**
 - **Fecha:** 2026-11-06
@@ -92,7 +92,7 @@ Las specs 003 a 010 dejaron para esta lo que no se pudo comprobar en el emulador
 
 ### Pulido: botones de la grabación
 
-- **CA-30 (HU-8):** Dada una actividad en curso con seguridad activa, cuando miro el mapa, entonces "Pedir ayuda" es un botón flotante circular en la esquina superior izquierda. Se muestra en las mismas condiciones que hoy y sigue pidiendo mantenerlo presionado 2 s (spec 008, RN-7).
+- **CA-30 (HU-8):** Dada una actividad en curso con seguridad activa, cuando miro el mapa, entonces "Pedir ayuda" es un botón flotante circular del mismo tamaño que el botón 3D/2D, en la esquina inferior derecha. Se muestra en las mismas condiciones que hoy y sigue pidiendo mantenerlo presionado 2 s (spec 008, RN-7).
 - **CA-35 (HU-8):** Dada una actividad en curso, cuando miro el mapa, entonces "Detener actividad" es un botón flotante abajo y al centro, más pequeño que el botón actual, y funciona igual que antes (spec 003, CA-8).
 - **CA-36 (HU-8):** Dado que aparece cualquier aviso sobre el mapa (alerta activa, sin conexión, mapa no disponible o esperando GPS), cuando miro la pantalla, entonces ni el aviso ni los botones 3D/2D y "Volver a mi posición" se enciman con los botones flotantes. El logo del mapa sigue visible.
 - **CA-37 (HU-8):** Dado que el mapa no se puede mostrar por cualquier causa, cuando estoy grabando, entonces "Pedir ayuda" y "Detener actividad" siguen visibles y funcionan (spec 010, CA-17).
@@ -123,7 +123,7 @@ Las specs 003 a 010 dejaron para esta lo que no se pudo comprobar en el emulador
 - RN-1: Las correcciones no pueden afectar la grabación offline ni borrar datos locales sin sincronizar, salvo cuando el usuario borra su cuenta (CA-46).
 - RN-2: Severidad de un fallo. **Bloqueante:** pierde datos, cierra la app, impide grabar o impide que salga una alerta. **Mayor:** una función no sirve o muestra datos falsos, pero hay forma de seguir. **Menor:** detalle visual o de texto. Los bloqueantes se corrigen en esta spec. Los mayores y menores se corrigen o los acepta el usuario.
 - RN-3: Un fallo visto una sola vez se intenta reproducir las veces que indique su CA. Si no se repite, se cierra como "no reproducible", con los intentos anotados, y no se cambia código por suposición.
-- RN-4: Si un resultado o un cambio contradice una spec anterior, se corrige esa spec primero, con nota en su historial (constitución 1.3). Ya se sabe que cambian: 009 CA-13 ("Pedir ayuda" deja de estar en la mitad inferior), 010 CA-6 (hay controles sobre el mapa), 007 RN-1 y RN-10 y 006 RN-3 (recalcular distancias), 008 RN-4 (umbrales ajustables), 006 CA-15 y el requisito offline de la 007 (consulta sin conexión), el autor de una ruta en la 007 (rutas sin autor) y las notas de 006 y 007 que mandan a esta spec los mapas sin conexión.
+- RN-4: Si un resultado o un cambio contradice una spec anterior, se corrige esa spec primero, con nota en su historial (constitución 1.3). Ya se sabe que cambian: 010 CA-6 (hay controles sobre el mapa), 007 RN-1 y RN-10 y 006 RN-3 (recalcular distancias), 008 RN-4 (umbrales ajustables), 006 CA-15 y el requisito offline de la 007 (consulta sin conexión), el autor de una ruta en la 007 (rutas sin autor) y las notas de 006 y 007 que mandan a esta spec los mapas sin conexión.
 - RN-5: Los casos que necesitan el mundo real se corren en un teléfono real. El emulador no cuenta para CA-1 a CA-3 ni para CA-5 a CA-11.
 - RN-6: Los botones flotantes, los mapas descargados, la consulta sin conexión, el perfil, la cuenta y los umbrales se terminan antes de la prueba de campo, para que esta los cubra.
 - RN-7: La opción de grabar sin mapa existe solo para medir la batería. No aparece en la compilación de entrega ni la ve un usuario normal.
@@ -170,7 +170,7 @@ Ninguna pendiente.
 - [x] **P6 — Tolerancia:** la eligió Claude a petición del usuario (RN-10).
 - [x] **P7 — Distancia inflada:** se recalcula (CA-17, RN-11).
 - [x] **P8 — Pruebas unitarias:** sin meta de cobertura (CA-23).
-- [x] **P9 — Pulido:** "Pedir ayuda" como botón circular flotante arriba a la izquierda del mapa y "Detener actividad" como botón flotante más pequeño abajo al centro (CA-30, CA-35 a CA-40).
+- [x] **P9 — Pulido:** "Pedir ayuda" como botón circular flotante abajo a la derecha del mapa, del tamaño del botón 3D/2D, y "Detener actividad" como botón flotante más pequeño abajo al centro (CA-30, CA-35 a CA-40).
 - [x] **P10 — Chips de Explorar:** entran en la limitación aceptada.
 - [x] **P11 — Medir sin mapa:** opción solo de prueba (CA-8, RN-7).
 - [x] **P12 — Avatar:** predefinidos (CA-42, RN-15).
@@ -180,6 +180,8 @@ Ninguna pendiente.
 
 ## Historial
 
+- 2026-11-06 — Marco de grabación aprobado por el usuario en Figma (T5).
+- 2026-11-06 — Al revisar el marco de Figma (T5), el usuario pide "Pedir ayuda" del tamaño del botón 3D/2D y en la esquina inferior derecha (CA-30, P9). Con esto se cumple la spec 009, CA-13, que ya no hace falta cambiar.
 - 2026-11-06 — Plan aprobado por el usuario, junto con la constitución v1.9.
 - 2026-11-06 — Aprobada por el usuario.
 - 2026-11-06 — Preguntas P12 a P15 resueltas por el usuario. Se agregan HU-12, CA-53 a CA-60 y RN-14 a RN-16; cambian CA-42, CA-48, RN-4, RN-6 y RN-9.

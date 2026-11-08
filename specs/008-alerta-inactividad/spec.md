@@ -50,7 +50,7 @@ La spec 005 dejó para esta enviar la ubicación al servidor durante la activida
 
 ### Detección de inactividad
 
-- **CA-11 (HU-4):** Dada una actividad en curso, con la app abierta o con la pantalla bloqueada, cuando no me alejo más de 30 m durante 10 minutos (RN-4), entonces recibo la pregunta "¿Estás bien?" con una cuenta regresiva de 2 minutos, sonido y vibración. Con la pantalla bloqueada, la pregunta llega como notificación y puedo responder desde ella.
+- **CA-11 (HU-4):** Dada una actividad en curso, con la app abierta o con la pantalla bloqueada, cuando no me alejo más de 30 m durante el tiempo elegido, 10 minutos por defecto (RN-4), entonces recibo la pregunta "¿Estás bien?" con la cuenta regresiva elegida, 2 minutos por defecto, sonido y vibración. Con la pantalla bloqueada, la pregunta llega como notificación y puedo responder desde ella.
 - **CA-12 (HU-4):** Dada la pregunta "¿Estás bien?", cuando respondo "Estoy bien" antes de que termine la cuenta regresiva, entonces no se envía nada y la detección vuelve a empezar desde ese momento.
 - **CA-13 (HU-4):** Dada una actividad terminada, o sin ninguna actividad en curso, entonces no se detecta inactividad: fuera de una actividad iniciada por mí no se vigila nada (constitución 3.5). La app no permite pausar una actividad (specs 003 y 004), así que una parada larga cuenta como inactividad y se resuelve respondiendo "Estoy bien".
 
@@ -89,7 +89,7 @@ La spec 005 dejó para esta enviar la ubicación al servidor durante la activida
 - RN-1: El nombre de un contacto es el que el usuario le da (por ejemplo, "Mamá"). Es obligatorio, sin contar los espacios del principio y del final, y tiene como máximo 40 caracteres (como el nombre de una ruta, spec 007).
 - RN-2: Un contacto se vincula a una cuenta de Telegram cuando acepta la invitación. La app no pide ni guarda su número de teléfono.
 - RN-3: Una cuenta tiene de cero a tres contactos de emergencia, activos o pendientes. Una alerta avisa a todos los activos. Una misma cuenta de Telegram no puede ser dos veces contacto del mismo usuario.
-- RN-4: Inactividad es no alejarse más de **30 m** de un punto durante **10 minutos** seguidos de una actividad en curso. La cuenta regresiva de "¿Estás bien?" dura **2 minutos**. Estos valores se revisan en la prueba de campo (009).
+- RN-4: Inactividad es no alejarse más de **30 m** de un punto durante **10 minutos** seguidos de una actividad en curso. La cuenta regresiva de "¿Estás bien?" dura **2 minutos**. Son los valores por defecto: el usuario puede elegir el tiempo y la cuenta regresiva, y los 30 m son fijos (spec 011, RN-9). Se revisan en la prueba de campo de la 011.
 - RN-5: Una alerta usa la última ubicación conocida y la hora en que se registró. Si es vieja (por ejemplo, el GPS dejó de dar posición), el mensaje dice de cuándo es.
 - RN-6: El mensaje de alerta dice, en español: que es una alerta de SendaBC, el nombre del usuario, el motivo, la hora, la última ubicación conocida con un enlace a un mapa y de qué hora es, y el tipo de actividad. No incluye el correo del usuario. Por inactividad sin respuesta o por pedido de ayuda, el mensaje dice que puede necesitar ayuda. Por la hora de regreso, dice que **no ha confirmado su regreso** y que puede deberse a falta de señal (P11).
 - RN-7: El SOS manual pide una confirmación explícita (por ejemplo, mantener presionado o confirmar en un diálogo).
@@ -146,6 +146,7 @@ Resueltas el 2026-10-22:
 
 ## Historial
 
+- 2026-11-06 — Cambios por la spec 011: RN-4 y CA-11 usan los valores que elija el usuario, con 10 y 2 minutos por defecto (CA-50 a CA-52, RN-9). Aprobado por el usuario.
 - 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). "Seguridad" es una pestaña y el enlace del aviso sin contactos dice "Configurar contactos" (M1 y M3). Los CA no cambian.
 - 2026-10-30 — M1 paso 8 aprobado (los contactos se ven igual al entrar en un teléfono sin datos locales): CA-3 verificado. Los 28 CA están verificados; la spec pasa a Implementada.

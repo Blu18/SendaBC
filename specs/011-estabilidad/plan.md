@@ -104,9 +104,9 @@ Migración: `20261107000000_cuenta_y_rutas_sin_autor`.
 - `pages/activity/activityPage.tsx`:
   - Mientras se graba, el mapa y los botones van en un contenedor. Los botones quedan **fuera** de `MapErrorBoundary`, así que sobreviven a un fallo del mapa (CA-37). El contenedor conserva su alto en ese caso.
   - La barra `actions` solo se muestra antes de iniciar y con `stopFailed` (CA-40). El panel de métricas usa ese espacio.
-- `components/safety/SosButton.tsx`: círculo de 56 dp, con `onLongPress` de 2 s igual que hoy. `onPress` muestra la instrucción durante 3 s en un aviso sobre el mapa (CA-38). Se quita el texto fijo de abajo. `accessibilityLabel` "Pedir ayuda" y el `accessibilityHint` actual.
+- `components/safety/SosButton.tsx`: círculo de 48 dp, igual que el botón 3D/2D, abajo a la derecha, con `onLongPress` de 2 s igual que hoy. `onPress` muestra la instrucción durante 3 s en un aviso sobre el mapa (CA-38). Se quita el texto fijo de abajo. `accessibilityLabel` "Pedir ayuda" y el `accessibilityHint` actual.
 - `components/activity/StopButton.tsx`: píldora con ícono y "Detener", de 48 dp de alto, abajo al centro. `accessibilityLabel` "Detener actividad". Usa `handleStop` sin cambios.
-- `components/map/RecordingMap.tsx`: `top.left` deja libre la columna del botón circular, de modo que la alerta y los avisos empiezan a su derecha. `bottomNotice` sube por encima de "Detener". El logo se queda abajo a la izquierda (CA-36).
+- `components/map/RecordingMap.tsx`: `bottomNotice` sube por encima de "Detener" y "Pedir ayuda". La alerta y los avisos de arriba no cambian. El logo se queda abajo a la izquierda (CA-36).
 - Colores de `surface` y `alert` con `shadows.floating`, como los controles del mapa actuales (CA-39).
 
 **Cuenta y perfil (CA-41 a CA-49)**
@@ -227,8 +227,9 @@ Los pasos exactos van en `tasks.md`. Reparto:
 | D10 | Archivos de e2e en serie | Aislar los datos de cada archivo; base de pruebas propia | Ya se sabe que en serie pasan, y es un cambio de una línea. La causa exacta no se investiga. La suite tarda más, sin efecto en la app. |
 | D11 | Contraseña incorrecta responde `403`, no `401` | `401` | `apiFetch` cierra la sesión con cualquier `401` que lleve token. Equivocarse de contraseña no debe sacar al usuario. |
 | D12 | Las pantallas nuevas no pasan por Figma; solo se actualiza el marco de grabación | Prototipar todas | Usan los componentes del sistema de diseño de la 009, y falta poco tiempo. El marco de grabación se actualiza porque 009 M1 compara contra Figma. |
-| D13 | Zonas con zoom 10 a 15 y tope inicial de 900 km² (unos 30 × 30 km) | Toda la resolución; sin tope | La grabación usa zoom 14. El tope se confirma con el tamaño real en la prueba técnica (RN-8). |
-| D14 | Se descargan los dos estilos, claro y oscuro, y el relieve | Solo el tema actual | El tema sigue al teléfono y puede cambiar en la salida. Si el tamaño se dispara, se descarga solo el estilo activo (R1). |
+| D13 | Zonas con zoom 10 a 13, tope de 900 km² (unos 30 × 30 km, unos 140 MB) y máximo 10 zonas | Zoom 10 a 15; sin tope | Medido en T2: zoom 13 pesa 142 MB y usa 34 paquetes de mosaicos; zoom 15 pesa 152 MB y usa 74. A zoom 14, el de la grabación, se ve bien. Mapbox admite 750 paquetes en total, así que 10 zonas dejan margen (RN-8). |
+| D14 | Se descargan los dos estilos, claro y oscuro, y el relieve | Solo el tema actual | El tema sigue al teléfono y puede cambiar en la salida. Medido en T2: el segundo estilo no descarga nada, porque comparte sus mosaicos con el primero. Cada zona son dos paquetes de `createPack` con `tilesets: [TERRAIN_URL]`. |
+| D15 | Tamaño aproximado: unos 28 MB más 0.126 MB por km² | Proporcional al área | El tamaño no crece con el área: 100 km² pesan 41 MB y 900 km², 142 MB, porque se descargan paquetes completos. La fórmula sale de esas dos mediciones en la sierra y es solo una aproximación (CA-31). |
 
 ## Specs y constitución por corregir
 
@@ -238,7 +239,6 @@ Antes del código de cada fase, con nota en su historial (RN-4):
 - **006:** CA-15 y RN-3.
 - **007:** RN-1, RN-10, el requisito offline, el autor de la ruta y la nota de mapas sin conexión.
 - **008:** RN-4, con los valores como opciones.
-- **009:** CA-13, "Pedir ayuda" deja la mitad inferior.
 - **010:** CA-6, hay botones sobre el mapa.
 - **001 y 002:** referencias a la edición de perfil, ya cubierta aquí.
 
@@ -272,10 +272,10 @@ Antes del código de cada fase, con nota en su historial (RN-4):
 
 ## Riesgos
 
-- **R1 — Mapas descargados con relieve.** No está probado que un paquete incluya el relieve, que hoy se agrega desde `RecordingMap` y no desde el estilo. `createPack` acepta `tilesets`, pero hay que confirmarlo en Android con el SDK 11. Tampoco se ha medido el tamaño real ni se han revisado los límites de Mapbox. **La prueba técnica va primero.** Si el relieve no funciona sin red, se propone cumplir CA-20 solo en 2D, lo que requiere cambiar la spec.
+- **R1 — Mapas descargados.** El relieve sin red ya se comprobó en T2. Queda abierto borrar: `deletePack` quita la zona de la lista, pero el espacio en disco no se libera (51 MB antes y después), como advierte Mapbox. Falta comprobar en T34 si una zona borrada deja de verse sin red (CA-33) y si `TileStore.setOption` con `disk-quota` libera el espacio. Si no, CA-33 necesita cambiar. Además, las zonas caducan según Mapbox, sin plazo publicado; `acceptExpired` viene activado, así que una zona vieja se sigue usando.
 - **R2 — `database is locked`.** La hipótesis es que `withExclusiveTransactionAsync` abre otra conexión mientras la recuperación de actividades corre al abrir la app, y que SQLite no espera porque no hay `busy_timeout`. No está confirmada: se reproduce primero (RN-3).
 - **R3 — CA-14.** En el código actual, un `5xx` al publicar da "No se pudo completar", no el mensaje de internet que se vio en la 010. Hay que reproducirlo para encontrar qué rama lo mostró. Además, el nombre exacto del error del adaptador se confirma al escribir el filtro.
-- **R4 — "Pedir ayuda" arriba.** Queda lejos del pulgar y un círculo sin texto se entiende menos. Se revisa en la prueba de campo, usando el teléfono con una mano.
+- **R4 — "Pedir ayuda" sin texto.** Un círculo solo con ícono se entiende menos que el botón anterior, y queda cerca de "Detener". Se revisa en la prueba de campo, usando el teléfono con una mano.
 - **R5 — Tiempo.** Es la mayor carga de trabajo de todas las specs, con poco margen antes de la 012. Si falta tiempo, el orden de recorte acordado es: zonas descargadas y después consulta sin conexión. La prueba de campo no se recorta.
 - **R6 — Túnel y computadora.** Si la computadora se suspende, no salen las alertas ni el aviso por hora de regreso. La grabación no se afecta (RN-12). Conviene probarlo en casa, con datos móviles, antes de salir.
 - **R7 — Medir batería.** 30 minutos dan una diferencia pequeña, y el clima y la señal influyen. Si el resultado queda cerca de los límites, se repite la medición.

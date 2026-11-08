@@ -30,7 +30,7 @@ Corresponde al pulido de la semana 9 y amplía lo que la spec 009 dejó fuera (e
 - **CA-3 (HU-1):** Dado que el mapa me sigue y avanzo, cuando cambio de dirección, entonces el mapa gira para que la dirección en la que avanzo quede hacia arriba de la pantalla. Si me detengo, conserva la última orientación.
 - **CA-4 (HU-1):** Dado que estoy grabando, cuando avanzo, entonces el mapa dibuja el recorrido desde el primer punto de la actividad hasta mi posición actual, y el trazo crece conforme se registran puntos.
 - **CA-5 (HU-1):** Dado que inicié una actividad y aún no hay ningún punto GPS, cuando miro el mapa, entonces un aviso indica que se está esperando la señal GPS y no se muestra una posición inventada.
-- **CA-6 (HU-1):** Dada la pantalla de grabación durante una actividad, cuando la miro, entonces el mapa ocupa todo el ancho y todo el alto disponible de la pantalla, y las métricas y los controles están debajo de él, sin taparlo. El tiempo, la distancia y la elevación siguen siendo los textos más grandes y se leen a la distancia de un brazo, y "Detener actividad" y "Pedir ayuda" siguen al alcance del pulgar en la mitad inferior (spec 009, CA-12 y CA-13).
+- **CA-6 (HU-1):** Dada la pantalla de grabación durante una actividad, cuando la miro, entonces el mapa ocupa todo el ancho y todo el alto disponible de la pantalla, y las métricas están debajo de él, sin taparlo. "Pedir ayuda" y "Detener actividad" flotan sobre el mapa (spec 011, CA-30 y CA-35). El tiempo, la distancia y la elevación siguen siendo los textos más grandes y se leen a la distancia de un brazo, y "Detener actividad" y "Pedir ayuda" siguen al alcance del pulgar en la mitad inferior (spec 009, CA-12 y CA-13).
 - **CA-7 (HU-1):** Dado que grabé con la pantalla bloqueada o con la app en segundo plano, cuando vuelvo a la pantalla de grabación, entonces el mapa muestra mi posición más reciente y el recorrido completo, incluidos los puntos registrados mientras no la veía.
 - **CA-8 (HU-1):** Dado que no hay una actividad en curso, cuando abro la pantalla de grabación antes de "Iniciar actividad" o llego al resumen tras detenerla, entonces no se muestra mi posición en vivo ni se escucha el GPS por causa del mapa (constitución 3.5).
 - **CA-9 (HU-1):** Dado el teléfono en modo oscuro, cuando grabo, entonces el mapa se ve en modo oscuro, tanto en 3D como en 2D; dado el teléfono en modo claro, se ve en modo claro. Si el usuario cambia el modo del teléfono durante la actividad, el mapa cambia sin interrumpir la grabación.
@@ -110,6 +110,7 @@ Ninguna. Ver las decisiones resueltas en el historial. El proveedor del mapa se 
 
 ## Historial
 
+- 2026-11-06 — Cambios por la spec 011: CA-6 admite "Pedir ayuda" y "Detener actividad" como botones flotantes sobre el mapa (CA-30, CA-35). Aprobado por el usuario.
 - 2026-11-06 — Implementada con pendientes, confirmado por el usuario: 27 de 28 CA verificados. CA-28 queda parcial: faltan casos de regresión de las specs 007, 008 y 009 (ver T25). La medición de batería pasa a 011-estabilidad.
 - 2026-11-05 — Prototipo de la grabación con mapa aprobado por el usuario (CA-19): https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX. Ya se puede programar `activityPage` (RN-9).
 - 2026-11-05 — En progreso: T1 hecha (pantalla de grabación con mapa en Figma).
