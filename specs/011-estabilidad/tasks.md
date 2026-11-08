@@ -106,7 +106,15 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
   - **M9:** paso 1 no se puede alcanzar desde la app, porque salir de la grabación pide terminar la actividad; el bloqueo local queda cubierto por `account.test.ts`. Paso 2 pasa con una alerta `ACTIVE` creada en el servidor (la cuenta no tenía contactos para pedir ayuda desde la app): responde el `409` y la app muestra "No puedes borrar tu cuenta mientras tienes una alerta activa".
   - **M8, pasa:** con la contraseña mala no pasa nada; con la correcta vuelve al inicio y el login da "Credenciales invalidas". Con M9, la ruta se abre desde favoritas como "Por Cuenta eliminada", sin opciones de edición; la archivada quedó `DELETED`. En el teléfono no quedó nada de la cuenta. Después se borraron las dos rutas de prueba y la favorita de M9.
   - Para grabar en el emulador hubo que activar la precisión de ubicación de Google; lo hizo el usuario.
-- [ ] T22 — Correr M5 a M10 y anotar los resultados. (CA-41 a CA-49)
+- [x] T22 — Correr M5 a M10 y anotar los resultados. (CA-41 a CA-49)
+
+  Hecho (2026-11-07) en el emulador `Pixel_8_Pro`, con el backend local y `TELEGRAM_MODE=log`. Se usaron la cuenta de M9, que quedó como estaba, y cuentas desechables que se borraron al terminar. El "otro dispositivo" de M5 y M10 fue una sesión nueva contra la API.
+  - **M5, pasa** (T18): nombre de 4 caracteres con error junto al campo y sin guardar; nombre válido y avatar visibles en Inicio y leídos igual desde otra sesión; quitar el avatar devuelve el ícono por defecto.
+  - **M6, pasa** (T19): contraseña incorrecta y correo existente sin cambios ni cierre de sesión, con "Ya existe un usuario con ese email"; tras cambiar correo y contraseña solo entran los nuevos, en la app y con la API.
+  - **M7, pasa** (T18, T19, T21): sin Wi-Fi ni datos, perfil, correo, contraseña y borrar la cuenta muestran "Sin conexión" y el servidor no cambia; al volver la red todo sigue como estaba.
+  - **M8, pasa** (T21): el aviso dice qué se borra, "1 actividad sin subir" y que la ruta publicada sigue como "Cuenta eliminada"; con la contraseña incorrecta no pasa nada; con la correcta vuelve al inicio y el login falla; con otra cuenta la ruta se abre desde favoritas sin opciones de edición y la archivada no aparece.
+  - **M9, parcial** (T21): paso 1 no se puede alcanzar, porque salir de la grabación pide terminar la actividad; el bloqueo local lo cubren `account.test.ts` y `deletion.test.ts`. Paso 2 pasa con una alerta `ACTIVE` creada en el servidor (la cuenta no tenía contactos): la app explica que hay una alerta activa y no borra. Queda probarlo pidiendo ayuda desde la app en la prueba de campo, con un contacto real.
+  - **M10, pasa:** con una cuenta abierta en el emulador y borrada desde otra sesión, al tirar para actualizar en Actividades la app cerró la sesión y volvió al inicio, sin fallar.
 
 ## Fase 1C — Umbrales de inactividad
 
@@ -219,15 +227,15 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-38 | Caso manual M4 | Manual | Parcial: falta TalkBack |
 | CA-39 | Caso manual M1 | Manual | Cumple (emulador) |
 | CA-40 | Caso manual M1 | Manual | Cumple (emulador) |
-| CA-41 | `user.service.spec.ts`, `update-profile.dto.spec.ts`, `user.e2e-spec.ts` y caso manual M5 | Automatizada y manual | Pendiente |
-| CA-42 | `user.e2e-spec.ts`, `frontend/lib/account/avatars.test.ts` y caso manual M5 | Automatizada y manual | Pendiente |
-| CA-43 | `user.service.spec.ts`, `user.e2e-spec.ts` y caso manual M6 | Automatizada y manual | Pendiente |
-| CA-44 | `user.service.spec.ts`, `user.e2e-spec.ts` y caso manual M6 | Automatizada y manual | Pendiente |
-| CA-45 | `frontend/lib/account/api.test.ts` y caso manual M7 | Automatizada y manual | Pendiente |
-| CA-46 | `user.service.spec.ts`, `user.e2e-spec.ts`, `frontend/lib/db/account.test.ts` y caso manual M8 | Automatizada y manual | Pendiente |
-| CA-47 | `user.service.spec.ts`, `user.e2e-spec.ts` y caso manual M9 | Automatizada y manual | Pendiente |
-| CA-48 | `route.service.spec.ts`, `user.e2e-spec.ts` y caso manual M8 | Automatizada y manual | Pendiente |
-| CA-49 | `user.e2e-spec.ts` y caso manual M10 | Automatizada y manual | Pendiente |
+| CA-41 | `user.service.spec.ts`, `update-profile.dto.spec.ts`, `user.e2e-spec.ts`, `frontend/lib/account/profile.test.ts` y caso manual M5 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
+| CA-42 | `user.e2e-spec.ts`, `frontend/lib/account/avatars.test.ts` y caso manual M5 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
+| CA-43 | `user.service.spec.ts`, `user.e2e-spec.ts` y caso manual M6 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
+| CA-44 | `user.service.spec.ts`, `user.e2e-spec.ts` y caso manual M6 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
+| CA-45 | `frontend/lib/account/api.test.ts` y caso manual M7 | Automatizada y manual | Cumple (Vitest y emulador) |
+| CA-46 | `user.service.spec.ts`, `user.e2e-spec.ts`, `frontend/lib/db/account.test.ts` y caso manual M8 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
+| CA-47 | `user.service.spec.ts`, `user.e2e-spec.ts`, `frontend/lib/db/account.test.ts`, `frontend/lib/account/deletion.test.ts` y caso manual M9 | Automatizada y manual | Cumple (Vitest, e2e y emulador; M9 paso 1 no se alcanza desde la app) |
+| CA-48 | `route.service.spec.ts`, `user.e2e-spec.ts` y caso manual M8 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
+| CA-49 | `user.e2e-spec.ts`, `jwt.strategies.spec.ts` y caso manual M10 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
 | CA-50 | `frontend/lib/safety/thresholds.test.ts` y caso manual M11 | Automatizada y manual | Pendiente |
 | CA-51 | `frontend/lib/safety/recording.test.ts`, `sessionActions.test.ts` y caso manual M11 | Automatizada y manual | Pendiente |
 | CA-52 | `thresholds.test.ts` y caso manual M11 | Automatizada y manual | Pendiente |
