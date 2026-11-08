@@ -2,6 +2,7 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { UpdateEmailDto } from './update-email.dto.js';
 import { UpdatePasswordDto } from './update-password.dto.js';
+import { DeleteAccountDto } from './delete-account.dto.js';
 
 async function validar<T extends object>(clase: new () => T, body: object) {
   const dto = plainToInstance(clase, body);
@@ -55,5 +56,13 @@ describe('UpdatePasswordDto (spec 011, CA-44)', () => {
       (await validar(UpdatePasswordDto, { currentPassword: '', newPassword: '12345678' }))
         .campos,
     ).toEqual(['currentPassword']);
+  });
+});
+
+describe('DeleteAccountDto (spec 011, CA-46)', () => {
+  it('pide la contraseña', async () => {
+    expect((await validar(DeleteAccountDto, { password: 'x' })).campos).toEqual([]);
+    expect((await validar(DeleteAccountDto, { password: '' })).campos).toEqual(['password']);
+    expect((await validar(DeleteAccountDto, {})).campos).toEqual(['password']);
   });
 });

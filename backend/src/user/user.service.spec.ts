@@ -1,7 +1,7 @@
 import { ConflictException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { hash } from 'bcrypt';
 import { Prisma } from '@prisma/client';
-import { UserService } from './user.service.js';
+import { MENSAJE_ALERTA_ACTIVA, UserService } from './user.service.js';
 import type { PrismaService } from '../prisma.service.js';
 
 const body = {
@@ -237,5 +237,83 @@ describe('UserService.updateEmail y updatePassword (spec 011)', () => {
     await expect(
       service.updatePassword('u1', { currentPassword: 'x', newPassword: 'nueva-1234' }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+});
+
+describe('UserService.deleteAccount (spec 011, CA-46 a CA-48)', () => {
+  let hashActual: string;
+
+  beforeAll(async () => {
+    hashActual = await hash('actual-123', 4);
+  });
+
+  function montarBorrado(alertasActivas = 0) {
+    const tx = {
+      emergencyAlert: { count: vi.fn().mockResolvedValue(alertasActivas) },
+      route: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+      user: { delete: vi.fn().mockResolvedValue({ id: 'u1' }) },
+    };
+    const prisma = {
+      user: { findUnique: vi.fn().mockResolvedValue({ passwordHash: hashActual }) },
+      $transaction: vi.fn(async (fn: (t: typeof tx) => unknown) => fn(tx)),
+    };
+    const service = new UserService(prisma as unknown as PrismaService);
+    return { service, prisma, tx };
+  }
+
+  it('en una transacción: busca alertas activas, retira las rutas no públicas y borra al usuario', async () => {
+    const { service, prisma, tx } = montarBorrado();
+
+    await service.deleteAccount('u1', { password: 'actual-123' });
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(tx.emergencyAlert.count).toHaveBeenCalledWith({
+      where: { status: 'ACTIVE', session: { userId: 'u1' } },
+    });
+    // Las publicadas se quedan, sin autor por el SET NULL (CA-48).
+    expect(tx.route.updateMany).toHaveBeenCalledWith({
+      where: { createdByUserId: 'u1', status: { in: ['ARCHIVED', 'DRAFT'] } },
+      data: { status: 'DELETED' },
+    });
+    expect(tx.user.delete).toHaveBeenCalledWith({ where: { id: 'u1' }, select: { id: true } });
+    // Las rutas se retiran antes de que el SET NULL las deje sin autor.
+    expect(tx.route.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
+      tx.user.delete.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('con una alerta activa responde 409 y no borra nada (CA-47)', async () => {
+    const { service, tx } = montarBorrado(1);
+
+    const error = await service
+      .deleteAccount('u1', { password: 'actual-123' })
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ConflictException);
+    expect((error as ConflictException).message).toBe(MENSAJE_ALERTA_ACTIVA);
+    expect(tx.route.updateMany).not.toHaveBeenCalled();
+    expect(tx.user.delete).not.toHaveBeenCalled();
+  });
+
+  it('con la contraseña incorrecta responde 403 y no abre la transacción (CA-46; plan, D11)', async () => {
+    const { service, prisma } = montarBorrado();
+
+    await expect(
+      service.deleteAccount('u1', { password: 'mala-1234' }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+});
+
+describe('UserService.exists (spec 011, CA-49)', () => {
+  it.each([
+    [{ id: 'u1' }, true],
+    [null, false],
+  ])('busca por clave primaria: %o → %s', async (fila, esperado) => {
+    const findUnique = vi.fn().mockResolvedValue(fila);
+    const service = new UserService({ user: { findUnique } } as unknown as PrismaService);
+
+    expect(await service.exists('u1')).toBe(esperado);
+    expect(findUnique).toHaveBeenCalledWith({ where: { id: 'u1' }, select: { id: true } });
   });
 });

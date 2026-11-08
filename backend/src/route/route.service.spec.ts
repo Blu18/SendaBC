@@ -6,7 +6,12 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { PrismaService } from '../prisma.service.js';
-import { esVisible, MAX_NEARBY_ROUTES, RouteService } from './route.service.js';
+import {
+  AUTOR_CUENTA_ELIMINADA,
+  esVisible,
+  MAX_NEARBY_ROUTES,
+  RouteService,
+} from './route.service.js';
 
 const USUARIO = '11111111-1111-4111-8111-111111111111';
 
@@ -405,42 +410,46 @@ describe('esVisible (spec 007, CA-14)', () => {
   });
 });
 
+// Fila de la consulta del detalle (spec 007), con RUTA_DETALLE y ACTIVIDAD_DETALLE.
+const RUTA_DETALLE = '7d9f3c1a-2b4e-4f6a-8c0d-1e2f3a4b5c6d';
+const ACTIVIDAD_DETALLE = '0b6f6c2e-6f3a-4d1b-9a4e-2f7c8d9e0a1b';
+
+function filaDetalle(overrides: Record<string, unknown> = {}) {
+  return {
+    id: RUTA_DETALLE,
+    name: 'Cañón de Doña Petra',
+    description: 'Sube por el arroyo.',
+    region: 'Ensenada',
+    type: 'HIKING',
+    difficulty: 'MODERATE',
+    distanceMeters: 5234.7,
+    elevationGainMeters: 312,
+    lat: 31.8667,
+    lng: -116.5964,
+    path: JSON.stringify({
+      type: 'LineString',
+      coordinates: [
+        [-116.5964, 31.8667],
+        [-116.59, 31.87],
+      ],
+    }),
+    elevationProfile: [
+      [0, 100],
+      [850.2, 140.5],
+    ],
+    author: 'Ana',
+    isMine: false,
+    isFavorite: true,
+    status: 'PUBLISHED',
+    sourceActivityId: ACTIVIDAD_DETALLE,
+    createdAt: new Date('2026-10-20T18:30:00.000Z'),
+    ...overrides,
+  };
+}
+
 describe('RouteService.detail (spec 007)', () => {
   const RUTA = '7d9f3c1a-2b4e-4f6a-8c0d-1e2f3a4b5c6d';
   const ACTIVIDAD = '0b6f6c2e-6f3a-4d1b-9a4e-2f7c8d9e0a1b';
-
-  function filaDetalle(overrides: Record<string, unknown> = {}) {
-    return {
-      id: RUTA,
-      name: 'Cañón de Doña Petra',
-      description: 'Sube por el arroyo.',
-      region: 'Ensenada',
-      type: 'HIKING',
-      difficulty: 'MODERATE',
-      distanceMeters: 5234.7,
-      elevationGainMeters: 312,
-      lat: 31.8667,
-      lng: -116.5964,
-      path: JSON.stringify({
-        type: 'LineString',
-        coordinates: [
-          [-116.5964, 31.8667],
-          [-116.59, 31.87],
-        ],
-      }),
-      elevationProfile: [
-        [0, 100],
-        [850.2, 140.5],
-      ],
-      author: 'Ana',
-      isMine: false,
-      isFavorite: true,
-      status: 'PUBLISHED',
-      sourceActivityId: ACTIVIDAD,
-      createdAt: new Date('2026-10-20T18:30:00.000Z'),
-      ...overrides,
-    };
-  }
 
   it('convierte la fila a RouteDetail (CA-10, CA-11)', async () => {
     const { service, prisma } = montar();
@@ -530,7 +539,7 @@ describe('RouteService.detail (spec 007)', () => {
 
     const sql = sqlDe(prisma);
     expect(sql).toContain('ST_Simplify(r.path, ?)');
-    expect(sql).toContain('"createdByUserId" = ?::uuid) AS "isMine"');
+    expect(sql).toContain('"createdByUserId" IS NOT DISTINCT FROM ?::uuid) AS "isMine"');
     expect(sql).toContain('route_favorites');
     expect(valoresDe(prisma)).toEqual([0.00002, USUARIO, USUARIO, RUTA]);
   });
@@ -860,5 +869,72 @@ describe('RouteService: Mis rutas y favoritas (spec 007)', () => {
         service.removeFavorite(USUARIO, RUTA),
       ).resolves.toBeUndefined();
     });
+  });
+});
+
+describe('RouteService: rutas de una cuenta borrada (spec 011, CA-48, RN-16)', () => {
+  const RUTA = '7d9f3c1a-2b4e-4f6a-8c0d-1e2f3a4b5c6d';
+  const autorSql = `COALESCE(u."displayName", '${AUTOR_CUENTA_ELIMINADA}') AS author`;
+
+  it('el autor por defecto es "Cuenta eliminada"', () => {
+    expect(AUTOR_CUENTA_ELIMINADA).toBe('Cuenta eliminada');
+  });
+
+  it.each([
+    ['nearby', (s: RouteService) => s.nearby(USUARIO, query)],
+    ['detail', (s: RouteService) => s.detail(USUARIO, RUTA).catch(() => undefined)],
+  ])('%s: LEFT JOIN, autor "Cuenta eliminada" e isMine falso sin autor', async (_, llamar) => {
+    const { service, prisma } = montar();
+
+    await llamar(service);
+
+    const sql = sqlDe(prisma);
+    expect(sql).toContain('FROM routes r LEFT JOIN users u ON u.id = r."createdByUserId"');
+    expect(sql).not.toMatch(/FROM routes r JOIN users/);
+    expect(sql).toContain(autorSql);
+    // Con createdByUserId nulo, "=" daría NULL; IS NOT DISTINCT FROM da false.
+    expect(sql).toContain('"createdByUserId" IS NOT DISTINCT FROM ?::uuid) AS "isMine"');
+  });
+
+  it('el detalle de una publicada sin autor la muestra a todos, sin actividad de origen', async () => {
+    const { service, prisma } = montar();
+    prisma.$queryRaw.mockResolvedValue([
+      filaDetalle({ author: AUTOR_CUENTA_ELIMINADA, isMine: false, sourceActivityId: null }),
+    ]);
+
+    const detalle = await service.detail(USUARIO, RUTA);
+
+    expect(detalle.author).toBe('Cuenta eliminada');
+    expect(detalle.isMine).toBe(false);
+    expect(detalle.sourceActivityId).toBeNull();
+  });
+
+  function montarSinAutor(status = 'PUBLISHED') {
+    const prisma = {
+      route: {
+        findUnique: vi.fn().mockResolvedValue({ createdByUserId: null, status }),
+        updateMany: vi.fn(),
+      },
+    };
+    return { service: new RouteService(prisma as unknown as PrismaService), prisma };
+  }
+
+  it('nadie puede editarla, archivarla ni borrarla: 403 (RN-16)', async () => {
+    const editar = montarSinAutor();
+    await expect(
+      editar.service.update(USUARIO, RUTA, { status: 'ARCHIVED' }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(editar.prisma.route.updateMany).not.toHaveBeenCalled();
+
+    const borrar = montarSinAutor();
+    await expect(borrar.service.remove(USUARIO, RUTA)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    expect(borrar.prisma.route.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('una no publicada sin autor no la ve nadie: 404', async () => {
+    const { service } = montarSinAutor('ARCHIVED');
+    await expect(service.remove(USUARIO, RUTA)).rejects.toBeInstanceOf(NotFoundException);
   });
 });
