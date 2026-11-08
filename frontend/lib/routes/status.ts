@@ -6,7 +6,7 @@ import type { NearbyRoute, RouteDetail, RouteFailure } from './api';
 // Sin conexión se usa lo guardado. También si la petición no llegó al servidor (sin red real,
 // tiempo agotado o túnel caído), porque el teléfono puede creer que tiene red (plan, D3). Una
 // respuesta del servidor, aunque sea un 5xx, sigue siendo error.
-export function noLlegoAlServidor(failure: RouteFailure): boolean {
+export function noLlegoAlServidor(failure: { status: number } | { error: unknown }): boolean {
   return 'error' in failure;
 }
 

@@ -167,12 +167,8 @@ describe('Datos guardados sin conexión (spec 011)', () => {
   describe('noLlegoAlServidor (plan, D3)', () => {
     it('sin red o tiempo agotado no llegó; cualquier respuesta, incluido un 5xx, sí', () => {
       expect(noLlegoAlServidor({ error: new TypeError('Network request failed') })).toBe(true);
-      expect(noLlegoAlServidor({ status: 500, apiError: { message: 'x', fieldErrors: {} } })).toBe(
-        false
-      );
-      expect(noLlegoAlServidor({ status: 404, apiError: { message: 'x', fieldErrors: {} } })).toBe(
-        false
-      );
+      expect(noLlegoAlServidor({ status: 500 })).toBe(false);
+      expect(noLlegoAlServidor({ status: 404 })).toBe(false);
     });
   });
 

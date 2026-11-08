@@ -24,7 +24,9 @@ import {
     NEARBY_MESSAGES,
     TYPE_FILTER_OPTIONS,
 } from "../../lib/routes/format";
-import { distanceFromUser, hasMovedEnough, pathToCoordinates, regionAround } from "../../lib/routes/geo";
+import { distanceFromUser, hasMovedEnough, pathToCoordinates, regionAround, regionForPath } from "../../lib/routes/geo";
+import { guardadasFueraDeVista } from "../../lib/routes/offline";
+import { avisoDeGuardado } from "../../lib/routes/status";
 import { fontFamilies, lightColors, type Theme } from "../../lib/theme";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 
@@ -128,7 +130,7 @@ function ExploreRoutes() {
     const mapRef = useRef<MapView>(null);
     const lastOverlayPress = useRef(0);
     const { request } = useLocationPermission();
-    const { routes, status, lastSearch, search, retry } = useNearbyRoutes();
+    const { routes, status, savedAt, lastSearch, search, retry } = useNearbyRoutes();
     const theme = useTheme();
     const styles = useThemedStyles(makeStyles);
 
@@ -188,6 +190,16 @@ function ExploreRoutes() {
     const selected = useMemo(() => routes.find((r) => r.id === selectedId) ?? null, [routes, selectedId]);
     // Número de la búsqueda actual: cambia las keys de todo lo dibujado en cada búsqueda nueva.
     const busqueda = lastSearch?.n ?? 0;
+
+    // Sin conexión, la búsqueda guardada puede ser de otro lugar: si ninguna de sus rutas queda
+    // dentro de la búsqueda actual, el mapa se mueve hacia ellas para que se vean (spec 011, CA-53).
+    useEffect(() => {
+        if (status !== 'saved' || !lastSearch) return;
+        if (!guardadasFueraDeVista(routes, lastSearch.center, lastSearch.radiusKm)) return;
+        const inicios = routes.map((r): [number, number] => [r.start.longitude, r.start.latitude]);
+        mapRef.current?.animateToRegion(regionForPath(inicios, routes[0].start), 600);
+        // Una vez por búsqueda.
+    }, [status, busqueda]);
 
     // En Android, un marcador con vista propia y tracksViewChanges={false} se queda con la imagen
     // tomada antes de dibujar sus hijos, y el punto dentro del área de 48 dp no se veía. Los
@@ -249,9 +261,20 @@ function ExploreRoutes() {
         status !== 'loading' &&
         hasMovedEnough(lastSearch?.center ?? null, mapCenter, radiusKm);
 
-    // Avisos de la búsqueda (CA-13 a CA-16), abajo sobre el mapa como en Figma.
+    // Avisos de la búsqueda (CA-13 a CA-16), abajo sobre el mapa como en Figma. Con la búsqueda
+    // guardada, de cuándo son los datos (spec 011, CA-53); si no hay rutas guardadas del tipo
+    // elegido, también lo dice.
     const aviso: { type: NoticeType; title: string; description: string } | null =
-        status === 'empty'
+        status === 'saved' && savedAt
+            ? {
+                  type: 'offline',
+                  title: 'Datos guardados',
+                  description:
+                      routes.length === 0
+                          ? `${NEARBY_MESSAGES.savedEmpty} ${avisoDeGuardado(savedAt)}`
+                          : avisoDeGuardado(savedAt),
+              }
+            : status === 'empty'
             ? { type: 'info', title: 'Sin rutas cerca', description: NEARBY_MESSAGES.empty }
             : status === 'offline'
               ? { type: 'offline', title: 'Sin conexión', description: NEARBY_MESSAGES.offline }
@@ -419,7 +442,7 @@ function ExploreRoutes() {
                         {aviso && (
                             <>
                                 <Notice {...aviso} />
-                                {(status === 'error' || status === 'offline') && (
+                                {(status === 'error' || status === 'offline' || status === 'saved') && (
                                     <PrimaryButton text="Reintentar" onPress={retry} />
                                 )}
                             </>
