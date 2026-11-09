@@ -238,7 +238,21 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
 ## Fase 2 — Bugs
 
-- [ ] T39 — `database is locked`: reproducirlo primero. Si se reproduce, aplicar `busy_timeout` (plan, R2). Correr M20. Si no se reproduce, se cierra por RN-3. (CA-13)
+- [x] T39 — `database is locked`: reproducirlo primero. Si se reproduce, aplicar `busy_timeout` (plan, R2). Correr M20. Si no se reproduce, se cierra por RN-3. (CA-13)
+
+  Hecho (2026-11-09). **M20 pasa en el emulador: 20 de 20 intentos inician y no aparece `database is locked` ni en la pantalla ni en el registro.** Hicieron falta tres cambios, aprobados uno por uno (plan, R2). Las 10 actividades se recuperaron completas, con sus 8 000 puntos (secuencias 1 a 8 000). **Se reproduce**, en el emulador Pixel_8_Pro con 2 procesos `yes` de carga, la cuenta de Postman y 10 actividades de 8 000 puntos en el servidor que la app no tiene (se restaura una copia de la base local antes de cada intento):
+  - **Sin cambios, 3 de 3 intentos fallan.** "Iniciar actividad" no inicia: la pantalla sigue en "Nueva actividad" y en desarrollo sale "Uncaught (in promise)… `NativeStatement.finalizeAsync`… database is locked". Lo que falla es el `INSERT` de `createActivity`; el `finalizeAsync` del `finally` de expo-sqlite es el que da el mensaje. Confirma R2: la recuperación (`insertDownloadedActivity`) escribe en la transacción exclusiva, que expo-sqlite abre en otra conexión, y la principal falla al momento.
+  - **Con `busy_timeout = 5000` en las dos conexiones, 16 de 20 siguen fallando.** Los errores (al iniciar, al guardar puntos y lecturas del barómetro) llegan en ráfagas cada ~5 s: la espera se aplica, pero la transacción dura más, porque inserta los puntos uno por uno con un `await` por punto. Hace falta acortar la transacción: el usuario aprueba insertar por lotes (plan, R2).
+  - **Con los puntos en lotes de 500, la actividad inicia en 29 de 29 intentos** (20 de M20 y 9 con medición). La transacción más larga baja a 1,7 s. En el intento 16 `uiautomator` no encontró "Detener", pero la captura muestra la grabación.
+  - **Queda `database is locked` en el registro en 11 de 29 intentos**, ya no al iniciar, sino en escrituras sueltas mientras se graba y se recupera: una lectura del barómetro, un punto ("Error procesando la ubicación") o la bandeja de seguridad. La medición muestra que no esperan: en el intento 8 el error llega sin ninguna transacción de más de 70 ms en los 5 s anteriores. Es el caso en que SQLite no usa `busy_timeout`: la conexión principal lee y escribe a la vez desde varios hilos y, si la otra conexión confirma en medio, la escritura falla en el acto. El usuario aprueba reintentarlas (plan, R2).
+  - **Con los reintentos (hasta 5, con pausas de 50 a 400 ms), 20 de 20 inician y no queda ningún `database is locked`.**
+  - **Código:**
+    - `lib/db/espera.ts`: `PRAGMA_ESPERA`, `transaccionExclusiva` (la espera en la conexión de cada transacción), `reintentarSiBloqueada` y `conReintentos` (envuelve `runAsync` de la conexión principal, que lleva todas las escrituras fuera de las transacciones).
+    - `sqlite.ts`: la espera al abrir y `conReintentos`. `activities.ts`, `safety.ts` y `account.ts` usan `transaccionExclusiva`.
+    - `insertDownloadedActivity` inserta por lotes de `PUNTOS_POR_LOTE` (500).
+  - **Pruebas:** `espera.test.ts` (8; dos usan un hilo que tiene la base bloqueada y muestran el fallo sin la espera) y 2 nuevas en `activities.test.ts` (lotes y todo o nada). Las de lotes y espera fallan sin la corrección (CA-24).
+  - **Datos de prueba:** script y copia de la base en el scratchpad de la sesión, no en el repositorio. M20 se corrió con el backend local en el puerto 3001, Metro en el 8082 y `adb reverse`.
+  - Aparte: el error de `start()` en `activityTracker.hook.ts` no se atrapa. En producción, la actividad no inicia y no se ve ningún mensaje.
 - [ ] T40 — Filtro de `503`, mensaje en `mensajeDeFallo`, y reproducir qué rama mostró el mensaje de internet (plan, R3). Correr M21. (CA-14, D9)
 - [ ] T41 — `sinSaltos` en `recorrido.ts` y publicar con `sequence = ANY(...)`, con e2e en `route-publish.e2e-spec.ts`. Correr M22. (CA-15, CA-16, D8)
 - [ ] T42 — `backend/src/activity/distancia.ts`, con los mismos casos que `frontend/lib/metrics/distance.test.ts`, y script `datos:recalcular-distancias`. (CA-17, RN-11, D7)
@@ -291,7 +305,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-10 | Caso manual M32 | Manual, teléfono real | Pendiente |
 | CA-11 | Caso manual M32 | Manual, teléfono real | Pendiente |
 | CA-12 | Caso manual M33 | Revisión | Pendiente |
-| CA-13 | Caso manual M20 | Manual | Pendiente |
+| CA-13 | Caso manual M20, `lib/db/espera.test.ts` y `activities.test.ts` | Manual y automatizada | Cumple (emulador) |
 | CA-14 | `prisma-disponibilidad.filter.spec.ts`, `frontend/lib/routes/status.test.ts` y caso manual M21 | Automatizada y manual | Pendiente |
 | CA-15 | `backend/src/route/recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Pendiente |
 | CA-16 | `recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Pendiente |

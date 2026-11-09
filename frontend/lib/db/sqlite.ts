@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { conReintentos, PRAGMA_ESPERA, transaccionExclusiva } from './espera';
 import { DB_VERSION, pasosPendientes } from './schema';
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
@@ -13,9 +14,10 @@ async function init() {
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
     PRAGMA foreign_keys = ON;
+    ${PRAGMA_ESPERA};
   `);
   await migrate(db);
-  return db;
+  return conReintentos(db);
 }
 
 // Aplica en una transacción los pasos de schema.ts que falten (PRAGMA user_version).
@@ -24,7 +26,7 @@ async function migrate(db: SQLite.SQLiteDatabase) {
   const version = row?.user_version ?? 0;
   if (version >= DB_VERSION) return;
 
-  await db.withExclusiveTransactionAsync(async (tx) => {
+  await transaccionExclusiva(db, async (tx) => {
     for (const paso of pasosPendientes(version)) await tx.execAsync(paso.sql);
     await tx.execAsync(`PRAGMA user_version = ${DB_VERSION}`);
   });

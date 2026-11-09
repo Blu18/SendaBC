@@ -1,6 +1,7 @@
 import type { EmergencyContact } from '../safety/contacts';
 import type { EstadoDetector } from '../safety/inactivity';
 import type { OutboxEntry, OutboxItem } from '../safety/outbox';
+import { transaccionExclusiva } from './espera';
 import { getDb } from './sqlite';
 
 // Datos locales de seguridad (spec 008, SQLite v5). La sesión de seguridad cuelga de la
@@ -252,7 +253,7 @@ export async function countOutbox(userId: string, clientId: string, kind?: Outbo
 // Reemplaza la copia con la lista que devolvió el servidor.
 export async function replaceContactsCache(userId: string, contactos: EmergencyContact[]) {
   const db = await getDb();
-  await db.withExclusiveTransactionAsync(async (tx) => {
+  await transaccionExclusiva(db, async (tx) => {
     await tx.runAsync(`DELETE FROM emergency_contacts_cache WHERE user_id = ?`, [userId]);
     for (const c of contactos) {
       await tx.runAsync(

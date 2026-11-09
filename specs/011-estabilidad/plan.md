@@ -189,7 +189,9 @@ ALTER TABLE safety_sessions ADD COLUMN response_ms INTEGER;
 
 **Bugs del frontend**
 
-- `lib/db/sqlite.ts`: `PRAGMA busy_timeout = 5000`, también en la conexión de las transacciones exclusivas (R2).
+- `lib/db/sqlite.ts`: `PRAGMA busy_timeout = 5000`, también en la conexión de las transacciones exclusivas (`lib/db/espera.ts`, R2).
+- `lib/db/activities.ts`: `insertDownloadedActivity` guarda los puntos en lotes de un `INSERT` con varias filas, en la misma transacción, para que dure menos que la espera (R2).
+- `lib/db/sqlite.ts`: `runAsync` de la conexión principal se reintenta hasta 5 veces, con pausas cortas, si falla con `database is locked` (`lib/db/espera.ts`, R2). Cada llamada es una sola sentencia, que falla completa, así que repetirla no duplica nada.
 - `lib/routes/status.ts`: `mensajeDeFallo` muestra el mensaje del `503` (CA-14).
 
 ## Prueba de campo (fase 4)
@@ -273,7 +275,7 @@ Antes del código de cada fase, con nota en su historial (RN-4):
 ## Riesgos
 
 - **R1 — Mapas descargados.** El relieve sin red ya se comprobó en T2. Borrar, cerrado en T34: `deletePack` quita la zona de la lista, pero el espacio no se libera al momento y la zona se sigue viendo sin red, aun tras reiniciar. `TileStore.setOption` con `disk-quota` no lo acelera, así que la app no lo usa. Mapbox lo libera con el tiempo: lo de T2 ya no estaba dos días después. CA-33 se cambió con aprobación del usuario. Además, las zonas caducan según Mapbox, sin plazo publicado; `acceptExpired` viene activado, así que una zona vieja se sigue usando.
-- **R2 — `database is locked`.** La hipótesis es que `withExclusiveTransactionAsync` abre otra conexión mientras la recuperación de actividades corre al abrir la app, y que SQLite no espera porque no hay `busy_timeout`. No está confirmada: se reproduce primero (RN-3).
+- **R2 — `database is locked`.** La hipótesis es que `withExclusiveTransactionAsync` abre otra conexión mientras la recuperación de actividades corre al abrir la app, y que SQLite no espera porque no hay `busy_timeout`. No está confirmada: se reproduce primero (RN-3). Confirmada en T39 (2026-11-09), pero `busy_timeout` solo no basta: la transacción inserta los puntos uno por uno y dura más de 5 s con una actividad larga. Por eso también se insertan por lotes. Con los lotes, algunas escrituras de la conexión principal siguen fallando sin esperar: SQLite no aplica `busy_timeout` cuando la conexión tiene una vista vieja de la base porque la otra confirmó en medio. Esas se reintentan.
 - **R3 — CA-14.** En el código actual, un `5xx` al publicar da "No se pudo completar", no el mensaje de internet que se vio en la 010. Hay que reproducirlo para encontrar qué rama lo mostró. Además, el nombre exacto del error del adaptador se confirma al escribir el filtro.
 - **R4 — "Pedir ayuda" sin texto.** Un círculo solo con ícono se entiende menos que el botón anterior, y queda cerca de "Detener". Se revisa en la prueba de campo, usando el teléfono con una mano.
 - **R5 — Tiempo.** Es la mayor carga de trabajo de todas las specs, con poco margen antes de la 012. Si falta tiempo, el orden de recorte acordado es: zonas descargadas y después consulta sin conexión. La prueba de campo no se recorta.

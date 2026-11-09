@@ -23,6 +23,7 @@ const {
   markSynced,
   markSyncError,
   saveMetrics,
+  PUNTOS_POR_LOTE,
 } = await import('./activities');
 
 const A = 'usuario-a';
@@ -208,6 +209,47 @@ describe('Recuperar actividades (spec 005, CA-20 a CA-22)', () => {
     };
     expect(puntos.n).toBe(3);
   });
+
+  // Spec 011, CA-13 (plan, R2): los puntos van por lotes para que la transacción sea corta.
+  function larga(n: number) {
+    return {
+      ...descargada,
+      clientGeneratedId: randomUUID(),
+      points: Array.from({ length: n }, (_, i) => ({
+        sequence: i + 1,
+        latitude: 31.8 + i / 100000,
+        longitude: -116.6,
+        altitude: 100,
+        accuracy: 4,
+        recordedAt: new Date(Date.parse('2026-10-01T10:00:00.000Z') + i * 3000).toISOString(),
+      })),
+    };
+  }
+
+  it('guarda una actividad larga completa y en orden, con un INSERT por lote', async () => {
+    const actividad = larga(PUNTOS_POR_LOTE * 2 + 1);
+    const runAsync = vi.spyOn(testDb, 'runAsync');
+
+    const id = await insertDownloadedActivity(actividad, A);
+
+    expect(await getActivityPoints(id)).toEqual(actividad.points);
+    const inserts = runAsync.mock.calls.filter(([sql]) => sql.includes('activity_points'));
+    expect(inserts).toHaveLength(3);
+    runAsync.mockRestore();
+  });
+
+  it('si falla un lote no queda nada de la actividad', async () => {
+    const actividad = larga(PUNTOS_POR_LOTE + 10);
+    // Un punto inválido en el segundo lote (latitude es NOT NULL).
+    (actividad.points[PUNTOS_POR_LOTE + 5] as { latitude: number | null }).latitude = null;
+
+    await expect(insertDownloadedActivity(actividad, A)).rejects.toThrow(/NOT NULL/);
+    expect(await listClientIds()).toEqual(new Set());
+    const puntos = testDb.raw.prepare('SELECT COUNT(*) AS n FROM activity_points').get() as {
+      n: number;
+    };
+    expect(puntos.n).toBe(0);
+  });
 });
 
 describe('getRecordingActivity y getLastPoint (spec 008)', () => {
@@ -234,7 +276,10 @@ describe('getRecordingActivity y getLastPoint (spec 008)', () => {
         recordedAt: `2026-10-26T10:0${sequence}:00.000Z`,
       });
     }
-    expect(await getLastPoint(id)).toMatchObject({ sequence: 2, latitude: 31.862 });
+    expect(await getLastPoint(id)).toMatchObject({
+      sequence: 2,
+      latitude: 31.862,
+    });
 
     await finishActivity(id);
     expect(await getRecordingActivity()).toBeNull();

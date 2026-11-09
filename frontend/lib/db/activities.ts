@@ -1,5 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import type { ActivityMetrics, BarometerReading, ElevationSource } from '../metrics/summary';
+import { transaccionExclusiva } from './espera';
 import { getDb } from './sqlite';
 
 // Mismos valores que los enums ActivityType / ActivityStatus de Prisma (spec 005 los sube tal cual).
@@ -289,12 +290,16 @@ export async function listClientIds() {
   return new Set(rows.map((r) => r.id));
 }
 
+// Puntos por INSERT al guardar una actividad recuperada. Con 7 columnas son 3 500
+// parámetros, lejos del tope de SQLite (32 766).
+export const PUNTOS_POR_LOTE = 500;
+
 // Guarda una actividad recuperada como SYNCED, con sus métricas y puntos, en una sola
 // transacción. No trae lecturas del barómetro (RN-6). Devuelve su local_id.
 export async function insertDownloadedActivity(activity: DownloadedActivity, userId: string) {
   const db = await getDb();
   let localId = 0;
-  await db.withExclusiveTransactionAsync(async (tx) => {
+  await transaccionExclusiva(db, async (tx) => {
     const result = await tx.runAsync(
       `INSERT INTO activities
          (client_generated_id, user_id, type, status, startedAt, endedAt, elevation_source,
@@ -316,15 +321,15 @@ export async function insertDownloadedActivity(activity: DownloadedActivity, use
     );
     localId = result.lastInsertRowId;
 
-    // Una sentencia preparada para los miles de puntos de una actividad larga.
-    const insert = await tx.prepareAsync(
-      `INSERT INTO activity_points
-       (activity_id, sequence, latitude, longitude, altitude, accuracy, recordedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
-    );
-    try {
-      for (const p of activity.points) {
-        await insert.executeAsync([
+    // Los miles de puntos de una actividad larga van en lotes: con un INSERT por punto la
+    // transacción duraba más que la espera de las otras escrituras (spec 011, CA-13; plan, R2).
+    for (let i = 0; i < activity.points.length; i += PUNTOS_POR_LOTE) {
+      const lote = activity.points.slice(i, i + PUNTOS_POR_LOTE);
+      await tx.runAsync(
+        `INSERT INTO activity_points
+         (activity_id, sequence, latitude, longitude, altitude, accuracy, recordedAt)
+         VALUES ${lote.map(() => '(?, ?, ?, ?, ?, ?, ?)').join(', ')}`,
+        lote.flatMap((p) => [
           localId,
           p.sequence,
           p.latitude,
@@ -332,10 +337,8 @@ export async function insertDownloadedActivity(activity: DownloadedActivity, use
           p.altitude,
           p.accuracy,
           p.recordedAt,
-        ]);
-      }
-    } finally {
-      await insert.finalizeAsync();
+        ])
+      );
     }
   });
   return localId;
