@@ -228,7 +228,13 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
 ## Fase 1F — Opción de prueba
 
-- [ ] T38 — "Sin mapa" en `MapViewToggle`, solo con `EXPO_PUBLIC_BATTERY_TEST=1`. Comprobar que sin la variable no aparece. (CA-8, RN-7)
+- [x] T38 — "Sin mapa" en `MapViewToggle`, solo con `EXPO_PUBLIC_BATTERY_TEST=1`. Comprobar que sin la variable no aparece. (CA-8, RN-7)
+
+  Hecho (2026-11-08).
+  - **Código:** `lib/map/viewMode.ts` lee la variable (solo `"1"` la activa) y decide la vista siguiente: 3D → 2D → 3D, o 3D → 2D → Sin mapa → 3D en la prueba de batería. `MapViewToggle` muestra "Sin mapa" en dos renglones, con `accessibilityLabel` "Quitar el mapa". Con "Sin mapa", `RecordingMap` desmonta `Mapbox.MapView` y deja el fondo, los avisos, el botón de vista y "Detener". Al volver, la cámara empieza en la posición, en 3D: sin eso, el mapa nuevo mostraba todo el estado hasta el siguiente punto. Pruebas en `viewMode.test.ts` (5).
+  - **Emulador**, grabando en Valle de la Trinidad:
+    - Con `EXPO_PUBLIC_BATTERY_TEST=1`, el botón pasa por 2D, "Sin mapa" y 3D. Sin mapa se ve el fondo liso con "3D" y "Detener", y la grabación sigue.
+    - Sin la variable, después de 2D el botón vuelve a 3D: "Sin mapa" no aparece.
 
 ## Fase 2 — Bugs
 
