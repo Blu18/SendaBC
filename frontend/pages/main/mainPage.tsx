@@ -5,6 +5,7 @@ import { useProfile } from "../../hooks/auth/auth.hooks";
 import { useAuth } from "../../context/AuthContext";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import TextBtn from "../../components/ui/buttons/TextBtn";
+import Card from "../../components/ui/Card";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Notice from "../../components/ui/Notice";
 import Icon from "../../components/ui/Icon";
@@ -107,6 +108,14 @@ export default function MainPage() {
                 {contactsStatus === 'success' && (
                     <SafetyCard nombres={nombresActivos} onConfigurar={() => navigation.navigate('Home', { screen: 'Safety' })} />
                 )}
+
+                {/* Zonas del mapa para grabar sin señal (spec 011, CA-32, CA-33). */}
+                <Text style={styles.sectionTitle} accessibilityRole="header">Mapas</Text>
+                <Card
+                    title="Mapas sin conexión"
+                    description="Descarga una zona para ver el mapa al grabar aunque no tengas señal."
+                    onPress={() => navigation.navigate('OfflineZones')}
+                />
 
                 <TextBtn text="Cerrar sesión" style={styles.logoutBtn} onPress={handleLogout} />
             </ScrollView>

@@ -181,7 +181,9 @@ function esZona(m: Partial<ZoneMetadata>): m is ZoneMetadata {
 // - Incompleta: lo demás, incluido un fallo o una descarga cortada al cerrar la app. Se reintenta.
 //
 // El tamaño es el del paquete más grande, no la suma: el segundo estilo comparte casi todos sus
-// mosaicos con el primero y no ocupa más espacio (D14), pero Mapbox los cuenta en ambos.
+// mosaicos con el primero y no ocupa más espacio (D14), pero Mapbox los cuenta en ambos. Tras
+// reanudar una descarga, Mapbox solo cuenta lo bajado en la última sesión (T36: 9 MB de una zona
+// que ocupó 69), así que nunca se muestra menos que la estimación de D15.
 export function agruparZonas(packs: PackInfo[], vivos: Record<string, PackLive> = {}): ZoneItem[] {
   const porZona = new Map<string, { meta: ZoneMetadata; packs: Map<ZoneStyle, PackInfo> }>();
   for (const p of packs) {
@@ -219,18 +221,13 @@ export function agruparZonas(packs: PackInfo[], vivos: Record<string, PackLive> 
       areaKm2: areaKm2(z.meta.bounds),
       status,
       percentage: Math.min(100, estados.reduce((s, e) => s + e.percentage, 0) / estados.length),
-      sizeBytes: Math.max(0, ...tamanos),
+      sizeBytes: Math.max(tamanoAproximadoMb(z.meta.bounds) * 1_000_000, ...tamanos),
       missingStyles: ZONE_STYLE_KEYS.filter((s) => !z.packs.has(s)),
     });
   }
   return zonas.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-// "41 MB" para lo que ya ocupa una zona descargada (CA-33).
-export function formatoOcupado(bytes: number): string {
-  const mb = bytes / 1_000_000;
-  return mb < 1 ? 'Menos de 1 MB' : `${Math.round(mb)} MB`;
-}
 
 // --- Selector de zona (CA-31, CA-34) ---
 
@@ -259,3 +256,25 @@ export function estadoDelSelector(o: {
 export function resumenDeZona(areaKm2: number, sizeMb: number): string {
   return `${formatoTamano(sizeMb)} · ${Math.round(areaKm2).toLocaleString('es-MX')} km²`;
 }
+
+// --- Lista de zonas (CA-32, CA-33) ---
+
+// Título y detalle de cada zona en offlineZonesPage. Las zonas no tienen nombre: se distinguen
+// por la fecha y el área.
+export function describirZona(z: ZoneItem): { title: string; detail: string } {
+  const fecha = new Date(z.createdAt).toLocaleDateString('es-MX', { dateStyle: 'medium' });
+  const area = `${Math.round(z.areaKm2).toLocaleString('es-MX')} km²`;
+  const title = `Zona del ${fecha}`;
+  if (z.status === 'ready') return { title, detail: `${formatoTamano(z.sizeBytes / 1_000_000)} · ${area}` };
+  if (z.status === 'downloading') return { title, detail: `Descargando ${Math.floor(z.percentage)} % · ${area}` };
+  return { title, detail: `Descarga incompleta (${Math.floor(z.percentage)} %). Reintenta con conexión.` };
+}
+
+export const ZONES_LIST_MESSAGES = {
+  intro: 'Descarga el mapa de la zona a la que vas. Lo verás al grabar aunque no tengas señal.',
+  empty: 'Aún no descargas ninguna zona.',
+  deleteTitle: '¿Borrar esta zona?',
+  // CA-33: el espacio no se libera al momento (plan, R1).
+  deleteBody: 'Sale de tu lista y deja de contar para el tope de 10. El teléfono libera su espacio con el tiempo.',
+  retryOffline: 'Necesitas conexión a internet para terminar de descargar la zona.',
+} as const;

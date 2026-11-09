@@ -47,10 +47,20 @@ export function paquetesVivos(): Record<string, PackLive> {
   return vivos;
 }
 
-function alAvanzar(_pack: unknown, status: { name: string; state: string; percentage: number | null }) {
+type Avance = { name: string; state: string; percentage: number | null; requiredResourceCount?: number };
+
+function alAvanzar(_pack: unknown, status: Avance) {
+  // El primer aviso de Mapbox llega con 0 de 0 recursos, y rnmapbox lo marca como completo y deja
+  // de escuchar ese paquete (T36: la zona salía lista sin haberse descargado). Solo es completo
+  // con recursos; si no, se vuelve a escuchar cuando rnmapbox termine de quitar el oyente.
+  const requeridos = status.requiredResourceCount ?? 0;
+  const completo = status.state === 'complete' && requeridos > 0;
+  if (status.state === 'complete' && !completo) {
+    setTimeout(() => void offline.subscribe(status.name, alAvanzar, alFallar), 0);
+  }
   vivos[status.name] = {
-    state: status.state === 'complete' ? 'complete' : 'active',
-    percentage: status.percentage,
+    state: completo ? 'complete' : 'active',
+    percentage: completo ? 100 : requeridos > 0 ? status.percentage : 0,
   };
   avisar();
 }
@@ -109,7 +119,17 @@ export async function listarPaquetes(): Promise<PackInfo[]> {
         sizeBytes: s.completedResourceSize ?? 0,
       });
     } catch (e) {
+      // Mientras se descarga, Mapbox aún no tiene la región y status() falla ("could not find
+      // groupID", T36). Se cuenta como sin terminar: agruparZonas la muestra descargando si hay
+      // avance en esta sesión, o incompleta para reintentar.
       console.log('No se pudo leer el estado de un paquete del mapa:', pack.name, e);
+      infos.push({
+        name: pack.name,
+        metadata: (pack.metadata ?? {}) as Partial<ZoneMetadata>,
+        complete: false,
+        percentage: null,
+        sizeBytes: 0,
+      });
     }
   }
   return infos;

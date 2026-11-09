@@ -190,7 +190,20 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
     - En modo avión: "Sin conexión", el botón desactivado y el diálogo no se abre (CA-34).
     - Se quitó del mensaje de zona grande la frase que repetía el título.
     - El rechazo por 10 zonas solo se probó con Vitest.
-- [ ] T36 — `offlineZonesPage` y acceso desde `mainPage`. (CA-32, CA-33)
+- [x] T36 — `offlineZonesPage` y acceso desde `mainPage`. (CA-32, CA-33)
+
+  Hecho (2026-11-08). `pages/map/offlineZonesPage.tsx`, registrada como `OfflineZones`, y tarjeta "Mapas sin conexión" en una sección "Mapas" de Inicio. Lista de la más nueva a la más vieja. Cada zona muestra "Zona del <fecha>" y, según su estado, "Unos N MB · área", "Descargando N %" con barra, o "Descarga incompleta" con "Reintentar". Borrar pide confirmación con el texto de CA-33. Reintentar sin red avisa y no hace nada. `describirZona` y `ZONES_LIST_MESSAGES` en `offlineZones.ts`, con sus pruebas.
+  - **Emulador**, abriendo la app en Inicio sin iniciar sesión (cambio temporal en `C:\dev\sbc`, ya quitado):
+    - La tarjeta de Inicio abre la lista. "Descargar una zona" abre `PickZone` y, al confirmar, regresa a la lista.
+    - Con la red del emulador en EDGE, una zona nueva (Miraflores) mostró 36, 42, 47 y 94 % y luego "Unos 65 MB · 292 km²". `tile_store` subió 48 MB.
+    - Modo avión a mitad de la descarga y app reiniciada: "Descarga incompleta (88 %)" con "Reintentar". Reintentar sin red avisa; con red, la zona queda lista.
+    - Borrar: confirmación y la zona sale de la lista.
+    - Sin reiniciar la app, cortar la red no dio ningún evento de error en unos 20 s: la zona sigue como descargando hasta reiniciar o volver la red. Se revisa en M17 (T37).
+  - **Tres correcciones en `offlinePacks.ts` y `offlineZones.ts`:**
+    - Mientras se descarga, `status()` falla ("could not find groupID") y el paquete se descartaba, así que la zona no aparecía. Ahora cuenta como sin terminar.
+    - El primer aviso de Mapbox llega con 0 de 0 recursos y rnmapbox lo marca como completo y deja de escuchar: la zona salía lista sin haberse descargado. Ahora solo es completo con recursos, y se vuelve a escuchar el paquete.
+    - Tras reanudar, Mapbox solo cuenta lo bajado en la última sesión: una zona que ocupó 69 MB decía 9 MB. Ahora el tamaño nunca baja de la estimación de D15 y se muestra como "Unos N MB".
+  - Quedan 5 zonas de prueba en el emulador, encimadas cerca de Santo Tomás y el centro del estado.
 - [ ] T37 — Comprobar `RecordingMap` con una zona descargada y sin ella. Correr M17 a M19 y anotar los resultados. (CA-20, CA-21, CA-31 a CA-34)
 
 ## Fase 1F — Opción de prueba

@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_ZONES,
   agruparZonas,
+  describirZona,
   estadoDelSelector,
   resumenDeZona,
   areaKm2,
   boundsParaMapbox,
   contarMosaicos,
-  formatoOcupado,
   formatoTamano,
   marcoALimites,
   nombreDePaquete,
@@ -15,6 +15,7 @@ import {
   tamanoAproximadoMb,
   type PackInfo,
   type ZoneBounds,
+  type ZoneItem,
   type ZoneStyle,
 } from './offlineZones';
 
@@ -141,6 +142,11 @@ describe('agruparZonas (CA-32, CA-33)', () => {
     expect(z.areaKm2).toBeCloseTo(100, 0);
   });
 
+  it('nunca muestra menos que la estimación: tras reanudar, Mapbox solo cuenta la última sesión', () => {
+    const [z] = agruparZonas([paquete('z1', 'light', { sizeBytes: 9_000_000 }), paquete('z1', 'dark', { sizeBytes: 0 })]);
+    expect(z.sizeBytes).toBeCloseTo(tamanoAproximadoMb(bounds) * 1_000_000, -3);
+  });
+
   it('ordena de la más nueva a la más vieja e ignora paquetes ajenos', () => {
     const ajeno: PackInfo = { name: 'otro', metadata: {}, complete: true, percentage: 100, sizeBytes: 1 };
     const zonas = agruparZonas([
@@ -188,12 +194,6 @@ describe('agruparZonas (CA-32, CA-33)', () => {
   });
 });
 
-describe('formatoOcupado', () => {
-  it('redondea a MB', () => {
-    expect(formatoOcupado(141_600_000)).toBe('142 MB');
-    expect(formatoOcupado(300_000)).toBe('Menos de 1 MB');
-  });
-});
 
 describe('estadoDelSelector (CA-31, CA-34)', () => {
   it('sin red no deja descargar, aunque todo lo demás esté bien (CA-34)', () => {
@@ -220,5 +220,35 @@ describe('estadoDelSelector (CA-31, CA-34)', () => {
 describe('resumenDeZona', () => {
   it('da tamaño y área redondeados', () => {
     expect(resumenDeZona(99.6, 40.6)).toBe('Unos 41 MB · 100 km²');
+  });
+});
+
+describe('describirZona (CA-32, CA-33)', () => {
+  const zona = (o: Partial<ZoneItem>): ZoneItem => ({
+    id: 'z1',
+    createdAt: '2026-11-08T18:00:00.000Z',
+    bounds: cuadro(10),
+    areaKm2: 99.6,
+    status: 'ready',
+    percentage: 100,
+    sizeBytes: 41_200_000,
+    missingStyles: [],
+    ...o,
+  });
+
+  it('una zona lista dice cuánto ocupa y su área', () => {
+    const d = describirZona(zona({}));
+    expect(d.title).toMatch(/^Zona del .*2026/);
+    expect(d.detail).toBe('Unos 41 MB · 100 km²');
+  });
+
+  it('una descarga en curso dice su avance', () => {
+    expect(describirZona(zona({ status: 'downloading', percentage: 37.8 })).detail).toBe('Descargando 37 % · 100 km²');
+  });
+
+  it('una incompleta no se presenta como lista (CA-32)', () => {
+    const d = describirZona(zona({ status: 'incomplete', percentage: 50 }));
+    expect(d.detail).toMatch(/^Descarga incompleta/);
+    expect(d.detail).not.toMatch(/MB/);
   });
 });
