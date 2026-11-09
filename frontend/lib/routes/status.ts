@@ -16,10 +16,11 @@ export function sinConexion<T>(saved: Guardado<T> | null): { offline: true; save
   return saved ? { offline: true, saved } : { offline: true };
 }
 
-// Texto del aviso de datos guardados, con su fecha (CA-53, CA-55).
+// Texto del aviso de datos guardados, con su fecha (CA-53, CA-55). La fecha va al final: en
+// es-MX la hora termina en "p.m.", y un punto después quedaba doble (M12).
 export function avisoDeGuardado(savedAt: string): string {
   const fecha = new Date(savedAt).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
-  return `Datos guardados el ${fecha}. Sin conexión no se pueden actualizar.`;
+  return `Sin conexión no se pueden actualizar. Son del ${fecha}`;
 }
 
 // Estado de la búsqueda que pinta la pantalla (CA-13, CA-15, CA-16; spec 011, CA-53).

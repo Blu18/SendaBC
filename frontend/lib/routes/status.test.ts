@@ -223,10 +223,12 @@ describe('Datos guardados sin conexión (spec 011)', () => {
   describe('avisoDeGuardado (CA-53, CA-55)', () => {
     it('dice que son datos guardados y de cuándo son', () => {
       const fecha = new Date(savedAt).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
-      expect(avisoDeGuardado(savedAt)).toBe(
-        `Datos guardados el ${fecha}. Sin conexión no se pueden actualizar.`
-      );
+      expect(avisoDeGuardado(savedAt)).toBe(`Sin conexión no se pueden actualizar. Son del ${fecha}`);
       expect(avisoDeGuardado(savedAt)).toMatch(/2026/);
+    });
+
+    it('no deja un punto doble después de "p.m." (M12)', () => {
+      expect(avisoDeGuardado(savedAt)).not.toMatch(/\.\./);
     });
   });
 });
