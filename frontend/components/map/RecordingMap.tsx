@@ -11,12 +11,11 @@ import { useReducedMotion } from "../../hooks/theme/useReducedMotion";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 import { CAMERA_MOVE_MS, LOOK_AHEAD_PADDING, PITCH_3D, ZOOM_FOLLOWING, ZOOM_OVERVIEW } from "../../lib/map/camera";
 import { MAP_OFFLINE, MAP_UNAVAILABLE, MAP_WAITING_GPS } from "../../lib/map/messages";
-import { localMapStyle, mapStyle } from "../../lib/map/style";
+import { TERRAIN_URL, localMapStyle, mapStyle } from "../../lib/map/style";
 import { BAJA_CALIFORNIA_REGION } from "../../lib/routes/constants";
 import type { Theme } from "../../lib/theme";
 
 // Datos de relieve de Mapbox, probados en la Sierra de Juárez (spec 010, T4).
-const TERRAIN_URL = "mapbox://mapbox.mapbox-terrain-dem-v1";
 const TERRAIN_EXAGGERATION = 1.5;
 
 const ICONS = {

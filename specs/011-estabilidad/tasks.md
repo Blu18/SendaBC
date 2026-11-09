@@ -169,7 +169,17 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 - [x] T33 — `lib/map/offlineZones.ts`: límites, conteo de mosaicos, tamaño aproximado y tope. (CA-31, RN-8)
 
   Hecho (2026-11-08). `marcoALimites` pasa el marco fijo del centro (centro, zoom y tamaño en dp) a límites en Web Mercator, con mosaicos de 512 px como la cámara de Mapbox; el selector va en 2D y hacia el norte. `areaKm2`, `tamanoAproximadoMb` (D15), `contarMosaicos` (XYZ, zoom 10 a 13) y `revisarZona`, que rechaza más de 900 km² o tener ya 10 zonas (D13); una zona incompleta cuenta hasta que se borra. `boundsParaMapbox` da el orden de `createPack`, y `ZONE_MESSAGES` y `formatoTamano` los textos de T35. Pruebas en `offlineZones.test.ts` (14).
-- [ ] T34 — `lib/map/offlinePacks.ts` y `useOfflineZones`: crear, avance, reintentar, listar y borrar. Comprobar primero que una zona borrada deja de verse sin red y si `disk-quota` libera el espacio (plan, R1). (CA-32, CA-33)
+- [x] T34 — `lib/map/offlinePacks.ts` y `useOfflineZones`: crear, avance, reintentar, listar y borrar. Comprobar primero que una zona borrada deja de verse sin red y si `disk-quota` libera el espacio (plan, R1). (CA-32, CA-33)
+
+  Hecho (2026-11-08).
+  - **Código:** `offlinePacks.ts` envuelve `offlineManager`. Cada zona son dos paquetes, `<zona>:light` y `<zona>:dark`, con el relieve, y la metadata guarda los límites para recrear un paquete que falte. El avance y los errores quedan en un estado del módulo, así que la descarga sigue aunque se cierre la pantalla. `agruparZonas` en `offlineZones.ts` arma las zonas: lista, descargando o incompleta, con el tamaño del paquete mayor. `useOfflineZones` las lista con TanStack Query y expone descargar, reintentar y borrar. `TERRAIN_URL` y los estilos pasan a `style.ts`. Pruebas en `offlineZones.test.ts` (22).
+  - **Comprobación R1**, en el emulador, con una pantalla temporal en `C:\dev\sbc` (ya quitada) y una zona de 5.5 × 5.5 km en Bahía de los Ángeles, nunca vista:
+    - Sin descargar y sin red solo se ven manchas de zoom bajo.
+    - La descarga tardó menos de 10 s. Quedó lista con 25 MB y `tile_store` pasó de 1 MB a 36 MB. Sin red se ve completa, con el relieve.
+    - **Al borrarla** sale de la lista, pero `tile_store` sigue en 36 MB y, tras cerrar y abrir la app en modo avión, **la zona se sigue viendo**.
+    - **`disk-quota` en 1 byte** (`TileStore.setOption`), antes y después de reiniciar y con red para forzar escrituras, **no libera nada**: 36 MB y la zona visible.
+    - Lo descargado en T2 (51 MB) ya no estaba al empezar: `tile_store` medía 1 MB. Mapbox sí lo libera con el tiempo, sin plazo conocido.
+    - **Conclusión:** la última frase de CA-33 no se podía cumplir con Mapbox. El usuario aprobó cambiarla: la zona borrada sale de la lista y deja de contar para el tope, y puede seguir viéndose sin red hasta que se libere el espacio. M18 paso 3 cambia en consecuencia. La app no toca `disk-quota`.
 - [ ] T35 — `pickZonePage`: marco, tamaño, confirmar o cancelar, rechazo por tope o por tener ya 10 zonas, y sin red. (CA-31, CA-34)
 - [ ] T36 — `offlineZonesPage` y acceso desde `mainPage`. (CA-32, CA-33)
 - [ ] T37 — Comprobar `RecordingMap` con una zona descargada y sin ella. Correr M17 a M19 y anotar los resultados. (CA-20, CA-21, CA-31 a CA-34)
@@ -393,8 +403,8 @@ Antes de la fase 4, salvo que digan otra cosa, se pueden correr en el emulador, 
 **M18 — Lista de zonas**
 1. Con dos zonas descargadas, abrir la lista.
 2. Borrar una.
-3. En modo avión, grabar simulando estar en la zona borrada.
-- **Esperado:** (1) cada una dice cuánto ocupa. (2) desaparece. (3) se comporta como una zona sin descargar.
+3. Con nueve zonas y la borrada fuera de la lista, elegir una zona nueva.
+- **Esperado:** (1) cada una dice cuánto ocupa. (2) desaparece de la lista. (3) deja descargarla: la borrada ya no cuenta para el tope. Sin red, la zona borrada puede seguir viéndose hasta que el teléfono libere su espacio (CA-33).
 
 **M19 — Usar una zona sin conexión**
 1. Descargar una zona que el teléfono nunca haya visto.

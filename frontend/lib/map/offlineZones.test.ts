@@ -1,14 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_ZONES,
+  agruparZonas,
   areaKm2,
   boundsParaMapbox,
   contarMosaicos,
+  formatoOcupado,
   formatoTamano,
   marcoALimites,
+  nombreDePaquete,
   revisarZona,
   tamanoAproximadoMb,
+  type PackInfo,
   type ZoneBounds,
+  type ZoneStyle,
 } from './offlineZones';
 
 // Sierra de San Pedro Mártir, donde se midió en T2.
@@ -114,5 +119,76 @@ describe('boundsParaMapbox', () => {
       [4, 2],
       [3, 1],
     ]);
+  });
+});
+
+describe('agruparZonas (CA-32, CA-33)', () => {
+  const bounds = cuadro(10);
+  const paquete = (zoneId: string, style: ZoneStyle, o: Partial<PackInfo> = {}): PackInfo => ({
+    name: nombreDePaquete(zoneId, style),
+    metadata: { zoneId, style, createdAt: `2026-11-0${zoneId.slice(-1)}T10:00:00.000Z`, bounds },
+    complete: true,
+    percentage: 100,
+    sizeBytes: 41_000_000,
+    ...o,
+  });
+
+  it('dos paquetes completos son una zona lista, con el tamaño del mayor', () => {
+    const [z] = agruparZonas([paquete('z1', 'light'), paquete('z1', 'dark', { sizeBytes: 40_000_000 })]);
+    expect(z).toMatchObject({ id: 'z1', status: 'ready', percentage: 100, sizeBytes: 41_000_000, missingStyles: [] });
+    expect(z.areaKm2).toBeCloseTo(100, 0);
+  });
+
+  it('ordena de la más nueva a la más vieja e ignora paquetes ajenos', () => {
+    const ajeno: PackInfo = { name: 'otro', metadata: {}, complete: true, percentage: 100, sizeBytes: 1 };
+    const zonas = agruparZonas([
+      paquete('z1', 'light'),
+      paquete('z1', 'dark'),
+      ajeno,
+      paquete('z2', 'light'),
+      paquete('z2', 'dark'),
+    ]);
+    expect(zonas.map((z) => z.id)).toEqual(['z2', 'z1']);
+  });
+
+  it('con un paquete avanzando en esta sesión está descargando, con el avance promedio', () => {
+    const packs = [
+      paquete('z1', 'light', { complete: false, percentage: 10 }),
+      paquete('z1', 'dark', { complete: false, percentage: 0 }),
+    ];
+    const [z] = agruparZonas(packs, { 'z1:light': { state: 'active', percentage: 60 } });
+    expect(z).toMatchObject({ status: 'downloading', percentage: 30 });
+  });
+
+  it('el aviso de completo de esta sesión cuenta aunque la lista sea vieja', () => {
+    const packs = [paquete('z1', 'light', { complete: false, percentage: 90 }), paquete('z1', 'dark')];
+    const [z] = agruparZonas(packs, { 'z1:light': { state: 'complete', percentage: 100 } });
+    expect(z.status).toBe('ready');
+  });
+
+  it('sin terminar y sin descarga en esta sesión (app cerrada) es incompleta, no lista', () => {
+    const [z] = agruparZonas([paquete('z1', 'light', { complete: false, percentage: 40 }), paquete('z1', 'dark')]);
+    expect(z).toMatchObject({ status: 'incomplete', percentage: 70 });
+  });
+
+  it('un error en un paquete la deja incompleta aunque el otro siga', () => {
+    const packs = [paquete('z1', 'light', { complete: false }), paquete('z1', 'dark', { complete: false })];
+    const [z] = agruparZonas(packs, {
+      'z1:light': { state: 'error', percentage: 20 },
+      'z1:dark': { state: 'active', percentage: 5 },
+    });
+    expect(z.status).toBe('incomplete');
+  });
+
+  it('si falta el paquete oscuro (se cerró la app entre uno y otro) es incompleta y lo dice', () => {
+    const [z] = agruparZonas([paquete('z1', 'light')]);
+    expect(z).toMatchObject({ status: 'incomplete', percentage: 50, missingStyles: ['dark'] });
+  });
+});
+
+describe('formatoOcupado', () => {
+  it('redondea a MB', () => {
+    expect(formatoOcupado(141_600_000)).toBe('142 MB');
+    expect(formatoOcupado(300_000)).toBe('Menos de 1 MB');
   });
 });

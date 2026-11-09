@@ -128,3 +128,105 @@ export const ZONE_MESSAGES = {
 export function formatoTamano(mb: number): string {
   return `Unos ${Math.round(mb)} MB`;
 }
+
+// --- De paquetes de Mapbox a zonas (CA-32, CA-33) ---
+
+// Cada zona son dos paquetes, uno por estilo (D14). El nombre del paquete lleva la zona y el
+// estilo; la metadata guarda lo necesario para listarla y volver a crear un paquete que falte.
+export type ZoneStyle = 'light' | 'dark';
+export const ZONE_STYLE_KEYS: readonly ZoneStyle[] = ['light', 'dark'];
+
+export type ZoneMetadata = { zoneId: string; style: ZoneStyle; createdAt: string; bounds: ZoneBounds };
+
+export function nombreDePaquete(zoneId: string, style: ZoneStyle) {
+  return `${zoneId}:${style}`;
+}
+
+// Un paquete como lo deja offlinePacks.ts, ya sin tipos de Mapbox.
+export type PackInfo = {
+  name: string;
+  metadata: Partial<ZoneMetadata>;
+  complete: boolean;
+  percentage: number | null;
+  sizeBytes: number;
+};
+
+// Lo que se sabe en esta sesión de las descargas: los eventos de avance y de error de Mapbox.
+// Tras cerrar la app no hay nada aquí y una zona sin terminar se ve como incompleta.
+export type PackLive = { state: 'active' | 'complete' | 'error'; percentage: number | null };
+
+export type ZoneStatus = 'ready' | 'downloading' | 'incomplete';
+
+export type ZoneItem = {
+  id: string;
+  createdAt: string;
+  bounds: ZoneBounds;
+  areaKm2: number;
+  status: ZoneStatus;
+  percentage: number; // 0 a 100, promedio de los dos estilos
+  sizeBytes: number;
+  missingStyles: ZoneStyle[]; // paquetes que no se llegaron a crear
+};
+
+function esZona(m: Partial<ZoneMetadata>): m is ZoneMetadata {
+  return typeof m.zoneId === 'string' && typeof m.createdAt === 'string' && !!m.bounds && !!m.style;
+}
+
+// Agrupa los paquetes por zona, de la más nueva a la más vieja. Un paquete sin metadata de zona
+// no es de esta app y se ignora.
+//
+// - Lista: los dos paquetes completos (CA-32: solo entonces aparece como lista).
+// - Descargando: algún paquete avanza en esta sesión y ninguno falló.
+// - Incompleta: lo demás, incluido un fallo o una descarga cortada al cerrar la app. Se reintenta.
+//
+// El tamaño es el del paquete más grande, no la suma: el segundo estilo comparte casi todos sus
+// mosaicos con el primero y no ocupa más espacio (D14), pero Mapbox los cuenta en ambos.
+export function agruparZonas(packs: PackInfo[], vivos: Record<string, PackLive> = {}): ZoneItem[] {
+  const porZona = new Map<string, { meta: ZoneMetadata; packs: Map<ZoneStyle, PackInfo> }>();
+  for (const p of packs) {
+    if (!esZona(p.metadata)) continue;
+    const z = porZona.get(p.metadata.zoneId) ?? { meta: p.metadata, packs: new Map() };
+    z.packs.set(p.metadata.style, p);
+    porZona.set(p.metadata.zoneId, z);
+  }
+
+  const zonas: ZoneItem[] = [];
+  for (const [id, z] of porZona) {
+    const estados = ZONE_STYLE_KEYS.map((style) => {
+      const p = z.packs.get(style);
+      if (!p) return { complete: false, percentage: 0, live: undefined };
+      const live = vivos[p.name];
+      const complete = p.complete || live?.state === 'complete';
+      return {
+        complete,
+        percentage: complete ? 100 : (live?.percentage ?? p.percentage ?? 0),
+        live,
+      };
+    });
+
+    let status: ZoneStatus;
+    if (estados.every((e) => e.complete)) status = 'ready';
+    else if (estados.some((e) => e.live?.state === 'error')) status = 'incomplete';
+    else if (estados.some((e) => e.live?.state === 'active')) status = 'downloading';
+    else status = 'incomplete';
+
+    const tamanos = [...z.packs.values()].map((p) => p.sizeBytes);
+    zonas.push({
+      id,
+      createdAt: z.meta.createdAt,
+      bounds: z.meta.bounds,
+      areaKm2: areaKm2(z.meta.bounds),
+      status,
+      percentage: Math.min(100, estados.reduce((s, e) => s + e.percentage, 0) / estados.length),
+      sizeBytes: Math.max(0, ...tamanos),
+      missingStyles: ZONE_STYLE_KEYS.filter((s) => !z.packs.has(s)),
+    });
+  }
+  return zonas.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+// "41 MB" para lo que ya ocupa una zona descargada (CA-33).
+export function formatoOcupado(bytes: number): string {
+  const mb = bytes / 1_000_000;
+  return mb < 1 ? 'Menos de 1 MB' : `${Math.round(mb)} MB`;
+}
