@@ -34,6 +34,11 @@ export const MENSAJES_PUBLICAR = {
   yaPublicada: 'Esta actividad ya tiene una ruta publicada',
 };
 
+// Autor de una ruta cuya cuenta se borró (spec 011, CA-48, RN-16). La ruta queda con
+// createdByUserId nulo por el SET NULL de la migración, así que nadie la ve como suya.
+// Se repite como texto en el COALESCE de nearby y detail.
+export const AUTOR_CUENTA_ELIMINADA = 'Cuenta eliminada';
+
 export const MENSAJES_RUTA = {
   noDisponible: 'Esta ruta ya no está disponible',
   soloDueno: 'Solo quien publicó esta ruta puede cambiarla',
@@ -163,8 +168,9 @@ export class RouteService {
              ST_Y(r."startPoint"::geometry) AS lat, ST_X(r."startPoint"::geometry) AS lng,
              ST_Distance(r."startPoint", centro.g) AS "distanceFromCenterMeters",
              ST_AsGeoJSON(ST_Simplify(r.path, ${SIMPLIFY_TOLERANCE_DEG})) AS path,
-             u."displayName" AS author, (r."createdByUserId" = ${userId}::uuid) AS "isMine"
-      FROM routes r JOIN users u ON u.id = r."createdByUserId", centro
+             COALESCE(u."displayName", 'Cuenta eliminada') AS author,
+             (r."createdByUserId" IS NOT DISTINCT FROM ${userId}::uuid) AS "isMine"
+      FROM routes r LEFT JOIN users u ON u.id = r."createdByUserId", centro
       WHERE r.status = 'PUBLISHED'
         AND ST_DWithin(r."startPoint", centro.g, ${radiusKm * 1000})
         ${filtroTipo}
@@ -269,12 +275,12 @@ export class RouteService {
              r."distanceMeters", r."elevationGainMeters",
              ST_Y(r."startPoint"::geometry) AS lat, ST_X(r."startPoint"::geometry) AS lng,
              ST_AsGeoJSON(ST_Simplify(r.path, ${DETAIL_SIMPLIFY_TOLERANCE_DEG})) AS path,
-             r."elevationProfile", u."displayName" AS author,
-             (r."createdByUserId" = ${userId}::uuid) AS "isMine",
+             r."elevationProfile", COALESCE(u."displayName", 'Cuenta eliminada') AS author,
+             (r."createdByUserId" IS NOT DISTINCT FROM ${userId}::uuid) AS "isMine",
              EXISTS (SELECT 1 FROM route_favorites f
                      WHERE f."routeId" = r.id AND f."userId" = ${userId}::uuid) AS "isFavorite",
              r.status, r."sourceActivityId", r."createdAt"
-      FROM routes r JOIN users u ON u.id = r."createdByUserId"
+      FROM routes r LEFT JOIN users u ON u.id = r."createdByUserId"
       WHERE r.id = ${id}::uuid`;
     if (!row || !esVisible(row.status, row.isMine)) {
       throw new NotFoundException(MENSAJES_RUTA.noDisponible);

@@ -40,6 +40,8 @@ function sesion(overrides: Partial<LocalSafetySession> = {}): LocalSafetySession
     alertServerId: null,
     alertTriggeredAt: null,
     alertCancelledAt: null,
+    quietMs: null,
+    responseMs: null,
     ...overrides,
   };
 }
@@ -226,6 +228,29 @@ describe('createLocationProcessor (spec 008, T16)', () => {
 
     const acciones = eventos.flatMap((e) => (e.type === 'detector' ? [e.accion] : []));
     expect(acciones).toEqual(['programar-pregunta', 'preguntar', 'alertar']);
+  });
+
+  it('usa los umbrales de la sesión: 5 min quieto y 1 de cuenta regresiva (spec 011, CA-51)', async () => {
+    const { processor, eventos } = montar({ sesion: { quietMs: 5 * MIN, responseMs: MIN } });
+
+    for (let s = 0; s <= 6 * 60; s += 10) {
+      await processor.procesar([gps(0, T0 + s * 1000)], T0 + s * 1000);
+    }
+
+    const preguntar = eventos.find((e) => e.type === 'detector' && e.accion === 'preguntar');
+    const alertar = eventos.find((e) => e.type === 'detector' && e.accion === 'alertar');
+    expect(preguntar).toBeDefined();
+    expect(alertar).toBeDefined();
+  });
+
+  it('una sesión de antes de v6 usa los de la app: a los 6 min todavía no pregunta (CA-52)', async () => {
+    const { processor, eventos } = montar();
+
+    for (let s = 0; s <= 6 * 60; s += 10) {
+      await processor.procesar([gps(0, T0 + s * 1000)], T0 + s * 1000);
+    }
+
+    expect(eventos.some((e) => e.type === 'detector' && e.accion === 'preguntar')).toBe(false);
   });
 
   it('sin puntos, el detector corre igual con el paso del tiempo', async () => {

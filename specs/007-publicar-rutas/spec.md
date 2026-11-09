@@ -45,7 +45,7 @@ Con la spec 006, el catálogo muestra rutas cercanas, pero solo tiene las rutas 
 - **CA-10 (HU-3):** Dada una ruta seleccionada en "Explorar rutas", cuando toco "Ver detalle" en su tarjeta, entonces se abre una vista con:
   - el recorrido completo en un mapa;
   - el nombre, el tipo, la zona, la dificultad, la distancia y la elevación ganada;
-  - el autor y la descripción;
+  - el autor (RN-11) y la descripción;
   - si hay permiso de ubicación, la distancia en línea recta desde mí hasta el inicio.
 - **CA-11 (HU-3):** El detalle muestra el perfil de elevación de la ruta (altitud contra distancia recorrida). Esto incluye las rutas de ejemplo (RN-8).
 - **CA-12 (HU-3):** El detalle de una ruta mía muestra la marca "Tuya" y, además, las opciones para editarla, archivarla o volver a publicarla, y borrarla (CA-22 a CA-25). El de una ruta de ejemplo dice "Por SendaBC" (spec 006, CA-19).
@@ -77,7 +77,7 @@ Con la spec 006, el catálogo muestra rutas cercanas, pero solo tiene las rutas 
 
 ## Reglas de negocio y validaciones
 
-- RN-1: Una ruta publicada conserva el tipo, la distancia, la elevación ganada y el recorrido de la actividad de la que sale, salvo lo que quita RN-10. El catálogo no los recalcula (spec 006, RN-3).
+- RN-1: Una ruta publicada conserva el tipo, la distancia, la elevación ganada y el recorrido de la actividad de la que sale, salvo lo que quita RN-10 y los saltos imposibles (spec 011, CA-15). El catálogo no los recalcula (spec 006, RN-3), salvo la corrección única de una distancia inflada (spec 011, RN-11).
 - RN-2: Una actividad tiene como máximo una ruta a la vez, publicada o archivada. Si esa ruta se borra, la actividad se puede publicar de nuevo.
 - RN-3: La distancia y la elevación se muestran con el mismo formato que en el resumen de actividad (spec 004, RN-1).
 - RN-4: El nombre es obligatorio, sin contar los espacios del principio y del final, y tiene como máximo 40 caracteres. La descripción es opcional y tiene como máximo 200 caracteres.
@@ -95,18 +95,19 @@ Con la spec 006, el catálogo muestra rutas cercanas, pero solo tiene las rutas 
 - RN-7: La zona es opcional y tiene como máximo 40 caracteres. La app la propone según dónde empieza el recorrido; si no puede deducirla, el campo queda vacío.
 - RN-8: Todas las rutas tienen perfil de elevación: las publicadas desde una actividad, con la altitud que el GPS registró en cada punto (las lecturas del barómetro se quedan en el teléfono, spec 005, CA-8), y las de ejemplo, con las altitudes de su traza original.
 - RN-9: Las rutas de ejemplo de SendaBC se pueden ver a detalle y guardar en favoritas igual que cualquier otra ruta.
-- RN-10: Al publicar se quitan los puntos del principio con hora de más de 30 s antes del inicio de la actividad. Si quedaran menos de 2 puntos, se conserva el recorrido completo, porque significa que el reloj del teléfono estaba desfasado. La actividad no cambia y la distancia guardada tampoco.
+- RN-10: Al publicar se quitan los puntos del principio con hora de más de 30 s antes del inicio de la actividad. Si quedaran menos de 2 puntos, se conserva el recorrido completo, porque significa que el reloj del teléfono estaba desfasado. La actividad no cambia al publicar. Su distancia guardada solo cambia con la corrección única de la spec 011 (RN-11).
+- RN-11: Una ruta publicada de una cuenta borrada sigue en el catálogo, con el autor "Cuenta eliminada", y nadie puede editarla, archivarla ni borrarla desde la app (spec 011, RN-16).
 
 ## Requisitos no funcionales
 
-- **Offline-first:** publicar, ver el detalle, cambiar favoritas y administrar mis rutas necesitan conexión. Grabar actividades sigue funcionando sin conexión (constitución 2.1).
+- **Offline-first:** publicar, cambiar favoritas y administrar mis rutas necesitan conexión. El detalle ya abierto y las favoritas se pueden consultar sin ella (spec 011, CA-55 y CA-56). Grabar actividades sigue funcionando sin conexión (constitución 2.1).
 - **Privacidad:** el recorrido se publica completo, incluidos su inicio y su final, y el formulario lo avisa (CA-4). La publicación no muestra el correo del autor, solo su nombre.
 - **Datos móviles:** el recorrido completo y el perfil de elevación se descargan solo al abrir el detalle, no en el mapa del catálogo (spec 006).
 - **Rendimiento:** con conexión normal, el detalle de una ruta de 3 horas se muestra en menos de 2 segundos.
 
 ## Fuera de alcance
 
-- Mostrar el detalle o las favoritas sin conexión, y mapas sin conexión → **011-estabilidad**.
+- Mostrar el detalle o las favoritas sin conexión → **011-estabilidad**. Mapas de fondo sin conexión en el detalle → no está en el roadmap.
 - Recortar el inicio y el final del recorrido por privacidad → no está en el roadmap (decisión P6: se publica completo).
 - Avisos o notificaciones sobre rutas (por ejemplo, cuando alguien guarda una ruta mía) → no está en el roadmap.
 - Comentarios, calificaciones y fotos de rutas → no está en el roadmap.
@@ -141,6 +142,7 @@ No quedan preguntas abiertas.
 
 ## Historial
 
+- 2026-11-06 — Cambios por la spec 011: RN-1 y RN-10 admiten corregir una distancia inflada (RN-11) y quitar saltos al publicar (CA-15, CA-16). Se agrega RN-11, para las rutas de una cuenta borrada (CA-48). El detalle y las favoritas se pueden consultar sin conexión (CA-55, CA-56). Los mapas de fondo sin conexión quedan descartados. Aprobado por el usuario.
 - 2026-11-06 — Se agregan CA-28 y RN-10, y RN-1 admite esa excepción. En la spec 010 (T25), una actividad grabada antes de la spec 003 CA-13 se publicó con su punto viejo: una ruta de 1.56 km con un perfil de 148 km. Aprobado por el usuario.
 - 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). CA-18 y CA-21: "Mis favoritas" y "Mis rutas" pasan de botones de la pantalla principal al encabezado de la pestaña Rutas (spec 009, RN-2; reemplaza P8). Casos M1, M2, M4, M6, M7 y M8.

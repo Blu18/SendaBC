@@ -18,7 +18,7 @@ import type { Coordinates } from "../../lib/metrics/geo";
 import type { RouteDetail } from "../../lib/routes/api";
 import { DETAIL_MESSAGES, DIFFICULTY_LABELS, formatDistanceFromUser } from "../../lib/routes/format";
 import { distanceFromUser, pathToCoordinates, regionForPath } from "../../lib/routes/geo";
-import { mensajeDeFallo, type RouteActionFailure } from "../../lib/routes/status";
+import { avisoDeGuardado, mensajeDeFallo, type RouteActionFailure } from "../../lib/routes/status";
 import { fontFamilies, lightColors, type Theme } from "../../lib/theme";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 
@@ -205,11 +205,13 @@ function OwnerActions({
 }
 
 // Detalle de una ruta (spec 007, CA-10 a CA-15). El recorrido completo y el perfil se descargan
-// solo aquí (requisito de datos móviles).
+// solo aquí (requisito de datos móviles). Sin conexión, con el detalle guardado se muestra igual,
+// con un aviso de cuándo es; el recorrido se dibuja aunque falte el mapa de fondo (spec 011,
+// CA-55). Favoritas y las acciones de la ruta propia avisan que necesitan conexión (CA-58).
 export default function RouteDetailPage({ route: navRoute }: Props) {
     const { id } = navRoute.params;
     const navigation = useNavigation();
-    const { route, status, retry } = useRouteDetail(id);
+    const { route, savedAt, status, retry } = useRouteDetail(id);
     const user = useUbicacionSiHayPermiso();
     const { remove } = useRouteMutations();
     const theme = useTheme();
@@ -238,7 +240,7 @@ export default function RouteDetailPage({ route: navRoute }: Props) {
         );
     }
 
-    if (status !== 'success' || !route) {
+    if ((status !== 'success' && status !== 'saved') || !route) {
         const aviso =
             status === 'offline'
                 ? { type: 'offline' as const, title: 'Sin conexión', description: DETAIL_MESSAGES.offline }
@@ -281,6 +283,12 @@ export default function RouteDetailPage({ route: navRoute }: Props) {
                 <RouteMap route={route} />
 
                 <View style={styles.body}>
+                    {status === 'saved' && savedAt && (
+                        <Appear style={styles.actionGroup}>
+                            <Notice type="offline" title="Datos guardados" description={avisoDeGuardado(savedAt)} />
+                            <BgBtn text="Reintentar" onPress={retry} />
+                        </Appear>
+                    )}
                     <View style={styles.titleRow}>
                         <Text style={styles.title} accessibilityRole="header">{route.name}</Text>
                         {route.isMine && (

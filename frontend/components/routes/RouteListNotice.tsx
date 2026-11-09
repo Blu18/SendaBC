@@ -19,7 +19,8 @@ const TYPES = { empty: 'info', offline: 'offline', error: 'error' } as const;
 
 // Lo que muestran "Mis rutas" y "Mis favoritas" cuando no hay lista que pintar: cargando, sin
 // conexión o error con "Reintentar", o el mensaje de lista vacía (spec 007, CA-18, CA-21).
-// Con status 'success' no muestra nada.
+// Con status 'success' o 'saved' (spec 011: hay una lista guardada, con su propio aviso) no
+// muestra nada.
 export default function RouteListNotice({
     status,
     messages,
@@ -31,7 +32,7 @@ export default function RouteListNotice({
 }) {
     const theme = useTheme();
     const styles = useThemedStyles(makeStyles);
-    if (status === 'success') return null;
+    if (status === 'success' || status === 'saved') return null;
     if (status === 'loading') {
         return <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loading} />;
     }

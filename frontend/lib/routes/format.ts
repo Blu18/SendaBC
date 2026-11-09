@@ -30,6 +30,7 @@ export function formatDistanceFromUser(meters: number | null) {
 export const NEARBY_MESSAGES = {
   empty: 'No hay rutas publicadas cerca de aquí. Mueve el mapa o aumenta la distancia de búsqueda.',
   offline: 'Explorar rutas necesita conexión a internet. Revisa tu conexión e inténtalo de nuevo.',
+  savedEmpty: 'Tu última búsqueda no tenía rutas de este tipo.', // spec 011, CA-53
   error: 'No se pudieron cargar las rutas. Inténtalo de nuevo.',
   noPermission:
     'Sin permiso de ubicación no podemos centrar el mapa en ti ni calcular la distancia hasta cada ruta. Mueve el mapa y toca "Buscar en esta zona".',

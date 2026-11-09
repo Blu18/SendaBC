@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Vibration } from 'react-native';
 import { getDetectorState } from '../../lib/db/safety';
-import { responderEstoyBien } from '../../lib/safety/areYouOk';
-import { restanteMs, type EstadoDetector } from '../../lib/safety/inactivity';
+import { responderEstoyBien, umbralesDeActividad } from '../../lib/safety/areYouOk';
+import { restanteMs, type EstadoDetector, type Umbrales } from '../../lib/safety/inactivity';
 import { UMBRALES_APP } from '../../lib/safety/locationTask';
 
 const VIBRACION = [0, 600, 400];
@@ -15,6 +15,22 @@ export function useAreYouOk(activityLocalId: number | null, recording: boolean) 
   const [estado, setEstado] = useState<EstadoDetector | null>(null);
   const [ahora, setAhora] = useState(() => Date.now());
   const [respondiendo, setRespondiendo] = useState(false);
+  // Los umbrales de la sesión de esta actividad (spec 011, CA-51): la cuenta regresiva y el texto
+  // usan los que se eligieron al iniciar. Mientras se leen, los de la app.
+  const [umbrales, setUmbrales] = useState<Umbrales>(UMBRALES_APP);
+
+  useEffect(() => {
+    if (activityLocalId === null) return;
+    let vigente = true;
+    umbralesDeActividad(activityLocalId)
+      .then((u) => {
+        if (vigente) setUmbrales(u);
+      })
+      .catch((e) => console.log('Error leyendo los umbrales de la sesión:', e));
+    return () => {
+      vigente = false;
+    };
+  }, [activityLocalId, recording]);
 
   const leer = useCallback(async () => {
     if (activityLocalId === null) return;
@@ -59,7 +75,8 @@ export function useAreYouOk(activityLocalId: number | null, recording: boolean) 
 
   return {
     visible,
-    restanteMs: estado ? (restanteMs(estado, ahora, UMBRALES_APP) ?? 0) : 0,
+    restanteMs: estado ? (restanteMs(estado, ahora, umbrales) ?? 0) : 0,
+    umbrales,
     alertada: estado?.fase === 'alertada',
     respondiendo,
     estoyBien,

@@ -1,12 +1,21 @@
 import type { Theme } from '../theme';
 
+// Relieve del 3D y del sombreado oscuro. Las zonas descargadas lo incluyen (spec 011, D14).
+export const TERRAIN_URL = 'mapbox://mapbox.mapbox-terrain-dem-v1';
+
+// Los dos estilos, para descargar ambos en cada zona: el tema puede cambiar en la salida (D14).
+export const ZONE_STYLES = {
+  light: 'mapbox://styles/mapbox/outdoors-v12',
+  dark: 'mapbox://styles/mapbox/dark-v11',
+} as const;
+
 // Estilos del mapa de la grabación, elegidos en la Sierra de Juárez (spec 010, plan D7). Outdoors
 // trae curvas de nivel y sombreado. Dark no muestra el relieve por sí solo, así que se le agrega
 // un sombreado calculado con los mismos datos de relieve.
 export function mapStyle(scheme: Theme['scheme']) {
   return scheme === 'dark'
     ? {
-        styleURL: 'mapbox://styles/mapbox/dark-v11',
+        styleURL: ZONE_STYLES.dark,
         hillshade: {
           hillshadeShadowColor: '#000000',
           hillshadeHighlightColor: '#7f9488',
@@ -14,7 +23,7 @@ export function mapStyle(scheme: Theme['scheme']) {
           hillshadeExaggeration: 0.9,
         },
       }
-    : { styleURL: 'mapbox://styles/mapbox/outdoors-v12', hillshade: null };
+    : { styleURL: ZONE_STYLES.light, hillshade: null };
 }
 
 // Estilo mínimo para cuando no se puede cargar el normal (spec 010, CA-15). No usa la red: solo un

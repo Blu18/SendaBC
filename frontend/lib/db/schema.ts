@@ -128,7 +128,43 @@ export const MIGRATIONS: { version: number; sql: string }[] = [
       );
     `,
   },
+  // v6: estabilidad (spec 011, plan "SQLite, versión 6").
+  // - app_settings: ajustes de la app por cuenta, como los umbrales de inactividad (CA-50).
+  // - route_cache: lo último consultado de rutas, para verlo sin conexión (CA-53). kind es
+  //   'nearby', 'detail' o 'favorites'; cache_key es el id de la ruta en 'detail' y 'last' en los
+  //   otros dos. payload en JSON y saved_at en ISO 8601.
+  // - safety_sessions.quiet_ms y response_ms: los umbrales elegidos, copiados al iniciar la
+  //   sesión (CA-51). NULL en sesiones de antes de v6: usan los valores por defecto (CA-52).
+  {
+    version: 6,
+    sql: `
+      CREATE TABLE IF NOT EXISTS app_settings (
+        user_id TEXT NOT NULL,
+        key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        PRIMARY KEY (user_id, key)
+      );
+
+      CREATE TABLE IF NOT EXISTS route_cache (
+        user_id TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        cache_key TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        saved_at TEXT NOT NULL,
+        PRIMARY KEY (user_id, kind, cache_key)
+      );
+
+      ALTER TABLE safety_sessions ADD COLUMN quiet_ms INTEGER;
+      ALTER TABLE safety_sessions ADD COLUMN response_ms INTEGER;
+    `,
+  },
 ];
 
 // Versión del esquema local (PRAGMA user_version): la del último paso.
 export const DB_VERSION = MIGRATIONS[MIGRATIONS.length - 1].version;
+
+// Pasos que faltan para llevar una base en `version` a DB_VERSION, en orden. sqlite.ts los aplica
+// en una transacción; las pruebas, igual, para comprobar la migración desde una versión vieja.
+export function pasosPendientes(version: number) {
+  return MIGRATIONS.filter((paso) => paso.version > version);
+}

@@ -13,6 +13,7 @@ import {
   setAlert,
   setReturnBy,
 } from '../db/safety';
+import { getEleccionUmbrales } from '../db/settings';
 import { isOnline } from '../sync';
 import { cancelAlert, createAlert, finishSession, postLocation, upsertSession } from './api';
 import { createSafetySync } from './safetySync';
@@ -40,6 +41,7 @@ export const safetySync = createSafetySync({
 export const sessionActions = createSessionActions({
   getActivity,
   createSafetySession,
+  getEleccionUmbrales,
   getSafetySession,
   setReturnBy,
   listRecordingSessionIds,

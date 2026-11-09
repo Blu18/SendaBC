@@ -5,9 +5,12 @@ import { useProfile } from "../../hooks/auth/auth.hooks";
 import { useAuth } from "../../context/AuthContext";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import TextBtn from "../../components/ui/buttons/TextBtn";
+import Card from "../../components/ui/Card";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Notice from "../../components/ui/Notice";
 import Icon from "../../components/ui/Icon";
+import PressableScale from "../../components/ui/PressableScale";
+import Avatar from "../../components/account/Avatar";
 import SafetyCard from "../../components/safety/SafetyCard";
 import { useEmergencyContacts } from "../../hooks/safety/useEmergencyContacts";
 import { contactosActivos } from "../../lib/safety/contacts";
@@ -58,7 +61,21 @@ export default function MainPage() {
 
     return (
         <View style={styles.container}>
-            <ScreenHeader title={profile.data ? `Hola, ${profile.data.displayName}` : 'Inicio'} />
+            <ScreenHeader
+                title={profile.data ? `Hola, ${profile.data.displayName}` : 'Inicio'}
+                actions={
+                    // Avatar de la cuenta (spec 011, CA-42): abre el perfil.
+                    <PressableScale
+                        onPress={() => navigation.navigate('Profile')}
+                        accessibilityRole="button"
+                        accessibilityLabel="Tu perfil"
+                        style={styles.avatarBtn}
+                        pressedStyle={styles.avatarPressed}
+                    >
+                        <Avatar avatarId={profile.data?.avatarId} size={40} />
+                    </PressableScale>
+                }
+            />
             <ScrollView contentContainerStyle={styles.content}>
                 {profile.isLoading && <ActivityIndicator size="large" color={theme.colors.primary} />}
                 <Appear>
@@ -92,6 +109,14 @@ export default function MainPage() {
                     <SafetyCard nombres={nombresActivos} onConfigurar={() => navigation.navigate('Home', { screen: 'Safety' })} />
                 )}
 
+                {/* Zonas del mapa para grabar sin señal (spec 011, CA-32, CA-33). */}
+                <Text style={styles.sectionTitle} accessibilityRole="header">Mapas</Text>
+                <Card
+                    title="Mapas sin conexión"
+                    description="Descarga una zona para ver el mapa al grabar aunque no tengas señal."
+                    onPress={() => navigation.navigate('OfflineZones')}
+                />
+
                 <TextBtn text="Cerrar sesión" style={styles.logoutBtn} onPress={handleLogout} />
             </ScrollView>
         </View>
@@ -124,6 +149,20 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     sectionTitle: {
         ...t.typography.title,
         color: t.colors.text,
+    },
+    // Área de toque de 48 dp (touchMin) alrededor del avatar de 40.
+    avatarBtn: {
+        width: t.touchMin,
+        height: t.touchMin,
+        borderRadius: t.touchMin / 2,
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+    },
+    avatarPressed: {
+        ...StyleSheet.absoluteFill,
+        backgroundColor: t.colors.primary,
+        opacity: 0.12,
     },
     logoutBtn: {
         alignSelf: 'flex-start',

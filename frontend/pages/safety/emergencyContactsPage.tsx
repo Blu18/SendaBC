@@ -8,6 +8,7 @@ import ContactForm from "../../components/safety/ContactForm";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import BgBtn from "../../components/ui/buttons/BgBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
+import InactivitySettings from "../../components/safety/InactivitySettings";
 import Notice from "../../components/ui/Notice";
 import Icon from "../../components/ui/Icon";
 import TextBtn from "../../components/ui/buttons/TextBtn";
@@ -247,6 +248,9 @@ export default function EmergencyContactsPage() {
                         <Text style={styles.muted}>{CONTACT_MESSAGES.limite}</Text>
                     )
                 )}
+
+                {/* Umbrales de inactividad (spec 011, CA-50): funcionan sin conexión. */}
+                <InactivitySettings />
 
                 <Text style={styles.disclaimer}>{AVISO_911}</Text>
             </ScrollView>

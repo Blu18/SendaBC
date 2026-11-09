@@ -20,6 +20,9 @@ export type LocalSafetySession = {
   alertTriggeredAt: string | null;
   // La alerta está activa si hay alertClientId y no se canceló (CA-17, CA-25).
   alertCancelledAt: string | null;
+  // Umbrales elegidos, copiados al iniciar (spec 011, CA-51). NULL en sesiones de antes de v6.
+  quietMs: number | null;
+  responseMs: number | null;
 };
 
 const SESSION_COLUMNS = `
@@ -32,25 +35,37 @@ const SESSION_COLUMNS = `
   alert_client_id AS alertClientId,
   alert_server_id AS alertServerId,
   alert_triggered_at AS alertTriggeredAt,
-  alert_cancelled_at AS alertCancelledAt`;
+  alert_cancelled_at AS alertCancelledAt,
+  quiet_ms AS quietMs,
+  response_ms AS responseMs`;
 
 type SessionRow = Omit<LocalSafetySession, 'serverAck'> & { serverAck: number };
 
 const aSesion = (row: SessionRow | null): LocalSafetySession | null =>
   row ? { ...row, serverAck: row.serverAck === 1 } : null;
 
-// Al iniciar una actividad, con el mismo clientGeneratedId (plan D1).
+// Al iniciar una actividad, con el mismo clientGeneratedId (plan D1). Los umbrales elegidos se
+// copian aquí y la actividad los conserva aunque se cambien después (spec 011, CA-51).
 export async function createSafetySession(
   activityLocalId: number,
   clientGeneratedId: string,
   userId: string,
-  returnBy: string | null
+  returnBy: string | null,
+  umbrales: { quietMs: number; responseMs: number } | null = null
 ) {
   const db = await getDb();
   await db.runAsync(
-    `INSERT INTO safety_sessions (activity_local_id, client_generated_id, user_id, return_by)
-     VALUES (?, ?, ?, ?)`,
-    [activityLocalId, clientGeneratedId, userId, returnBy]
+    `INSERT INTO safety_sessions
+       (activity_local_id, client_generated_id, user_id, return_by, quiet_ms, response_ms)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      activityLocalId,
+      clientGeneratedId,
+      userId,
+      returnBy,
+      umbrales?.quietMs ?? null,
+      umbrales?.responseMs ?? null,
+    ]
   );
 }
 

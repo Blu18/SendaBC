@@ -52,7 +52,7 @@ Como publicar llega hasta la 007, esta semana el catálogo se alimenta con un co
 
 - **CA-13 (HU-5):** Si no hay rutas publicadas en la zona buscada, veo el mensaje "No hay rutas publicadas cerca de aquí. Mueve el mapa o aumenta la distancia de búsqueda."
 - **CA-14 (HU-5):** Si no concedo el permiso de ubicación, el mapa se abre mostrando todo el estado de **Baja California**, sin buscar todavía, con un aviso que explica que sin el permiso no se puede centrar en mí ni calcular la distancia hasta cada ruta. Puedo explorar moviendo el mapa y usando "Buscar en esta zona"; en la tarjeta no aparece la distancia hasta mí.
-- **CA-15 (HU-5):** Si no hay conexión, veo un mensaje que explica que explorar rutas necesita internet, y no se queda cargando indefinidamente. No se muestran búsquedas anteriores (eso queda para la spec 011). Grabar actividades sigue funcionando sin conexión (constitución 2.1).
+- **CA-15 (HU-5):** Si no hay conexión y no tengo una búsqueda guardada, veo un mensaje que explica que explorar rutas necesita internet, y no se queda cargando indefinidamente. Si la tengo, veo sus resultados (spec 011, CA-53). Grabar actividades sigue funcionando sin conexión (constitución 2.1).
 - **CA-16 (HU-5):** Mientras se buscan rutas se ve un indicador de carga; si la búsqueda falla por un error del servidor, veo un mensaje y puedo reintentar.
 
 ### Acceso
@@ -69,7 +69,7 @@ Como publicar llega hasta la 007, esta semana el catálogo se alimenta con un co
 
 - RN-1: La cercanía se mide desde el punto de inicio de la ruta hasta el centro de la búsqueda, en metros sobre la superficie terrestre.
 - RN-2: La distancia mostrada en la tarjeta (CA-7) es en línea recta hasta el inicio, no la distancia por camino.
-- RN-3: Las rutas se muestran con los datos guardados al publicarlas; el catálogo no recalcula distancia ni desnivel.
+- RN-3: Las rutas se muestran con los datos guardados al publicarlas; el catálogo no recalcula distancia ni desnivel. La única excepción es la corrección única de una distancia inflada por un punto viejo (spec 011, RN-11).
 - RN-4: Formato de distancias y elevación igual que en el resumen de actividad (spec 004, RN-1).
 - RN-5: El radio de búsqueda nunca pasa de 100 km.
 
@@ -84,7 +84,7 @@ Como publicar llega hasta la 007, esta semana el catálogo se alimenta con un co
 - Publicar una actividad como ruta pública → **007-publicar-rutas**.
 - Vista de detalle de una ruta (mapa completo, perfil de elevación, dificultad estimada) → **007-publicar-rutas**.
 - Guardar rutas como favoritas → **007-publicar-rutas**.
-- Mostrar búsquedas anteriores o mapas sin conexión → **011-estabilidad**.
+- Mostrar la última búsqueda sin conexión → **011-estabilidad**. Mapas de fondo sin conexión en Explorar → no está en el roadmap.
 - Una lista de rutas además del mapa.
 - Navegación guiada paso a paso o seguir una ruta en vivo.
 - Buscar rutas por nombre o por región.
@@ -103,6 +103,7 @@ Resueltas el 2026-10-16:
 
 ## Historial
 
+- 2026-11-06 — Cambios por la spec 011: CA-15 muestra la última búsqueda guardada sin conexión (CA-53, CA-54), RN-3 admite recalcular una distancia inflada (RN-11) y los mapas de fondo sin conexión quedan descartados. Aprobado por el usuario.
 - 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). CA-1: "Explorar rutas" es la pestaña Rutas (spec 009, RN-2). "Abrir" es entrar a la pestaña desde otra: vuelve a empezar centrada en el usuario, con 25 km y todas (CA-1, CA-11 y CA-12); al volver del detalle conserva el mapa. Casos M1, M4 y M7.
 - 2026-10-17 — Implementada: los 20 CA verificados (pruebas automáticas y casos manuales M1–M8). Las rutas de ejemplo salen de trazas GPX reales (plan D8) y la app se prueba con un development build (plan D7).

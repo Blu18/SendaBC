@@ -4,6 +4,7 @@ import { getLastPoint, getRecordingActivity } from '../db/activities';
 import { enqueueOutbox, getSafetySession, markAlertCancelled, setAlert } from '../db/safety';
 import { safetySync } from '.';
 import { createAlertActions } from './alertActions';
+import type { Umbrales } from './inactivity';
 import { locationProcessor, onGrabacion, UMBRALES_APP } from './locationTask';
 import {
   esRespuestaEstoyBien,
@@ -11,6 +12,7 @@ import {
   programarPregunta,
   quitarPregunta,
 } from './notifications';
+import { umbralesDeSesion } from './thresholds';
 
 // Atiende lo que pide el detector de inactividad (spec 008, T17): programar la notificación de
 // respaldo, preguntar "¿Estás bien?" y, sin respuesta, crear la alerta. Se importa en index.ts
@@ -39,18 +41,28 @@ export const alertActions = createAlertActions({
 
 const log = (mensaje: string) => (e: unknown) => console.log(mensaje, e);
 
+// Umbrales con los que corre la actividad: los de su sesión (spec 011, CA-51) o los de la app.
+// La notificación los usa para decir cuánto tiempo lleva quieto y cuánto queda para responder.
+export async function umbralesDeActividad(activityLocalId: number): Promise<Umbrales> {
+  return umbralesDeSesion(await getSafetySession(activityLocalId), UMBRALES_APP);
+}
+
 onGrabacion((evento) => {
   if (evento.type !== 'detector') return;
   switch (evento.accion) {
-    case 'programar-pregunta':
-      if (evento.estado.programadaPara !== null) {
-        programarPregunta(evento.estado.programadaPara, UMBRALES_APP).catch(
-          log('Error programando "¿Estás bien?":')
-        );
+    case 'programar-pregunta': {
+      const para = evento.estado.programadaPara;
+      if (para !== null) {
+        umbralesDeActividad(evento.activityLocalId)
+          .then((umbrales) => programarPregunta(para, umbrales))
+          .catch(log('Error programando "¿Estás bien?":'));
       }
       return;
+    }
     case 'preguntar':
-      preguntarYa(UMBRALES_APP).catch(log('Error mostrando "¿Estás bien?":'));
+      umbralesDeActividad(evento.activityLocalId)
+        .then((umbrales) => preguntarYa(umbrales))
+        .catch(log('Error mostrando "¿Estás bien?":'));
       return;
     case 'alertar':
       // Terminó la cuenta regresiva sin respuesta (CA-14). Sin conexión se queda en la bandeja y
