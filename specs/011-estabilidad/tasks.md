@@ -153,7 +153,16 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 - [x] T31 — `useFavorites` y `favoritesPage`, con descarga del detalle de las favoritas. (CA-55, CA-56, CA-59)
 
   Hecho (2026-11-08): `useRouteList` usa `consultarConRespaldo` con un respaldo opcional; solo lo tienen las favoritas, así que "Mis rutas" sigue necesitando conexión (CA-58). La clave de consulta lleva el `userId` y sigue bajo `['routes']`, que invalidan las mutaciones. Cada lista de favoritas que responde se guarda (CA-56, CA-59) y, en segundo plano, `descargarDetallesDeFavoritas` baja una por una el detalle de las favoritas disponibles que no estén guardadas (`getSavedDetailIds`, nuevo en `routeCache`), para que una favorita nunca abierta se vea sin red (CA-55). Un `404` o un fallo al guardar no detiene las demás; si la red se cae, se deja para el siguiente refresco. Solo corre una descarga a la vez. En `favoritesPage`, con `saved` se ve la lista con el aviso "Datos guardados el …" y "Reintentar"; una lista guardada vacía muestra el mensaje de lista vacía, y "Quitar" sin red avisa que necesita conexión, como antes. 4 pruebas nuevas (`offline.test.ts` y `routeCache.test.ts`); `tsc` y Vitest pasan (682). Falta verlo en la app (M13 a M16, T32).
-- [ ] T32 — Correr M12 a M16 y anotar los resultados. (CA-53 a CA-60)
+- [x] T32 — Correr M12 a M16 y anotar los resultados. (CA-53 a CA-60)
+
+  Hecho (2026-11-08) en el emulador `Pixel_8_Pro`, con el backend local (`http://10.0.2.2:3000`), Metro desde `C:\dev\sbc` en `b341046` y la ubicación simulada junto a Cerros de Ensenada. Sin red = modo avión; la app se abrió por `adb reverse` para que Metro siguiera disponible. Dos cuentas desechables (A y B), creadas por la API; B subió una actividad de 3 km y publicó "Ruta de prueba T32". A guardó en favoritas esa ruta y "Bosque de los Attenuatas" por la API, sin abrirlas, porque en la app solo se marca favorita desde el detalle. Lo guardado se revisó copiando la base SQLite del teléfono. Al terminar, A se borró desde "Borrar cuenta" y B por la API: las dos dejan de iniciar sesión y en el teléfono no quedó nada de A.
+  - **M12, pasa:** (1) A, sin haber buscado, en modo avión: "Explorar rutas necesita conexión", con "Reintentar" y sin quedarse cargando. (2) Con red se ven las rutas. (3) Tras cerrar la app y abrirla en modo avión: las mismas rutas en el mapa, con "Datos guardados" y la fecha. Con el filtro "Ciclismo" dice que la búsqueda guardada no tenía rutas de ese tipo; con "Senderismo" las muestra.
+  - **M13, pasa:** (1) Con red se abrió "Cañón de Doña Petra" y la lista de favoritas; en la base quedaron la búsqueda, la lista y el detalle de las tres rutas, incluidas las dos favoritas nunca abiertas. (2) En modo avión, la lista de favoritas, "Bosque de los Attenuatas" (favorita nunca abierta) y Doña Petra se ven con datos, perfil, recorrido y el aviso. El fondo del mapa se vio porque la zona estaba en la caché del mapa. (3) "El Salto", desde la búsqueda guardada y sin detalle guardado: "Ver el detalle de una ruta necesita conexión", en menos de 5 s.
+  - **M14, pasa en parte:** (1) "Quitar de favoritas" en una ruta guardada: "Esto necesita conexión a internet" y la favorita no cambió. (2) "Mis rutas" pide conexión. Publicar no se probó: la cuenta A no tenía actividades; ese flujo no cambió en esta fase (spec 007).
+  - **M15, pasa:** B archivó su ruta por la API. Con red, favoritas se actualizó sin el aviso y la muestra como "Ya no disponible"; al abrirla dice "Ruta no disponible" y su detalle guardado se borró del teléfono. Explorar se actualizó sin el aviso y la búsqueda guardada ya no la incluye.
+  - **M16, pasa:** con B, en modo avión, Explorar y favoritas dicen que necesitan internet; no se ve nada de A. Lo de A siguió en el teléfono para A (RN-14).
+  - **Fallo menor encontrado y corregido:** el aviso decía "5:38 p.m.. Sin conexión", con punto doble, porque en es-MX la hora termina en "p.m.". Ahora es "Sin conexión no se pueden actualizar. Son del …", con prueba en `status.test.ts`; se vio corregido en la app.
+  - **Para la prueba de campo:** el cliente de Prisma de `backend/` de la copia principal estaba generado antes de la migración de la 011 (`users.avatarUrl` no existe) y el login respondía `500` hasta correr `npx prisma generate`. Hay que regenerarlo después de cada `git pull` que traiga migraciones. Además, `EXPO_PUBLIC_BACKEND_IP` no debe terminar en `/` para el backend local: la doble barra da `404`.
 
 ## Fase 1E — Zonas descargadas
 
@@ -262,14 +271,14 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-50 | `frontend/lib/safety/thresholds.test.ts`, `frontend/lib/db/settings.test.ts` y caso manual M11 | Automatizada y manual | Cumple (Vitest y emulador) |
 | CA-51 | `frontend/lib/safety/recording.test.ts`, `sessionActions.test.ts` y caso manual M11 | Automatizada y manual | Cumple (Vitest y emulador; M11 paso 3 no se alcanza desde la app) |
 | CA-52 | `thresholds.test.ts`, `recording.test.ts` y caso manual M11 | Automatizada y manual | Cumple (Vitest y emulador) |
-| CA-53 | `frontend/lib/db/routeCache.test.ts`, `status.test.ts` y caso manual M12 | Automatizada y manual | Pendiente |
-| CA-54 | `status.test.ts` y caso manual M12 | Automatizada y manual | Pendiente |
-| CA-55 | `routeCache.test.ts`, `status.test.ts` y caso manual M13 | Automatizada y manual | Pendiente |
-| CA-56 | `routeCache.test.ts`, `status.test.ts` y caso manual M13 | Automatizada y manual | Pendiente |
-| CA-57 | `status.test.ts` y caso manual M13 | Automatizada y manual | Pendiente |
-| CA-58 | Caso manual M14 | Manual | Pendiente |
-| CA-59 | Caso manual M15 | Manual | Pendiente |
-| CA-60 | `routeCache.test.ts` y caso manual M16 | Automatizada y manual | Pendiente |
+| CA-53 | `frontend/lib/db/routeCache.test.ts`, `status.test.ts` y caso manual M12 | Automatizada y manual | Cumple (Vitest y emulador) |
+| CA-54 | `status.test.ts` y caso manual M12 | Automatizada y manual | Cumple (Vitest y emulador) |
+| CA-55 | `routeCache.test.ts`, `status.test.ts` y caso manual M13 | Automatizada y manual | Cumple (Vitest y emulador) |
+| CA-56 | `routeCache.test.ts`, `status.test.ts` y caso manual M13 | Automatizada y manual | Cumple (Vitest y emulador) |
+| CA-57 | `status.test.ts` y caso manual M13 | Automatizada y manual | Cumple (Vitest y emulador) |
+| CA-58 | Caso manual M14 | Manual | Cumple en parte (emulador): favoritas y "Mis rutas"; publicar sin probar |
+| CA-59 | Caso manual M15 | Manual | Cumple (emulador) |
+| CA-60 | `routeCache.test.ts` y caso manual M16 | Automatizada y manual | Cumple (Vitest y emulador) |
 
 ### Casos manuales
 
