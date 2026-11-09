@@ -204,7 +204,27 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
     - El primer aviso de Mapbox llega con 0 de 0 recursos y rnmapbox lo marca como completo y deja de escuchar: la zona salía lista sin haberse descargado. Ahora solo es completo con recursos, y se vuelve a escuchar el paquete.
     - Tras reanudar, Mapbox solo cuenta lo bajado en la última sesión: una zona que ocupó 69 MB decía 9 MB. Ahora el tamaño nunca baja de la estimación de D15 y se muestra como "Unos N MB".
   - Quedan 5 zonas de prueba en el emulador, encimadas cerca de Santo Tomás y el centro del estado.
-- [ ] T37 — Comprobar `RecordingMap` con una zona descargada y sin ella. Correr M17 a M19 y anotar los resultados. (CA-20, CA-21, CA-31 a CA-34)
+- [x] T37 — Comprobar `RecordingMap` con una zona descargada y sin ella. Correr M17 a M19 y anotar los resultados. (CA-20, CA-21, CA-31 a CA-34)
+
+  Hecho (2026-11-08), en el emulador, con la app completa (sin cambios temporales), el backend local y una cuenta de prueba nueva. No hubo que cambiar código.
+  - **M17, pasa:**
+    - (1) En modo avión, el selector dice "Sin conexión" y el botón no hace nada.
+    - (2) Al abrir, con todo el estado en el marco: "Zona demasiado grande", con la explicación.
+    - (3) San Felipe, "Unos 63 MB · 275 km²": el diálogo muestra el tamaño y, al cancelar, `tile_store` no cambia.
+    - (4) La velocidad EDGE del emulador ya no frenaba la descarga: 64 MB en unos 15 s. Aun así se vio el avance en La Rumorosa (41 % y 94 %) antes de quedar lista. Modo avión 3 s después de confirmar, en Cerro Prieto: sin reiniciar, la zona pasó a "Descarga incompleta (80 %)". Esta vez Mapbox sí avisó el error ("2 of 10 resources failed to load"), a diferencia de T36.
+    - (5) Con red, "Reintentar" la dejó lista al momento. `tile_store` no creció: solo faltaban recursos pequeños.
+  - **M18, pasa:**
+    - (1) Cada zona dice cuánto ocupa.
+    - (2) Borrar pide confirmación y la zona sale de la lista.
+    - (3) Con 10 zonas el selector dice "Ya tienes 10 zonas" y no deja descargar; así queda probado en la app el rechazo que en T35 solo se probó con Vitest. Al borrar una (9), Valle de la Trinidad, "Unos 62 MB · 273 km²", sí se descargó.
+  - **M19, pasa en el emulador.** Zona de Valle de la Trinidad, sin ver antes a ese zoom; GPS simulado y modo avión:
+    - **Claro:** en 3D se ven el relieve, el sombreado y las curvas de nivel; en 2D, el terreno y las curvas.
+    - **Oscuro:** en 3D se ve el relieve. En 2D el fondo es gris liso, porque `dark-v11` no dibuja sombreado ni curvas y en ese punto no hay caminos. Los dos paquetes de la zona tienen los mismos mosaicos de calles, terreno y relieve (`metadata.db` de `tile_store`). En ningún caso hubo fondo azul.
+    - **Fuera de la zona** solo se ven manchas de zoom bajo, y la grabación siguió igual (7 puntos, 72 m, la línea dibujada). Quedó "Pendiente de subir", como en la spec 010.
+    - El aviso "Mapa sin conexión" sale con o sin zona. En desarrollo, LogBox muestra "Map load failed: Online connectivity is disabled" por los mosaicos fuera de la zona o de más zoom; no afecta.
+    - CA-20 y CA-21 siguen pendientes del teléfono real (T54).
+  - **Para revisar:** todas las zonas se llaman "Zona del 8 nov 2026", así que en la lista no se distinguen las de un mismo día más que por tamaño y área.
+  - Quedan 10 zonas de prueba en el emulador y la cuenta de prueba en la base local.
 
 ## Fase 1F — Opción de prueba
 
@@ -283,10 +303,10 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-28 | Revisión de estados en T61 | Revisión | Pendiente |
 | CA-29 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |
 | CA-30 | Caso manual M1 | Manual | Cumple (emulador) |
-| CA-31 | `frontend/lib/map/offlineZones.test.ts` y caso manual M17 | Automatizada y manual | Pendiente: Vitest pasa, falta M17 |
-| CA-32 | Caso manual M17 | Manual | Pendiente |
-| CA-33 | Caso manual M18 | Manual | Pendiente |
-| CA-34 | Caso manual M17 | Manual | Pendiente |
+| CA-31 | `frontend/lib/map/offlineZones.test.ts` y caso manual M17 | Automatizada y manual | Cumple (Vitest y emulador) |
+| CA-32 | Caso manual M17 | Manual | Cumple (emulador) |
+| CA-33 | Caso manual M18 | Manual | Cumple (emulador) |
+| CA-34 | Caso manual M17 | Manual | Cumple (emulador) |
 | CA-35 | Caso manual M1 | Manual | Cumple (emulador) |
 | CA-36 | Caso manual M2 | Manual | Cumple (emulador) |
 | CA-37 | Caso manual M3 | Manual | Cumple (emulador) |
