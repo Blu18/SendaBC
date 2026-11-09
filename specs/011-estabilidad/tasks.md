@@ -252,13 +252,24 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
     - `insertDownloadedActivity` inserta por lotes de `PUNTOS_POR_LOTE` (500).
   - **Pruebas:** `espera.test.ts` (8; dos usan un hilo que tiene la base bloqueada y muestran el fallo sin la espera) y 2 nuevas en `activities.test.ts` (lotes y todo o nada). Las de lotes y espera fallan sin la corrección (CA-24).
   - **Datos de prueba:** script y copia de la base en el scratchpad de la sesión, no en el repositorio. M20 se corrió con el backend local en el puerto 3001, Metro en el 8082 y `adb reverse`.
-  - Aparte: el error de `start()` en `activityTracker.hook.ts` no se atrapa. En producción, la actividad no inicia y no se ve ningún mensaje.
+  - Aparte: el error de `start()` en `activityTracker.hook.ts` no se atrapa. En producción, la actividad no inicia y no se ve ningún mensaje. Se corrige en T62 (spec 003, CA-16).
 - [ ] T40 — Filtro de `503`, mensaje en `mensajeDeFallo`, y reproducir qué rama mostró el mensaje de internet (plan, R3). Correr M21. (CA-14, D9)
 - [ ] T41 — `sinSaltos` en `recorrido.ts` y publicar con `sequence = ANY(...)`, con e2e en `route-publish.e2e-spec.ts`. Correr M22. (CA-15, CA-16, D8)
 - [ ] T42 — `backend/src/activity/distancia.ts`, con los mismos casos que `frontend/lib/metrics/distance.test.ts`, y script `datos:recalcular-distancias`. (CA-17, RN-11, D7)
 - [ ] T43 — `lib/metrics/oldPoints.ts` y `recalcularDistanciasViejas`, una sola vez, sin cambiar el estado. (CA-17, RN-11)
 - [ ] T44 — Correr el script en modo informe, revisar la lista con el usuario y aplicar. Correr M23. (CA-17)
 - [ ] T45 — Correr M24 en un teléfono real. Corregir si se reproduce; si no, cerrar por RN-3. (CA-18)
+- [x] T62 — Avisar cuando falla el inicio de una actividad y permitir reintentar, sin dejar nada grabando ni una actividad en `RECORDING`. Correr M36. (spec 003, CA-16; CA-13)
+
+  Hecho (2026-11-09). **M36 pasa en el emulador Pixel_8_Pro** con la cuenta de Postman y contactos activos (modo en segundo plano). El fallo se forzó con un `throw` temporal, solo en el primer intento, justo después de `createActivity`, el caso que más limpieza necesita. Al terminar el caso se quitó el `throw`.
+  - **Primer intento:** la pantalla sigue en "Nueva actividad" con el aviso de error "No se pudo iniciar la actividad · Intenta de nuevo.", y "Iniciar actividad" sigue abajo. En el registro sale `Error iniciando la actividad: FALLA_INICIO_TEMPORAL`, sin "Uncaught (in promise)". La actividad creada (87) queda cerrada con `endedAt = startedAt` y se sube, como en CA-10. No queda ninguna en `RECORDING`.
+  - **Reintento:** inicia y graba ("Grabando · Senderismo", 1 punto). Al detenerla (88), la base no tiene ninguna actividad en `RECORDING`.
+  - **Código:**
+    - `lib/activity/inicio.ts`: `iniciarOLimpiar` (si falla, limpia y devuelve el error original) y `cierrePendiente` (hora de cierre como en CA-10, compartida con la salida de la pantalla).
+    - `activityTracker.hook.ts`: `start()` ya no deja escapar el error. Limpia lo que alcanzó a arrancar (GPS o tarea, barómetro, escucha de puntos), cierra la actividad si ya existía y expone `startFailed`.
+    - `activityPage.tsx`: muestra el aviso.
+  - **Pruebas:** `lib/activity/inicio.test.ts` (7).
+  - **Datos de prueba:** las actividades 87 y 88, vacías, quedaron subidas en la cuenta de Postman.
 
 ## Fase 3 — Pruebas
 
@@ -559,6 +570,13 @@ Antes de la fase 4, salvo que digan otra cosa, se pueden correr en el emulador, 
 **M35 — Postman**
 1. Correr la colección completa en Postman, con el backend local.
 - **Esperado:** todas las solicitudes pasan, incluidos los cuatro endpoints de `/user/me`.
+
+**M36 — Fallo al iniciar (spec 003, CA-16)**
+1. Forzar que el primer inicio falle después de crear la actividad (un `throw` temporal en `start()`, solo en el primer intento) y presionar "Iniciar actividad".
+2. Revisar la pantalla, el registro y la base del teléfono.
+3. Presionar "Iniciar actividad" de nuevo, grabar unos segundos y detener.
+4. Quitar el `throw`.
+- **Esperado:** en el paso 2 la pantalla sigue en "Nueva actividad" con "No se pudo iniciar la actividad. Intenta de nuevo.", no sale "Uncaught (in promise)", y la actividad creada queda cerrada como en CA-10, sin ninguna en `RECORDING`. En el paso 3 la actividad inicia y se graba normalmente.
 
 ## Reporte de la prueba de campo
 

@@ -8,6 +8,7 @@ import {
   type ActivityType,
 } from '../../lib/db/activities';
 import { finalizeMetrics } from '../../lib/db/activityMetrics';
+import { cierrePendiente, iniciarOLimpiar } from '../../lib/activity/inicio';
 import { getDetectorState, saveDetectorState } from '../../lib/db/safety';
 import { syncEngine } from '../../lib/sync';
 import { createLiveMetrics } from '../../lib/metrics/summary';
@@ -90,6 +91,8 @@ export function useActivityTracker() {
   // Métricas en vivo, con los mismos umbrales que el resumen (spec 004, CA-15, CA-16)
   // No se pudo cerrar la actividad al detener (spec 003, CA-12)
   const [stopFailed, setStopFailed] = useState(false);
+  // No se pudo iniciar la actividad; "Iniciar actividad" sigue disponible (spec 003, CA-16)
+  const [startFailed, setStartFailed] = useState(false);
   const [liveDistance, setLiveDistance] = useState(0);
   const [liveElevationGain, setLiveElevationGain] = useState(0);
 
@@ -112,7 +115,10 @@ export function useActivityTracker() {
     if (busy.current || modeRef.current || !userId) return;
     busy.current = true;
 
-    try {
+    const iniciar = async () => {
+      // Sin restos de un intento anterior: la limpieza solo cierra la actividad de este (CA-16)
+      activityId.current = null;
+      startedAtRef.current = null;
       const permiso = await request();
       if (!permiso.granted) {
         setPermissionError(permiso.canAskAgain ? 'denied' : 'blocked');
@@ -201,10 +207,35 @@ export function useActivityTracker() {
       // (CA-11; spec 008, D4)
       if (modo === 'foreground') keepScreenOn();
       setStatus('recording');
+    };
+
+    try {
+      setStartFailed(false);
+      // Si falla a medias, no queda nada grabando ni una actividad en RECORDING, y se avisa en
+      // pantalla para reintentar (spec 003, CA-16)
+      const resultado = await iniciarOLimpiar(iniciar, limpiarInicioFallido, console.log);
+      if (!resultado.ok) {
+        console.log('Error iniciando la actividad:', resultado.error);
+        if (mounted.current) setStartFailed(true);
+      }
     } finally {
       busy.current = false;
     }
   }, [request, userId]);
+
+  // Deshace un inicio fallido: deja de escuchar lo que alcanzó a arrancar y, si la actividad ya
+  // se había creado, la cierra como en CA-10 antes de permitir reintentar (spec 003, CA-16; RN-1)
+  const limpiarInicioFallido = async () => {
+    dejarDeGrabar();
+    const cierre = cierrePendiente(activityId.current, lastPointAt.current, startedAtRef.current);
+    activityId.current = null;
+    startedAtRef.current = null;
+    if (mounted.current) {
+      setActivityLocalId(null);
+      setStartedAt(null);
+    }
+    if (cierre) await cerrarActividad(cierre.id, cierre.endedAt);
+  };
 
   // Deja de escuchar el GPS (o detiene la tarea), el barómetro y los puntos guardados.
   const dejarDeGrabar = () => {
@@ -290,11 +321,14 @@ export function useActivityTracker() {
   const closeOnUnmount = () => {
     if (!dejarDeGrabar()) return;
 
-    const id = activityId.current;
-    const endedAt = lastPointAt.current ?? startedAtRef.current;
-    if (id == null || !endedAt) return;
+    const cierre = cierrePendiente(activityId.current, lastPointAt.current, startedAtRef.current);
+    if (cierre) void cerrarActividad(cierre.id, cierre.endedAt);
+  };
+
+  // Cierra una actividad que dejó de grabarse sin "Detener" (al salir o al fallar el inicio)
+  const cerrarActividad = (id: number, endedAt: string) => {
     void detenerDetector(id);
-    finishActivity(id, endedAt)
+    return finishActivity(id, endedAt)
       .then(() => sessionActions.terminar(id, endedAt))
       // Como al detener: sin esto se vería sin métricas y sin subir hasta reabrir la app.
       .then(() => finalizeMetrics(id))
@@ -322,6 +356,7 @@ export function useActivityTracker() {
     startedAt,
     permissionError,
     stopFailed,
+    startFailed,
     liveDistance,
     liveElevationGain,
     start,
