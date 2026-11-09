@@ -180,7 +180,16 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
     - **`disk-quota` en 1 byte** (`TileStore.setOption`), antes y después de reiniciar y con red para forzar escrituras, **no libera nada**: 36 MB y la zona visible.
     - Lo descargado en T2 (51 MB) ya no estaba al empezar: `tile_store` medía 1 MB. Mapbox sí lo libera con el tiempo, sin plazo conocido.
     - **Conclusión:** la última frase de CA-33 no se podía cumplir con Mapbox. El usuario aprobó cambiarla: la zona borrada sale de la lista y deja de contar para el tope, y puede seguir viéndose sin red hasta que se libere el espacio. M18 paso 3 cambia en consecuencia. La app no toca `disk-quota`.
-- [ ] T35 — `pickZonePage`: marco, tamaño, confirmar o cancelar, rechazo por tope o por tener ya 10 zonas, y sin red. (CA-31, CA-34)
+- [x] T35 — `pickZonePage`: marco, tamaño, confirmar o cancelar, rechazo por tope o por tener ya 10 zonas, y sin red. (CA-31, CA-34)
+
+  Hecho (2026-11-08). `pages/map/pickZonePage.tsx`, registrada como `PickZone`; el acceso se agrega en T36. Mapa en 2D, sin giro ni inclinación, que empieza con todo Baja California y no usa la ubicación. El marco fijo ocupa el 80 % del lado más corto. `estadoDelSelector` y `resumenDeZona` en `offlineZones.ts` deciden el panel: sin red, demasiado grande, ya hay 10 o tamaño y área. Confirmar abre un diálogo con el tamaño y el aviso de datos. Al empezar la descarga, regresa. Pruebas en `offlineZones.test.ts` (27).
+  - **Emulador**, abriendo la pantalla directo en `C:\dev\sbc` (cambio temporal ya quitado):
+    - Al abrir, con todo el estado en el marco: "Zona demasiado grande" y el botón desactivado.
+    - Acercando unos 5 niveles: "Unos 62 MB · 272 km²" y el botón activo.
+    - El diálogo muestra el tamaño. Cancelar no descarga nada: `tile_store` sigue en 36.9 MB. Descargar sube `tile_store` a 72 MB.
+    - En modo avión: "Sin conexión", el botón desactivado y el diálogo no se abre (CA-34).
+    - Se quitó del mensaje de zona grande la frase que repetía el título.
+    - El rechazo por 10 zonas solo se probó con Vitest.
 - [ ] T36 — `offlineZonesPage` y acceso desde `mainPage`. (CA-32, CA-33)
 - [ ] T37 — Comprobar `RecordingMap` con una zona descargada y sin ella. Correr M17 a M19 y anotar los resultados. (CA-20, CA-21, CA-31 a CA-34)
 

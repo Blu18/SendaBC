@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_ZONES,
   agruparZonas,
+  estadoDelSelector,
+  resumenDeZona,
   areaKm2,
   boundsParaMapbox,
   contarMosaicos,
@@ -190,5 +192,33 @@ describe('formatoOcupado', () => {
   it('redondea a MB', () => {
     expect(formatoOcupado(141_600_000)).toBe('142 MB');
     expect(formatoOcupado(300_000)).toBe('Menos de 1 MB');
+  });
+});
+
+describe('estadoDelSelector (CA-31, CA-34)', () => {
+  it('sin red no deja descargar, aunque todo lo demás esté bien (CA-34)', () => {
+    expect(estadoDelSelector({ conectado: false, zonas: 0, bounds: cuadro(10) })).toEqual({ kind: 'offline' });
+  });
+
+  it('espera a saber cuántas zonas hay y a medir el marco', () => {
+    expect(estadoDelSelector({ conectado: true, zonas: null, bounds: cuadro(10) }).kind).toBe('loading');
+    expect(estadoDelSelector({ conectado: true, zonas: 0, bounds: null }).kind).toBe('loading');
+  });
+
+  it('una zona válida trae su tamaño para mostrarlo antes de confirmar (CA-31)', () => {
+    const r = estadoDelSelector({ conectado: true, zonas: 3, bounds: cuadro(10) });
+    expect(r).toMatchObject({ kind: 'ok' });
+    if (r.kind === 'ok') expect(r.sizeMb).toBeCloseTo(41, 0);
+  });
+
+  it('rechaza por tamaño o por tener ya 10 zonas (RN-8)', () => {
+    expect(estadoDelSelector({ conectado: true, zonas: 0, bounds: cuadro(40) }).kind).toBe('too-large');
+    expect(estadoDelSelector({ conectado: true, zonas: MAX_ZONES, bounds: cuadro(10) }).kind).toBe('too-many');
+  });
+});
+
+describe('resumenDeZona', () => {
+  it('da tamaño y área redondeados', () => {
+    expect(resumenDeZona(99.6, 40.6)).toBe('Unos 41 MB · 100 km²');
   });
 });

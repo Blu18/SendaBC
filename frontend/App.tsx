@@ -26,6 +26,7 @@ import ProfilePage from './pages/account/profilePage';
 import ChangeEmailPage from './pages/account/changeEmailPage';
 import ChangePasswordPage from './pages/account/changePasswordPage';
 import DeleteAccountPage from './pages/account/deleteAccountPage';
+import PickZonePage from './pages/map/pickZonePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
 import { closeOrphanActivities } from './lib/db/activities';
@@ -142,6 +143,10 @@ const RootStack = createNativeStackNavigator({
     },
     DeleteAccount: {
       screen: DeleteAccountPage
+    },
+    // Zonas del mapa para grabar sin conexión (spec 011, CA-31 a CA-34).
+    PickZone: {
+      screen: PickZonePage
     }
   }
 })

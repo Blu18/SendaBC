@@ -120,7 +120,8 @@ export function revisarZona(b: ZoneBounds, zonasExistentes: number): ZoneCheck {
 
 // Mensajes para pickZonePage (CA-31).
 export const ZONE_MESSAGES = {
-  tooLarge: `La zona es demasiado grande. Acerca el mapa: el máximo es de unos ${MAX_ZONE_KM2} km² (30 × 30 km).`,
+  offline: 'Necesitas conexión a internet para descargar una zona.',
+  tooLarge: `Acerca el mapa: el máximo es de unos ${MAX_ZONE_KM2} km² (30 × 30 km).`,
   tooMany: `Ya tienes ${MAX_ZONES} zonas descargadas. Borra una para descargar otra.`,
 } as const;
 
@@ -229,4 +230,32 @@ export function agruparZonas(packs: PackInfo[], vivos: Record<string, PackLive> 
 export function formatoOcupado(bytes: number): string {
   const mb = bytes / 1_000_000;
   return mb < 1 ? 'Menos de 1 MB' : `${Math.round(mb)} MB`;
+}
+
+// --- Selector de zona (CA-31, CA-34) ---
+
+export type PickerState =
+  | { kind: 'offline' }
+  | { kind: 'loading' }
+  | { kind: 'too-many' }
+  | { kind: 'too-large'; areaKm2: number; sizeMb: number }
+  | { kind: 'ok'; bounds: ZoneBounds; areaKm2: number; sizeMb: number };
+
+// Qué muestra pickZonePage. Sin red no se puede descargar, aunque el mapa se vea por la caché
+// (CA-34). Mientras no se sabe cuántas zonas hay, o el marco aún no se mide, no se decide nada.
+export function estadoDelSelector(o: {
+  conectado: boolean;
+  zonas: number | null;
+  bounds: ZoneBounds | null;
+}): PickerState {
+  if (!o.conectado) return { kind: 'offline' };
+  if (o.zonas === null || !o.bounds) return { kind: 'loading' };
+  const r = revisarZona(o.bounds, o.zonas);
+  if (r.ok) return { kind: 'ok', bounds: o.bounds, areaKm2: r.areaKm2, sizeMb: r.sizeMb };
+  return r.reason === 'too-many' ? { kind: 'too-many' } : { kind: 'too-large', areaKm2: r.areaKm2, sizeMb: r.sizeMb };
+}
+
+// "Unos 41 MB · 100 km²"
+export function resumenDeZona(areaKm2: number, sizeMb: number): string {
+  return `${formatoTamano(sizeMb)} · ${Math.round(areaKm2).toLocaleString('es-MX')} km²`;
 }
