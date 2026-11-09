@@ -62,7 +62,7 @@ Las specs 003 a 010 dejaron para esta lo que no se pudo comprobar en el emulador
 - **CA-21 (HU-5):** Dado que no descargué la zona, cuando grabo sin red, entonces la grabación funciona igual y sigue el comportamiento sin conexión de la spec 010.
 - **CA-31 (HU-5):** Dado que tengo conexión, cuando elijo una zona en el mapa, entonces veo su tamaño aproximado antes de descargarla y puedo confirmar o cancelar. Si la zona supera el tope de RN-8, la app no deja descargarla y explica por qué.
 - **CA-32 (HU-5):** Dada una descarga en curso, cuando la miro, entonces veo su avance. Si se interrumpe, la zona no aparece como lista y puedo reintentar.
-- **CA-33 (HU-5):** Dadas mis zonas descargadas, cuando abro su lista, entonces veo cuánto ocupa cada una y puedo borrarla. Una zona borrada deja de estar disponible sin red.
+- **CA-33 (HU-5):** Dadas mis zonas descargadas, cuando abro su lista, entonces veo cuánto ocupa cada una y puedo borrarla. Una zona borrada sale de la lista y deja de contar para el tope; el teléfono libera su espacio con el tiempo, y mientras tanto el mapa puede seguir mostrándola sin red.
 - **CA-34 (HU-5):** Dado que no tengo conexión, cuando intento descargar una zona, entonces la app me lo indica y no empieza la descarga.
 
 ### Rutas sin conexión
@@ -180,6 +180,7 @@ Ninguna pendiente.
 
 ## Historial
 
+- 2026-11-08 — Al implementar T34, la comprobación de R1 muestra que Mapbox no quita al momento lo descargado de una zona borrada: sigue ocupando espacio y viéndose sin red, y bajar `disk-quota` no lo acelera. El usuario aprueba cambiar la última frase de CA-33.
 - 2026-11-07 — Al implementar T11, el plan no fijaba qué avatares hay. El usuario elige 8, y se anotan en el plan (D4). La spec no cambia.
 - 2026-11-06 — Marco de grabación aprobado por el usuario en Figma (T5).
 - 2026-11-06 — Al revisar el marco de Figma (T5), el usuario pide "Pedir ayuda" del tamaño del botón 3D/2D y en la esquina inferior derecha (CA-30, P9). Con esto se cumple la spec 009, CA-13, que ya no hace falta cambiar.
