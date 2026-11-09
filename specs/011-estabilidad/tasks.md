@@ -166,7 +166,9 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
 ## Fase 1E — Zonas descargadas
 
-- [ ] T33 — `lib/map/offlineZones.ts`: límites, conteo de mosaicos, tamaño aproximado y tope. (CA-31, RN-8)
+- [x] T33 — `lib/map/offlineZones.ts`: límites, conteo de mosaicos, tamaño aproximado y tope. (CA-31, RN-8)
+
+  Hecho (2026-11-08). `marcoALimites` pasa el marco fijo del centro (centro, zoom y tamaño en dp) a límites en Web Mercator, con mosaicos de 512 px como la cámara de Mapbox; el selector va en 2D y hacia el norte. `areaKm2`, `tamanoAproximadoMb` (D15), `contarMosaicos` (XYZ, zoom 10 a 13) y `revisarZona`, que rechaza más de 900 km² o tener ya 10 zonas (D13); una zona incompleta cuenta hasta que se borra. `boundsParaMapbox` da el orden de `createPack`, y `ZONE_MESSAGES` y `formatoTamano` los textos de T35. Pruebas en `offlineZones.test.ts` (14).
 - [ ] T34 — `lib/map/offlinePacks.ts` y `useOfflineZones`: crear, avance, reintentar, listar y borrar. Comprobar primero que una zona borrada deja de verse sin red y si `disk-quota` libera el espacio (plan, R1). (CA-32, CA-33)
 - [ ] T35 — `pickZonePage`: marco, tamaño, confirmar o cancelar, rechazo por tope o por tener ya 10 zonas, y sin red. (CA-31, CA-34)
 - [ ] T36 — `offlineZonesPage` y acceso desde `mainPage`. (CA-32, CA-33)
@@ -249,7 +251,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-28 | Revisión de estados en T61 | Revisión | Pendiente |
 | CA-29 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |
 | CA-30 | Caso manual M1 | Manual | Cumple (emulador) |
-| CA-31 | `frontend/lib/map/offlineZones.test.ts` y caso manual M17 | Automatizada y manual | Pendiente |
+| CA-31 | `frontend/lib/map/offlineZones.test.ts` y caso manual M17 | Automatizada y manual | Pendiente: Vitest pasa, falta M17 |
 | CA-32 | Caso manual M17 | Manual | Pendiente |
 | CA-33 | Caso manual M18 | Manual | Pendiente |
 | CA-34 | Caso manual M17 | Manual | Pendiente |
