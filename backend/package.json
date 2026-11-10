@@ -23,7 +23,8 @@
     "postinstall": "prisma generate",
     "seed:rutas:generar": "node prisma/seed/gpx-a-json.ts",
     "seed:rutas": "node prisma/seed/rutas-ejemplo.ts",
-    "seed:rutas:quitar": "node prisma/seed/rutas-ejemplo.ts --quitar"
+    "seed:rutas:quitar": "node prisma/seed/rutas-ejemplo.ts --quitar",
+    "datos:recalcular-distancias": "node prisma/scripts/recalcular-distancias.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

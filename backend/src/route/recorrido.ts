@@ -1,4 +1,5 @@
-import { haversine, type PuntoPerfil } from './elevation-profile.js';
+// Con extensión .ts para que el script de recálculo (node prisma/scripts/...) pueda cargarlo.
+import { haversine, type PuntoPerfil } from './elevation-profile.ts';
 
 // Mismo margen que usa la app para descartar una ubicación vieja al iniciar (spec 003, RN-5).
 export const MARGEN_PUNTO_VIEJO_MS = 30_000;
