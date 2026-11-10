@@ -8,6 +8,7 @@ import {
   sinConexion,
   erroresDeCampo,
   mensajeDeFallo,
+  ROUTE_ACTION_MESSAGES,
   routeDetailStatus,
   routeListStatus,
 } from './status';
@@ -130,6 +131,14 @@ describe('Detalle, listas y acciones de rutas (spec 007)', () => {
       expect(mensajeDeFallo({ error: new TypeError('Network request failed') })).toBe(generico);
       expect(mensajeDeFallo(http(500, 'Internal server error'))).toBe(generico);
       expect(mensajeDeFallo(http(401, 'Unauthorized'))).toBe(generico);
+    });
+
+    it('un 503 dice que el servicio no está disponible, no que falta internet (spec 011, CA-14)', () => {
+      const noDisponible = 'El servicio no está disponible. Inténtalo de nuevo en unos minutos.';
+      // Con el cuerpo del backend y sin él (p. ej. un 503 del túnel).
+      expect(mensajeDeFallo(http(503, noDisponible))).toBe(noDisponible);
+      expect(mensajeDeFallo(http(503, 'No se pudo completar la acción'))).toBe(noDisponible);
+      expect(mensajeDeFallo(http(503, noDisponible))).not.toBe(ROUTE_ACTION_MESSAGES.offline);
     });
 
     it('solo un 400 tiene errores por campo', () => {

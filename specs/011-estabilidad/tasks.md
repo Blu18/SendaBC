@@ -253,7 +253,18 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
   - **Pruebas:** `espera.test.ts` (8; dos usan un hilo que tiene la base bloqueada y muestran el fallo sin la espera) y 2 nuevas en `activities.test.ts` (lotes y todo o nada). Las de lotes y espera fallan sin la corrección (CA-24).
   - **Datos de prueba:** script y copia de la base en el scratchpad de la sesión, no en el repositorio. M20 se corrió con el backend local en el puerto 3001, Metro en el 8082 y `adb reverse`.
   - Aparte: el error de `start()` en `activityTracker.hook.ts` no se atrapa. En producción, la actividad no inicia y no se ve ningún mensaje. Se corrige en T62 (spec 003, CA-16).
-- [ ] T40 — Filtro de `503`, mensaje en `mensajeDeFallo`, y reproducir qué rama mostró el mensaje de internet (plan, R3). Correr M21. (CA-14, D9)
+- [x] T40 — Filtro de `503`, mensaje en `mensajeDeFallo`, y reproducir qué rama mostró el mensaje de internet (plan, R3). Correr M21. (CA-14, D9)
+
+  Hecho (2026-11-09).
+  - **Error de Prisma, confirmado:** con `DATABASE_URL` en un puerto cerrado, Prisma 7 lanza `PrismaClientKnownRequestError` con `code: 'P1001'` y `meta.driverAdapterError.cause.kind: 'DatabaseNotReachable'`. Hasta ahora respondía `500`.
+  - **Backend:** `src/prisma-disponibilidad.filter.ts`. `esBaseNoDisponible` revisa la forma del error, no su clase: los códigos de conexión de Prisma (`P1001`, `P1002`, `P1017`, `P2024`, también como `errorCode` de inicialización) y los tipos del adaptador (`DatabaseNotReachable`, `ConnectionClosed`, `SocketTimeout`, `TooManyConnections`). El filtro global responde `503` con "El servicio no está disponible. Inténtalo de nuevo en unos minutos." y deja los demás errores a Nest. Se registra en `configurarHttp`, que comparten `main.ts` y las e2e que lo usan (`app` y `auth` no lo usan y no lo necesitan).
+  - **Frontend:** `mensajeDeFallo` muestra ese texto para cualquier `503`, también si llega sin el cuerpo del backend (por ejemplo, del túnel).
+  - **Pruebas:** `prisma-disponibilidad.filter.spec.ts` (6: el error real de Prisma, otros códigos, errores que no son de conexión, y una app Nest con `configurarHttp` que responde `503`, `500` y `404`) y una nueva en `status.test.ts`. La del `503` falla sin el filtro (CA-24). Pasan las 433 del backend y la compilación; el lint no marca nada en estos archivos.
+  - **M21 en el emulador** (Pixel_8_Pro, cuenta de Postman, actividad del 6 nov de 1.56 km, backend en el 3001 con `adb reverse`):
+    - **Antes**, sin el filtro y con la base inalcanzable: "No se pudo publicar · No se pudo completar. Inténtalo de nuevo." No menciona internet.
+    - **Después**: "No se pudo publicar · El servicio no está disponible. Inténtalo de nuevo en unos minutos." El formulario conserva lo escrito. **Pasa.**
+  - **Qué rama mostró el mensaje de internet en la 010 (R3):** no fue la del `5xx`; en el código de entonces (`b929794`) `mensajeDeFallo` era igual. El único camino es `{ offline: true }` de `useRouteMutations`, cuando `hayConexion` dice que no hay red (`isInternetReachable: false`): la petición ni se envía. La causa más probable es la falla de DNS del emulador de ese mismo día (2026-11-06), que hacía que la app se creyera sin conexión; el `DatabaseNotReachable` del registro del backend sería otro intento. No se repitió (RN-3), así que no se cambió `hayConexion`.
+  - **Incidente en la prueba:** en el primer intento el backend no se reinició sin base y la ruta "Prueba M21" se publicó de verdad en la cuenta de Postman. Se borró al momento con `DELETE /routes/:id` (`204`, luego `404`). La cuenta queda sin rutas.
 - [ ] T41 — `sinSaltos` en `recorrido.ts` y publicar con `sequence = ANY(...)`, con e2e en `route-publish.e2e-spec.ts`. Correr M22. (CA-15, CA-16, D8)
 - [ ] T42 — `backend/src/activity/distancia.ts`, con los mismos casos que `frontend/lib/metrics/distance.test.ts`, y script `datos:recalcular-distancias`. (CA-17, RN-11, D7)
 - [ ] T43 — `lib/metrics/oldPoints.ts` y `recalcularDistanciasViejas`, una sola vez, sin cambiar el estado. (CA-17, RN-11)
@@ -317,7 +328,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-11 | Caso manual M32 | Manual, teléfono real | Pendiente |
 | CA-12 | Caso manual M33 | Revisión | Pendiente |
 | CA-13 | Caso manual M20, `lib/db/espera.test.ts` y `activities.test.ts` | Manual y automatizada | Cumple (emulador) |
-| CA-14 | `prisma-disponibilidad.filter.spec.ts`, `frontend/lib/routes/status.test.ts` y caso manual M21 | Automatizada y manual | Pendiente |
+| CA-14 | `prisma-disponibilidad.filter.spec.ts`, `frontend/lib/routes/status.test.ts` y caso manual M21 | Automatizada y manual | Cumple (Vitest y emulador) |
 | CA-15 | `backend/src/route/recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Pendiente |
 | CA-16 | `recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Pendiente |
 | CA-17 | `backend/src/activity/distancia.spec.ts`, `frontend/lib/metrics/oldPoints.test.ts` y caso manual M23 | Automatizada y manual | Pendiente |

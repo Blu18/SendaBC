@@ -104,13 +104,18 @@ export type RouteActionFailure = RouteFailure | { offline: true };
 export const ROUTE_ACTION_MESSAGES = {
   offline: 'Esto necesita conexión a internet. Revisa tu conexión e inténtalo de nuevo.',
   error: 'No se pudo completar. Inténtalo de nuevo.',
+  // El servidor no alcanza su base (503): no es problema de la red del teléfono (spec 011,
+  // CA-14). Es el mismo texto que manda el backend; aquí cubre también un 503 sin ese cuerpo.
+  noDisponible: 'El servicio no está disponible. Inténtalo de nuevo en unos minutos.',
 } as const;
 
 // Mensaje para el usuario. Un 4xx trae su motivo del servidor en español (409, 403, 404); sin
-// red, un 5xx o un 400 de validación (sus errores van junto a cada campo) usan uno genérico.
+// red, un 5xx o un 400 de validación (sus errores van junto a cada campo) usan uno genérico. Un
+// 503 dice que el servicio no está disponible (spec 011, CA-14).
 export function mensajeDeFallo(fallo: RouteActionFailure): string {
   if ('offline' in fallo) return ROUTE_ACTION_MESSAGES.offline;
   if ('error' in fallo) return ROUTE_ACTION_MESSAGES.error;
+  if (fallo.status === 503) return ROUTE_ACTION_MESSAGES.noDisponible;
   const tieneCampos = Object.keys(fallo.apiError.fieldErrors).length > 0;
   if (fallo.status >= 400 && fallo.status < 500 && fallo.status !== 401 && !tieneCampos) {
     return fallo.apiError.message;
