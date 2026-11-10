@@ -325,7 +325,9 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
 ## Fase 3 — Pruebas
 
-- [ ] T46 — `fileParallelism: false` en `vitest.config.e2e.ts`, y correr la suite 5 veces seguidas. (CA-22, D10)
+- [x] T46 — `fileParallelism: false` en `vitest.config.e2e.ts`, y correr la suite 5 veces seguidas. (CA-22, D10)
+
+  Hecho (2026-11-10). `fileParallelism: false` en `backend/vitest.config.e2e.ts`, con comentario. `npm run test:e2e` corrió 5 veces seguidas contra la base de Supabase y pasó las 5: 7 archivos y 88 pruebas cada vez, en 56, 44, 44, 44 y 45 s.
 - [ ] T47 — Revisar la lista de CA-23 del plan. Escribir las pruebas que falten y anotar por qué no aplican las demás. (CA-23)
 - [ ] T48 — Revisar que cada bug corregido en la fase 2 tenga una prueba que falle sin la corrección. (CA-24)
 
@@ -377,7 +379,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-19 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |
 | CA-20 | Caso manual M19 | Manual, teléfono real | Pendiente |
 | CA-21 | Caso manual M19 | Manual, teléfono real | Pendiente |
-| CA-22 | `npm run test:e2e`, 5 veces seguidas | Automatizada | Pendiente |
+| CA-22 | `npm run test:e2e`, 5 veces seguidas | Automatizada | Cumple (5 de 5, 88 pruebas) |
 | CA-23 | Pruebas nuevas y lista revisada en T47 | Automatizada y revisión | Pendiente |
 | CA-24 | Revisión de T48 y T57 | Revisión | Pendiente |
 | CA-25 | `npm test` y `npm run test:e2e` en backend, Vitest en frontend, y `npm run lint` | Automatizada | Pendiente |
