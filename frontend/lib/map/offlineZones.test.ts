@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_ZONES,
+  avanceDePaquete,
   agruparZonas,
   describirZona,
   estadoDelSelector,
@@ -250,5 +251,36 @@ describe('describirZona (CA-32, CA-33)', () => {
     const d = describirZona(zona({ status: 'incomplete', percentage: 50 }));
     expect(d.detail).toMatch(/^Descarga incompleta/);
     expect(d.detail).not.toMatch(/MB/);
+  });
+});
+
+describe('avanceDePaquete (spec 011, T36)', () => {
+  it('el primer aviso "completo" con 0 recursos sigue descargando y se vuelve a escuchar', () => {
+    expect(avanceDePaquete({ state: 'complete', percentage: 100, requiredResourceCount: 0 })).toEqual({
+      live: { state: 'active', percentage: 0 },
+      resubscribe: true,
+    });
+    expect(avanceDePaquete({ state: 'complete', percentage: 100 })).toEqual({
+      live: { state: 'active', percentage: 0 },
+      resubscribe: true,
+    });
+  });
+
+  it('completo con recursos es completo al 100 %', () => {
+    expect(avanceDePaquete({ state: 'complete', percentage: 99.6, requiredResourceCount: 812 })).toEqual({
+      live: { state: 'complete', percentage: 100 },
+      resubscribe: false,
+    });
+  });
+
+  it('descargando muestra el avance solo cuando ya se sabe cuántos recursos son', () => {
+    expect(avanceDePaquete({ state: 'active', percentage: 42, requiredResourceCount: 812 })).toEqual({
+      live: { state: 'active', percentage: 42 },
+      resubscribe: false,
+    });
+    expect(avanceDePaquete({ state: 'active', percentage: 100, requiredResourceCount: 0 })).toEqual({
+      live: { state: 'active', percentage: 0 },
+      resubscribe: false,
+    });
   });
 });

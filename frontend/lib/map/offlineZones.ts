@@ -156,6 +156,25 @@ export type PackInfo = {
 // Tras cerrar la app no hay nada aquí y una zona sin terminar se ve como incompleta.
 export type PackLive = { state: 'active' | 'complete' | 'error'; percentage: number | null };
 
+// Aviso de avance de Mapbox para un paquete.
+export type PackProgress = { state: string; percentage: number | null; requiredResourceCount?: number };
+
+// Estado de un paquete con un aviso de avance (spec 011, T36). El primer aviso de Mapbox llega con
+// 0 de 0 recursos, y rnmapbox lo marca como completo y deja de escuchar ese paquete: la zona salía
+// lista sin haberse descargado. Solo es completo con recursos; si no, sigue descargando y hay que
+// volver a escucharlo.
+export function avanceDePaquete(status: PackProgress): { live: PackLive; resubscribe: boolean } {
+  const requeridos = status.requiredResourceCount ?? 0;
+  const completo = status.state === 'complete' && requeridos > 0;
+  return {
+    live: {
+      state: completo ? 'complete' : 'active',
+      percentage: completo ? 100 : requeridos > 0 ? status.percentage : 0,
+    },
+    resubscribe: status.state === 'complete' && !completo,
+  };
+}
+
 export type ZoneStatus = 'ready' | 'downloading' | 'incomplete';
 
 export type ZoneItem = {

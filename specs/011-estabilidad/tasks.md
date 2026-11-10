@@ -328,7 +328,38 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 - [x] T46 — `fileParallelism: false` en `vitest.config.e2e.ts`, y correr la suite 5 veces seguidas. (CA-22, D10)
 
   Hecho (2026-11-10). `fileParallelism: false` en `backend/vitest.config.e2e.ts`, con comentario. `npm run test:e2e` corrió 5 veces seguidas contra la base de Supabase y pasó las 5: 7 archivos y 88 pruebas cada vez, en 56, 44, 44, 44 y 45 s.
-- [ ] T47 — Revisar la lista de CA-23 del plan. Escribir las pruebas que falten y anotar por qué no aplican las demás. (CA-23)
+- [x] T47 — Revisar la lista de CA-23 del plan. Escribir las pruebas que falten y anotar por qué no aplican las demás. (CA-23)
+
+  Hecho (2026-11-10). Se revisaron todos los `.ts` de `frontend/lib` y `backend/src` sin prueba propia: 21 y 32 archivos, además de la lista del plan.
+  - **Pruebas nuevas, frontend (+17):**
+    - `lib/safety/areYouOk.test.ts` (10), con Expo, la base y la tarea de ubicación simulados. Cubre `umbralesDeActividad` y lo que hace cada evento del detector: programar con los umbrales de la sesión, sin hora, preguntar, alertar e ignorar los ajenos. También que un error al crear la alerta queda en el log, y `responderEstoyBien` con y sin actividad y desde la notificación.
+    - `lib/safety/notifications.test.ts` (4): `esRespuestaEstoyBien` y el contenido de la pregunta (umbrales en el texto, `sticky`, canal y categoría con "Estoy bien" una sola vez).
+    - `lib/map/offlineZones.test.ts` (+3): la regla de T36 que estaba dentro de `offlinePacks.ts` ("completo" con 0 recursos sigue descargando y se vuelve a escuchar) pasó a `avanceDePaquete` en `offlineZones.ts`, que es lógica pura. `offlinePacks.ts` la usa sin cambiar su comportamiento.
+    - `lib/db/activityMetrics.ts` ya tenía prueba desde T43.
+  - **Pruebas nuevas, backend (+11):**
+    - `auth/auth.controller.spec.ts` (2): `LocalAuthGuard` y el token del id validado.
+    - `user/user.controller.spec.ts` (3): `JwtAuthGuard` en todo menos el registro, y cada endpoint de `/user/me` con el id del token (constitución 3.3).
+    - `user/normalizar-email.spec.ts` (2).
+    - `safety/safety.types.spec.ts` (4): `MOTIVO_API`, `aSafetyAlert` y `aSafetySession`.
+  - **No aplican, con su motivo:**
+    - **Constantes y textos:** `lib/api/queryClient.ts`, `lib/map/camera.ts`, `lib/map/messages.ts`, `lib/metrics/constants.ts`, `lib/routes/constants.ts`, `lib/theme/*` y `backend/src/telegram/telegram.sender.ts` (interfaz y un texto).
+    - **Envolturas nativas sin decisiones propias:**
+      - `lib/map/mapbox.ts` (token).
+      - `lib/map/offlinePacks.ts` (`offlineManager`; su regla ya se probó en `avanceDePaquete`).
+      - `lib/sensors/barometer.ts` (`expo-sensors`; se ve con 004 M3 y M5).
+      - `lib/auth/tokenStorage.ts` (`expo-secure-store`).
+      - `lib/db/sqlite.ts` (abre la base; el reintento está en `espera.ts`, con prueba).
+      - `lib/safety/locationTask.ts` (`TaskManager`; `aUbicacion` solo copia campos y el procesador tiene `recording.test.ts`).
+    - **Ensamblado de piezas que ya tienen prueba:** `lib/safety/index.ts` (`safetySync` y `sessionActions`) y `lib/sync/index.ts` (`syncEngine`; `isOnline` usa `hayConexion`, con prueba).
+    - **Utilidades de prueba:** `lib/db/testing.ts` y `lib/metrics/testing.ts`.
+    - **Backend, módulos y arranque:** `*.module.ts`, `main.ts`, `app.module.ts`, `app.service.ts`, `prisma.service.ts`, `prisma/db.ts` y `auth/types/*.d.ts`. `configurar-http.ts` lo usan todas las e2e.
+    - **Backend, cubiertos en otros archivos:**
+      - `auth/strategies/local.strategies.ts` (`auth.e2e-spec.ts`).
+      - `telegram/log.sender.ts` y `telegram.config.ts` (`telegram.module.spec.ts` y `safety.e2e-spec.ts`).
+      - `telegram/webhook-secret.guard.ts` (`telegram.controller.spec.ts`).
+      - `user/entities/user.entity.ts` (sin lógica).
+    - **DTOs** (`activity-point`, `activity-upload`, `update-emergency-contact`, `finish-session`, `session-location`, `upsert-session`, `delete-account`, `update-email` y `update-password`): son reglas declarativas de `class-validator`, y las e2e los recorren por el `ValidationPipe`. Varios casos 400 de `/user/me` ya están en `user.e2e-spec.ts`. No se prueba cada regla por separado.
+  - Vitest pasa en el frontend (766) y en el backend (468); `tsc` y lint, sin errores.
 - [ ] T48 — Revisar que cada bug corregido en la fase 2 tenga una prueba que falle sin la corrección. (CA-24)
 
 ## Fase 4 — Prueba de campo
@@ -380,7 +411,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-20 | Caso manual M19 | Manual, teléfono real | Pendiente |
 | CA-21 | Caso manual M19 | Manual, teléfono real | Pendiente |
 | CA-22 | `npm run test:e2e`, 5 veces seguidas | Automatizada | Cumple (5 de 5, 88 pruebas) |
-| CA-23 | Pruebas nuevas y lista revisada en T47 | Automatizada y revisión | Pendiente |
+| CA-23 | Pruebas nuevas y lista revisada en T47 | Automatizada y revisión | Cumple (28 pruebas nuevas; resto anotado) |
 | CA-24 | Revisión de T48 y T57 | Revisión | Pendiente |
 | CA-25 | `npm test` y `npm run test:e2e` en backend, Vitest en frontend, y `npm run lint` | Automatizada | Pendiente |
 | CA-26 | Caso manual M34 | Manual | Pendiente |
