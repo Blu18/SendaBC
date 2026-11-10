@@ -19,7 +19,11 @@ import type { CreateRouteDto } from './dto/create-route.dto.js';
 import type { NearbyQueryDto } from './dto/nearby-query.dto.js';
 import type { UpdateRouteDto } from './dto/update-route.dto.js';
 import { perfilDe, type Perfil } from './elevation-profile.js';
-import { sinPuntosViejos, type PuntoRecorrido } from './recorrido.js';
+import {
+  sinPuntosViejos,
+  sinSaltos,
+  type PuntoRecorrido,
+} from './recorrido.js';
 
 // Como máximo 50 rutas, las más cercanas al centro (spec 006, CA-5).
 export const MAX_NEARBY_ROUTES = 50;
@@ -228,8 +232,12 @@ export class RouteService {
           if (guardados.length < 2) {
             throw new BadRequestException(MENSAJES_PUBLICAR.sinRecorrido);
           }
-          // Sin la ubicación vieja que el GPS pudo entregar al iniciar (CA-28, RN-10).
-          const puntos = sinPuntosViejos(guardados, actividad.startedAt);
+          // Sin la ubicación vieja que el GPS pudo entregar al iniciar (CA-28, RN-10) ni los
+          // saltos imposibles a media grabación (spec 011, CA-15, CA-16).
+          const puntos = sinSaltos(
+            sinPuntosViejos(guardados, actividad.startedAt),
+          );
+          const secuencias = puntos.map((p) => p.sequence);
 
           const elevacion = actividad.elevationGainMeters ?? 0;
           const perfil = perfilDe(puntos);
@@ -248,7 +256,7 @@ export class RouteService {
                  (SELECT ST_MakeLine(location ORDER BY sequence) AS path
                   FROM activity_points
                   WHERE "activityId" = ${actividad.id}::uuid
-                    AND sequence >= ${puntos[0].sequence}::int) recorrido
+                    AND sequence = ANY(${secuencias}::int[])) recorrido
             WHERE a.id = ${actividad.id}::uuid`;
           return id;
         },

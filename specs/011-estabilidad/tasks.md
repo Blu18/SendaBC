@@ -265,7 +265,12 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
     - **Después**: "No se pudo publicar · El servicio no está disponible. Inténtalo de nuevo en unos minutos." El formulario conserva lo escrito. **Pasa.**
   - **Qué rama mostró el mensaje de internet en la 010 (R3):** no fue la del `5xx`; en el código de entonces (`b929794`) `mensajeDeFallo` era igual. El único camino es `{ offline: true }` de `useRouteMutations`, cuando `hayConexion` dice que no hay red (`isInternetReachable: false`): la petición ni se envía. La causa más probable es la falla de DNS del emulador de ese mismo día (2026-11-06), que hacía que la app se creyera sin conexión; el `DatabaseNotReachable` del registro del backend sería otro intento. No se repitió (RN-3), así que no se cambió `hayConexion`.
   - **Incidente en la prueba:** en el primer intento el backend no se reinició sin base y la ruta "Prueba M21" se publicó de verdad en la cuenta de Postman. Se borró al momento con `DELETE /routes/:id` (`204`, luego `404`). La cuenta queda sin rutas.
-- [ ] T41 — `sinSaltos` en `recorrido.ts` y publicar con `sequence = ANY(...)`, con e2e en `route-publish.e2e-spec.ts`. Correr M22. (CA-15, CA-16, D8)
+- [x] T41 — `sinSaltos` en `recorrido.ts` y publicar con `sequence = ANY(...)`, con e2e en `route-publish.e2e-spec.ts`. Correr M22. (CA-15, CA-16, D8)
+
+  Hecho (2026-11-09). `sinSaltos` en `backend/src/route/recorrido.ts` (D8): descarta cada punto a más de 50 m/s del último conservado (misma regla que `isJump` de la app); si quedara menos de la mitad o menos de 2 puntos, usa el tramo sin saltos más largo, y si tampoco alcanza, conserva todos. `RouteService.publish` la aplica después de `sinPuntosViejos`, pasa el resultado a `perfilDe` (CA-16) y arma `ST_MakeLine` con `sequence = ANY(...)` (CA-15). `haversine` se exporta de `elevation-profile.ts`. Las rutas ya publicadas no cambian.
+  - **Pruebas:** `recorrido.spec.ts` (7 nuevas), `route.service.spec.ts` (1 nueva, 3 ajustadas al arreglo de secuencias) y una e2e en `route-publish.e2e-spec.ts` con un punto ~100 km fuera de la línea: ningún vértice del recorrido va hacia él y el eje del perfil mide 28 × 111 m. Se comprobó que la e2e falla sin `sinSaltos`. `npm test` (441) y la e2e de publicar (23) pasan.
+  - **M22 pasa en el emulador Pixel_8_Pro** con la cuenta "Prueba zonas" y el backend local. Se grabó "Ciclismo" con `adb emu geo fix` hacia el norte desde `-115.91 32.04`, ~35 m cada 3 s, y un punto a ~4.7 km al este a la mitad. La actividad quedó con 2.04 km, 80 puntos y "Sincronizada"; en el servidor guarda el punto falso (secuencia 48, en `-115.86`). Se publicó como "M22 Salto". En la base, la ruta tiene 79 puntos, todos en `-115.91`, y el perfil 79, con el eje hasta 2 238 m: sin el salto habría sumado ~9.4 km de ida y vuelta. En el detalle, el mapa dibuja solo la línea recta hacia el norte, y el perfil va de 0 a 2.24 km. Los 200 m sobre la distancia de la actividad vienen del suavizado de la app (la distancia de la ruta se copia de la actividad, RN-1), no del salto. La elevación es 0 porque el emulador no simula altitud.
+  - **Datos de prueba:** la actividad y la ruta "M22 Salto" quedaron en la cuenta "Prueba zonas".
 - [ ] T42 — `backend/src/activity/distancia.ts`, con los mismos casos que `frontend/lib/metrics/distance.test.ts`, y script `datos:recalcular-distancias`. (CA-17, RN-11, D7)
 - [ ] T43 — `lib/metrics/oldPoints.ts` y `recalcularDistanciasViejas`, una sola vez, sin cambiar el estado. (CA-17, RN-11)
 - [ ] T44 — Correr el script en modo informe, revisar la lista con el usuario y aplicar. Correr M23. (CA-17)
@@ -329,8 +334,8 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-12 | Caso manual M33 | Revisión | Pendiente |
 | CA-13 | Caso manual M20, `lib/db/espera.test.ts` y `activities.test.ts` | Manual y automatizada | Cumple (emulador) |
 | CA-14 | `prisma-disponibilidad.filter.spec.ts`, `frontend/lib/routes/status.test.ts` y caso manual M21 | Automatizada y manual | Cumple (Vitest y emulador) |
-| CA-15 | `backend/src/route/recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Pendiente |
-| CA-16 | `recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Pendiente |
+| CA-15 | `backend/src/route/recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
+| CA-16 | `recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
 | CA-17 | `backend/src/activity/distancia.spec.ts`, `frontend/lib/metrics/oldPoints.test.ts` y caso manual M23 | Automatizada y manual | Pendiente |
 | CA-18 | Caso manual M24 | Manual, teléfono real | Pendiente |
 | CA-19 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |

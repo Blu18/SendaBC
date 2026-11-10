@@ -16,7 +16,7 @@ export type Perfil = [number, number][];
 
 const rad = (g: number) => (g * Math.PI) / 180;
 
-function haversine(a: PuntoPerfil, b: PuntoPerfil) {
+export function haversine(a: PuntoPerfil, b: PuntoPerfil) {
   const h =
     Math.sin(rad(b.lat - a.lat) / 2) ** 2 +
     Math.cos(rad(a.lat)) *
