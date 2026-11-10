@@ -287,7 +287,20 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
   - **Una vez por teléfono:** se marca en `app_settings` con `user_id = ''`, porque el paso es del teléfono y no de una cuenta. Si alguna actividad falla, no se marca y todo se repite en la siguiente apertura; recalcular dos veces da lo mismo.
   - **`App.tsx`:** se llama al abrir, después de `computeMissingMetrics` y antes de mostrar la navegación.
   - **Pruebas:** `activityMetrics.test.ts` (6) usa una ubicación guardada de 25 min antes, a 300 m, que la distancia de la spec 004 suma porque no es salto. Cubre que la distancia queda igual a la del recorrido sin ese punto, sin cambiar estado ni demás métricas; que no toca actividades sin puntos viejos; que corre una sola vez; que es idempotente; que con un error no se marca, y que no se cruza con los ajustes de una cuenta. `tsc` y Vitest pasan (749). Se ve en el teléfono con M23 (T44).
-- [ ] T44 — Correr el script en modo informe, revisar la lista con el usuario y aplicar. Correr M23. (CA-17)
+- [x] T44 — Correr el script en modo informe, revisar la lista con el usuario y aplicar. Correr M23. (CA-17)
+
+  Hecho (2026-11-09). **M23 pasa en el emulador Pixel_8_Pro** con el backend local y la base de Supabase.
+  - **Lista revisada con el usuario:** 9 actividades con puntos viejos y 2 con distancia distinta, las dos de `postman@senda.bc` y sin ruta publicada. El usuario aprobó aplicar.
+  - **Paso 1:** se entró con la cuenta de Postman en la app de antes (`C:\dev\sbc`, sin T43) para que descargara las dos. Teléfono y servidor tenían lo mismo, "Sincronizada" en los dos:
+    - `2cb9ddda…` (26 oct, 12:40 p.m.): 137 m, 5 puntos.
+    - `3dd385a8…` (30 oct, 2:41 p.m.): 1.08 km, 6 puntos.
+  - **Paso 2:** `npm run datos:recalcular-distancias -- --aplicar` guardó 83.963 m y 82.635 m. Las dos siguen `SYNCED` y su `updatedAt` no cambió. Luego se abrió la app desde `C:\dev\SendaBC\frontend`, con T43. El teléfono quedó con las mismas cifras, hasta el decimal 12, y en "Mis actividades" se ven "84 m" y "83 m", las dos "Sincronizada". Quedó la marca `distancias_recalculadas` en `app_settings`.
+  - **Paso 3:** al reiniciar la app no cambió nada, y el script en modo informe dio "9 actividades con puntos viejos, 0 con distancia distinta".
+  - **Comparación completa:** las 115 actividades `SYNCED` del teléfono que existen en el servidor tienen la misma distancia en los dos lados.
+  - **Ruta publicada (prueba aparte):** ninguna actividad afectada tenía ruta, así que se armó una. Con una cuenta de prueba nueva, en el backend local, se subió por `POST /activities/sync` una caminata de 7.5 km en el océano, como las e2e. Empezaba con una ubicación guardada 25 min antes y 1.5 km al sur, y la distancia era la que daría la app: 8 950 m. Se publicó como ruta: 8 950 m y Moderada. El perfil ya excluía el punto viejo (7 500 m).
+    - El informe mostró "8.950 km → 7.450 km, dificultad MODERATE → EASY". Era la única actividad con cambios; el informe contó 10 actividades con puntos viejos.
+    - Con `--aplicar`, la actividad y la ruta quedaron en 7 450 m y la ruta en Fácil. `GET /routes/:id` devuelve lo mismo. La actividad siguió `SYNCED` con su `updatedAt`, y la ruta siguió `PUBLISHED`, con `updatedAt` nuevo y el mismo recorrido. Una segunda corrida dio 0 cambios.
+    - Al final se borraron la ruta y la cuenta de prueba, y con ella su actividad.
 - [ ] T45 — Correr M24 en un teléfono real. Corregir si se reproduce; si no, cerrar por RN-3. (CA-18)
 - [x] T62 — Avisar cuando falla el inicio de una actividad y permitir reintentar, sin dejar nada grabando ni una actividad en `RECORDING`. Correr M36. (spec 003, CA-16; CA-13)
 
@@ -350,7 +363,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-14 | `prisma-disponibilidad.filter.spec.ts`, `frontend/lib/routes/status.test.ts` y caso manual M21 | Automatizada y manual | Cumple (Vitest y emulador) |
 | CA-15 | `backend/src/route/recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
 | CA-16 | `recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
-| CA-17 | `backend/src/activity/distancia.spec.ts`, `frontend/lib/metrics/oldPoints.test.ts` y caso manual M23 | Automatizada y manual | Pendiente |
+| CA-17 | `backend/src/activity/distancia.spec.ts`, `frontend/lib/metrics/oldPoints.test.ts` y caso manual M23 | Automatizada y manual | Cumple (Vitest, emulador y script con ruta de prueba) |
 | CA-18 | Caso manual M24 | Manual, teléfono real | Pendiente |
 | CA-19 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |
 | CA-20 | Caso manual M19 | Manual, teléfono real | Pendiente |
