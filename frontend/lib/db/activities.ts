@@ -346,6 +346,26 @@ export async function insertDownloadedActivity(activity: DownloadedActivity, use
 
 // Actividades terminadas con métricas pendientes: cerradas al abrir la app o
 // grabadas antes de la v3 (spec 004, CA-19).
+// Actividades terminadas que ya tienen distancia, para recalcular las que tienen puntos viejos
+// (spec 011, RN-11). Incluye las de cualquier cuenta y las sincronizadas.
+export async function listActivityIdsWithDistance() {
+  const db = await getDb();
+  const rows = await db.getAllAsync<{ localId: number }>(
+    `SELECT local_id AS localId FROM activities
+     WHERE status != 'RECORDING' AND distance_meters IS NOT NULL`
+  );
+  return rows.map((r) => r.localId);
+}
+
+// Guarda solo la distancia: ni el estado ni las demás métricas cambian (spec 011, RN-11).
+export async function saveDistance(localId: number, distanceMeters: number) {
+  const db = await getDb();
+  await db.runAsync(`UPDATE activities SET distance_meters = ? WHERE local_id = ?`, [
+    distanceMeters,
+    localId,
+  ]);
+}
+
 export async function listActivityIdsMissingMetrics() {
   const db = await getDb();
   const rows = await db.getAllAsync<{ localId: number }>(

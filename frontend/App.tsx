@@ -32,7 +32,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
 import { closeOrphanActivities } from './lib/db/activities';
 import { sessionActions } from './lib/safety';
-import { computeMissingMetrics } from './lib/db/activityMetrics';
+import { computeMissingMetrics, recalcularDistanciasViejas } from './lib/db/activityMetrics';
 import { setUnauthorizedHandler } from './lib/api/client';
 import { queryClient } from './lib/api/queryClient';
 import { fontFamilies, type Theme } from './lib/theme';
@@ -194,8 +194,9 @@ function Gate({ children }: { children: React.ReactNode }) {
   const styles = useThemedStyles(makeStyles);
   const [localDataReady, setLocalDataReady] = useState(false);
 
-  // Al abrir la app, cerrar las actividades que quedaron en RECORDING (spec 003, CA-10) y
-  // calcular las métricas de las que no las tienen, incluidas esas (spec 004, CA-19).
+  // Al abrir la app, cerrar las actividades que quedaron en RECORDING (spec 003, CA-10),
+  // calcular las métricas de las que no las tienen, incluidas esas (spec 004, CA-19), y una
+  // sola vez recalcular las distancias infladas por puntos viejos (spec 011, RN-11).
   // Se espera antes de mostrar la navegación para que no se cruce con una grabación nueva
   // y para que el historial ya muestre sus métricas.
   useEffect(() => {
@@ -205,6 +206,9 @@ function Gate({ children }: { children: React.ReactNode }) {
       .catch((e) => console.log('Error cerrando actividades huérfanas:', e))
       .then(() => computeMissingMetrics())
       .catch((e) => console.log('Error calculando métricas pendientes:', e))
+      // Una sola vez: la distancia sin los puntos viejos del principio (spec 011, CA-17, RN-11).
+      .then(() => recalcularDistanciasViejas())
+      .catch((e) => console.log('Error recalculando distancias:', e))
       .finally(() => setLocalDataReady(true));
   }, []);
 

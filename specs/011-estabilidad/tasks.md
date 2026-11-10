@@ -279,7 +279,14 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
   - **`recorrido.ts`** importa `./elevation-profile.ts` en lugar de `.js` para que Node pueda cargarlo desde el script. El build lo reescribe a `.js` (`rewriteRelativeImportExtensions`).
   - **Modo informe contra la base (sin aplicar):** 9 actividades con puntos viejos, 2 con distancia distinta, las dos de `postman@senda.bc` y sin ruta: `2cb9ddda…` (0.137 → 0.084 km) y `3dd385a8…` (1.078 → 0.083 km). En las otras 7, el punto viejo ya era un salto y no sumaba. Se aplica en T44.
   - `tsc`, `nest build`, lint y `npm test` (457) pasan.
-- [ ] T43 — `lib/metrics/oldPoints.ts` y `recalcularDistanciasViejas`, una sola vez, sin cambiar el estado. (CA-17, RN-11)
+- [x] T43 — `lib/metrics/oldPoints.ts` y `recalcularDistanciasViejas`, una sola vez, sin cambiar el estado. (CA-17, RN-11)
+
+  Hecho (2026-11-09).
+  - **`lib/metrics/oldPoints.ts`:** `withoutOldPoints`, copia de `sinPuntosViejos`, y `hasOldPoints`. `oldPoints.test.ts` repite los 6 casos de `recorrido.spec.ts` y agrega 1 de `hasOldPoints`.
+  - **`lib/db/activityMetrics.ts`:** `recalcularDistanciasViejas()` recorre las actividades terminadas con distancia, de cualquier cuenta y en cualquier estado. A las que empiezan con puntos viejos les recalcula `computeDistance` sin esos puntos y guarda solo `distance_meters` (`saveDistance` en `activities.ts`). Una `SYNCED` sigue `SYNCED`, y una `PENDING_SYNC` sube con la distancia nueva.
+  - **Una vez por teléfono:** se marca en `app_settings` con `user_id = ''`, porque el paso es del teléfono y no de una cuenta. Si alguna actividad falla, no se marca y todo se repite en la siguiente apertura; recalcular dos veces da lo mismo.
+  - **`App.tsx`:** se llama al abrir, después de `computeMissingMetrics` y antes de mostrar la navegación.
+  - **Pruebas:** `activityMetrics.test.ts` (6) usa una ubicación guardada de 25 min antes, a 300 m, que la distancia de la spec 004 suma porque no es salto. Cubre que la distancia queda igual a la del recorrido sin ese punto, sin cambiar estado ni demás métricas; que no toca actividades sin puntos viejos; que corre una sola vez; que es idempotente; que con un error no se marca, y que no se cruza con los ajustes de una cuenta. `tsc` y Vitest pasan (749). Se ve en el teléfono con M23 (T44).
 - [ ] T44 — Correr el script en modo informe, revisar la lista con el usuario y aplicar. Correr M23. (CA-17)
 - [ ] T45 — Correr M24 en un teléfono real. Corregir si se reproduce; si no, cerrar por RN-3. (CA-18)
 - [x] T62 — Avisar cuando falla el inicio de una actividad y permitir reintentar, sin dejar nada grabando ni una actividad en `RECORDING`. Correr M36. (spec 003, CA-16; CA-13)
