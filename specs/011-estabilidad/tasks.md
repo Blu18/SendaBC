@@ -301,7 +301,16 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
     - El informe mostró "8.950 km → 7.450 km, dificultad MODERATE → EASY". Era la única actividad con cambios; el informe contó 10 actividades con puntos viejos.
     - Con `--aplicar`, la actividad y la ruta quedaron en 7 450 m y la ruta en Fácil. `GET /routes/:id` devuelve lo mismo. La actividad siguió `SYNCED` con su `updatedAt`, y la ruta siguió `PUBLISHED`, con `updatedAt` nuevo y el mismo recorrido. Una segunda corrida dio 0 cambios.
     - Al final se borraron la ruta y la cuenta de prueba, y con ella su actividad.
-- [ ] T45 — Correr M24 en un teléfono real. Corregir si se reproduce; si no, cerrar por RN-3. (CA-18)
+- [x] T45 — Correr M24 en un teléfono real. Corregir si se reproduce; si no, cerrar por RN-3. (CA-18)
+
+  Hecho (2026-11-09). **M24 no reproduce el fallo en el Nothing Phone 2** (A065, Android 16): 20 de 20 intentos seleccionan la ruta tocada. Se cierra por RN-3, sin cambiar código.
+  - **Preparación:** el teléfono tenía una build del 6 nov sin depuración. Se le instaló encima, con la misma firma y conservando sus datos, un APK de desarrollo arm64 compilado desde `C:\dev\sbc` (la parte nativa no cambió desde ese commit). Por USB se usó `adb reverse` para el 8081 y el 3000: Metro desde `C:\dev\SendaBC\frontend` con `EXPO_PUBLIC_BACKEND_IP=http://localhost:3000` y el backend local. Se usó la cuenta del usuario, con su ubicación real cerca de El Sauzal.
+  - **Explorar, 25 km, "Todas":** 3 marcadores visibles. El Salto en (353, 866), Cañón de Doña Petra en (686, 1165), encimado con otro marcador, y Bosque de los Attenuatas en (860, 1159). Seleccionar no mueve la cámara, así que los marcadores no cambian de lugar entre intentos.
+  - **Intentos:** cada uno toca el marcador de una ruta, espera, toca el de otra y lee el nombre de la tarjeta a los 2.5 s.
+    - Las esperas fueron 0.1, 0.3, 0.5, 0.8, 1, 1.5, 2, 3, 4, 0.2, 0.4, 0.6, 1.2, 2.5, 0.1, 0.7, 1.8, 3.5, 0.3 y 1 s.
+    - Se cubrieron los 6 cambios posibles entre las tres rutas.
+    - Los 20 dieron la ruta tocada. En la captura final, el anillo de selección y la tarjeta coinciden (Bosque de los Attenuatas).
+  - **Límite:** los toques fueron de `adb shell input tap`, no de un dedo. Si el fallo vuelve a verse a mano, se reabre con la nueva evidencia.
 - [x] T62 — Avisar cuando falla el inicio de una actividad y permitir reintentar, sin dejar nada grabando ni una actividad en `RECORDING`. Correr M36. (spec 003, CA-16; CA-13)
 
   Hecho (2026-11-09). **M36 pasa en el emulador Pixel_8_Pro** con la cuenta de Postman y contactos activos (modo en segundo plano). El fallo se forzó con un `throw` temporal, solo en el primer intento, justo después de `createActivity`, el caso que más limpieza necesita. Al terminar el caso se quitó el `throw`.
@@ -364,7 +373,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-15 | `backend/src/route/recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
 | CA-16 | `recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
 | CA-17 | `backend/src/activity/distancia.spec.ts`, `frontend/lib/metrics/oldPoints.test.ts` y caso manual M23 | Automatizada y manual | Cumple (Vitest, emulador y script con ruta de prueba) |
-| CA-18 | Caso manual M24 | Manual, teléfono real | Pendiente |
+| CA-18 | Caso manual M24 | Manual, teléfono real | No reproducible (20/20 en Nothing Phone 2, RN-3) |
 | CA-19 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |
 | CA-20 | Caso manual M19 | Manual, teléfono real | Pendiente |
 | CA-21 | Caso manual M19 | Manual, teléfono real | Pendiente |
