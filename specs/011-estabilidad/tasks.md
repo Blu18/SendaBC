@@ -33,7 +33,16 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
   - **Decidido:** zoom 10 a 13, 900 km² como tope y máximo 10 zonas (D13). Los dos estilos, porque el segundo no descargó nada (D14). Fórmula de tamaño en D15.
   - **Mapbox:** 750 paquetes de mosaicos en total, sin tope de bytes, y lo descargado cuenta en la facturación normal por usuarios activos. Los mapas no se pueden incluir en la app: se descargan desde sus servidores.
   - **Hallazgo:** al borrar, la zona sale de la lista pero el disco no baja (R1). Se revisa en T34.
-- [ ] T3 — Compilar el build e instalarlo en el S9+ y el Nothing Phone 2. Iniciar sesión, grabar 1 minuto y ver el mapa en cada uno. Confirmar que el S9+ detecta el barómetro y el Nothing Phone 2 no. (CA-1, CA-6)
+- [x] T3 — Compilar el build e instalarlo en el S9+ y el Nothing Phone 2. Iniciar sesión, grabar 1 minuto y ver el mapa en cada uno. Confirmar que el S9+ detecta el barómetro y el Nothing Phone 2 no. (CA-1, CA-6)
+
+  Hecho (2026-11-10) en los dos teléfonos.
+  - **Build:** el APK de desarrollo arm64, compilado desde `C:\dev\sbc` en T45, que necesita Metro. Por USB, con `adb reverse` del 8081 y el 3000: Metro desde `C:\dev\SendaBC\frontend` con `EXPO_PUBLIC_BACKEND_IP=http://localhost:3000` y el backend local. El build de campo, sin Metro y con el túnel, es T49.
+  - **S9+** (SM-G9650, Android 10, arm64), con barómetro LPS22HB según `dumpsys sensorservice`. La app se instaló sin problemas.
+    - Se entró con la cuenta de Postman y se dio el permiso de ubicación "solo con la app en uso". El de segundo plano quedó en "Ahora no".
+    - Se grabaron 2 min de senderismo con el teléfono quieto. El mapa 3D oscuro se vio con relieve y calles. Se guardaron 3 puntos, porque quieto no avanza los 5 m que pide un punto nuevo.
+    - Al detener, la actividad quedó "Sincronizada" y el resumen dice "Elevación medida con barómetro": **el S9+ detecta el barómetro.**
+  - **Nothing Phone 2** (A065, Android 16): `dumpsys sensorservice` no lista ningún sensor de presión. Con la misma build y la cuenta del usuario, que no tiene contactos activos, se grabaron 1:13 de senderismo con el teléfono quieto. El mapa 3D se vio con relieve y se guardaron 2 puntos. Al detener, la actividad quedó "Sincronizada" y el resumen dice "Elevación estimada con GPS": **el Nothing Phone 2 no detecta barómetro**, como se esperaba. Esa actividad de 1 min quedó en la cuenta del usuario.
+  - **Nota:** el teclado de Samsung pierde letras con `adb shell input text`; hay que escribir de una en una.
 - [ ] T4 — Levantar el backend con el túnel y `TELEGRAM_MODE=polling`. Probar desde un teléfono con datos móviles, sin Wi-Fi, que inicia sesión y sincroniza. Comprobar que la computadora no se suspende. (RN-12)
 
 ## Fase 1A — Botones de la grabación
