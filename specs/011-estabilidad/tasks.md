@@ -360,7 +360,28 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
       - `user/entities/user.entity.ts` (sin lógica).
     - **DTOs** (`activity-point`, `activity-upload`, `update-emergency-contact`, `finish-session`, `session-location`, `upsert-session`, `delete-account`, `update-email` y `update-password`): son reglas declarativas de `class-validator`, y las e2e los recorren por el `ValidationPipe`. Varios casos 400 de `/user/me` ya están en `user.e2e-spec.ts`. No se prueba cada regla por separado.
   - Vitest pasa en el frontend (766) y en el backend (468); `tsc` y lint, sin errores.
-- [ ] T48 — Revisar que cada bug corregido en la fase 2 tenga una prueba que falle sin la corrección. (CA-24)
+- [x] T48 — Revisar que cada bug corregido en la fase 2 tenga una prueba que falle sin la corrección. (CA-24)
+
+  Hecho (2026-11-10). Cada arreglo de la fase 2 se quitó un momento, se corrió su prueba y se restauró el archivo (mutación con `sed` y copia de respaldo). T44 y T45 no cambiaron código.
+
+  | Arreglo | Sin el arreglo | Falla |
+  |---|---|---|
+  | T39, reintento de `database is locked` (`espera.ts`) | no reintentar | 3 de 8 en `espera.test.ts` |
+  | T39, `busy_timeout` en la conexión de la transacción | sin el `PRAGMA` | 1 de 8 en `espera.test.ts` |
+  | T39, puntos por lotes (`insertDownloadedActivity`) | el código de antes, un `executeAsync` por punto | 1 de 13 en `activities.test.ts` |
+  | T40, `503` en `mensajeDeFallo` | sin la rama del `503` | 1 de 31 en `status.test.ts` |
+  | T40, filtro del `503` | sin registrarlo en `configurarHttp` | 1 de 6 en `prisma-disponibilidad.filter.spec.ts` |
+  | T41, `sinSaltos` al publicar | sin `sinSaltos` | 1 de 71 en `route.service.spec.ts` (la e2e ya se había comprobado en T41) |
+  | T41, `sequence = ANY(...)` | `sequence >=` como antes, con `sinSaltos` | 1 de 23 en `route-publish.e2e-spec.ts` |
+  | T43, distancia sin puntos viejos | sin `withoutOldPoints` | 4 de 6 en `activityMetrics.test.ts` |
+  | T62, limpiar un inicio fallido (`inicio.ts`) | sin `limpiar()` | 3 de 7 en `inicio.test.ts` |
+
+  - **Prueba reforzada:** la de lotes calcula lo que espera con `PUNTOS_POR_LOTE`, así que con lotes de 1 punto seguía pasando, aunque la transacción volviera a ser larga. Se agregó `expect(PUNTOS_POR_LOTE).toBeGreaterThanOrEqual(100)`; con lotes de 1 ahora falla.
+  - **Sin prueba automática, con su motivo:**
+    - `busy_timeout` y `conReintentos` en la conexión principal (`sqlite.ts`): solo los aplica al abrir expo-sqlite, que no corre en Vitest. Las dos funciones tienen prueba, y que estén conectadas se vio en M20.
+    - El script `datos:recalcular-distancias`: necesita la base. Su cálculo es `sinPuntosViejos` más `computeDistance` (`distancia.ts`), los dos con prueba. Se comprobó en M23 y con la ruta de prueba de T44.
+    - Lo que hace `activityTracker.hook.ts` con el resultado de `iniciarOLimpiar` (pantalla de React Native): M36.
+  - Vitest pasa en el frontend (766) y en el backend (468).
 
 ## Fase 4 — Prueba de campo
 
@@ -412,7 +433,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-21 | Caso manual M19 | Manual, teléfono real | Pendiente |
 | CA-22 | `npm run test:e2e`, 5 veces seguidas | Automatizada | Cumple (5 de 5, 88 pruebas) |
 | CA-23 | Pruebas nuevas y lista revisada en T47 | Automatizada y revisión | Cumple (28 pruebas nuevas; resto anotado) |
-| CA-24 | Revisión de T48 y T57 | Revisión | Pendiente |
+| CA-24 | Revisión de T48 y T57 | Revisión | Fase 2 cumple (T48); falta T57 |
 | CA-25 | `npm test` y `npm run test:e2e` en backend, Vitest en frontend, y `npm run lint` | Automatizada | Pendiente |
 | CA-26 | Caso manual M34 | Manual | Pendiente |
 | CA-27 | Caso manual M35 | Postman | Pendiente |

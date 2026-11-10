@@ -235,6 +235,8 @@ describe('Recuperar actividades (spec 005, CA-20 a CA-22)', () => {
     expect(await getActivityPoints(id)).toEqual(actividad.points);
     const inserts = runAsync.mock.calls.filter(([sql]) => sql.includes('activity_points'));
     expect(inserts).toHaveLength(3);
+    // Lotes de pocos puntos volverían a alargar la transacción (T48).
+    expect(PUNTOS_POR_LOTE).toBeGreaterThanOrEqual(100);
     runAsync.mockRestore();
   });
 
