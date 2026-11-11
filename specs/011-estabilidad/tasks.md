@@ -43,7 +43,17 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
     - Al detener, la actividad quedó "Sincronizada" y el resumen dice "Elevación medida con barómetro": **el S9+ detecta el barómetro.**
   - **Nothing Phone 2** (A065, Android 16): `dumpsys sensorservice` no lista ningún sensor de presión. Con la misma build y la cuenta del usuario, que no tiene contactos activos, se grabaron 1:13 de senderismo con el teléfono quieto. El mapa 3D se vio con relieve y se guardaron 2 puntos. Al detener, la actividad quedó "Sincronizada" y el resumen dice "Elevación estimada con GPS": **el Nothing Phone 2 no detecta barómetro**, como se esperaba. Esa actividad de 1 min quedó en la cuenta del usuario.
   - **Nota:** el teclado de Samsung pierde letras con `adb shell input text`; hay que escribir de una en una.
-- [ ] T4 — Levantar el backend con el túnel y `TELEGRAM_MODE=polling`. Probar desde un teléfono con datos móviles, sin Wi-Fi, que inicia sesión y sincroniza. Comprobar que la computadora no se suspende. (RN-12)
+- [x] T4 — Levantar el backend con el túnel y `TELEGRAM_MODE=polling`. Probar desde un teléfono con datos móviles, sin Wi-Fi, que inicia sesión y sincroniza. Comprobar que la computadora no se suspende. (RN-12)
+
+  Hecho (2026-11-10).
+  - **Túnel:** el de VS Code (Dev Tunnels) del puerto 3000, con la URL fija de `frontend/.env`. Para que funcione tiene que estar en visibilidad **Pública** y protocolo **HTTP**:
+    - Privado, redirige al inicio de sesión de GitHub.
+    - Con HTTPS, da `502`.
+    - Al cambiar el protocolo, la visibilidad vuelve a privada.
+    - VS Code tiene que quedarse abierto.
+  - **Backend:** `TELEGRAM_MODE=polling` en `backend/.env`. Al arrancar registra "Recibiendo mensajes del bot con getUpdates", sin errores de Telegram.
+  - **Pruebas por el túnel:** `POST /auth/login` con la cuenta de Postman da token, y `GET /activities` y `/routes/nearby` responden `200` en ~1 s. Con la versión de campo, el Nothing Phone 2 sin Wi-Fi, solo con datos móviles, cargó Rutas con distintos radios sin el aviso de datos guardados.
+  - **Suspensión:** la computadora no tiene batería y su plan de energía ("High performance") no suspende con corriente.
 
 ## Fase 1A — Botones de la grabación
 
@@ -395,6 +405,13 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 ## Fase 4 — Prueba de campo
 
 - [ ] T49 — Compilar el build de campo con la URL del túnel y `EXPO_PUBLIC_BATTERY_TEST=1`, e instalarlo en los dos teléfonos. Descargar la zona del recorrido en cada uno. (CA-8, CA-20, RN-7, RN-12)
+
+  **Build instalado (2026-11-10); falta descargar la zona en cada teléfono.**
+  - `C:\dev\sbc` se movió al commit `2d4e18c`; no hubo cambios nativos desde el anterior.
+  - Se compiló con `./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a`, con `EXPO_PUBLIC_BACKEND_IP` igual a la URL del túnel **sin `/` final** y `EXPO_PUBLIC_BATTERY_TEST=1`. Queda en `C:\dev\sbc\frontend\android\app\build\outputs\apk\release\app-release.apk`, de 67 MB.
+  - El paquete tiene la URL del túnel, ningún `localhost` ni `10.0.2.2`, y el código de T41 a T48.
+  - Se firma con la misma clave que la versión de desarrollo, así que se instaló encima con `adb install -r` en el S9+ y el Nothing Phone 2, y conservó sesión y actividades.
+  - Con `adb reverse` quitado, los dos abren sin la computadora y cargan Rutas por el túnel.
 - [ ] T50 — Ensayo cerca de casa, con datos móviles: 10 minutos grabando en cada teléfono y una alerta de prueba. (R6)
 - [ ] T51 — Correr M25, M26, M28 y M29 en la salida, y M4 paso 2 con TalkBack en un teléfono. (CA-1 a CA-3, CA-5 a CA-7, CA-38)
 - [ ] T52 — Correr M30, la medición de batería. Si no cumple, ajustar el mapa y volver a medir. (CA-8)
@@ -705,6 +722,28 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
 
 | Fallo | Severidad | Resolución |
 |---|---|---|
+| F1 — Una actividad cerrada sin "Detener" puede quedar con el fin antes del inicio y no subir nunca (ver abajo) | Por decidir en T56 | Pendiente |
+
+**Antes de la salida (2026-11-10).** Actividades grabadas por el usuario sin backend ni internet, sincronizadas después por USB. No cuentan como la prueba de campo (M25 a M33), pero dejan datos y un fallo.
+- **Mismo recorrido en los dos teléfonos**, grabado como ciclismo. Por la velocidad (mediana 25 km/h, máximo 113 km/h), parece hecho en carro.
+
+  | | S9+ | Nothing Phone 2 |
+  |---|---|---|
+  | Duración | 7:24 | 7:29 |
+  | Distancia | 4 433 m | 4 440 m (0.2 % de diferencia) |
+  | Puntos | 190, cada 2 s | 190, cada 2 s; un hueco de 34 s al empezar |
+  | Precisión, mediana | 3.2 m | 3.8 m |
+  | Elevación | barómetro: +51 / −42 m | GPS: +28 / −14 m |
+  | Desnivel neto | +8 m por presión, +7 m por GPS | +15 m por GPS |
+
+  Ninguno tiene huecos durante el recorrido, saltos de más de 50 m/s ni la ubicación vieja al inicio. Sin app de referencia no sirve para CA-2.
+- **Regreso en el S9+**, también como ciclismo: 4.03 km en 6:45, +26 / −33 m. El desnivel neto es parecido al de ida, en sentido contrario.
+- **Un senderismo de 70 s en el S9+**, quieto: 2 puntos y 0 m.
+- **Teléfono y servidor** tienen la misma distancia, la misma elevación y el mismo número de puntos en las 4.
+- **F1, detalle:** en el Nothing Phone 2, una actividad del 2026-11-07 seguía en `PENDING_SYNC` con el error "El fin de la actividad no puede ser anterior al inicio".
+  - **Causa:** su único punto tiene la hora del GPS 95 ms antes de `startedAt`. Al cerrarla sin "Detener", `endedAt` tomó la hora del último punto.
+  - **Dónde:** `closeOrphanActivities` (`lib/db/activities.ts`) y `cierrePendiente` (`lib/activity/inicio.ts`) hacen lo mismo. Un primer punto unos ms antes del inicio es normal: la del Nothing de este día empezó con uno 0.6 s antes.
+  - **Corrección propuesta:** usar como fin el mayor entre el último punto y el inicio, y reparar una vez las actividades pendientes que ya tengan el fin antes del inicio. Toca la spec 003, CA-10.
 
 ## Commits
 
