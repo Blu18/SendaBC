@@ -723,6 +723,7 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
 | Fallo | Severidad | Resolución |
 |---|---|---|
 | F1 — Una actividad cerrada sin "Detener" puede quedar con el fin antes del inicio y no subir nunca (ver abajo) | Por decidir en T56 | Pendiente |
+| F2 — Con la pantalla bloqueada, los dos teléfonos dejan de grabar puntos durante casi toda la salida, y la detección de inactividad tampoco corre (ver abajo) | Por decidir en T56. En los dos fue el permiso, no el código | Repetir M25 y M26 con "Permitir todo el tiempo" |
 
 **Antes de la salida (2026-11-10).** Actividades grabadas por el usuario sin backend ni internet, sincronizadas después por USB. No cuentan como la prueba de campo (M25 a M33), pero dejan datos y un fallo.
 - **Mismo recorrido en los dos teléfonos**, grabado como ciclismo. Por la velocidad (mediana 25 km/h, máximo 113 km/h), parece hecho en carro.
@@ -744,6 +745,31 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
   - **Causa:** su único punto tiene la hora del GPS 95 ms antes de `startedAt`. Al cerrarla sin "Detener", `endedAt` tomó la hora del último punto.
   - **Dónde:** `closeOrphanActivities` (`lib/db/activities.ts`) y `cierrePendiente` (`lib/activity/inicio.ts`) hacen lo mismo. Un primer punto unos ms antes del inicio es normal: la del Nothing de este día empezó con uno 0.6 s antes.
   - **Corrección propuesta:** usar como fin el mayor entre el último punto y el inicio, y reparar una vez las actividades pendientes que ya tengan el fin antes del inicio. Toca la spec 003, CA-10.
+
+**Salida (2026-11-11), senderismo, 08:21 a 09:17.** Los dos teléfonos con sesión de seguridad y Strava en el Nothing como referencia. Las dos actividades se sincronizaron solas.
+
+| | S9+ | Nothing Phone 2 | Strava |
+|---|---|---|---|
+| Duración | 55:38 | 55:43 | — |
+| Distancia | 1 180 m (−72 %) | 2 107 m (−51 %) | 4.29 km |
+| Elevación ganada | 31 m, barómetro | 124 m, GPS (−41 %) | 208 m |
+| Puntos | 62 | 37 | — |
+
+- **Resultado:** CA-1 y CA-2 no cumplen, por F2. La distancia y la elevación no se pueden juzgar contra RN-10 hasta que la grabación no tenga huecos. CA-3 cumple: el primer punto de cada uno es de la hora de inicio.
+- **F2, detalle:** los puntos llegan cada 4 a 6 s y con precisión de 3 a 6 m mientras hay, pero se cortan.
+  - **S9+:** sin puntos de 08:24:34 a 08:29:12 y de 08:29:49 a 09:15:55 (46 min).
+  - **Nothing:** seis huecos de 3 a 20 min. Entre ellos solo hay puntos sueltos, casi siempre de a dos.
+  - **Los dos vuelven a las 09:15:55,** con menos de un segundo de diferencia, y siguen bien hasta "Detener" a las 09:17.
+  - **No llegó ningún "¿Estás bien?" ni alerta** en 46 min sin puntos. El detector solo corre cuando llega una ubicación (segundo plano) o con el temporizador de la pantalla (primer plano). Que tampoco corriera indica que la app entera dejó de ejecutarse, no solo el GPS.
+  - **No hay saltos ni puntos descartados:** el procesador solo descarta los que están a menos de 5 m del anterior y la ubicación vieja del primer minuto.
+- **Causas posibles, por confirmar:**
+  1. Grabó en primer plano (`watchPositionAsync`) porque faltaba el permiso "Permitir todo el tiempo". Con la pantalla bloqueada, ese modo no recibe puntos.
+  2. Grabó en segundo plano, pero el ahorro de batería de Samsung y de Nothing detuvo el servicio.
+- **Para distinguirlas:** si se vio la notificación fija de "grabando", el permiso de ubicación de SendaBC en cada teléfono, y el registro del teléfono (`adb logcat`) si todavía lo guarda.
+- **S9+, causa confirmada (1):** `ACCESS_BACKGROUND_LOCATION` está denegado con la marca `USER_SET`, así que grabó en primer plano. El registro muestra la pantalla apagada (en reposo) hasta las 09:15:54, cuando se desbloqueó con la huella. El primer punto después del hueco es de las 09:15:55. Es lo que la spec 008 (CA-10) define sin ese permiso: la app avisa con "Detección solo con la app abierta" y no vuelve a pedir el permiso si el sistema ya no deja preguntar. M25 pide el permiso concedido, así que en el S9+ falló la preparación, no el código.
+- **Nothing, misma causa:** `ACCESS_BACKGROUND_LOCATION` está denegado con `USER_SET|USER_FIXED` ("no volver a preguntar"), así que la app no lo pide de nuevo. Su registro empieza a las 09:15 y ya no muestra los huecos. Los puntos sueltos entre los huecos coinciden con ratos en que la app estaba en pantalla.
+- **Para decidir en T56:** el aviso es fácil de pasar por alto y, con la pantalla apagada, la actividad pierde puntos sin que el usuario lo note. Se puede pedir un aviso más claro antes de iniciar, con un acceso directo a los ajustes del permiso.
+- **Visto de paso, sin confirmar:** en Android, `expo-location` lee `timeInterval` con `as? Long` (`LocationArguments.kt`). Si el 10 000 llega como `Int`, se ignora y la tarea pide un punto cada 2 s, el valor de `Accuracy.High`. Coincide con los puntos cada 4 s (2 s más el mínimo de 5 m) y gasta más batería que lo planeado (D5). No explica los huecos.
 
 ## Commits
 
