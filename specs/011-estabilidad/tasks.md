@@ -404,15 +404,17 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
 ## Fase 4 — Prueba de campo
 
-- [ ] T49 — Compilar el build de campo con la URL del túnel y `EXPO_PUBLIC_BATTERY_TEST=1`, e instalarlo en los dos teléfonos. Descargar la zona del recorrido en cada uno. (CA-8, CA-20, RN-7, RN-12)
+- [x] T49 — Compilar el build de campo con la URL del túnel y `EXPO_PUBLIC_BATTERY_TEST=1`, e instalarlo en los dos teléfonos. Descargar la zona del recorrido en cada uno. (CA-8, CA-20, RN-7, RN-12)
 
-  **Build instalado (2026-11-10); falta descargar la zona en cada teléfono.**
+  **Build instalado (2026-11-10). El usuario descargó la zona del recorrido en los dos teléfonos.**
   - `C:\dev\sbc` se movió al commit `2d4e18c`; no hubo cambios nativos desde el anterior.
   - Se compiló con `./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a`, con `EXPO_PUBLIC_BACKEND_IP` igual a la URL del túnel **sin `/` final** y `EXPO_PUBLIC_BATTERY_TEST=1`. Queda en `C:\dev\sbc\frontend\android\app\build\outputs\apk\release\app-release.apk`, de 67 MB.
   - El paquete tiene la URL del túnel, ningún `localhost` ni `10.0.2.2`, y el código de T41 a T48.
   - Se firma con la misma clave que la versión de desarrollo, así que se instaló encima con `adb install -r` en el S9+ y el Nothing Phone 2, y conservó sesión y actividades.
   - Con `adb reverse` quitado, los dos abren sin la computadora y cargan Rutas por el túnel.
-- [ ] T50 — Ensayo cerca de casa, con datos móviles: 10 minutos grabando en cada teléfono y una alerta de prueba. (R6)
+- [x] T50 — Ensayo cerca de casa, con datos móviles: 10 minutos grabando en cada teléfono y una alerta de prueba. (R6)
+
+  Hecho por el usuario el 2026-11-10, en los dos teléfonos. En el servidor queda la alerta de inactividad de la prueba, cancelada, en la sesión del Nothing de las 21:35.
 - [ ] T51 — Correr M25, M26, M28 y M29 en la salida, y M4 paso 2 con TalkBack en un teléfono. (CA-1 a CA-3, CA-5 a CA-7, CA-38)
 - [ ] T52 — Correr M30, la medición de batería. Si no cumple, ajustar el mapa y volver a medir. (CA-8)
 - [ ] T53 — Correr M31 y M32 con el contacto real. (CA-9 a CA-11)
@@ -724,6 +726,8 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
 |---|---|---|
 | F1 — Una actividad cerrada sin "Detener" puede quedar con el fin antes del inicio y no subir nunca (ver abajo) | Por decidir en T56 | Pendiente |
 | F2 — Con la pantalla bloqueada, los dos teléfonos dejan de grabar puntos durante casi toda la salida, y la detección de inactividad tampoco corre (ver abajo) | Por decidir en T56. En los dos fue el permiso, no el código | Repetir M25 y M26 con "Permitir todo el tiempo" |
+| F3 — Con la pantalla apagada el barómetro no entrega lecturas, y la actividad queda con fuente "barómetro" y 0 m de elevación (ver abajo) | Por decidir en T56; afecta CA-2 | Pendiente |
+| F4 — A velocidad de carro o bici, con un punto cada 10 s, el suavizado de la distancia recorta 8 a 16 % (ver abajo) | Por decidir en T56; afecta CA-4 | Pendiente |
 
 **Antes de la salida (2026-11-10).** Actividades grabadas por el usuario sin backend ni internet, sincronizadas después por USB. No cuentan como la prueba de campo (M25 a M33), pero dejan datos y un fallo.
 - **Mismo recorrido en los dos teléfonos**, grabado como ciclismo. Por la velocidad (mediana 25 km/h, máximo 113 km/h), parece hecho en carro.
@@ -769,7 +773,23 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
 - **S9+, causa confirmada (1):** `ACCESS_BACKGROUND_LOCATION` está denegado con la marca `USER_SET`, así que grabó en primer plano. El registro muestra la pantalla apagada (en reposo) hasta las 09:15:54, cuando se desbloqueó con la huella. El primer punto después del hueco es de las 09:15:55. Es lo que la spec 008 (CA-10) define sin ese permiso: la app avisa con "Detección solo con la app abierta" y no vuelve a pedir el permiso si el sistema ya no deja preguntar. M25 pide el permiso concedido, así que en el S9+ falló la preparación, no el código.
 - **Nothing, misma causa:** `ACCESS_BACKGROUND_LOCATION` está denegado con `USER_SET|USER_FIXED` ("no volver a preguntar"), así que la app no lo pide de nuevo. Su registro empieza a las 09:15 y ya no muestra los huecos. Los puntos sueltos entre los huecos coinciden con ratos en que la app estaba en pantalla.
 - **Para decidir en T56:** el aviso es fácil de pasar por alto y, con la pantalla apagada, la actividad pierde puntos sin que el usuario lo note. Se puede pedir un aviso más claro antes de iniciar, con un acceso directo a los ajustes del permiso.
-- **Visto de paso, sin confirmar:** en Android, `expo-location` lee `timeInterval` con `as? Long` (`LocationArguments.kt`). Si el 10 000 llega como `Int`, se ignora y la tarea pide un punto cada 2 s, el valor de `Accuracy.High`. Coincide con los puntos cada 4 s (2 s más el mínimo de 5 m) y gasta más batería que lo planeado (D5). No explica los huecos.
+- **Visto de paso, descartado después:** se sospechó que `expo-location` ignoraba el `timeInterval` de 10 s en segundo plano (`as? Long` en `LocationArguments.kt`). Las actividades de la tarde, ya en segundo plano, tienen un punto cada 10 s: el intervalo sí se respeta. Los puntos cada 4 s de la mañana eran del modo primer plano (2 s más el mínimo de 5 m).
+
+**Más tarde (2026-11-11), en carro, como ciclismo.** Los dos teléfonos ya en segundo plano, con la pantalla apagada todo el tiempo. Strava en el Nothing. No cuentan para M25 (no es senderismo), pero prueban el segundo plano y dejan F3 y F4.
+
+| | A1, S9+ | A1, Nothing | A1, Strava | A2, S9+ | A2, Nothing | A2, Strava |
+|---|---|---|---|---|---|---|
+| Distancia | 4 385 m (−16 %) | 4 536 m (−14 %) | 5.25 km | 3 313 m (−8 %) | 3 271 m (−9 %) | 3.59 km |
+| Suma punto a punto | 5 207 m (−1 %) | 5 152 m (−2 %) | | 3 614 m (+1 %) | 3 538 m (−1 %) | |
+| Elevación ganada | 0 m, barómetro | 61 m, GPS (+11 %) | 55 m | 0 m, barómetro | 12.5 m, GPS (−1.5 m) | 14 m |
+| Puntos | 67 | 70 | | 31 | 30 | |
+
+- **Segundo plano:** puntos cada 9 a 10 s durante todo el recorrido, con la pantalla apagada. Sin huecos, salvo de 38 a 48 s al empezar (primer fijo del GPS) y uno de ~40 s en A1, en el mismo sitio en los dos teléfonos (parado: los puntos a menos de 5 m del anterior no se guardan). Esto cumple lo que M25 pide del tiempo bloqueado.
+- **Elevación con GPS (Nothing):** dentro de RN-10 en las dos (±30 % o ±30 m).
+- **F3, detalle:** `expo-sensors` deja de escuchar el sensor cuando la actividad de Android pasa a segundo plano (`OnActivityEntersBackground` → `onHostPause` en `SensorProxy.kt`). Con la pantalla apagada no llegan lecturas. `finalizeMetrics` usa la fuente elegida al iniciar sin revisar si hubo lecturas, así que la actividad queda con 0 / 0 m y fuente "barómetro". En la salida de la mañana pasó a medias: solo cuenta lo que hubo con la pantalla encendida.
+  - **Opciones para T56:** usar la altitud del GPS cuando las lecturas no cubren la actividad (sencillo, pierde la precisión del barómetro), o leer el barómetro desde código nativo dentro del servicio en primer plano (más trabajo). Toca la spec 004 (CA-12 a CA-14) y su RN-3.
+- **F4, detalle:** la suma punto a punto queda a 2 % o menos de Strava. Lo que se pierde viene del promedio de 5 puntos (`SMOOTHING_WINDOW`): a 10 s entre puntos y 30 a 100 km/h, la ventana abarca cientos de metros y corta las curvas. A pie (~14 m entre puntos) la ventana abarca ~60 m y debería perder mucho menos, pero falta confirmarlo en M26. Con bici a 20 km/h la ventana abarca ~270 m.
+  - **Opciones para T56:** que la ventana dependa del tiempo o la distancia entre puntos en lugar de la cantidad, o no suavizar cuando los puntos están lejos entre sí. Toca la spec 004 (plan D3) y el cálculo del backend (`distancia.ts`, D7).
 
 ## Commits
 
