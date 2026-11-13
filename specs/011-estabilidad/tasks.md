@@ -394,6 +394,8 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
   | T41, `sequence = ANY(...)` | `sequence >=` como antes, con `sinSaltos` | 1 de 23 en `route-publish.e2e-spec.ts` |
   | T43, distancia sin puntos viejos | sin `withoutOldPoints` | 4 de 6 en `activityMetrics.test.ts` |
   | T62, limpiar un inicio fallido (`inicio.ts`) | sin `limpiar()` | 3 de 7 en `inicio.test.ts` |
+  | T63, fin nunca antes del inicio y reparación (F1) | sin comparar con el inicio, `MIN` en lugar de `MAX`, sin reparar | 1 de 8 en `inicio.test.ts` y 3 de 16 en `activities.test.ts` |
+  | T64, cobertura del barómetro (F3) | la regla de al menos 2 lecturas | 1 de 17 en `summary.test.ts` |
 
   - **Prueba reforzada:** la de lotes calcula lo que espera con `PUNTOS_POR_LOTE`, así que con lotes de 1 punto seguía pasando, aunque la transacción volviera a ser larga. Se agregó `expect(PUNTOS_POR_LOTE).toBeGreaterThanOrEqual(100)`; con lotes de 1 ahora falla.
   - **Sin prueba automática, con su motivo:**
@@ -422,6 +424,20 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 - [ ] T55 — Correr M27, el recorrido simulado a velocidad de bicicleta. (CA-4)
 - [ ] T56 — Hacer el reporte en este archivo, con la revisión de M33. Clasificar cada fallo por severidad y decidir con el usuario. (CA-12, CA-19, CA-29, RN-2)
 - [ ] T57 — Corregir los fallos bloqueantes y los que el usuario pida, con su prueba si se puede. Repetir el caso que falló. (CA-19, CA-24)
+
+  **Decidido el 2026-11-12, antes de repetir la salida:** se corrigen F1, F2 y F3 en T63 a T66; F4 se decide con los datos de la caminata (M26).
+- [x] T63 — F1: cerrar sin "Detener" nunca deja el fin antes del inicio, en `closeOrphanActivities` y `cierrePendiente`. Al abrir la app, corregir las actividades pendientes que ya lo tengan, recalcular sus métricas y quitar su error de subida. (spec 003, CA-10; CA-24)
+
+  Hecho (2026-11-12). `cierrePendiente` (`lib/activity/inicio.ts`) y `closeOrphanActivities` usan el inicio si el último punto es anterior. `repararFinAntesDelInicio` (`lib/db/activities.ts`) corre al abrir la app, entre cerrar huérfanas y `computeMissingMetrics`: pone el fin igual al inicio, borra las métricas para que se recalculen, conserva la fuente de elevación y quita el error. Sin el arreglo fallan 4 pruebas: 1 en `inicio.test.ts` y 3 en `activities.test.ts`. La actividad del Nothing del 2026-11-07 se corregirá al abrir esta versión.
+- [x] T64 — F3: usar GPS para la elevación cuando las lecturas del barómetro no cubren la actividad. (spec 004, CA-13, RN-7; CA-24)
+
+  Hecho (2026-11-12). `barometerCovers` (`lib/metrics/summary.ts`) suma los tramos de más de 60 s sin lecturas, del inicio al fin, y exige menos del 10 % de la duración (`MAX_BARO_GAP_MS`, `MAX_BARO_UNCOVERED`). `computeActivityMetrics` recibe las lecturas con su hora. Con la regla anterior (al menos 2 lecturas) falla 1 de 17 en `summary.test.ts`. Las actividades ya sincronizadas con 0 m no se recalculan.
+- [x] T65 — F3: módulo nativo `modules/barometro` que sigue leyendo con la pantalla apagada, con la hora del sensor; `lib/sensors/barometer.ts` lo usa en Android. Probar en el S9+ 10 min con la pantalla apagada. (spec 004, CA-12, CA-14; plan D16)
+
+  Hecho (2026-11-12). El módulo tiene `disponible`, `iniciar`, `detener` y el evento `onLectura`, con la hora calculada desde `event.timestamp`. `barometer.ts` lo usa si existe y, si no, sigue con `expo-sensors` (3 pruebas en `barometer.test.ts`, con el módulo simulado). El autolinking lo encuentra en `modules/` sin `prebuild`. Se compiló la versión de campo en `C:\dev\sbc` y se instaló en el S9+, ya con "Permitir todo el tiempo". **Prueba:** senderismo de ~10 min con la pantalla bloqueada casi todo el tiempo y el teléfono quieto. El resumen dice "Elevación medida con barómetro", con 0 / 0 m. Como T64 solo usa el barómetro si las lecturas cubren el 90 % de la actividad, hubo lecturas con la pantalla apagada; los 0 m son el umbral de ruido de 3 m con el teléfono quieto. La base no se pudo leer directo: la versión de campo no es depurable (`run-as`).
+- [x] T66 — F2: si falta el permiso en segundo plano y el sistema ya no deja pedirlo, avisar antes de iniciar y ofrecer abrir los ajustes. (spec 008, CA-10)
+
+  Hecho (2026-11-12). La decisión pasa a `decidirSegundoPlano` (`lib/activity/segundoPlano.ts`, 4 pruebas). Con contactos activos y el permiso bloqueado, la pantalla muestra "Falta “Permitir todo el tiempo”" con "Grabar así" y "Abrir ajustes". "Abrir ajustes" o cerrar el aviso no crean la actividad: al volver se presiona "Iniciar" otra vez. Falta verlo en el Nothing, que tiene el permiso bloqueado.
 
 ## Fase 5 — Regresión y cierre
 
@@ -724,9 +740,9 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
 
 | Fallo | Severidad | Resolución |
 |---|---|---|
-| F1 — Una actividad cerrada sin "Detener" puede quedar con el fin antes del inicio y no subir nunca (ver abajo) | Por decidir en T56 | Pendiente |
-| F2 — Con la pantalla bloqueada, los dos teléfonos dejan de grabar puntos durante casi toda la salida, y la detección de inactividad tampoco corre (ver abajo) | Por decidir en T56. En los dos fue el permiso, no el código | Repetir M25 y M26 con "Permitir todo el tiempo" |
-| F3 — Con la pantalla apagada el barómetro no entrega lecturas, y la actividad queda con fuente "barómetro" y 0 m de elevación (ver abajo) | Por decidir en T56; afecta CA-2 | Pendiente |
+| F1 — Una actividad cerrada sin "Detener" puede quedar con el fin antes del inicio y no subir nunca (ver abajo) | Bloqueante | T63 |
+| F2 — Con la pantalla bloqueada, los dos teléfonos dejan de grabar puntos durante casi toda la salida, y la detección de inactividad tampoco corre (ver abajo) | Mayor. En los dos fue el permiso, no el código | Aviso antes de iniciar en T66; repetir M25 y M26 con "Permitir todo el tiempo" |
+| F3 — Con la pantalla apagada el barómetro no entrega lecturas, y la actividad queda con fuente "barómetro" y 0 m de elevación (ver abajo) | Mayor; afecta CA-2 | T64 y T65 |
 | F4 — A velocidad de carro o bici, con un punto cada 10 s, el suavizado de la distancia recorta 8 a 16 % (ver abajo) | Por decidir en T56; afecta CA-4 | Pendiente |
 
 **Antes de la salida (2026-11-10).** Actividades grabadas por el usuario sin backend ni internet, sincronizadas después por USB. No cuentan como la prueba de campo (M25 a M33), pero dejan datos y un fallo.
