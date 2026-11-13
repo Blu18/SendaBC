@@ -46,7 +46,7 @@ La spec 005 dejó para esta enviar la ubicación al servidor durante la activida
 
 - **CA-8 (HU-3):** Dado que tengo al menos un contacto activo, cuando abro la pantalla para iniciar una actividad, entonces veo que el módulo de seguridad está activo, a quiénes se avisaría, y puedo indicar, si quiero, mi hora de regreso (RN-10).
 - **CA-9 (HU-3):** Dado que no tengo ningún contacto activo (no tengo contactos o ninguno ha aceptado), cuando abro la pantalla para iniciar una actividad, entonces veo un aviso de que no se puede avisar a nadie, con una forma de configurarlos. Puedo iniciar la actividad de todos modos.
-- **CA-10 (HU-4):** Dado que la app no tiene el permiso para seguir mi ubicación con la pantalla bloqueada, cuando inicio una actividad con contactos activos, entonces me explica para qué lo necesita y me lo pide. Si no lo doy, la actividad se graba como hasta ahora (pantalla encendida, spec 003) y veo que la detección solo funciona con la app abierta.
+- **CA-10 (HU-4):** Dado que la app no tiene el permiso para seguir mi ubicación con la pantalla bloqueada, cuando inicio una actividad con contactos activos, entonces me explica para qué lo necesita y me lo pide. Si no lo doy, la actividad se graba como hasta ahora (pantalla encendida, spec 003) y veo que la detección solo funciona con la app abierta. Si el sistema ya no deja pedirlo, antes de iniciar me avisa que sin "Permitir todo el tiempo" no se graba ni se detecta nada con la pantalla bloqueada, y me deja abrir los ajustes de la app o grabar así.
 
 ### Detección de inactividad
 
@@ -146,6 +146,7 @@ Resueltas el 2026-10-22:
 
 ## Historial
 
+- 2026-11-12 — CA-10: si el sistema ya no deja pedir el permiso, se avisa antes de iniciar y se ofrece abrir los ajustes. En la prueba de campo de la spec 011 (F2) los dos teléfonos tenían el permiso negado: el aviso durante la grabación pasó desapercibido y se perdieron 46 min de puntos. Aprobado por el usuario.
 - 2026-11-06 — Cambios por la spec 011: RN-4 y CA-11 usan los valores que elija el usuario, con 10 y 2 minutos por defecto (CA-50 a CA-52, RN-9). Aprobado por el usuario.
 - 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). "Seguridad" es una pestaña y el enlace del aviso sin contactos dice "Configurar contactos" (M1 y M3). Los CA no cambian.

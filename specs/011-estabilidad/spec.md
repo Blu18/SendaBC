@@ -180,6 +180,7 @@ Ninguna pendiente.
 
 ## Historial
 
+- 2026-11-12 — Fallos de la prueba de campo (T56, en parte): el usuario decide corregir F1, F2 y F3 antes de repetir la salida, y F4 después. Cambian la spec 003 (CA-10), la 004 (CA-12, CA-13, RN-7) y la 008 (CA-10); se corrigen en T63 a T66. Esta spec no cambia.
 - 2026-11-09 — Al cerrar T39 se vio que, si falla el inicio, la pantalla se queda en "Nueva actividad" sin avisar. El usuario aprueba agregar CA-16 a la spec 003 (RN-4); se corrige en T62. Esta spec no cambia.
 - 2026-11-09 — Al implementar T39, M20 reproduce `database is locked`, pero con `busy_timeout` solo siguen fallando 16 de 20 intentos: la transacción de la recuperación dura más que la espera. El usuario aprueba insertar los puntos recuperados por lotes, y se anota en el plan (R2). Con los lotes la actividad siempre inicia, pero algunas escrituras sueltas fallan sin esperar; el usuario aprueba reintentarlas (R2). La spec no cambia.
 - 2026-11-08 — Al implementar T34, la comprobación de R1 muestra que Mapbox no quita al momento lo descargado de una zona borrada: sigue ocupando espacio y viéndose sin red, y bajar `disk-quota` no lo acelera. El usuario aprueba cambiar la última frase de CA-33.
