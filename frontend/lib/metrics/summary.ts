@@ -1,4 +1,10 @@
-import { BARO_NOISE_M, GPS_NOISE_M, MAX_ACCURACY_M } from './constants';
+import {
+  BARO_NOISE_M,
+  GPS_NOISE_M,
+  MAX_ACCURACY_M,
+  MAX_BARO_GAP_MS,
+  MAX_BARO_UNCOVERED,
+} from './constants';
 import { createDistanceAccumulator, DistancePoint } from './distance';
 import { createElevationAccumulator, pressureToAltitude } from './elevation';
 
@@ -10,6 +16,9 @@ export type BarometerReading = {
   pressureHpa: number;
   relativeAltitudeM: number | null; // solo iOS
 };
+
+// Lectura guardada en el teléfono, con la hora a la que se tomó.
+export type TimedBarometerReading = BarometerReading & { recordedAt: string };
 
 export type ActivityMetrics = {
   distanceMeters: number;
@@ -54,18 +63,43 @@ export function createLiveMetrics(source: ElevationSource) {
   };
 }
 
+// ¿Las lecturas cubren la actividad? Suma los tramos de más de MAX_BARO_GAP_MS sin lecturas,
+// incluidos los del inicio a la primera y de la última al fin (RN-7). Con la pantalla apagada
+// el barómetro llegó a no entregar nada (spec 011, F3). Con menos de 2 lecturas no hay
+// diferencias que medir. Las lecturas van en el orden en que se registraron.
+export function barometerCovers(
+  readings: TimedBarometerReading[],
+  startedAt: string,
+  endedAt: string
+) {
+  if (readings.length < 2) return false;
+  const start = Date.parse(startedAt);
+  const duration = Date.parse(endedAt) - start;
+  if (duration <= 0) return true;
+  const times = [start, ...readings.map((r) => Date.parse(r.recordedAt)), start + duration];
+  let uncovered = 0;
+  for (let i = 1; i < times.length; i++) {
+    const gap = times[i] - times[i - 1];
+    if (gap > MAX_BARO_GAP_MS) uncovered += gap;
+  }
+  return uncovered < MAX_BARO_UNCOVERED * duration;
+}
+
 // Métricas finales de una actividad a partir de lo guardado en el teléfono (RN-4).
 // `points` y `barometerReadings` van en el orden en que se registraron.
 export function computeActivityMetrics(input: {
   points: MetricsPoint[];
-  barometerReadings: BarometerReading[];
+  barometerReadings: TimedBarometerReading[];
   source: ElevationSource;
   startedAt: string;
   endedAt: string;
 }): ActivityMetrics {
-  // Con menos de 2 lecturas no hay diferencias que medir: toda la actividad usa GPS.
+  // Si las lecturas no cubren la actividad, toda la actividad usa GPS (CA-13, RN-3, RN-7).
   const elevationSource: ElevationSource =
-    input.source === 'BAROMETER' && input.barometerReadings.length >= 2 ? 'BAROMETER' : 'GPS';
+    input.source === 'BAROMETER' &&
+    barometerCovers(input.barometerReadings, input.startedAt, input.endedAt)
+      ? 'BAROMETER'
+      : 'GPS';
 
   const metrics = createLiveMetrics(elevationSource);
   for (const p of input.points) metrics.addPoint(p);

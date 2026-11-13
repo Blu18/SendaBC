@@ -4,10 +4,11 @@ import { pressureToAltitude } from './elevation';
 import {
   averagePace,
   averageSpeed,
-  BarometerReading,
+  barometerCovers,
   computeActivityMetrics,
   createLiveMetrics,
   MetricsPoint,
+  TimedBarometerReading,
 } from './summary';
 import { gaussian, path, rng } from './testing';
 
@@ -18,11 +19,30 @@ const END = '2026-10-05T16:02:03.000Z'; // 1 h 2 min 3 s
 const walk = (altitude: (i: number) => number | null, accuracy = 5): MetricsPoint[] =>
   path([[0, 0], [0, 1000]], 2.6, accuracy).map((p, i) => ({ ...p, altitude: altitude(i) }));
 
-const relative = (altitudes: number[]): BarometerReading[] =>
-  altitudes.map((a) => ({ pressureHpa: 1000, relativeAltitudeM: a }));
+// Hora de la lectura i de n, repartidas de START a END: cubren toda la actividad (RN-7).
+const spread = (i: number, n: number) => {
+  const start = Date.parse(START);
+  const step = n > 1 ? (Date.parse(END) - start) / (n - 1) : 0;
+  return new Date(start + i * step).toISOString();
+};
 
-const pressures = (hpa: number[]): BarometerReading[] =>
-  hpa.map((p) => ({ pressureHpa: p, relativeAltitudeM: null }));
+const relative = (altitudes: number[]): TimedBarometerReading[] =>
+  altitudes.map((a, i) => ({
+    pressureHpa: 1000,
+    relativeAltitudeM: a,
+    recordedAt: spread(i, altitudes.length),
+  }));
+
+const pressures = (hpa: number[]): TimedBarometerReading[] =>
+  hpa.map((p, i) => ({ pressureHpa: p, relativeAltitudeM: null, recordedAt: spread(i, hpa.length) }));
+
+// Lecturas cada segundo de `desde` a `hasta` (segundos después de START).
+const cadaSegundo = (desde: number, hasta: number): TimedBarometerReading[] =>
+  Array.from({ length: hasta - desde + 1 }, (_, i) => ({
+    pressureHpa: 1000 - (desde + i) / 30, // sube ~0.27 m por segundo
+    relativeAltitudeM: null,
+    recordedAt: new Date(Date.parse(START) + (desde + i) * 1000).toISOString(),
+  }));
 
 const ramp = (from: number, to: number, count: number) =>
   Array.from({ length: count + 1 }, (_, i) => from + ((to - from) * i) / count);
@@ -74,6 +94,33 @@ describe('fuente de la elevación (CA-12, CA-13, RN-3)', () => {
       expect(m.elevationSource).toBe('GPS');
       expect(m.elevationGainMeters).toBeGreaterThan(70);
     }
+  });
+
+  // Spec 011, F3: con la pantalla apagada solo hubo lecturas al principio y la actividad quedó
+  // con 0 m y fuente "barómetro".
+  it('si las lecturas no cubren la actividad, toda la actividad usa GPS (RN-7)', () => {
+    const climbing = walk((i) => i * 0.2); // ~77 m de subida según GPS
+    const m = metrics({ points: climbing, source: 'BAROMETER', barometerReadings: cadaSegundo(0, 30) });
+    expect(m.elevationSource).toBe('GPS');
+    expect(m.elevationGainMeters).toBeGreaterThan(70);
+  });
+
+  it('cobertura: tramos de más de 60 s sin lecturas, del inicio al fin, suman menos del 10 % (RN-7)', () => {
+    const fin = '2026-10-05T15:10:00.000Z'; // 600 s: hasta 59 s sin cubrir
+    const cubre = (lecturas: TimedBarometerReading[]) => barometerCovers(lecturas, START, fin);
+
+    expect(cubre(cadaSegundo(0, 600))).toBe(true);
+    // Huecos de 60 s o menos no cuentan, aunque sean varios.
+    expect(cubre([...cadaSegundo(0, 100), ...cadaSegundo(160, 400), ...cadaSegundo(460, 600)])).toBe(true);
+    // Un hueco de 61 s en medio, al principio o al final deja 61 s sin cubrir: más del 10 %.
+    expect(cubre([...cadaSegundo(0, 100), ...cadaSegundo(161, 600)])).toBe(false);
+    expect(cubre(cadaSegundo(61, 600))).toBe(false);
+    expect(cubre(cadaSegundo(0, 539))).toBe(false);
+    // Uno de 59 s sí entra, porque no pasa de 60.
+    expect(cubre(cadaSegundo(0, 541))).toBe(true);
+    // Menos de 2 lecturas nunca cubre; una actividad de duración 0 con 2, sí.
+    expect(cubre(cadaSegundo(0, 0))).toBe(false);
+    expect(barometerCovers(cadaSegundo(0, 1), START, START)).toBe(true);
   });
 
   it('con fuente GPS ignora las lecturas del barómetro', () => {
