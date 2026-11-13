@@ -122,19 +122,39 @@ export async function countPoints(localId: number) {
 }
 
 // Cierra las actividades que quedaron en RECORDING (app cerrada o pantalla abandonada).
-// endedAt = hora del último punto, o startedAt si no tiene puntos (CA-10). Devuelve cuántas cerró.
+// endedAt = hora del último punto, o startedAt si no tiene puntos o si el último punto es
+// anterior al inicio (CA-10, F1 de la spec 011). Las horas son ISO 8601 en UTC con el mismo
+// formato, así que MAX compara bien como texto. Devuelve cuántas cerró.
 export async function closeOrphanActivities() {
   const db = await getDb();
   const result = await db.runAsync(
     `UPDATE activities
      SET status = 'PENDING_SYNC',
-         endedAt = COALESCE(
-           (SELECT p.recordedAt FROM activity_points p
-            WHERE p.activity_id = activities.local_id
-            ORDER BY p.sequence DESC LIMIT 1),
+         endedAt = MAX(
+           COALESCE(
+             (SELECT p.recordedAt FROM activity_points p
+              WHERE p.activity_id = activities.local_id
+              ORDER BY p.sequence DESC LIMIT 1),
+             startedAt
+           ),
            startedAt
          )
      WHERE status = 'RECORDING'`
+  );
+  return result.changes;
+}
+
+// Corrige las actividades pendientes que ya quedaron con el fin antes del inicio, como cerraba
+// closeOrphanActivities antes de la spec 011 (F1): el servidor las rechaza y nunca suben. El fin
+// pasa a ser el inicio, sus métricas se borran para que computeMissingMetrics las recalcule y se
+// quita el error, para que vuelvan a intentar subirse (spec 003, CA-10). Devuelve cuántas corrigió.
+export async function repararFinAntesDelInicio() {
+  const db = await getDb();
+  const result = await db.runAsync(
+    `UPDATE activities
+     SET endedAt = startedAt, distance_meters = NULL, duration_seconds = NULL,
+         elevation_gain_meters = NULL, elevation_loss_meters = NULL, sync_error = NULL
+     WHERE status = 'PENDING_SYNC' AND endedAt < startedAt`
   );
   return result.changes;
 }

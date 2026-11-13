@@ -70,4 +70,12 @@ describe('cierrePendiente', () => {
       endedAt: '2026-11-09T10:00:00.000Z',
     });
   });
+
+  // Spec 011, F1: el único punto venía 95 ms antes del inicio y el servidor rechazaba la actividad.
+  it('si el último punto es anterior al inicio, cierra con la hora de inicio (CA-10)', () => {
+    expect(cierrePendiente(3, '2026-11-09T09:59:59.905Z', '2026-11-09T10:00:00.000Z')).toEqual({
+      id: 3,
+      endedAt: '2026-11-09T10:00:00.000Z',
+    });
+  });
 });

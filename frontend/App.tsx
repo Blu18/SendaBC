@@ -30,7 +30,7 @@ import PickZonePage from './pages/map/pickZonePage';
 import OfflineZonesPage from './pages/map/offlineZonesPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
-import { closeOrphanActivities } from './lib/db/activities';
+import { closeOrphanActivities, repararFinAntesDelInicio } from './lib/db/activities';
 import { sessionActions } from './lib/safety';
 import { computeMissingMetrics, recalcularDistanciasViejas } from './lib/db/activityMetrics';
 import { setUnauthorizedHandler } from './lib/api/client';
@@ -204,6 +204,9 @@ function Gate({ children }: { children: React.ReactNode }) {
     sessionActions
       .cerrarHuerfanas(closeOrphanActivities)
       .catch((e) => console.log('Error cerrando actividades huérfanas:', e))
+      // Las que quedaron con el fin antes del inicio no suben nunca (spec 003, CA-10; F1).
+      .then(() => repararFinAntesDelInicio())
+      .catch((e) => console.log('Error corrigiendo actividades con el fin antes del inicio:', e))
       .then(() => computeMissingMetrics())
       .catch((e) => console.log('Error calculando métricas pendientes:', e))
       // Una sola vez: la distancia sin los puntos viejos del principio (spec 011, CA-17, RN-11).

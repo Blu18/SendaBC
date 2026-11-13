@@ -8,6 +8,7 @@ vi.mock('./sqlite', () => ({ getDb: async () => testDb }));
 vi.mock('expo-crypto', () => ({ randomUUID: () => randomUUID() }));
 
 const {
+  closeOrphanActivities,
   countPendingUploads,
   createActivity,
   finishActivity,
@@ -22,6 +23,7 @@ const {
   listUploadable,
   markSynced,
   markSyncError,
+  repararFinAntesDelInicio,
   saveMetrics,
   PUNTOS_POR_LOTE,
 } = await import('./activities');
@@ -251,6 +253,68 @@ describe('Recuperar actividades (spec 005, CA-20 a CA-22)', () => {
       n: number;
     };
     expect(puntos.n).toBe(0);
+  });
+});
+
+describe('Cerrar sin "Detener" (spec 003, CA-10; spec 011, F1)', () => {
+  const INICIO = '2026-11-07T10:00:00.000Z';
+  const punto = (sequence: number, recordedAt: string) => ({
+    sequence,
+    latitude: 31.86,
+    longitude: -116.59,
+    altitude: null,
+    accuracy: 5,
+    recordedAt,
+  });
+
+  it('closeOrphanActivities cierra con la hora del último punto, o el inicio sin puntos', async () => {
+    const conPuntos = await createActivity(A, 'HIKING', 'GPS', INICIO);
+    await insertPoint(conPuntos, punto(1, '2026-11-07T10:01:00.000Z'));
+    await insertPoint(conPuntos, punto(2, '2026-11-07T10:02:00.000Z'));
+    const sinPuntos = await createActivity(A, 'HIKING', 'GPS', INICIO);
+
+    expect(await closeOrphanActivities()).toBe(2);
+
+    expect(await getActivity(conPuntos)).toMatchObject({
+      status: 'PENDING_SYNC',
+      endedAt: '2026-11-07T10:02:00.000Z',
+    });
+    expect(await getActivity(sinPuntos)).toMatchObject({ status: 'PENDING_SYNC', endedAt: INICIO });
+  });
+
+  it('closeOrphanActivities nunca deja el fin antes del inicio', async () => {
+    const id = await createActivity(A, 'HIKING', 'GPS', INICIO);
+    await insertPoint(id, punto(1, '2026-11-07T09:59:59.905Z'));
+
+    await closeOrphanActivities();
+
+    expect((await getActivity(id))!.endedAt).toBe(INICIO);
+  });
+
+  it('repararFinAntesDelInicio corrige el fin, borra las métricas y quita el error', async () => {
+    const id = await createActivity(A, 'HIKING', 'GPS', INICIO);
+    await insertPoint(id, punto(1, '2026-11-07T09:59:59.905Z'));
+    await finishActivity(id, '2026-11-07T09:59:59.905Z'); // como cerraba antes de F1
+    await saveMetrics(id, metricas);
+    await markSyncError(id, 'El fin de la actividad no puede ser anterior al inicio');
+    const sana = await terminada(A, '2026-10-09T10:00:00.000Z');
+    await markSyncError(sana, 'otro motivo');
+
+    expect(await repararFinAntesDelInicio()).toBe(1);
+
+    expect(await getActivity(id)).toMatchObject({
+      status: 'PENDING_SYNC',
+      endedAt: INICIO,
+      distanceMeters: null,
+      durationSeconds: null,
+      elevationGainMeters: null,
+      elevationLossMeters: null,
+      elevationSource: 'GPS', // la fuente elegida al iniciar se conserva
+      syncError: null,
+    });
+    // Las demás no cambian.
+    expect(await getActivity(sana)).toMatchObject({ syncError: 'otro motivo', distanceMeters: 1234.5 });
+    expect(await repararFinAntesDelInicio()).toBe(0);
   });
 });
 

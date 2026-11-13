@@ -25,13 +25,18 @@ export async function iniciarOLimpiar(
 }
 
 // Hora con la que se cierra una actividad que dejó de grabarse sin "Detener": la de su último
-// punto o, si no tiene, su inicio (spec 003, CA-10). Sin actividad creada no hay nada que cerrar.
+// punto o, si no tiene, su inicio (spec 003, CA-10). El primer punto puede traer una hora unos ms
+// antes del inicio; el fin nunca queda antes, porque el servidor rechazaría la actividad (F1).
+// Sin actividad creada no hay nada que cerrar.
 export function cierrePendiente(
   activityId: number | null,
   ultimoPunto: string | null,
   inicio: string | null
 ): { id: number; endedAt: string } | null {
-  const endedAt = ultimoPunto ?? inicio;
+  const endedAt =
+    ultimoPunto && inicio && Date.parse(ultimoPunto) < Date.parse(inicio)
+      ? inicio
+      : (ultimoPunto ?? inicio);
   if (activityId == null || !endedAt) return null;
   return { id: activityId, endedAt };
 }
