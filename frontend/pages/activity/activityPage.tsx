@@ -50,6 +50,23 @@ function explicarSegundoPlano() {
     );
 }
 
+// Si el sistema ya no deja pedir el permiso en segundo plano, se avisa antes de iniciar y se
+// ofrecen los ajustes (spec 008, CA-10; spec 011, F2). true = grabar así.
+function avisarSinPermisoSegundoPlano() {
+    return new Promise<boolean>((resolve) =>
+        Alert.alert(SAFETY_MESSAGES.sinPermisoTitulo, SAFETY_MESSAGES.sinPermisoAntes, [
+            { text: SAFETY_MESSAGES.grabarAsi, style: 'cancel', onPress: () => resolve(true) },
+            {
+                text: SAFETY_MESSAGES.abrirAjustes,
+                onPress: () => {
+                    void Linking.openSettings();
+                    resolve(false);
+                },
+            },
+        ], { cancelable: true, onDismiss: () => resolve(false) })
+    );
+}
+
 // Al detener con una alerta activa se pregunta si se cancela antes (CA-26).
 type DecisionAlerta = 'cancelar' | 'mantener' | 'seguir';
 function preguntarPorAlerta() {
@@ -163,6 +180,7 @@ export default function ActivityPage() {
             // La sesión de seguridad se crea con la actividad y se encola para el servidor (T18).
             await start(type, {
                 explicarSegundoPlano,
+                avisarSinPermisoSegundoPlano,
                 alCrear: (localId) => sessionActions.iniciar(localId, userId!, regreso),
             });
         } catch (e) {

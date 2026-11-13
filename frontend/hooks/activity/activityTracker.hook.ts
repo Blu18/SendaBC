@@ -9,6 +9,7 @@ import {
 } from '../../lib/db/activities';
 import { finalizeMetrics } from '../../lib/db/activityMetrics';
 import { cierrePendiente, iniciarOLimpiar } from '../../lib/activity/inicio';
+import { decidirSegundoPlano, type ModoGrabacion } from '../../lib/activity/segundoPlano';
 import { getDetectorState, saveDetectorState } from '../../lib/db/safety';
 import { syncEngine } from '../../lib/sync';
 import { createLiveMetrics } from '../../lib/metrics/summary';
@@ -33,12 +34,15 @@ export type PermissionError = 'denied' | 'blocked';
 // background: tarea de expo-task-manager, sigue con la pantalla bloqueada (spec 008, D4).
 // foreground: watchPositionAsync con la pantalla encendida, como en la spec 003 (sin el permiso
 // en segundo plano, CA-10).
-export type TrackerMode = 'background' | 'foreground';
+export type TrackerMode = ModoGrabacion;
 
 export type StartOptions = {
   // Explica para qué es el permiso en segundo plano y dice si el usuario quiere darlo. Solo se
   // pasa con contactos activos: sin ellos no hay a quién avisar (spec 008, CA-10).
   explicarSegundoPlano?: () => Promise<boolean>;
+  // Con contactos activos, si el sistema ya no deja pedir el permiso: avisa antes de iniciar.
+  // Devuelve true para grabar así, o false si el usuario fue a los ajustes (spec 008, CA-10).
+  avisarSinPermisoSegundoPlano?: () => Promise<boolean>;
   // Se llama con la actividad ya creada y antes de empezar a grabar, para crear su sesión de
   // seguridad: el detector solo corre si existe (spec 008, T18). Un fallo no impide grabar
   // (constitución 2.1).
@@ -66,15 +70,15 @@ async function detenerDetector(localId: number) {
   }
 }
 
-// ¿Hay permiso en segundo plano? Si no, y hay a quién avisar, lo explica y lo pide (CA-10). La
-// app funciona sin él (constitución 3.5).
-async function permisoSegundoPlano(opciones: StartOptions) {
-  const actual = await Location.getBackgroundPermissionsAsync();
-  if (actual.granted) return true;
-  if (!actual.canAskAgain || !opciones.explicarSegundoPlano) return false;
-  if (!(await opciones.explicarSegundoPlano())) return false;
-  return (await Location.requestBackgroundPermissionsAsync()).granted;
-}
+// ¿Hay permiso en segundo plano? Si no, y hay a quién avisar, lo explica y lo pide, o avisa si
+// el sistema ya no deja pedirlo (CA-10). La app funciona sin él (constitución 3.5).
+const modoDeGrabacion = (opciones: StartOptions) =>
+  decidirSegundoPlano({
+    permiso: () => Location.getBackgroundPermissionsAsync(),
+    pedir: () => Location.requestBackgroundPermissionsAsync(),
+    explicar: opciones.explicarSegundoPlano,
+    avisarSinPermiso: opciones.avisarSinPermisoSegundoPlano,
+  });
 
 export function useActivityTracker() {
   const { request } = useLocationPermission();
@@ -126,7 +130,10 @@ export function useActivityTracker() {
       }
       setPermissionError(null);
       // Con el permiso de primer plano ya concedido se puede pedir el de segundo plano (D4).
-      const modo: TrackerMode = (await permisoSegundoPlano(opciones)) ? 'background' : 'foreground';
+      // Si el usuario fue a los ajustes, no se crea nada: vuelve y presiona "Iniciar" otra vez.
+      const decision = await modoDeGrabacion(opciones);
+      if (decision === 'cancelar') return;
+      const modo: TrackerMode = decision;
 
       // 1. Fuente de la elevación: barómetro si existe y hay permiso; si no, GPS (spec 004, CA-12, CA-13)
       const elevationSource = await prepareBarometer();
