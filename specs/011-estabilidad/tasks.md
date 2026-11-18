@@ -741,9 +741,10 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
 | Fallo | Severidad | Resolución |
 |---|---|---|
 | F1 — Una actividad cerrada sin "Detener" puede quedar con el fin antes del inicio y no subir nunca (ver abajo) | Bloqueante | Corregido en T63; la actividad del Nothing subió |
-| F2 — Con la pantalla bloqueada, los dos teléfonos dejan de grabar puntos durante casi toda la salida, y la detección de inactividad tampoco corre (ver abajo) | Mayor. En los dos fue el permiso, no el código | Corregido: aviso antes de iniciar (T66). Los dos teléfonos ya tienen "Permitir todo el tiempo"; falta repetir M25 y M26 |
-| F3 — Con la pantalla apagada el barómetro no entrega lecturas, y la actividad queda con fuente "barómetro" y 0 m de elevación (ver abajo) | Mayor; afecta CA-2 | Corregido en T64 y T65; probado en el S9+ con la pantalla bloqueada |
+| F2 — Con la pantalla bloqueada, los dos teléfonos dejan de grabar puntos durante casi toda la salida, y la detección de inactividad tampoco corre (ver abajo) | Mayor. En los dos fue el permiso, no el código | Corregido: aviso antes de iniciar (T66). En la salida del 2026-11-18 los dos grabaron sin huecos |
+| F3 — Con la pantalla apagada el barómetro no entrega lecturas, y la actividad queda con fuente "barómetro" y 0 m de elevación (ver abajo) | Mayor; afecta CA-2 | Corregido en T64 y T65. En la salida del 2026-11-18 el S9+ midió 212 m con barómetro contra 201 m de Strava |
 | F4 — A velocidad de carro o bici, con un punto cada 10 s, el suavizado de la distancia recorta 8 a 16 % (ver abajo) | Por decidir en T56; afecta CA-4 | Pendiente |
+| F5 — En segundo plano, la altitud del GPS alterna entre la real y un valor casi fijo (~−15 m), y la elevación con GPS sale casi 4 veces la real (ver abajo) | Mayor; afecta CA-2 en teléfonos sin barómetro | Por decidir en T56 |
 
 **Antes de la salida (2026-11-10).** Actividades grabadas por el usuario sin backend ni internet, sincronizadas después por USB. No cuentan como la prueba de campo (M25 a M33), pero dejan datos y un fallo.
 - **Mismo recorrido en los dos teléfonos**, grabado como ciclismo. Por la velocidad (mediana 25 km/h, máximo 113 km/h), parece hecho en carro.
@@ -806,6 +807,29 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
   - **Opciones para T56:** usar la altitud del GPS cuando las lecturas no cubren la actividad (sencillo, pierde la precisión del barómetro), o leer el barómetro desde código nativo dentro del servicio en primer plano (más trabajo). Toca la spec 004 (CA-12 a CA-14) y su RN-3.
 - **F4, detalle:** la suma punto a punto queda a 2 % o menos de Strava. Lo que se pierde viene del promedio de 5 puntos (`SMOOTHING_WINDOW`): a 10 s entre puntos y 30 a 100 km/h, la ventana abarca cientos de metros y corta las curvas. A pie (~14 m entre puntos) la ventana abarca ~60 m y debería perder mucho menos, pero falta confirmarlo en M26. Con bici a 20 km/h la ventana abarca ~270 m.
   - **Opciones para T56:** que la ventana dependa del tiempo o la distancia entre puntos en lugar de la cantidad, o no suavizar cuando los puntos están lejos entre sí. Toca la spec 004 (plan D3) y el cálculo del backend (`distancia.ts`, D7).
+
+**Salida (2026-11-18), senderismo, 17:42 a 18:50 (UTC).** Los dos teléfonos con "Permitir todo el tiempo" y la versión con T63 a T66. Strava como referencia. Las dos actividades se sincronizaron solas.
+
+| | S9+ | Nothing Phone 2 | Strava |
+|---|---|---|---|
+| Duración | 1:08:26 | 1:08:02 | ~1 h, recortada a la hora de "Detener" |
+| Distancia | 4 461 m (+5.2 %) | 4 458 m (+5.1 %) | 4.24 km |
+| Suma punto a punto | 4 996 m | 4 775 m | |
+| Elevación ganada | 212 m, barómetro (+6.5 %) | 774 m, GPS (+289 %) | 199 m |
+| Puntos | 394, cada ~10 s | 410, cada ~10 s | |
+| Precisión, mediana | 9 m | 3 m | |
+
+- **F2 resuelto en campo:** puntos cada 9 a 10 s durante todo el recorrido, con la pantalla bloqueada. Solo hay tramos de 64 a 141 s sin puntos guardados, en el mismo sitio en los dos (parado: no se guardan puntos a menos de 5 m). Cumple lo que M25 pide del tiempo bloqueado.
+- **CA-3:** el primer punto del Nothing es de la hora de inicio; el del S9+ es de 26 s antes, a 11 m del siguiente, dentro del margen de 30 s (spec 003, RN-5). No hay ubicación vieja.
+- **F3 resuelto en campo:** el S9+ midió con barómetro toda la salida, con la pantalla bloqueada. 212 m contra 199 m está dentro de RN-10 (±15 %).
+- **Otra actividad del Nothing,** de 6 s y 1 punto, a las 17:41: un inicio de prueba sin recorrido.
+- **F5, detalle:** en los dos teléfonos, la altitud del GPS salta entre la real (sube de −17 a ~120 m) y un valor casi fijo de −13 a −20 m, a veces en puntos seguidos y a veces durante varios minutos (de 18:24 a 18:34 en el S9+, siempre −13 m mientras avanza). Son 173 de 394 puntos en el S9+ y 130 de 410 en el Nothing. La precisión horizontal de esos puntos es normal (8 a 11 m), así que el filtro de precisión no los quita. Un valor fijo mientras la persona avanza indica que esa ubicación no trae altitud medida. Con el promedio de 5 y el umbral de 10 m, cada salto suma una subida falsa de ~100 m.
+  - En la caminata del 2026-11-11 (primer plano, punto cada 2 s) y en el carro (segundo plano, terreno casi plano) no se vio, o no pesó.
+  - **Probado con los puntos de hoy, sin cambiar el código:** la mediana de 15 en lugar del promedio de 5 deja 492 m en el Nothing; descartar las altitudes que implican más de 0.5 m/s de velocidad vertical deja 412 m. Ninguna llega a RN-10 (±30 %): son demasiados puntos malos.
+  - **Opción para T56:** guardar la precisión vertical de cada punto (`coords.altitudeAccuracy` de `expo-location`) e ignorar la altitud de los puntos sin ella o con una mala. Falta comprobar en un teléfono que esos puntos la traen vacía o grande. Para eso, el 2026-11-18 se instaló en el Nothing un build de diagnóstico (solo en `C:\dev\sbc`, sin commit): guarda en la tabla `diag_f5` cada ubicación tal como llega, con `altitudeAccuracy`, y es depurable para leerla con `run-as`. Falta una caminata de 15 a 20 min con la pantalla bloqueada. Toca la spec 004 (CA-11, RN-3) y la tabla de puntos del teléfono.
+- **Strava:** sin recortar marcaba 5.04 km y 201 m, porque siguió grabando después de "Detener". El usuario la recortó a la hora de fin de la app: 4.24 km, ~1 h y 199 m. Strava empezó un poco antes que la app, con el usuario quieto, así que cubre el mismo recorrido; la diferencia de tiempo es cómo cuenta Strava el tiempo.
+- **Distancia (CA-2):** los dos teléfonos quedan 5.1 y 5.2 % arriba de Strava, apenas fuera de ±5 % (RN-10), y a menos de 0.1 % entre sí. **Decidido con el usuario (2026-11-18):** se acepta como dentro de CA-2; la diferencia con el límite es menor que el error de la referencia. CA-2 queda pendiente solo por la elevación con GPS (F5).
+- **F4 a pie:** el suavizado no recorta de más. La distancia suavizada queda 11 % (S9+) y 7 % (Nothing) bajo la suma punto a punto, y aun así un poco arriba de Strava: a pie quita ruido. F4 solo afecta a velocidad de bici o carro.
 
 ## Commits
 
