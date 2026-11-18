@@ -439,6 +439,12 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
   Hecho (2026-11-12). La decisión pasa a `decidirSegundoPlano` (`lib/activity/segundoPlano.ts`, 4 pruebas). Con contactos activos y el permiso bloqueado, la pantalla muestra "Falta “Permitir todo el tiempo”" con "Grabar así" y "Abrir ajustes". "Abrir ajustes" o cerrar el aviso no crean la actividad: al volver se presiona "Iniciar" otra vez. No se vio en un teléfono: el Nothing ya tenía "Permitir todo el tiempo" al instalar esta versión, y el usuario decidió no quitarlo; queda verificado con las pruebas.
 
+- [x] T67 — F4: la distancia solo promedia los puntos a 50 m o menos del punto nuevo, en el teléfono y en el servidor. (spec 004, plan D3; CA-4, CA-24)
+
+  Hecho (2026-11-18). `SMOOTHING_RADIUS_M = 50` en `lib/metrics/constants.ts` y `backend/src/activity/distancia.ts`; el plan de la 004 se actualizó primero (D3, "Distancia", historial). Se eligió con los puntos reales de la salida: el carro del 2026-11-11 pasa de −8 a −16 % a entre −5.2 y −2.4 % de Strava, y la caminata del 2026-11-18 queda igual (+4.6 y +5.2 %). Prueba nueva en `distance.test.ts` y `distancia.spec.ts`: carretera con curvas a 25 m/s, un punto cada 10 s, error ≤ 5 %. Sin el radio, esa prueba falla en los dos lados. Las actividades ya guardadas conservan su distancia.
+
+**M33, revisado con el usuario (2026-11-18):** se conservan 30 m, 10 minutos y 2 minutos. En la caminata, la parada más larga dentro de 30 m fue de 3.4 min, no hubo "¿Estás bien?" sin motivo ni alertas, y el tiempo y la cuenta regresiva ya los puede cambiar cada usuario. La spec 008 no cambia.
+
 ## Fase 5 — Regresión y cierre
 
 - [ ] T58 — Correr M34, los casos pendientes de las specs 005, 007, 008 y 009. 009 M1 lo hace el usuario. (CA-26)
@@ -465,7 +471,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-9 | Caso manual M31 | Manual, teléfono real | Pendiente |
 | CA-10 | Caso manual M32 | Manual, teléfono real | Pendiente |
 | CA-11 | Caso manual M32 | Manual, teléfono real | Pendiente |
-| CA-12 | Caso manual M33 | Revisión | Pendiente |
+| CA-12 | Caso manual M33 | Revisión | Cumple (2026-11-18): se conservan los valores |
 | CA-13 | Caso manual M20, `lib/db/espera.test.ts` y `activities.test.ts` | Manual y automatizada | Cumple (emulador) |
 | CA-14 | `prisma-disponibilidad.filter.spec.ts`, `frontend/lib/routes/status.test.ts` y caso manual M21 | Automatizada y manual | Cumple (Vitest y emulador) |
 | CA-15 | `backend/src/route/recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
@@ -743,7 +749,7 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
 | F1 — Una actividad cerrada sin "Detener" puede quedar con el fin antes del inicio y no subir nunca (ver abajo) | Bloqueante | Corregido en T63; la actividad del Nothing subió |
 | F2 — Con la pantalla bloqueada, los dos teléfonos dejan de grabar puntos durante casi toda la salida, y la detección de inactividad tampoco corre (ver abajo) | Mayor. En los dos fue el permiso, no el código | Corregido: aviso antes de iniciar (T66). En la salida del 2026-11-18 los dos grabaron sin huecos |
 | F3 — Con la pantalla apagada el barómetro no entrega lecturas, y la actividad queda con fuente "barómetro" y 0 m de elevación (ver abajo) | Mayor; afecta CA-2 | Corregido en T64 y T65. En la salida del 2026-11-18 el S9+ midió 212 m con barómetro contra 201 m de Strava |
-| F4 — A velocidad de carro o bici, con un punto cada 10 s, el suavizado de la distancia recorta 8 a 16 % (ver abajo) | Por decidir en T56; afecta CA-4 | Pendiente |
+| F4 — A velocidad de carro o bici, con un punto cada 10 s, el suavizado de la distancia recorta 8 a 16 % (ver abajo) | Menor; afecta CA-4 | Corregido en T67: con los puntos reales, el carro queda entre −5.2 y −2.4 % de Strava y la caminata igual |
 | F5 — En segundo plano, la altitud del GPS alterna entre la real y un valor casi fijo (~−15 m), y la elevación con GPS sale casi 4 veces la real (ver abajo) | Mayor; afecta CA-2 en teléfonos sin barómetro | Por decidir en T56 |
 
 **Antes de la salida (2026-11-10).** Actividades grabadas por el usuario sin backend ni internet, sincronizadas después por USB. No cuentan como la prueba de campo (M25 a M33), pero dejan datos y un fallo.
