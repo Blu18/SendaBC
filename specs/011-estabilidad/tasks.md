@@ -448,8 +448,12 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 ## Fase 5 — Regresión y cierre
 
 - [ ] T58 — Correr M34, los casos pendientes de las specs 005, 007, 008 y 009. 009 M1 lo hace el usuario. (CA-26)
-- [ ] T59 — Agregar a la colección de Postman los endpoints nuevos y correrla en Postman. (CA-27)
-- [ ] T60 — Correr pruebas unitarias de backend y frontend, e2e y lint. (CA-25)
+- [x] T59 — Agregar a la colección de Postman los endpoints nuevos y correrla en Postman. (CA-27)
+
+  Colección actualizada (2026-11-18): carpeta "Cuenta (spec 011)" con 25 peticiones y sus pruebas. Crea una cuenta temporal (no toca la de las variables `email` y `password`), edita nombre y avatar (`400` con avatar inexistente y nombre corto, `null` quita el avatar), cambia correo (`403`, `409`) y contraseña (`400`, `403`, login nuevo `200` y anterior `401`), publica una ruta, comprueba el `409` al borrar con una alerta activa y el `403` con contraseña incorrecta, la borra (`204`) y verifica el `401` del token y del login, y que la ruta publicada queda con autor "Cuenta eliminada". **Corrida (2026-11-18):** con un runner propio que ejecuta los mismos scripts de la colección (el subconjunto de `pm` que usa, con `chai`), no con la app de Postman, contra un backend aparte en el puerto 3001 con `TELEGRAM_MODE=log` y el secreto del webhook. Se corrió con una cuenta desechable en `email` y `password`, porque la carpeta de seguridad borra todos los contactos de esa cuenta y la de Postman tiene contactos reales en el S9+; la advertencia quedó en la descripción de esa carpeta. Las 78 solicitudes y sus 134 pruebas pasan. En la primera corrida fallaron 7 pruebas de la carpeta nueva por errores de la propia colección (el `400` trae el detalle en `errors`, y la ruta de prueba medía menos de 1.5 km); se corrigieron. Al final se borró la cuenta desechable y la ruta sin autor que deja la carpeta; no quedan cuentas de prueba.
+- [x] T60 — Correr pruebas unitarias de backend y frontend, e2e y lint. (CA-25)
+
+  Hecho (2026-11-18), después de T67: Vitest pasa en el frontend (780) y en el backend (469); las e2e del backend pasan (88) y no dejan cuentas de prueba. `npm run lint` del backend termina sin errores, con 3 advertencias de variables sin usar en `user.entity.ts` y `user.service.ts` que ya estaban. `tsc` del frontend y `nest build` pasan. `tsc` sobre todo el backend marca `supertest/types` en `test/app.e2e-spec.ts`, que viene del primer commit y no afecta las e2e. El frontend no tiene lint configurado.
 - [ ] T61 — Ejecutar `/spec-verify`. Actualizar los estados de 004, 009, 010 y 011 y `specs/roadmap.md`. Anotar en la 012 que debe quitar el túnel y comprobar que no define `EXPO_PUBLIC_BATTERY_TEST`. (CA-28, RN-7)
 
 ## Cobertura
@@ -484,9 +488,9 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-22 | `npm run test:e2e`, 5 veces seguidas | Automatizada | Cumple (5 de 5, 88 pruebas) |
 | CA-23 | Pruebas nuevas y lista revisada en T47 | Automatizada y revisión | Cumple (28 pruebas nuevas; resto anotado) |
 | CA-24 | Revisión de T48 y T57 | Revisión | Fase 2 cumple (T48); falta T57 |
-| CA-25 | `npm test` y `npm run test:e2e` en backend, Vitest en frontend, y `npm run lint` | Automatizada | Pendiente |
+| CA-25 | `npm test` y `npm run test:e2e` en backend, Vitest en frontend, y `npm run lint` | Automatizada | Cumple (2026-11-18, T60) |
 | CA-26 | Caso manual M34 | Manual | Pendiente |
-| CA-27 | Caso manual M35 | Postman | Pendiente |
+| CA-27 | Caso manual M35 | Postman | Cumple (2026-11-18, T59): 134 pruebas, con un runner de los scripts de la colección |
 | CA-28 | Revisión de estados en T61 | Revisión | Pendiente |
 | CA-29 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |
 | CA-30 | Caso manual M1 | Manual | Cumple (emulador) |

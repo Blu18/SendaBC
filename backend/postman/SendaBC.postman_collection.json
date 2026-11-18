@@ -32,7 +32,17 @@
     { "key": "clientAlertId", "value": "" },
     { "key": "triggeredAt", "value": "" },
     { "key": "alertId", "value": "" },
-    { "key": "endedAt", "value": "" }
+    { "key": "endedAt", "value": "" },
+    { "key": "cuentaEmail", "value": "" },
+    { "key": "cuentaEmailNuevo", "value": "" },
+    { "key": "cuentaPassword", "value": "" },
+    { "key": "cuentaPasswordNueva", "value": "" },
+    { "key": "cuentaToken", "value": "" },
+    { "key": "cuentaActivityBody", "value": "" },
+    { "key": "cuentaActivityId", "value": "" },
+    { "key": "cuentaRouteId", "value": "" },
+    { "key": "cuentaSafetyClientId", "value": "" },
+    { "key": "cuentaAlertId", "value": "" }
   ],
   "item": [
     {
@@ -840,7 +850,7 @@
     },
     {
       "name": "Seguridad (spec 008)",
-      "description": "Ejecutar en orden, después de \"2. Login\". Requiere el backend con TELEGRAM_MODE=log y TELEGRAM_WEBHOOK_SECRET igual a la variable webhookSecret, para simular que el contacto acepta la invitación sin Telegram. Quita los contactos de corridas anteriores, agrega uno, lo activa por el webhook, le manda la prueba, inicia una sesión con hora de regreso, manda una ubicación, crea y cancela una alerta, termina la actividad y quita el contacto.",
+      "description": "Ejecutar en orden, después de \"2. Login\". Requiere el backend con TELEGRAM_MODE=log y TELEGRAM_WEBHOOK_SECRET igual a la variable webhookSecret, para simular que el contacto acepta la invitación sin Telegram. Cuidado: quita TODOS los contactos de la cuenta de las variables email y password, así que no se debe correr con una cuenta que tenga contactos reales. Quita los contactos de corridas anteriores, agrega uno, lo activa por el webhook, le manda la prueba, inicia una sesión con hora de regreso, manda una ubicación, crea y cancela una alerta, termina la actividad y quita el contacto.",
       "item": [
         {
           "name": "Mis contactos (y limpiar los de corridas anteriores)",
@@ -1427,6 +1437,1021 @@
             "method": "GET",
             "url": "{{baseUrl}}/emergency-contacts",
             "auth": { "type": "noauth" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cuenta (spec 011)",
+      "description": "Crea una cuenta temporal, la edita y la borra. No toca la cuenta de las variables email y password. Necesita haber corrido '2. Login'. Deja una ruta publicada sin autor ('Ruta de la cuenta temporal', en el océano Pacífico): nadie puede borrarla por la API, así que se borra en la base después de correrla.",
+      "item": [
+        {
+          "name": "Crear cuenta temporal",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Cuenta nueva en cada corrida, para no tocar la de las variables email y password:",
+                  "// esta carpeta la borra al final.",
+                  "const n = Date.now();",
+                  "pm.collectionVariables.set('cuentaEmail', `cuenta-${n}@prueba.senda.bc`);",
+                  "pm.collectionVariables.set('cuentaEmailNuevo', `cuenta-${n}-nuevo@prueba.senda.bc`);",
+                  "pm.collectionVariables.set('cuentaPassword', `temporal-${pm.variables.replaceIn('{{$guid}}').slice(0, 8)}`);",
+                  "pm.collectionVariables.set('cuentaPasswordNueva', `temporal-${pm.variables.replaceIn('{{$guid}}').slice(0, 8)}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('avatarId en lugar de avatarUrl, sin passwordHash', () => {",
+                  "  pm.expect(body).to.have.property('avatarId', null);",
+                  "  pm.expect(body).to.not.have.property('avatarUrl');",
+                  "  pm.expect(body).to.not.have.property('passwordHash');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "url": "{{baseUrl}}/user",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{cuentaEmail}}\",\n  \"displayName\": \"Cuenta temporal\",\n  \"password\": \"{{cuentaPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login de la cuenta temporal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('cuentaToken', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{cuentaEmail}}\",\n  \"password\": \"{{cuentaPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Editar nombre y avatar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 (CA-41, CA-42)', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('nombre sin espacios de los extremos y avatar nuevo', () => {",
+                  "  pm.expect(body.displayName).to.eql('Nombre editado');",
+                  "  pm.expect(body.avatarId).to.eql('pino');",
+                  "  pm.expect(body).to.not.have.property('passwordHash');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{baseUrl}}/user/me",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"  Nombre editado  \",\n  \"avatarId\": \"pino\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Avatar que no existe (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje en español', () => pm.expect(pm.response.json().errors.avatarId).to.include('El avatar no es válido'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{baseUrl}}/user/me",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"avatarId\": \"dragon\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Nombre de 4 caracteres (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 (spec 001, RN-4)', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje en español', () => pm.expect(pm.response.json().errors.displayName).to.include('El nombre visible debe tener al menos 5 caracteres'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{baseUrl}}/user/me",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"  Luis  \"\n}"
+            }
+          }
+        },
+        {
+          "name": "Quitar el avatar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 (RN-15)', () => pm.response.to.have.status(200));",
+                  "pm.test('vuelve al ícono por defecto', () => pm.expect(pm.response.json().avatarId).to.eql(null));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{baseUrl}}/user/me",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"avatarId\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Perfil editado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('guarda el nombre, sin avatar', () => {",
+                  "  pm.expect(body.displayName).to.eql('Nombre editado');",
+                  "  pm.expect(body.avatarId).to.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/user/profile"
+          }
+        },
+        {
+          "name": "Cambiar email con contraseña incorrecta (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 (CA-43)', () => pm.response.to.have.status(403));",
+                  "pm.test('mensaje en español', () => pm.expect(pm.response.json().message).to.eql('La contraseña no es correcta'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{baseUrl}}/user/me/email",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{cuentaEmailNuevo}}\",\n  \"password\": \"no-es-la-contrasena\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cambiar a un email que ya existe (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 (CA-43)', () => pm.response.to.have.status(409));",
+                  "pm.test('mensaje en español', () => pm.expect(pm.response.json().message).to.eql('Ya existe un usuario con ese email'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{baseUrl}}/user/me/email",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{cuentaPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cambiar email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 (CA-43)', () => pm.response.to.have.status(200));",
+                  "pm.test('email nuevo, sin passwordHash', () => {",
+                  "  pm.expect(pm.response.json().email).to.eql(pm.collectionVariables.get('cuentaEmailNuevo'));",
+                  "  pm.expect(pm.response.json()).to.not.have.property('passwordHash');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{baseUrl}}/user/me/email",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{cuentaEmailNuevo}}\",\n  \"password\": \"{{cuentaPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Contraseña nueva de 7 caracteres (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje en español', () => pm.expect(pm.response.json().errors.newPassword).to.include('La contraseña debe tener al menos 8 caracteres'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{baseUrl}}/user/me/password",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{cuentaPassword}}\",\n  \"newPassword\": \"1234567\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cambiar contraseña con la actual incorrecta (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 (CA-44)', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{baseUrl}}/user/me/password",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"no-es-la-contrasena\",\n  \"newPassword\": \"{{cuentaPasswordNueva}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cambiar contraseña",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 (CA-44)', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{baseUrl}}/user/me/password",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{cuentaPassword}}\",\n  \"newPassword\": \"{{cuentaPasswordNueva}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login con el email y la contraseña nuevos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 (CA-43, CA-44)', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('cuentaToken', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{cuentaEmailNuevo}}\",\n  \"password\": \"{{cuentaPasswordNueva}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login con la contraseña anterior (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{cuentaEmailNuevo}}\",\n  \"password\": \"{{cuentaPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Subir una actividad de la cuenta temporal",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 2.1 km en el océano Pacífico (una ruta mide al menos 1.5 km), como la carpeta de publicar rutas.",
+                  "const inicio = Date.UTC(2026, 10, 18, 15);",
+                  "const points = Array.from({ length: 20 }, (_, i) => ({",
+                  "  sequence: i + 1,",
+                  "  latitude: 24.5 + i * 0.001,",
+                  "  longitude: -127,",
+                  "  altitude: 100,",
+                  "  accuracy: 4.8,",
+                  "  recordedAt: new Date(inicio + i * 60000).toISOString(),",
+                  "}));",
+                  "pm.collectionVariables.set('cuentaActivityBody', JSON.stringify({",
+                  "  activities: [{",
+                  "    clientGeneratedId: pm.variables.replaceIn('{{$guid}}'),",
+                  "    type: 'HIKING',",
+                  "    startedAt: points[0].recordedAt,",
+                  "    endedAt: points[points.length - 1].recordedAt,",
+                  "    distanceMeters: 2100,",
+                  "    durationSeconds: 1140,",
+                  "    elevationGainMeters: 0,",
+                  "    elevationLossMeters: 0,",
+                  "    elevationSource: 'GPS',",
+                  "    points,",
+                  "  }],",
+                  "}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const [result] = pm.response.json().results;",
+                  "pm.test('CREATED', () => pm.expect(result.status).to.eql('CREATED'));",
+                  "pm.collectionVariables.set('cuentaActivityId', result.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": "{{baseUrl}}/activities/sync",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{cuentaActivityBody}}"
+            }
+          }
+        },
+        {
+          "name": "Publicar una ruta de la cuenta temporal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.test('el autor es la cuenta', () => pm.expect(pm.response.json().author).to.eql('Nombre editado'));",
+                  "pm.collectionVariables.set('cuentaRouteId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": "{{baseUrl}}/routes",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activityId\": \"{{cuentaActivityId}}\",\n  \"name\": \"Ruta de la cuenta temporal\",\n  \"region\": \"Océano Pacífico\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Sesión de seguridad de la cuenta temporal",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('cuentaSafetyClientId', pm.variables.replaceIn('{{$guid}}'));",
+                  "pm.collectionVariables.set('startedAt', new Date(Date.now() - 3600e3).toISOString());",
+                  "pm.collectionVariables.set('recordedAt', new Date().toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "url": "{{baseUrl}}/safety/sessions/{{cuentaSafetyClientId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"HIKING\",\n  \"startedAt\": \"{{startedAt}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Alerta activa de la cuenta temporal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.test('sin contactos, no se envía a nadie', () => pm.expect(pm.response.json().deliveries).to.eql([]));",
+                  "pm.collectionVariables.set('cuentaAlertId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": "{{baseUrl}}/safety/sessions/{{cuentaSafetyClientId}}/alerts",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientAlertId\": \"{{$guid}}\",\n  \"reason\": \"SOS\",\n  \"triggeredAt\": \"{{recordedAt}}\",\n  \"latitude\": 24.5,\n  \"longitude\": -127,\n  \"locationAt\": \"{{recordedAt}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Borrar la cuenta con una alerta activa (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 (CA-47)', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/user/me",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{cuentaPasswordNueva}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cancelar la alerta de la cuenta temporal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "url": "{{baseUrl}}/safety/alerts/{{cuentaAlertId}}/cancel"
+          }
+        },
+        {
+          "name": "Borrar la cuenta con contraseña incorrecta (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 (CA-46)', () => pm.response.to.have.status(403));",
+                  "pm.test('mensaje en español', () => pm.expect(pm.response.json().message).to.eql('La contraseña no es correcta'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/user/me",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"no-es-la-contrasena\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Borrar la cuenta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 (CA-46)', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/user/me",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{cuentaPasswordNueva}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Token de la cuenta borrada (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 (CA-49)', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cuentaToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/user/profile"
+          }
+        },
+        {
+          "name": "Login de la cuenta borrada (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 (CA-46)', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{cuentaEmailNuevo}}\",\n  \"password\": \"{{cuentaPasswordNueva}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Ruta publicada de la cuenta borrada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200: la ruta publicada se queda (CA-48)', () => pm.response.to.have.status(200));",
+                  "pm.test('autor \"Cuenta eliminada\" (RN-16)', () => pm.expect(pm.response.json().author).to.eql('Cuenta eliminada'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/{{cuentaRouteId}}"
           }
         }
       ]
