@@ -418,10 +418,14 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
   Hecho por el usuario el 2026-11-10, en los dos teléfonos. En el servidor queda la alerta de inactividad de la prueba, cancelada, en la sesión del Nothing de las 21:35.
 - [ ] T51 — Correr M25, M26, M28 y M29 en la salida, y M4 paso 2 con TalkBack en un teléfono. (CA-1 a CA-3, CA-5 a CA-7, CA-38)
+
+  **M28 (2026-11-18):** el usuario publicó la actividad del S9+ de la caminata. La ruta mide 4 461 m (la distancia de la actividad) y el eje del perfil llega a 4 996 m (+12 %). El perfil tiene 20 saltos de más de 30 m entre puntos seguidos: sale de la altitud del GPS de cada punto, así que hereda F5 aunque la actividad se midió con barómetro. No cumple; ver F5 y F6.
 - [ ] T52 — Correr M30, la medición de batería. Si no cumple, ajustar el mapa y volver a medir. (CA-8)
 - [ ] T53 — Correr M31 y M32 con el contacto real. (CA-9 a CA-11)
 - [ ] T54 — Correr M19 en la zona real, en modo avión. (CA-20, CA-21)
-- [ ] T55 — Correr M27, el recorrido simulado a velocidad de bicicleta. (CA-4)
+- [x] T55 — Correr M27, el recorrido simulado a velocidad de bicicleta. (CA-4)
+
+  Corrido el 2026-11-18 en el emulador `Pixel_8_Pro` (development build, Metro con el código de T67 y backend aparte en `TELEGRAM_MODE=log`), con una cuenta desechable. Un script manda una ubicación por `adb emu geo fix` según el tiempo real, a 20 km/h, sobre una carretera con curvas. El emulador no tenía el permiso en segundo plano, así que grabó en primer plano, con un punto cada ~2 s. Resultado: 5:33, 1.79 km, 19.4 km/h, 160 puntos; la distancia queda 1.8 % bajo la suma punto a punto. En 3D la cámara sigue al marcador con el rumbo y el trazo sale continuo; en 2D, igual. **El usuario lo da por aceptable (2026-11-18).** Queda escrito que no se probó en una bicicleta real. Un primer intento se descartó: quedaron dos scripts mandando ubicaciones a la vez y el trazo salió en pedazos; los saltos no sumaron distancia (la regla de 50 m/s funcionó), pero esa actividad no cuenta.
 - [ ] T56 — Hacer el reporte en este archivo, con la revisión de M33. Clasificar cada fallo por severidad y decidir con el usuario. (CA-12, CA-19, CA-29, RN-2)
 - [ ] T57 — Corregir los fallos bloqueantes y los que el usuario pida, con su prueba si se puede. Repetir el caso que falló. (CA-19, CA-24)
 
@@ -448,6 +452,14 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 ## Fase 5 — Regresión y cierre
 
 - [ ] T58 — Correr M34, los casos pendientes de las specs 005, 007, 008 y 009. 009 M1 lo hace el usuario. (CA-26)
+
+  Avance (2026-11-18), en el emulador con la misma preparación que T55:
+  - **005 M3, pasa:** con 3 actividades grabadas en modo avión, al quitarlo se tocó "Empezar" → "Iniciar actividad" de inmediato. La grabación arrancó normal y a los 21 s las 3 ya estaban sincronizadas, con la nueva aún grabando.
+  - **007 M1, pasa:** una pendiente no ofrece publicar y dice "Para publicarla como ruta, primero tiene que subirse a tu cuenta."; una sincronizada de 424 m dice "Una ruta debe medir al menos 1.5 km."; la de 1.79 km ofrece "Publicar como ruta".
+  - **007 M6, pasa:** se publicó la de 1.79 km, se editó el nombre, se archivó (queda "Archivada" en "Mis rutas", desaparece del mapa y de la búsqueda cercana), se volvió a publicar (regresa al mapa) y se borró (sale de "Mis rutas" y el resumen vuelve a ofrecer "Publicar como ruta").
+  - **008 M8 paso 4, pasa:** se inició con regreso a 1 h, se cambió a 3 h con conexión (el servidor guardó la nueva) y se adelantó la sesión 1 h 31 min en la base, de modo que la hora anterior ya habría vencido con su margen. En dos corridas de la tarea no hubo aviso. Como control, al vencer también la hora nueva el servidor sí mandó "no ha confirmado su regreso".
+  - **008 M10, pasa:** con "Permitir todo el tiempo" en el emulador, 5 min con la pantalla bloqueada y el GPS en movimiento: 64 puntos, sin tramos de más de 5 s sin puntos. Al detener desaparece la notificación de grabación y el servicio sale de primer plano. Después de 11 min (más que los 10 de inactividad) no llegó pregunta ni alerta.
+  - **Pendiente:** 007 M8 en el segundo teléfono y 009 M1, que hace el usuario.
 - [x] T59 — Agregar a la colección de Postman los endpoints nuevos y correrla en Postman. (CA-27)
 
   Colección actualizada (2026-11-18): carpeta "Cuenta (spec 011)" con 25 peticiones y sus pruebas. Crea una cuenta temporal (no toca la de las variables `email` y `password`), edita nombre y avatar (`400` con avatar inexistente y nombre corto, `null` quita el avatar), cambia correo (`403`, `409`) y contraseña (`400`, `403`, login nuevo `200` y anterior `401`), publica una ruta, comprueba el `409` al borrar con una alerta activa y el `403` con contraseña incorrecta, la borra (`204`) y verifica el `401` del token y del login, y que la ruta publicada queda con autor "Cuenta eliminada". **Corrida (2026-11-18):** con un runner propio que ejecuta los mismos scripts de la colección (el subconjunto de `pm` que usa, con `chai`), no con la app de Postman, contra un backend aparte en el puerto 3001 con `TELEGRAM_MODE=log` y el secreto del webhook. Se corrió con una cuenta desechable en `email` y `password`, porque la carpeta de seguridad borra todos los contactos de esa cuenta y la de Postman tiene contactos reales en el S9+; la advertencia quedó en la descripción de esa carpeta. Las 78 solicitudes y sus 134 pruebas pasan. En la primera corrida fallaron 7 pruebas de la carpeta nueva por errores de la propia colección (el `400` trae el detalle en `errors`, y la ruta de prueba medía menos de 1.5 km); se corrigieron. Al final se borró la cuenta desechable y la ruta sin autor que deja la carpeta; no quedan cuentas de prueba.
@@ -467,7 +479,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-1 | Caso manual M25 | Manual, teléfono real | Pendiente |
 | CA-2 | Caso manual M26 | Manual, teléfono real | Pendiente |
 | CA-3 | Caso manual M25 | Manual, teléfono real | Pendiente |
-| CA-4 | Caso manual M27 | Manual, simulado | Pendiente |
+| CA-4 | Caso manual M27 | Manual, simulado | Cumple (2026-11-18, T55): aceptado por el usuario; no probado en bici real |
 | CA-5 | Caso manual M28 | Manual, teléfono real | Pendiente |
 | CA-6 | Caso manual M29 | Manual, teléfono real | Pendiente |
 | CA-7 | Caso manual M25 | Manual, teléfono real | Pendiente |
@@ -754,7 +766,8 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
 | F2 — Con la pantalla bloqueada, los dos teléfonos dejan de grabar puntos durante casi toda la salida, y la detección de inactividad tampoco corre (ver abajo) | Mayor. En los dos fue el permiso, no el código | Corregido: aviso antes de iniciar (T66). En la salida del 2026-11-18 los dos grabaron sin huecos |
 | F3 — Con la pantalla apagada el barómetro no entrega lecturas, y la actividad queda con fuente "barómetro" y 0 m de elevación (ver abajo) | Mayor; afecta CA-2 | Corregido en T64 y T65. En la salida del 2026-11-18 el S9+ midió 212 m con barómetro contra 201 m de Strava |
 | F4 — A velocidad de carro o bici, con un punto cada 10 s, el suavizado de la distancia recorta 8 a 16 % (ver abajo) | Menor; afecta CA-4 | Corregido en T67: con los puntos reales, el carro queda entre −5.2 y −2.4 % de Strava y la caminata igual |
-| F5 — En segundo plano, la altitud del GPS alterna entre la real y un valor casi fijo (~−15 m), y la elevación con GPS sale casi 4 veces la real (ver abajo) | Mayor; afecta CA-2 en teléfonos sin barómetro | Por decidir en T56 |
+| F5 — En segundo plano, la altitud del GPS alterna entre la real y un valor casi fijo (~−15 m), y la elevación con GPS sale casi 4 veces la real (ver abajo) | Mayor; afecta CA-2 en teléfonos sin barómetro y el perfil de las rutas (M28) | Por decidir en T56 |
+| F6 — El eje del perfil de una ruta mide la suma punto a punto, no la distancia de la ruta: en M28, 4 996 contra 4 461 m (+12 %) | Menor; afecta M28 | Por decidir en T56 |
 
 **Antes de la salida (2026-11-10).** Actividades grabadas por el usuario sin backend ni internet, sincronizadas después por USB. No cuentan como la prueba de campo (M25 a M33), pero dejan datos y un fallo.
 - **Mismo recorrido en los dos teléfonos**, grabado como ciclismo. Por la velocidad (mediana 25 km/h, máximo 113 km/h), parece hecho en carro.
