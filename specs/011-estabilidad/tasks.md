@@ -421,8 +421,12 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
   **M28 (2026-11-18):** el usuario publicó la actividad del S9+ de la caminata. La ruta mide 4 461 m (la distancia de la actividad) y el eje del perfil llega a 4 996 m (+12 %). El perfil tiene 20 saltos de más de 30 m entre puntos seguidos: sale de la altitud del GPS de cada punto, así que hereda F5 aunque la actividad se midió con barómetro. No cumple; ver F5 y F6.
 - [ ] T52 — Correr M30, la medición de batería. Si no cumple, ajustar el mapa y volver a medir. (CA-8)
+
+  **Dato de la salida (2026-11-18), no sustituye a M30:** según los ajustes de batería de cada teléfono, el día de la caminata de ~1 h 08 min. **Nothing:** menos de 1 %, con 9 min de uso en pantalla y 1 h 15 min en segundo plano. **S9+:** 8.4 %, con 17 min en pantalla y 3 h 2 min en segundo plano; el segundo plano dura casi el triple que la caminata, así que incluye tiempo fuera de la grabación. La pantalla estuvo bloqueada casi todo el tiempo, así que mide sobre todo la grabación en segundo plano, no el mapa. CA-8 sigue pendiente: pide comparar el consumo por hora con "Sin mapa", 2D y 3D en pantalla.
 - [ ] T53 — Correr M31 y M32 con el contacto real. (CA-9 a CA-11)
 - [ ] T54 — Correr M19 en la zona real, en modo avión. (CA-20, CA-21)
+
+  **Avance (2026-11-18):** en la salida, en modo avión y dentro de la zona descargada, el mapa se vio con el terreno, no un fondo azul (CA-20, parte). No se revisaron el cambio entre 3D y 2D, el modo oscuro ni la grabación fuera de la zona (CA-21); quedan para otra salida.
 - [x] T55 — Correr M27, el recorrido simulado a velocidad de bicicleta. (CA-4)
 
   Corrido el 2026-11-18 en el emulador `Pixel_8_Pro` (development build, Metro con el código de T67 y backend aparte en `TELEGRAM_MODE=log`), con una cuenta desechable. Un script manda una ubicación por `adb emu geo fix` según el tiempo real, a 20 km/h, sobre una carretera con curvas. El emulador no tenía el permiso en segundo plano, así que grabó en primer plano, con un punto cada ~2 s. Resultado: 5:33, 1.79 km, 19.4 km/h, 160 puntos; la distancia queda 1.8 % bajo la suma punto a punto. En 3D la cámara sigue al marcador con el rumbo y el trazo sale continuo; en 2D, igual. **El usuario lo da por aceptable (2026-11-18).** Queda escrito que no se probó en una bicicleta real. Un primer intento se descartó: quedaron dos scripts mandando ubicaciones a la vez y el trazo salió en pedazos; los saltos no sumaron distancia (la regla de 50 m/s funcionó), pero esa actividad no cuenta.
