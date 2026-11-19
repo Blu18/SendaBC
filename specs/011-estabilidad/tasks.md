@@ -423,6 +423,18 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 - [ ] T52 — Correr M30, la medición de batería. Si no cumple, ajustar el mapa y volver a medir. (CA-8)
 
   **Dato de la salida (2026-11-18), no sustituye a M30:** según los ajustes de batería de cada teléfono, el día de la caminata de ~1 h 08 min. **Nothing:** menos de 1 %, con 9 min de uso en pantalla y 1 h 15 min en segundo plano. **S9+:** 8.4 %, con 17 min en pantalla y 3 h 2 min en segundo plano; el segundo plano dura casi el triple que la caminata, así que incluye tiempo fuera de la grabación. La pantalla estuvo bloqueada casi todo el tiempo, así que mide sobre todo la grabación en segundo plano, no el mapa. CA-8 sigue pendiente: pide comparar el consumo por hora con "Sin mapa", 2D y 3D en pantalla.
+
+  **M30 en el Nothing, con el teléfono quieto (2026-11-18):** en lugar del S9+. Build de diagnóstico de F5 (con `EXPO_PUBLIC_BATTERY_TEST=1`), zona descargada, pantalla encendida, brillo fijo y en el mismo lugar. El cable carga el teléfono, así que cada vuelta se midió desconectada: `Charge counter` de `dumpsys battery` justo antes de desconectar y al reconectar, ~30 min después.
+
+  | Vuelta | Vista | Duración | Charge counter (µAh) | Nivel | Consumo | Frente a "Sin mapa" |
+  |---|---|---|---|---|---|---|
+  | 1 | 3D | 30:08 | 1 499 000 → 1 341 000 | 43 → 39 % | ~315 mAh/h | −13 % |
+  | 2 | 2D | 30:02 | 1 383 000 → 1 213 000 | 40 → 35 % | ~340 mAh/h | −6 % |
+  | 3 | Sin mapa | 30:14 | 1 225 000 → 1 043 000 | 35 → 30 % | ~361 mAh/h | — |
+
+  - Cumple los límites: 3D no supera a "Sin mapa" (límite +30 %) ni a 2D (límite +15 %).
+  - El consumo sube en el orden en que se corrieron las vueltas y no por vista. Con menos carga baja el voltaje y el mismo trabajo gasta más carga, así que la diferencia parece del orden, no del mapa. Quieto, el mapa no suma un consumo medible.
+  - **Reservas:** sin movimiento, la cámara no sigue al marcador ni gira con el rumbo, que es lo que más dibuja el mapa; M30 pide "el mismo recorrido". Tampoco se corrió en el S9+. Para cerrar CA-8 falta repetirlo caminando, en otro orden ("Sin mapa" primero) y con la misma carga al empezar cada vuelta.
 - [ ] T53 — Correr M31 y M32 con el contacto real. (CA-9 a CA-11)
 - [ ] T54 — Correr M19 en la zona real, en modo avión. (CA-20, CA-21)
 
@@ -487,7 +499,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-5 | Caso manual M28 | Manual, teléfono real | Pendiente |
 | CA-6 | Caso manual M29 | Manual, teléfono real | Pendiente |
 | CA-7 | Caso manual M25 | Manual, teléfono real | Pendiente |
-| CA-8 | Caso manual M30 | Manual, teléfono real | Pendiente |
+| CA-8 | Caso manual M30 | Manual, teléfono real | Pendiente: cumple quieto en el Nothing (2026-11-18); falta caminando |
 | CA-9 | Caso manual M31 | Manual, teléfono real | Pendiente |
 | CA-10 | Caso manual M32 | Manual, teléfono real | Pendiente |
 | CA-11 | Caso manual M32 | Manual, teléfono real | Pendiente |
