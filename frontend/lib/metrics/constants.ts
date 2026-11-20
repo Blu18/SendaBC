@@ -12,6 +12,10 @@ export const MAX_SPEED_MS = 50;
 // para quitar el ruido del sensor (plan D3, D4).
 export const SMOOTHING_WINDOW = 5;
 
+// La distancia solo promedia los puntos a esta distancia o menos del punto nuevo: con puntos
+// separados (bici o carro, uno cada 10 s) el promedio cortaba las curvas (spec 011, F4; plan D3).
+export const SMOOTHING_RADIUS_M = 50;
+
 // Distancia: solo se suma al alejarse del ancla más que las precisiones de ambos
 // puntos, y al menos esto (CA-9, plan D3).
 export const MIN_STEP_M = 5;
@@ -19,3 +23,8 @@ export const MIN_STEP_M = 5;
 // Variaciones de altitud menores a estos umbrales se consideran ruido (CA-11).
 export const BARO_NOISE_M = 3;
 export const GPS_NOISE_M = 10;
+
+// El barómetro cubre la actividad si los tramos sin lecturas de más de MAX_BARO_GAP_MS suman
+// menos de MAX_BARO_UNCOVERED de su duración; si no, toda la actividad usa GPS (RN-7).
+export const MAX_BARO_GAP_MS = 60_000;
+export const MAX_BARO_UNCOVERED = 0.1;

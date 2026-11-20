@@ -26,6 +26,15 @@ describe('computeDistance — recorrido conocido (CA-7)', () => {
     expect(relativeError(d, 5000)).toBeLessThanOrEqual(0.01);
   });
 
+  it('carretera con curvas en carro (un punto cada 10 s a 25 m/s): error ≤ 5 %', () => {
+    // Con los puntos a ~200 m, promediar los últimos 5 cortaba las curvas: 8–16 % menos en la
+    // prueba de campo de la 011 (F4). Solo se promedian los puntos a 50 m o menos.
+    const road: Vertex[] = Array.from({ length: 21 }, (_, i) => [i % 2 ? 300 : 0, i * 300]);
+    const expected = 20 * Math.hypot(300, 300);
+    const d = computeDistance(path(road, 250, 5, 25));
+    expect(relativeError(d, expected)).toBeLessThanOrEqual(0.05);
+  });
+
   it('límite conocido: en zigzag cerrado subestima, pero menos de 7 %', () => {
     // 50 vueltas de 90° cada ~99 m caminando: el promedio y el umbral recortan las
     // esquinas (plan, Riesgos). Esta prueba fija el límite para que no empeore sin aviso.

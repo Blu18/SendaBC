@@ -200,7 +200,8 @@ describe('RouteService.publish (spec 007)', () => {
     const { sql, valores } = insertDe(tx);
     expect(sql).toContain('ST_MakeLine(location ORDER BY sequence)');
     expect(sql).toContain('ST_StartPoint(recorrido.path)');
-    expect(valores).toContain(1);
+    expect(sql).toContain('sequence = ANY(?::int[])');
+    expect(valores).toContainEqual(PUNTOS.map((p) => p.sequence));
   });
 
   it('quita la ubicación vieja del recorrido y del perfil (CA-28, RN-10)', async () => {
@@ -220,11 +221,29 @@ describe('RouteService.publish (spec 007)', () => {
     await service.publish(USUARIO, dto);
 
     const { valores } = insertDe(tx);
-    expect(valores).toContain(2);
+    expect(valores).toContainEqual(PUNTOS.map((p) => p.sequence + 1));
     const perfil = valores.find(
       (v): v is string => typeof v === 'string' && v.startsWith('[['),
     );
     expect(JSON.parse(perfil!)[0]).toEqual([0, 100]);
+  });
+
+  it('quita un salto imposible del recorrido y del perfil (spec 011, CA-15, CA-16)', async () => {
+    const { service, tx } = montarPublicar();
+    // El punto 14 está ~1 100 km al norte, 10 s después del anterior.
+    tx.$queryRaw.mockResolvedValue(
+      PUNTOS.map((p) => (p.sequence === 14 ? { ...p, lat: 10 } : p)),
+    );
+
+    await service.publish(USUARIO, dto);
+
+    const { valores } = insertDe(tx);
+    const restantes = PUNTOS.map((p) => p.sequence).filter((n) => n !== 14);
+    expect(valores).toContainEqual(restantes);
+    const perfil = JSON.parse(valores[7] as string) as [number, number][];
+    expect(perfil).toHaveLength(PUNTOS.length - 1);
+    // El eje sigue en ~27 tramos de 111 m, sin los ~2 200 km de ida y vuelta.
+    expect(perfil.at(-1)![0]).toBeCloseTo(3_002, -1);
   });
 
   it('busca la actividad entre las sincronizadas del usuario del token (CA-9)', async () => {
@@ -385,7 +404,7 @@ describe('RouteService.publish (spec 007)', () => {
       expect.any(String),
       USUARIO,
       ACTIVIDAD,
-      1,
+      PUNTOS.map((p) => p.sequence),
       ACTIVIDAD,
     ]);
     const perfil = JSON.parse(valores[7] as string) as [number, number][];
@@ -539,7 +558,9 @@ describe('RouteService.detail (spec 007)', () => {
 
     const sql = sqlDe(prisma);
     expect(sql).toContain('ST_Simplify(r.path, ?)');
-    expect(sql).toContain('"createdByUserId" IS NOT DISTINCT FROM ?::uuid) AS "isMine"');
+    expect(sql).toContain(
+      '"createdByUserId" IS NOT DISTINCT FROM ?::uuid) AS "isMine"',
+    );
     expect(sql).toContain('route_favorites');
     expect(valoresDe(prisma)).toEqual([0.00002, USUARIO, USUARIO, RUTA]);
   });
@@ -882,24 +903,38 @@ describe('RouteService: rutas de una cuenta borrada (spec 011, CA-48, RN-16)', (
 
   it.each([
     ['nearby', (s: RouteService) => s.nearby(USUARIO, query)],
-    ['detail', (s: RouteService) => s.detail(USUARIO, RUTA).catch(() => undefined)],
-  ])('%s: LEFT JOIN, autor "Cuenta eliminada" e isMine falso sin autor', async (_, llamar) => {
-    const { service, prisma } = montar();
+    [
+      'detail',
+      (s: RouteService) => s.detail(USUARIO, RUTA).catch(() => undefined),
+    ],
+  ])(
+    '%s: LEFT JOIN, autor "Cuenta eliminada" e isMine falso sin autor',
+    async (_, llamar) => {
+      const { service, prisma } = montar();
 
-    await llamar(service);
+      await llamar(service);
 
-    const sql = sqlDe(prisma);
-    expect(sql).toContain('FROM routes r LEFT JOIN users u ON u.id = r."createdByUserId"');
-    expect(sql).not.toMatch(/FROM routes r JOIN users/);
-    expect(sql).toContain(autorSql);
-    // Con createdByUserId nulo, "=" daría NULL; IS NOT DISTINCT FROM da false.
-    expect(sql).toContain('"createdByUserId" IS NOT DISTINCT FROM ?::uuid) AS "isMine"');
-  });
+      const sql = sqlDe(prisma);
+      expect(sql).toContain(
+        'FROM routes r LEFT JOIN users u ON u.id = r."createdByUserId"',
+      );
+      expect(sql).not.toMatch(/FROM routes r JOIN users/);
+      expect(sql).toContain(autorSql);
+      // Con createdByUserId nulo, "=" daría NULL; IS NOT DISTINCT FROM da false.
+      expect(sql).toContain(
+        '"createdByUserId" IS NOT DISTINCT FROM ?::uuid) AS "isMine"',
+      );
+    },
+  );
 
   it('el detalle de una publicada sin autor la muestra a todos, sin actividad de origen', async () => {
     const { service, prisma } = montar();
     prisma.$queryRaw.mockResolvedValue([
-      filaDetalle({ author: AUTOR_CUENTA_ELIMINADA, isMine: false, sourceActivityId: null }),
+      filaDetalle({
+        author: AUTOR_CUENTA_ELIMINADA,
+        isMine: false,
+        sourceActivityId: null,
+      }),
     ]);
 
     const detalle = await service.detail(USUARIO, RUTA);
@@ -912,11 +947,16 @@ describe('RouteService: rutas de una cuenta borrada (spec 011, CA-48, RN-16)', (
   function montarSinAutor(status = 'PUBLISHED') {
     const prisma = {
       route: {
-        findUnique: vi.fn().mockResolvedValue({ createdByUserId: null, status }),
+        findUnique: vi
+          .fn()
+          .mockResolvedValue({ createdByUserId: null, status }),
         updateMany: vi.fn(),
       },
     };
-    return { service: new RouteService(prisma as unknown as PrismaService), prisma };
+    return {
+      service: new RouteService(prisma as unknown as PrismaService),
+      prisma,
+    };
   }
 
   it('nadie puede editarla, archivarla ni borrarla: 403 (RN-16)', async () => {
@@ -935,6 +975,8 @@ describe('RouteService: rutas de una cuenta borrada (spec 011, CA-48, RN-16)', (
 
   it('una no publicada sin autor no la ve nadie: 404', async () => {
     const { service } = montarSinAutor('ARCHIVED');
-    await expect(service.remove(USUARIO, RUTA)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.remove(USUARIO, RUTA)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });

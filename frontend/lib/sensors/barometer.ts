@@ -1,5 +1,6 @@
 import { Barometer, DeviceMotion } from 'expo-sensors';
 import { Platform } from 'react-native';
+import BarometroNativo from '../../modules/barometro';
 import type { BarometerReadingInput } from '../db/activities';
 import type { ElevationSource } from '../metrics/summary';
 
@@ -14,6 +15,7 @@ const MIN_GAP_MS = 900;
 // Barometer no lo pide ni lo reporta, así que se pide con DeviceMotion.
 export async function prepareBarometer(): Promise<ElevationSource> {
   try {
+    if (BarometroNativo) return BarometroNativo.disponible() ? 'BAROMETER' : 'GPS';
     if (!(await Barometer.isAvailableAsync())) return 'GPS';
     if (Platform.OS === 'ios') {
       const { granted } = await DeviceMotion.requestPermissionsAsync();
@@ -27,9 +29,25 @@ export async function prepareBarometer(): Promise<ElevationSource> {
 }
 
 // Empieza a escuchar el barómetro; devuelve la función que lo detiene.
-// La hora de cada lectura se toma al recibirla: el timestamp del sensor está en segundos
-// desde un origen que cambia según la plataforma.
+// En Android usa el módulo nativo, que sigue leyendo con la pantalla apagada y da la hora de
+// cada lectura desde el sensor (spec 004, CA-12; spec 011, F3 y plan D16). En iOS, expo-sensors:
+// la hora se toma al recibirla, porque su timestamp tiene un origen que cambia por plataforma.
 export function startBarometer(onReading: (reading: BarometerReadingInput) => void) {
+  if (BarometroNativo) {
+    const subscription = BarometroNativo.addListener('onLectura', (lectura) =>
+      onReading({
+        recordedAt: new Date(Math.round(lectura.hora)).toISOString(),
+        pressureHpa: lectura.presionHpa,
+        relativeAltitudeM: null,
+      })
+    );
+    BarometroNativo.iniciar(UPDATE_INTERVAL_MS);
+    return () => {
+      BarometroNativo!.detener();
+      subscription.remove();
+    };
+  }
+
   let lastAt = 0;
   Barometer.setUpdateInterval(UPDATE_INTERVAL_MS);
   const subscription = Barometer.addListener((m) => {

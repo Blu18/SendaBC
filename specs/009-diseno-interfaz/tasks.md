@@ -405,7 +405,7 @@ Los 15 CA están cubiertos por al menos una tarea.
 | CA-12 | Caso manual M3 | Manual | Verificado (2026-11-05): M3 completo; las cifras no saltan (R3) |
 | CA-13 | Casos manuales M3 y M4 | Manual | Verificado (2026-11-05): M3 y M4 completos, con las 14 pantallas, los marcadores del detalle y "Estoy bien" |
 | CA-14 | Caso manual M5 | Manual | Verificado (2026-11-01) |
-| CA-15 | Caso manual M6 | Manual | Parcial (2026-11-05): pasan todos los casos corridos, incluidos 008 M1 a M10; falta 004 M3 (barómetro) |
+| CA-15 | Caso manual M6 | Manual | Cumple (2026-11-20): pasan todos los casos corridos, incluidos 008 M1 a M10; 004 M3 se corrió en la spec 011 (M29) |
 
 ### Casos de revisión en Figma
 

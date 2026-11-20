@@ -30,6 +30,12 @@ export const SAFETY_MESSAGES = {
     'Para notar si dejas de moverte aunque tengas la pantalla bloqueada, SendaBC necesita tu ubicación todo el tiempo, pero solo mientras grabas una actividad que iniciaste. En la siguiente pantalla elige "Permitir todo el tiempo".',
   sinPermiso:
     'Sin el permiso de ubicación en segundo plano, la detección de inactividad solo funciona con la app abierta y la pantalla encendida.',
+  // El sistema ya no deja pedirlo: se avisa antes de iniciar (CA-10; spec 011, F2).
+  sinPermisoTitulo: 'Falta "Permitir todo el tiempo"',
+  sinPermisoAntes:
+    'Sin ese permiso, con la pantalla bloqueada no se graba tu recorrido ni se nota si dejas de moverte. Actívalo en Ajustes > Permisos > Ubicación > "Permitir todo el tiempo".',
+  abrirAjustes: 'Abrir ajustes',
+  grabarAsi: 'Grabar así',
   sinNotificaciones:
     'Sin permiso de notificaciones, la pregunta "¿Estás bien?" solo se ve con la app abierta.',
   // Notificación del servicio en primer plano de Android (plan, locationTask).

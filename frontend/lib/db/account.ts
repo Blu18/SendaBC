@@ -1,3 +1,4 @@
+import { transaccionExclusiva } from './espera';
 import { getDb } from './sqlite';
 
 // Lo que la pantalla de borrar la cuenta necesita saber del teléfono (spec 011, CA-46, CA-47).
@@ -32,7 +33,7 @@ export async function getEstadoLocalDeCuenta(userId: string): Promise<EstadoLoca
 // Lo de otras cuentas del mismo teléfono no se toca. Después hay que cerrar la sesión.
 export async function deleteLocalAccount(userId: string) {
   const db = await getDb();
-  await db.withExclusiveTransactionAsync(async (tx) => {
+  await transaccionExclusiva(db, async (tx) => {
     await tx.runAsync(`DELETE FROM activities WHERE user_id = ?`, [userId]);
     await tx.runAsync(`DELETE FROM safety_sessions WHERE user_id = ?`, [userId]);
     await tx.runAsync(`DELETE FROM safety_outbox WHERE user_id = ?`, [userId]);

@@ -26,12 +26,13 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 - **CA-7 (HU-3):** Con el teléfono en modo avión durante toda la actividad, los puntos se siguen guardando.
 - **CA-8 (HU-3):** Al presionar "Detener actividad", se deja de escuchar el GPS, la actividad queda con `endedAt` y estado `PENDING_SYNC`, y la app muestra el resumen de la actividad (spec 004) con "N puntos registrados", donde N se lee de SQLite.
 - **CA-9 (HU-1):** Un doble toque en "Iniciar" no crea dos actividades.
-- **CA-10 (HU-3):** Si la app se cerró (o se salió de la pantalla) con una actividad en `RECORDING`, al volver a abrir la app esa actividad se cierra con `endedAt` igual a la hora de su último punto (o `startedAt` si no tiene puntos) y queda en `PENDING_SYNC`. Nunca quedan actividades huérfanas en `RECORDING`.
+- **CA-10 (HU-3):** Si la app se cerró (o se salió de la pantalla) con una actividad en `RECORDING`, al volver a abrir la app esa actividad se cierra con `endedAt` igual a la hora de su último punto (o `startedAt` si no tiene puntos) y queda en `PENDING_SYNC`. Nunca quedan actividades huérfanas en `RECORDING`. El fin nunca queda antes del inicio: si el último punto es anterior a `startedAt`, se usa `startedAt`. Una actividad que ya quedó con el fin antes del inicio se corrige al abrir la app y vuelve a intentar subirse.
 - **CA-11 (HU-2):** Mientras grabo, la pantalla no se apaga sola. Al detener la actividad (o salir de la pantalla), el teléfono vuelve a su comportamiento normal de apagado.
 - **CA-12 (HU-3):** Si al detener no se puede cerrar la actividad en el teléfono, la grabación se detiene igual, la pantalla deja de mostrar "Detener actividad" y muestra "No se pudo cerrar la actividad. Se completará automáticamente al volver a abrir la app." con un botón "Volver". No se puede iniciar otra actividad desde esa pantalla, y la actividad se cierra al abrir la app (CA-10).
 - **CA-13 (HU-3):** Si al iniciar el GPS entrega una ubicación guardada de antes de la actividad, no se guarda como punto, no suma distancia y no aparece en el recorrido (RN-5).
 - **CA-14 (HU-3):** Si cambio el tamaño de letra del sistema mientras grabo, la actividad sigue en curso y no se pierde ningún punto.
 - **CA-15 (HU-3):** Si intento salir de la pantalla mientras grabo, con la flecha o con el botón o gesto atrás del sistema, la app pregunta si quiero terminar la actividad. Si elijo seguir, la grabación continúa sin cambios; si elijo terminar, la actividad se cierra como en CA-10. "Detener actividad" no pregunta.
+- **CA-16 (HU-1):** Si al presionar "Iniciar actividad" la actividad no se puede iniciar (por ejemplo, porque no se puede guardar en el teléfono), la pantalla sigue en "Nueva actividad", muestra "No se pudo iniciar la actividad. Intenta de nuevo." y "Iniciar actividad" sigue disponible para reintentar. No queda ninguna actividad en `RECORDING` ni se sigue escuchando la ubicación ni el barómetro (RN-1, constitución 3.5). Si la actividad ya se había creado, se cierra como en CA-10.
 
 ## Reglas de negocio
 
@@ -61,6 +62,8 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 
 ## Historial
 
+- 2026-11-12 — CA-10: el fin nunca queda antes del inicio, y las actividades que ya quedaron así se corrigen al abrir la app. La spec 011 (prueba de campo, F1) encontró una actividad cerrada sin "Detener" con su único punto 95 ms antes de `startedAt`: el servidor la rechazaba y nunca subía. Aprobado por el usuario.
+- 2026-11-09 — Se agrega CA-16. Al implementar la spec 011 (T39, M20) se vio que, si falla el inicio, la pantalla se queda en "Nueva actividad" sin avisar nada. Aprobado por el usuario.
 - 2026-11-06 — "Fuera de alcance": el mapa de grabación quedó en la spec 010, no en las 006 y 007 (spec 010, T25).
 - 2026-11-06 — Se agrega CA-15. En la spec 010 (T16) un toque accidental en la flecha terminó una actividad sin preguntar y sin forma de reanudarla. Aprobado por el usuario.
 - 2026-11-06 — Se agrega CA-14. La spec 010 (T16) encontró que cambiar el tamaño de letra del sistema recreaba la pantalla y cerraba la actividad como huérfana. Aprobado por el usuario.

@@ -189,8 +189,10 @@ ALTER TABLE safety_sessions ADD COLUMN response_ms INTEGER;
 
 **Bugs del frontend**
 
-- `lib/db/sqlite.ts`: `PRAGMA busy_timeout = 5000`, también en la conexión de las transacciones exclusivas (R2).
-- `lib/routes/status.ts`: `mensajeDeFallo` muestra el mensaje del `503` (CA-14).
+- `lib/db/sqlite.ts`: `PRAGMA busy_timeout = 5000`, también en la conexión de las transacciones exclusivas (`lib/db/espera.ts`, R2).
+- `lib/db/activities.ts`: `insertDownloadedActivity` guarda los puntos en lotes de un `INSERT` con varias filas, en la misma transacción, para que dure menos que la espera (R2).
+- `lib/db/sqlite.ts`: `runAsync` de la conexión principal se reintenta hasta 5 veces, con pausas cortas, si falla con `database is locked` (`lib/db/espera.ts`, R2). Cada llamada es una sola sentencia, que falla completa, así que repetirla no duplica nada.
+- `lib/routes/status.ts`: `mensajeDeFallo` muestra el mensaje del `503` (CA-14). El mismo texto vive también en la app, para que un `503` sin el cuerpo del backend (por ejemplo, del túnel) tampoco diga "No se pudo completar".
 
 ## Prueba de campo (fase 4)
 
@@ -230,6 +232,7 @@ Los pasos exactos van en `tasks.md`. Reparto:
 | D13 | Zonas con zoom 10 a 13, tope de 900 km² (unos 30 × 30 km, unos 140 MB) y máximo 10 zonas | Zoom 10 a 15; sin tope | Medido en T2: zoom 13 pesa 142 MB y usa 34 paquetes de mosaicos; zoom 15 pesa 152 MB y usa 74. A zoom 14, el de la grabación, se ve bien. Mapbox admite 750 paquetes en total, así que 10 zonas dejan margen (RN-8). |
 | D14 | Se descargan los dos estilos, claro y oscuro, y el relieve | Solo el tema actual | El tema sigue al teléfono y puede cambiar en la salida. Medido en T2: el segundo estilo no descarga nada, porque comparte sus mosaicos con el primero. Cada zona son dos paquetes de `createPack` con `tilesets: [TERRAIN_URL]`. |
 | D15 | Tamaño aproximado: unos 28 MB más 0.126 MB por km² | Proporcional al área | El tamaño no crece con el área: 100 km² pesan 41 MB y 900 km², 142 MB, porque se descargan paquetes completos. La fórmula sale de esas dos mediciones en la sierra y es solo una aproximación (CA-31). |
+| D16 | El barómetro se lee en Android con un módulo nativo local (`modules/barometro`); iOS sigue con `expo-sensors` | Parchear `expo-sensors` con `patch-package`; solo GPS al apagarse la pantalla | `expo-sensors` deja de escuchar cuando la app pasa a segundo plano. El servicio en primer plano de la ubicación ya mantiene vivo el proceso, así que basta un listener que no se detenga. La hora sale del sensor, porque con la pantalla apagada Android puede entregar varias lecturas juntas. Un parche se pierde al actualizar Expo y afecta a todos los sensores. |
 
 ## Specs y constitución por corregir
 
@@ -273,8 +276,8 @@ Antes del código de cada fase, con nota en su historial (RN-4):
 ## Riesgos
 
 - **R1 — Mapas descargados.** El relieve sin red ya se comprobó en T2. Borrar, cerrado en T34: `deletePack` quita la zona de la lista, pero el espacio no se libera al momento y la zona se sigue viendo sin red, aun tras reiniciar. `TileStore.setOption` con `disk-quota` no lo acelera, así que la app no lo usa. Mapbox lo libera con el tiempo: lo de T2 ya no estaba dos días después. CA-33 se cambió con aprobación del usuario. Además, las zonas caducan según Mapbox, sin plazo publicado; `acceptExpired` viene activado, así que una zona vieja se sigue usando.
-- **R2 — `database is locked`.** La hipótesis es que `withExclusiveTransactionAsync` abre otra conexión mientras la recuperación de actividades corre al abrir la app, y que SQLite no espera porque no hay `busy_timeout`. No está confirmada: se reproduce primero (RN-3).
-- **R3 — CA-14.** En el código actual, un `5xx` al publicar da "No se pudo completar", no el mensaje de internet que se vio en la 010. Hay que reproducirlo para encontrar qué rama lo mostró. Además, el nombre exacto del error del adaptador se confirma al escribir el filtro.
+- **R2 — `database is locked`.** La hipótesis es que `withExclusiveTransactionAsync` abre otra conexión mientras la recuperación de actividades corre al abrir la app, y que SQLite no espera porque no hay `busy_timeout`. No está confirmada: se reproduce primero (RN-3). Confirmada en T39 (2026-11-09), pero `busy_timeout` solo no basta: la transacción inserta los puntos uno por uno y dura más de 5 s con una actividad larga. Por eso también se insertan por lotes. Con los lotes, algunas escrituras de la conexión principal siguen fallando sin esperar: SQLite no aplica `busy_timeout` cuando la conexión tiene una vista vieja de la base porque la otra confirmó en medio. Esas se reintentan.
+- **R3 — CA-14.** En el código actual, un `5xx` al publicar da "No se pudo completar", no el mensaje de internet que se vio en la 010. Hay que reproducirlo para encontrar qué rama lo mostró. Además, el nombre exacto del error del adaptador se confirma al escribir el filtro. Resuelto en T40 (2026-11-09): el error es `P1001` con `DatabaseNotReachable`. El mensaje de internet solo sale cuando la app cree que no hay red (`hayConexion`), sin enviar la petición, lo más probable por la falla de DNS del emulador de ese día. No se repitió.
 - **R4 — "Pedir ayuda" sin texto.** Un círculo solo con ícono se entiende menos que el botón anterior, y queda cerca de "Detener". Se revisa en la prueba de campo, usando el teléfono con una mano.
 - **R5 — Tiempo.** Es la mayor carga de trabajo de todas las specs, con poco margen antes de la 012. Si falta tiempo, el orden de recorte acordado es: zonas descargadas y después consulta sin conexión. La prueba de campo no se recorta.
 - **R6 — Túnel y computadora.** Si la computadora se suspende, no salen las alertas ni el aviso por hora de regreso. La grabación no se afecta (RN-12). Conviene probarlo en casa, con datos móviles, antes de salir.

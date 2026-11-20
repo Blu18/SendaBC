@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, AppState, StyleSheet, View } from 'react-native';
+import * as Network from 'expo-network';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar';
 import Register from './pages/auth/register';
@@ -30,11 +31,12 @@ import PickZonePage from './pages/map/pickZonePage';
 import OfflineZonesPage from './pages/map/offlineZonesPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
-import { closeOrphanActivities } from './lib/db/activities';
+import { closeOrphanActivities, repararFinAntesDelInicio } from './lib/db/activities';
 import { sessionActions } from './lib/safety';
-import { computeMissingMetrics } from './lib/db/activityMetrics';
+import { computeMissingMetrics, recalcularDistanciasViejas } from './lib/db/activityMetrics';
 import { setUnauthorizedHandler } from './lib/api/client';
 import { queryClient } from './lib/api/queryClient';
+import { conectarConsultas } from './lib/api/reconexion';
 import { fontFamilies, type Theme } from './lib/theme';
 import { getReducedMotion } from './hooks/theme/useReducedMotion';
 import { useTheme, useThemedStyles } from './hooks/theme/useTheme';
@@ -162,6 +164,18 @@ declare module '@react-navigation/native' {
 }
 
 const Navigation = createStaticNavigation(RootStack)
+
+// Las consultas que fallaron se repiten al volver la red o la app al frente (spec 011, F7).
+conectarConsultas({
+  suscribirRed: (oyente) => {
+    const subscription = Network.addNetworkStateListener(oyente)
+    return () => subscription.remove()
+  },
+  suscribirApp: (oyente) => {
+    const subscription = AppState.addEventListener('change', oyente)
+    return () => subscription.remove()
+  },
+})
 const navigationRef = createNavigationContainerRef()
 
 // Tema de React Navigation con los tokens (spec 009): fondo de pantallas, encabezados y
@@ -194,8 +208,9 @@ function Gate({ children }: { children: React.ReactNode }) {
   const styles = useThemedStyles(makeStyles);
   const [localDataReady, setLocalDataReady] = useState(false);
 
-  // Al abrir la app, cerrar las actividades que quedaron en RECORDING (spec 003, CA-10) y
-  // calcular las métricas de las que no las tienen, incluidas esas (spec 004, CA-19).
+  // Al abrir la app, cerrar las actividades que quedaron en RECORDING (spec 003, CA-10),
+  // calcular las métricas de las que no las tienen, incluidas esas (spec 004, CA-19), y una
+  // sola vez recalcular las distancias infladas por puntos viejos (spec 011, RN-11).
   // Se espera antes de mostrar la navegación para que no se cruce con una grabación nueva
   // y para que el historial ya muestre sus métricas.
   useEffect(() => {
@@ -203,8 +218,14 @@ function Gate({ children }: { children: React.ReactNode }) {
     sessionActions
       .cerrarHuerfanas(closeOrphanActivities)
       .catch((e) => console.log('Error cerrando actividades huérfanas:', e))
+      // Las que quedaron con el fin antes del inicio no suben nunca (spec 003, CA-10; F1).
+      .then(() => repararFinAntesDelInicio())
+      .catch((e) => console.log('Error corrigiendo actividades con el fin antes del inicio:', e))
       .then(() => computeMissingMetrics())
       .catch((e) => console.log('Error calculando métricas pendientes:', e))
+      // Una sola vez: la distancia sin los puntos viejos del principio (spec 011, CA-17, RN-11).
+      .then(() => recalcularDistanciasViejas())
+      .catch((e) => console.log('Error recalculando distancias:', e))
       .finally(() => setLocalDataReady(true));
   }, []);
 

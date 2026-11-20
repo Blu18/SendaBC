@@ -1,4 +1,10 @@
-import { MAX_ACCURACY_M, MAX_SPEED_MS, MIN_STEP_M, SMOOTHING_WINDOW } from './constants';
+import {
+  MAX_ACCURACY_M,
+  MAX_SPEED_MS,
+  MIN_STEP_M,
+  SMOOTHING_RADIUS_M,
+  SMOOTHING_WINDOW,
+} from './constants';
 import { Coordinates, haversineMeters } from './geo';
 
 export type DistancePoint = Coordinates & {
@@ -38,12 +44,13 @@ function average(points: DistancePoint[]): SmoothedPoint {
 // 1. Descarta puntos con precisión peor que MAX_ACCURACY_M (CA-8).
 // 2. Si el punto implica más de MAX_SPEED_MS respecto al punto válido anterior, es un
 //    salto de ubicación: reinicia el promedio y el ancla en él sin sumar (CA-25).
-// 3. Promedia cada punto con los últimos SMOOTHING_WINDOW puntos válidos.
+// 3. Promedia cada punto con los últimos SMOOTHING_WINDOW puntos válidos que estén a
+//    SMOOTHING_RADIUS_M o menos de él (spec 011, F4).
 // 4. Solo suma cuando el punto promediado se aleja del ancla más que
 //    max(MIN_STEP_M, precisión del ancla + precisión del punto), así el titubeo
 //    del GPS con el teléfono quieto no suma (CA-9).
 export function createDistanceAccumulator() {
-  const window: DistancePoint[] = [];
+  let window: DistancePoint[] = [];
   let anchor: SmoothedPoint | null = null;
   let previous: DistancePoint | null = null;
   let total = 0;
@@ -53,13 +60,14 @@ export function createDistanceAccumulator() {
       if (!isAccurate(point)) return;
 
       if (previous && isJump(previous, point)) {
-        window.length = 0;
+        window = [];
         anchor = null;
       }
       previous = point;
 
       window.push(point);
       if (window.length > SMOOTHING_WINDOW) window.shift();
+      window = window.filter((p) => haversineMeters(p, point) <= SMOOTHING_RADIUS_M);
       const smoothed = average(window);
       if (!anchor) {
         anchor = smoothed;

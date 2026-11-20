@@ -8,6 +8,7 @@ vi.mock('./sqlite', () => ({ getDb: async () => testDb }));
 vi.mock('expo-crypto', () => ({ randomUUID: () => randomUUID() }));
 
 const {
+  closeOrphanActivities,
   countPendingUploads,
   createActivity,
   finishActivity,
@@ -22,7 +23,9 @@ const {
   listUploadable,
   markSynced,
   markSyncError,
+  repararFinAntesDelInicio,
   saveMetrics,
+  PUNTOS_POR_LOTE,
 } = await import('./activities');
 
 const A = 'usuario-a';
@@ -208,6 +211,111 @@ describe('Recuperar actividades (spec 005, CA-20 a CA-22)', () => {
     };
     expect(puntos.n).toBe(3);
   });
+
+  // Spec 011, CA-13 (plan, R2): los puntos van por lotes para que la transacción sea corta.
+  function larga(n: number) {
+    return {
+      ...descargada,
+      clientGeneratedId: randomUUID(),
+      points: Array.from({ length: n }, (_, i) => ({
+        sequence: i + 1,
+        latitude: 31.8 + i / 100000,
+        longitude: -116.6,
+        altitude: 100,
+        accuracy: 4,
+        recordedAt: new Date(Date.parse('2026-10-01T10:00:00.000Z') + i * 3000).toISOString(),
+      })),
+    };
+  }
+
+  it('guarda una actividad larga completa y en orden, con un INSERT por lote', async () => {
+    const actividad = larga(PUNTOS_POR_LOTE * 2 + 1);
+    const runAsync = vi.spyOn(testDb, 'runAsync');
+
+    const id = await insertDownloadedActivity(actividad, A);
+
+    expect(await getActivityPoints(id)).toEqual(actividad.points);
+    const inserts = runAsync.mock.calls.filter(([sql]) => sql.includes('activity_points'));
+    expect(inserts).toHaveLength(3);
+    // Lotes de pocos puntos volverían a alargar la transacción (T48).
+    expect(PUNTOS_POR_LOTE).toBeGreaterThanOrEqual(100);
+    runAsync.mockRestore();
+  });
+
+  it('si falla un lote no queda nada de la actividad', async () => {
+    const actividad = larga(PUNTOS_POR_LOTE + 10);
+    // Un punto inválido en el segundo lote (latitude es NOT NULL).
+    (actividad.points[PUNTOS_POR_LOTE + 5] as { latitude: number | null }).latitude = null;
+
+    await expect(insertDownloadedActivity(actividad, A)).rejects.toThrow(/NOT NULL/);
+    expect(await listClientIds()).toEqual(new Set());
+    const puntos = testDb.raw.prepare('SELECT COUNT(*) AS n FROM activity_points').get() as {
+      n: number;
+    };
+    expect(puntos.n).toBe(0);
+  });
+});
+
+describe('Cerrar sin "Detener" (spec 003, CA-10; spec 011, F1)', () => {
+  const INICIO = '2026-11-07T10:00:00.000Z';
+  const punto = (sequence: number, recordedAt: string) => ({
+    sequence,
+    latitude: 31.86,
+    longitude: -116.59,
+    altitude: null,
+    accuracy: 5,
+    recordedAt,
+  });
+
+  it('closeOrphanActivities cierra con la hora del último punto, o el inicio sin puntos', async () => {
+    const conPuntos = await createActivity(A, 'HIKING', 'GPS', INICIO);
+    await insertPoint(conPuntos, punto(1, '2026-11-07T10:01:00.000Z'));
+    await insertPoint(conPuntos, punto(2, '2026-11-07T10:02:00.000Z'));
+    const sinPuntos = await createActivity(A, 'HIKING', 'GPS', INICIO);
+
+    expect(await closeOrphanActivities()).toBe(2);
+
+    expect(await getActivity(conPuntos)).toMatchObject({
+      status: 'PENDING_SYNC',
+      endedAt: '2026-11-07T10:02:00.000Z',
+    });
+    expect(await getActivity(sinPuntos)).toMatchObject({ status: 'PENDING_SYNC', endedAt: INICIO });
+  });
+
+  it('closeOrphanActivities nunca deja el fin antes del inicio', async () => {
+    const id = await createActivity(A, 'HIKING', 'GPS', INICIO);
+    await insertPoint(id, punto(1, '2026-11-07T09:59:59.905Z'));
+
+    await closeOrphanActivities();
+
+    expect((await getActivity(id))!.endedAt).toBe(INICIO);
+  });
+
+  it('repararFinAntesDelInicio corrige el fin, borra las métricas y quita el error', async () => {
+    const id = await createActivity(A, 'HIKING', 'GPS', INICIO);
+    await insertPoint(id, punto(1, '2026-11-07T09:59:59.905Z'));
+    await finishActivity(id, '2026-11-07T09:59:59.905Z'); // como cerraba antes de F1
+    await saveMetrics(id, metricas);
+    await markSyncError(id, 'El fin de la actividad no puede ser anterior al inicio');
+    const sana = await terminada(A, '2026-10-09T10:00:00.000Z');
+    await markSyncError(sana, 'otro motivo');
+
+    expect(await repararFinAntesDelInicio()).toBe(1);
+
+    expect(await getActivity(id)).toMatchObject({
+      status: 'PENDING_SYNC',
+      endedAt: INICIO,
+      distanceMeters: null,
+      durationSeconds: null,
+      elevationGainMeters: null,
+      elevationLossMeters: null,
+      elevationSource: 'GPS', // la fuente elegida al iniciar se conserva
+      syncError: null,
+    });
+    // Las demás no cambian.
+    expect(await getActivity(sana)).toMatchObject({ syncError: 'otro motivo', distanceMeters: 1234.5 });
+    expect(await repararFinAntesDelInicio()).toBe(0);
+  });
 });
 
 describe('getRecordingActivity y getLastPoint (spec 008)', () => {
@@ -234,7 +342,10 @@ describe('getRecordingActivity y getLastPoint (spec 008)', () => {
         recordedAt: `2026-10-26T10:0${sequence}:00.000Z`,
       });
     }
-    expect(await getLastPoint(id)).toMatchObject({ sequence: 2, latitude: 31.862 });
+    expect(await getLastPoint(id)).toMatchObject({
+      sequence: 2,
+      latitude: 31.862,
+    });
 
     await finishActivity(id);
     expect(await getRecordingActivity()).toBeNull();

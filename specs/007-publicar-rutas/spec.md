@@ -93,7 +93,7 @@ Con la spec 006, el catálogo muestra rutas cercanas, pero solo tiene las rutas 
 
   Ejemplos: 12 km con 200 m de senderismo es Moderada (por la distancia); 6 km con 900 m de trail running es Difícil (por la elevación); 35 km con 500 m de ciclismo es Moderada.
 - RN-7: La zona es opcional y tiene como máximo 40 caracteres. La app la propone según dónde empieza el recorrido; si no puede deducirla, el campo queda vacío.
-- RN-8: Todas las rutas tienen perfil de elevación: las publicadas desde una actividad, con la altitud que el GPS registró en cada punto (las lecturas del barómetro se quedan en el teléfono, spec 005, CA-8), y las de ejemplo, con las altitudes de su traza original.
+- RN-8: Todas las rutas tienen perfil de elevación: las publicadas desde una actividad, con la altitud que el GPS registró en cada punto (las lecturas del barómetro se quedan en el teléfono, spec 005, CA-8), y las de ejemplo, con las altitudes de su traza original. En las publicadas desde una actividad, el eje de distancia termina en la distancia de la ruta (RN-1): la distancia acumulada punto a punto se escala para que coincida.
 - RN-9: Las rutas de ejemplo de SendaBC se pueden ver a detalle y guardar en favoritas igual que cualquier otra ruta.
 - RN-10: Al publicar se quitan los puntos del principio con hora de más de 30 s antes del inicio de la actividad. Si quedaran menos de 2 puntos, se conserva el recorrido completo, porque significa que el reloj del teléfono estaba desfasado. La actividad no cambia al publicar. Su distancia guardada solo cambia con la corrección única de la spec 011 (RN-11).
 - RN-11: Una ruta publicada de una cuenta borrada sigue en el catálogo, con el autor "Cuenta eliminada", y nadie puede editarla, archivarla ni borrarla desde la app (spec 011, RN-16).
@@ -142,6 +142,7 @@ No quedan preguntas abiertas.
 
 ## Historial
 
+- 2026-11-20 — Cambio por la spec 011 (F6): RN-8 aclara que el eje de distancia del perfil termina en la distancia de la ruta. Antes medía la suma punto a punto, con el ruido del GPS: en la prueba de campo, 4 996 m en una ruta de 4 461 m (+12 %). Las rutas ya publicadas conservan su perfil. Aprobado por el usuario en la 011, T56.
 - 2026-11-06 — Cambios por la spec 011: RN-1 y RN-10 admiten corregir una distancia inflada (RN-11) y quitar saltos al publicar (CA-15, CA-16). Se agrega RN-11, para las rutas de una cuenta borrada (CA-48). El detalle y las favoritas se pueden consultar sin conexión (CA-55, CA-56). Los mapas de fondo sin conexión quedan descartados. Aprobado por el usuario.
 - 2026-11-06 — Se agregan CA-28 y RN-10, y RN-1 admite esa excepción. En la spec 010 (T25), una actividad grabada antes de la spec 003 CA-13 se publicó con su punto viejo: una ruta de 1.56 km con un perfil de 148 km. Aprobado por el usuario.
 - 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.

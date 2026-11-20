@@ -33,8 +33,27 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
   - **Decidido:** zoom 10 a 13, 900 km² como tope y máximo 10 zonas (D13). Los dos estilos, porque el segundo no descargó nada (D14). Fórmula de tamaño en D15.
   - **Mapbox:** 750 paquetes de mosaicos en total, sin tope de bytes, y lo descargado cuenta en la facturación normal por usuarios activos. Los mapas no se pueden incluir en la app: se descargan desde sus servidores.
   - **Hallazgo:** al borrar, la zona sale de la lista pero el disco no baja (R1). Se revisa en T34.
-- [ ] T3 — Compilar el build e instalarlo en el S9+ y el Nothing Phone 2. Iniciar sesión, grabar 1 minuto y ver el mapa en cada uno. Confirmar que el S9+ detecta el barómetro y el Nothing Phone 2 no. (CA-1, CA-6)
-- [ ] T4 — Levantar el backend con el túnel y `TELEGRAM_MODE=polling`. Probar desde un teléfono con datos móviles, sin Wi-Fi, que inicia sesión y sincroniza. Comprobar que la computadora no se suspende. (RN-12)
+- [x] T3 — Compilar el build e instalarlo en el S9+ y el Nothing Phone 2. Iniciar sesión, grabar 1 minuto y ver el mapa en cada uno. Confirmar que el S9+ detecta el barómetro y el Nothing Phone 2 no. (CA-1, CA-6)
+
+  Hecho (2026-11-10) en los dos teléfonos.
+  - **Build:** el APK de desarrollo arm64, compilado desde `C:\dev\sbc` en T45, que necesita Metro. Por USB, con `adb reverse` del 8081 y el 3000: Metro desde `C:\dev\SendaBC\frontend` con `EXPO_PUBLIC_BACKEND_IP=http://localhost:3000` y el backend local. El build de campo, sin Metro y con el túnel, es T49.
+  - **S9+** (SM-G9650, Android 10, arm64), con barómetro LPS22HB según `dumpsys sensorservice`. La app se instaló sin problemas.
+    - Se entró con la cuenta de Postman y se dio el permiso de ubicación "solo con la app en uso". El de segundo plano quedó en "Ahora no".
+    - Se grabaron 2 min de senderismo con el teléfono quieto. El mapa 3D oscuro se vio con relieve y calles. Se guardaron 3 puntos, porque quieto no avanza los 5 m que pide un punto nuevo.
+    - Al detener, la actividad quedó "Sincronizada" y el resumen dice "Elevación medida con barómetro": **el S9+ detecta el barómetro.**
+  - **Nothing Phone 2** (A065, Android 16): `dumpsys sensorservice` no lista ningún sensor de presión. Con la misma build y la cuenta del usuario, que no tiene contactos activos, se grabaron 1:13 de senderismo con el teléfono quieto. El mapa 3D se vio con relieve y se guardaron 2 puntos. Al detener, la actividad quedó "Sincronizada" y el resumen dice "Elevación estimada con GPS": **el Nothing Phone 2 no detecta barómetro**, como se esperaba. Esa actividad de 1 min quedó en la cuenta del usuario.
+  - **Nota:** el teclado de Samsung pierde letras con `adb shell input text`; hay que escribir de una en una.
+- [x] T4 — Levantar el backend con el túnel y `TELEGRAM_MODE=polling`. Probar desde un teléfono con datos móviles, sin Wi-Fi, que inicia sesión y sincroniza. Comprobar que la computadora no se suspende. (RN-12)
+
+  Hecho (2026-11-10).
+  - **Túnel:** el de VS Code (Dev Tunnels) del puerto 3000, con la URL fija de `frontend/.env`. Para que funcione tiene que estar en visibilidad **Pública** y protocolo **HTTP**:
+    - Privado, redirige al inicio de sesión de GitHub.
+    - Con HTTPS, da `502`.
+    - Al cambiar el protocolo, la visibilidad vuelve a privada.
+    - VS Code tiene que quedarse abierto.
+  - **Backend:** `TELEGRAM_MODE=polling` en `backend/.env`. Al arrancar registra "Recibiendo mensajes del bot con getUpdates", sin errores de Telegram.
+  - **Pruebas por el túnel:** `POST /auth/login` con la cuenta de Postman da token, y `GET /activities` y `/routes/nearby` responden `200` en ~1 s. Con la versión de campo, el Nothing Phone 2 sin Wi-Fi, solo con datos móviles, cargó Rutas con distintos radios sin el aviso de datos guardados.
+  - **Suspensión:** la computadora no tiene batería y su plan de energía ("High performance") no suspende con corriente.
 
 ## Fase 1A — Botones de la grabación
 
@@ -238,38 +257,308 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
 ## Fase 2 — Bugs
 
-- [ ] T39 — `database is locked`: reproducirlo primero. Si se reproduce, aplicar `busy_timeout` (plan, R2). Correr M20. Si no se reproduce, se cierra por RN-3. (CA-13)
-- [ ] T40 — Filtro de `503`, mensaje en `mensajeDeFallo`, y reproducir qué rama mostró el mensaje de internet (plan, R3). Correr M21. (CA-14, D9)
-- [ ] T41 — `sinSaltos` en `recorrido.ts` y publicar con `sequence = ANY(...)`, con e2e en `route-publish.e2e-spec.ts`. Correr M22. (CA-15, CA-16, D8)
-- [ ] T42 — `backend/src/activity/distancia.ts`, con los mismos casos que `frontend/lib/metrics/distance.test.ts`, y script `datos:recalcular-distancias`. (CA-17, RN-11, D7)
-- [ ] T43 — `lib/metrics/oldPoints.ts` y `recalcularDistanciasViejas`, una sola vez, sin cambiar el estado. (CA-17, RN-11)
-- [ ] T44 — Correr el script en modo informe, revisar la lista con el usuario y aplicar. Correr M23. (CA-17)
-- [ ] T45 — Correr M24 en un teléfono real. Corregir si se reproduce; si no, cerrar por RN-3. (CA-18)
+- [x] T39 — `database is locked`: reproducirlo primero. Si se reproduce, aplicar `busy_timeout` (plan, R2). Correr M20. Si no se reproduce, se cierra por RN-3. (CA-13)
+
+  Hecho (2026-11-09). **M20 pasa en el emulador: 20 de 20 intentos inician y no aparece `database is locked` ni en la pantalla ni en el registro.** Hicieron falta tres cambios, aprobados uno por uno (plan, R2). Las 10 actividades se recuperaron completas, con sus 8 000 puntos (secuencias 1 a 8 000). **Se reproduce**, en el emulador Pixel_8_Pro con 2 procesos `yes` de carga, la cuenta de Postman y 10 actividades de 8 000 puntos en el servidor que la app no tiene (se restaura una copia de la base local antes de cada intento):
+  - **Sin cambios, 3 de 3 intentos fallan.** "Iniciar actividad" no inicia: la pantalla sigue en "Nueva actividad" y en desarrollo sale "Uncaught (in promise)… `NativeStatement.finalizeAsync`… database is locked". Lo que falla es el `INSERT` de `createActivity`; el `finalizeAsync` del `finally` de expo-sqlite es el que da el mensaje. Confirma R2: la recuperación (`insertDownloadedActivity`) escribe en la transacción exclusiva, que expo-sqlite abre en otra conexión, y la principal falla al momento.
+  - **Con `busy_timeout = 5000` en las dos conexiones, 16 de 20 siguen fallando.** Los errores (al iniciar, al guardar puntos y lecturas del barómetro) llegan en ráfagas cada ~5 s: la espera se aplica, pero la transacción dura más, porque inserta los puntos uno por uno con un `await` por punto. Hace falta acortar la transacción: el usuario aprueba insertar por lotes (plan, R2).
+  - **Con los puntos en lotes de 500, la actividad inicia en 29 de 29 intentos** (20 de M20 y 9 con medición). La transacción más larga baja a 1,7 s. En el intento 16 `uiautomator` no encontró "Detener", pero la captura muestra la grabación.
+  - **Queda `database is locked` en el registro en 11 de 29 intentos**, ya no al iniciar, sino en escrituras sueltas mientras se graba y se recupera: una lectura del barómetro, un punto ("Error procesando la ubicación") o la bandeja de seguridad. La medición muestra que no esperan: en el intento 8 el error llega sin ninguna transacción de más de 70 ms en los 5 s anteriores. Es el caso en que SQLite no usa `busy_timeout`: la conexión principal lee y escribe a la vez desde varios hilos y, si la otra conexión confirma en medio, la escritura falla en el acto. El usuario aprueba reintentarlas (plan, R2).
+  - **Con los reintentos (hasta 5, con pausas de 50 a 400 ms), 20 de 20 inician y no queda ningún `database is locked`.**
+  - **Código:**
+    - `lib/db/espera.ts`: `PRAGMA_ESPERA`, `transaccionExclusiva` (la espera en la conexión de cada transacción), `reintentarSiBloqueada` y `conReintentos` (envuelve `runAsync` de la conexión principal, que lleva todas las escrituras fuera de las transacciones).
+    - `sqlite.ts`: la espera al abrir y `conReintentos`. `activities.ts`, `safety.ts` y `account.ts` usan `transaccionExclusiva`.
+    - `insertDownloadedActivity` inserta por lotes de `PUNTOS_POR_LOTE` (500).
+  - **Pruebas:** `espera.test.ts` (8; dos usan un hilo que tiene la base bloqueada y muestran el fallo sin la espera) y 2 nuevas en `activities.test.ts` (lotes y todo o nada). Las de lotes y espera fallan sin la corrección (CA-24).
+  - **Datos de prueba:** script y copia de la base en el scratchpad de la sesión, no en el repositorio. M20 se corrió con el backend local en el puerto 3001, Metro en el 8082 y `adb reverse`.
+  - Aparte: el error de `start()` en `activityTracker.hook.ts` no se atrapa. En producción, la actividad no inicia y no se ve ningún mensaje. Se corrige en T62 (spec 003, CA-16).
+- [x] T40 — Filtro de `503`, mensaje en `mensajeDeFallo`, y reproducir qué rama mostró el mensaje de internet (plan, R3). Correr M21. (CA-14, D9)
+
+  Hecho (2026-11-09).
+  - **Error de Prisma, confirmado:** con `DATABASE_URL` en un puerto cerrado, Prisma 7 lanza `PrismaClientKnownRequestError` con `code: 'P1001'` y `meta.driverAdapterError.cause.kind: 'DatabaseNotReachable'`. Hasta ahora respondía `500`.
+  - **Backend:** `src/prisma-disponibilidad.filter.ts`. `esBaseNoDisponible` revisa la forma del error, no su clase: los códigos de conexión de Prisma (`P1001`, `P1002`, `P1017`, `P2024`, también como `errorCode` de inicialización) y los tipos del adaptador (`DatabaseNotReachable`, `ConnectionClosed`, `SocketTimeout`, `TooManyConnections`). El filtro global responde `503` con "El servicio no está disponible. Inténtalo de nuevo en unos minutos." y deja los demás errores a Nest. Se registra en `configurarHttp`, que comparten `main.ts` y las e2e que lo usan (`app` y `auth` no lo usan y no lo necesitan).
+  - **Frontend:** `mensajeDeFallo` muestra ese texto para cualquier `503`, también si llega sin el cuerpo del backend (por ejemplo, del túnel).
+  - **Pruebas:** `prisma-disponibilidad.filter.spec.ts` (6: el error real de Prisma, otros códigos, errores que no son de conexión, y una app Nest con `configurarHttp` que responde `503`, `500` y `404`) y una nueva en `status.test.ts`. La del `503` falla sin el filtro (CA-24). Pasan las 433 del backend y la compilación; el lint no marca nada en estos archivos.
+  - **M21 en el emulador** (Pixel_8_Pro, cuenta de Postman, actividad del 6 nov de 1.56 km, backend en el 3001 con `adb reverse`):
+    - **Antes**, sin el filtro y con la base inalcanzable: "No se pudo publicar · No se pudo completar. Inténtalo de nuevo." No menciona internet.
+    - **Después**: "No se pudo publicar · El servicio no está disponible. Inténtalo de nuevo en unos minutos." El formulario conserva lo escrito. **Pasa.**
+  - **Qué rama mostró el mensaje de internet en la 010 (R3):** no fue la del `5xx`; en el código de entonces (`b929794`) `mensajeDeFallo` era igual. El único camino es `{ offline: true }` de `useRouteMutations`, cuando `hayConexion` dice que no hay red (`isInternetReachable: false`): la petición ni se envía. La causa más probable es la falla de DNS del emulador de ese mismo día (2026-11-06), que hacía que la app se creyera sin conexión; el `DatabaseNotReachable` del registro del backend sería otro intento. No se repitió (RN-3), así que no se cambió `hayConexion`.
+  - **Incidente en la prueba:** en el primer intento el backend no se reinició sin base y la ruta "Prueba M21" se publicó de verdad en la cuenta de Postman. Se borró al momento con `DELETE /routes/:id` (`204`, luego `404`). La cuenta queda sin rutas.
+- [x] T41 — `sinSaltos` en `recorrido.ts` y publicar con `sequence = ANY(...)`, con e2e en `route-publish.e2e-spec.ts`. Correr M22. (CA-15, CA-16, D8)
+
+  Hecho (2026-11-09). `sinSaltos` en `backend/src/route/recorrido.ts` (D8): descarta cada punto a más de 50 m/s del último conservado (misma regla que `isJump` de la app); si quedara menos de la mitad o menos de 2 puntos, usa el tramo sin saltos más largo, y si tampoco alcanza, conserva todos. `RouteService.publish` la aplica después de `sinPuntosViejos`, pasa el resultado a `perfilDe` (CA-16) y arma `ST_MakeLine` con `sequence = ANY(...)` (CA-15). `haversine` se exporta de `elevation-profile.ts`. Las rutas ya publicadas no cambian.
+  - **Pruebas:** `recorrido.spec.ts` (7 nuevas), `route.service.spec.ts` (1 nueva, 3 ajustadas al arreglo de secuencias) y una e2e en `route-publish.e2e-spec.ts` con un punto ~100 km fuera de la línea: ningún vértice del recorrido va hacia él y el eje del perfil mide 28 × 111 m. Se comprobó que la e2e falla sin `sinSaltos`. `npm test` (441) y la e2e de publicar (23) pasan.
+  - **M22 pasa en el emulador Pixel_8_Pro** con la cuenta "Prueba zonas" y el backend local. Se grabó "Ciclismo" con `adb emu geo fix` hacia el norte desde `-115.91 32.04`, ~35 m cada 3 s, y un punto a ~4.7 km al este a la mitad. La actividad quedó con 2.04 km, 80 puntos y "Sincronizada"; en el servidor guarda el punto falso (secuencia 48, en `-115.86`). Se publicó como "M22 Salto". En la base, la ruta tiene 79 puntos, todos en `-115.91`, y el perfil 79, con el eje hasta 2 238 m: sin el salto habría sumado ~9.4 km de ida y vuelta. En el detalle, el mapa dibuja solo la línea recta hacia el norte, y el perfil va de 0 a 2.24 km. Los 200 m sobre la distancia de la actividad vienen del suavizado de la app (la distancia de la ruta se copia de la actividad, RN-1), no del salto. La elevación es 0 porque el emulador no simula altitud.
+  - **Datos de prueba:** la actividad y la ruta "M22 Salto" quedaron en la cuenta "Prueba zonas".
+- [x] T42 — `backend/src/activity/distancia.ts`, con los mismos casos que `frontend/lib/metrics/distance.test.ts`, y script `datos:recalcular-distancias`. (CA-17, RN-11, D7)
+
+  Hecho (2026-11-09).
+  - **`src/activity/distancia.ts`:** copia de `computeDistance` (con `isAccurate`, `isJump`, los umbrales y `haversineMeters`), sin imports de runtime. `distancia.spec.ts` repite los 16 casos de `distance.test.ts`, con las utilidades de `testing.ts` dentro del archivo para que no entren al build.
+  - **`prisma/scripts/recalcular-distancias.ts`** (`npm run datos:recalcular-distancias`, con `-- --aplicar` para guardar): busca las actividades con algún punto de más de 30 s antes del inicio, quita esos puntos con `sinPuntosViejos` y recalcula. Lista solo las que cambian, más de 1 cm, con su ruta, la distancia nueva y la dificultad nueva (`dificultadDe` con la elevación de la ruta). Con `--aplicar` actualiza en una transacción solo `activities."distanceMeters"` y la distancia, la dificultad y `updatedAt` de la ruta. Usa SQL para no tocar el estado ni el `updatedAt` de la actividad. Una segunda corrida no encuentra diferencias.
+  - **`recorrido.ts`** importa `./elevation-profile.ts` en lugar de `.js` para que Node pueda cargarlo desde el script. El build lo reescribe a `.js` (`rewriteRelativeImportExtensions`).
+  - **Modo informe contra la base (sin aplicar):** 9 actividades con puntos viejos, 2 con distancia distinta, las dos de `postman@senda.bc` y sin ruta: `2cb9ddda…` (0.137 → 0.084 km) y `3dd385a8…` (1.078 → 0.083 km). En las otras 7, el punto viejo ya era un salto y no sumaba. Se aplica en T44.
+  - `tsc`, `nest build`, lint y `npm test` (457) pasan.
+- [x] T43 — `lib/metrics/oldPoints.ts` y `recalcularDistanciasViejas`, una sola vez, sin cambiar el estado. (CA-17, RN-11)
+
+  Hecho (2026-11-09).
+  - **`lib/metrics/oldPoints.ts`:** `withoutOldPoints`, copia de `sinPuntosViejos`, y `hasOldPoints`. `oldPoints.test.ts` repite los 6 casos de `recorrido.spec.ts` y agrega 1 de `hasOldPoints`.
+  - **`lib/db/activityMetrics.ts`:** `recalcularDistanciasViejas()` recorre las actividades terminadas con distancia, de cualquier cuenta y en cualquier estado. A las que empiezan con puntos viejos les recalcula `computeDistance` sin esos puntos y guarda solo `distance_meters` (`saveDistance` en `activities.ts`). Una `SYNCED` sigue `SYNCED`, y una `PENDING_SYNC` sube con la distancia nueva.
+  - **Una vez por teléfono:** se marca en `app_settings` con `user_id = ''`, porque el paso es del teléfono y no de una cuenta. Si alguna actividad falla, no se marca y todo se repite en la siguiente apertura; recalcular dos veces da lo mismo.
+  - **`App.tsx`:** se llama al abrir, después de `computeMissingMetrics` y antes de mostrar la navegación.
+  - **Pruebas:** `activityMetrics.test.ts` (6) usa una ubicación guardada de 25 min antes, a 300 m, que la distancia de la spec 004 suma porque no es salto. Cubre que la distancia queda igual a la del recorrido sin ese punto, sin cambiar estado ni demás métricas; que no toca actividades sin puntos viejos; que corre una sola vez; que es idempotente; que con un error no se marca, y que no se cruza con los ajustes de una cuenta. `tsc` y Vitest pasan (749). Se ve en el teléfono con M23 (T44).
+- [x] T44 — Correr el script en modo informe, revisar la lista con el usuario y aplicar. Correr M23. (CA-17)
+
+  Hecho (2026-11-09). **M23 pasa en el emulador Pixel_8_Pro** con el backend local y la base de Supabase.
+  - **Lista revisada con el usuario:** 9 actividades con puntos viejos y 2 con distancia distinta, las dos de `postman@senda.bc` y sin ruta publicada. El usuario aprobó aplicar.
+  - **Paso 1:** se entró con la cuenta de Postman en la app de antes (`C:\dev\sbc`, sin T43) para que descargara las dos. Teléfono y servidor tenían lo mismo, "Sincronizada" en los dos:
+    - `2cb9ddda…` (26 oct, 12:40 p.m.): 137 m, 5 puntos.
+    - `3dd385a8…` (30 oct, 2:41 p.m.): 1.08 km, 6 puntos.
+  - **Paso 2:** `npm run datos:recalcular-distancias -- --aplicar` guardó 83.963 m y 82.635 m. Las dos siguen `SYNCED` y su `updatedAt` no cambió. Luego se abrió la app desde `C:\dev\SendaBC\frontend`, con T43. El teléfono quedó con las mismas cifras, hasta el decimal 12, y en "Mis actividades" se ven "84 m" y "83 m", las dos "Sincronizada". Quedó la marca `distancias_recalculadas` en `app_settings`.
+  - **Paso 3:** al reiniciar la app no cambió nada, y el script en modo informe dio "9 actividades con puntos viejos, 0 con distancia distinta".
+  - **Comparación completa:** las 115 actividades `SYNCED` del teléfono que existen en el servidor tienen la misma distancia en los dos lados.
+  - **Ruta publicada (prueba aparte):** ninguna actividad afectada tenía ruta, así que se armó una. Con una cuenta de prueba nueva, en el backend local, se subió por `POST /activities/sync` una caminata de 7.5 km en el océano, como las e2e. Empezaba con una ubicación guardada 25 min antes y 1.5 km al sur, y la distancia era la que daría la app: 8 950 m. Se publicó como ruta: 8 950 m y Moderada. El perfil ya excluía el punto viejo (7 500 m).
+    - El informe mostró "8.950 km → 7.450 km, dificultad MODERATE → EASY". Era la única actividad con cambios; el informe contó 10 actividades con puntos viejos.
+    - Con `--aplicar`, la actividad y la ruta quedaron en 7 450 m y la ruta en Fácil. `GET /routes/:id` devuelve lo mismo. La actividad siguió `SYNCED` con su `updatedAt`, y la ruta siguió `PUBLISHED`, con `updatedAt` nuevo y el mismo recorrido. Una segunda corrida dio 0 cambios.
+    - Al final se borraron la ruta y la cuenta de prueba, y con ella su actividad.
+- [x] T45 — Correr M24 en un teléfono real. Corregir si se reproduce; si no, cerrar por RN-3. (CA-18)
+
+  Hecho (2026-11-09). **M24 no reproduce el fallo en el Nothing Phone 2** (A065, Android 16): 20 de 20 intentos seleccionan la ruta tocada. Se cierra por RN-3, sin cambiar código.
+  - **Preparación:** el teléfono tenía una build del 6 nov sin depuración. Se le instaló encima, con la misma firma y conservando sus datos, un APK de desarrollo arm64 compilado desde `C:\dev\sbc` (la parte nativa no cambió desde ese commit). Por USB se usó `adb reverse` para el 8081 y el 3000: Metro desde `C:\dev\SendaBC\frontend` con `EXPO_PUBLIC_BACKEND_IP=http://localhost:3000` y el backend local. Se usó la cuenta del usuario, con su ubicación real cerca de El Sauzal.
+  - **Explorar, 25 km, "Todas":** 3 marcadores visibles. El Salto en (353, 866), Cañón de Doña Petra en (686, 1165), encimado con otro marcador, y Bosque de los Attenuatas en (860, 1159). Seleccionar no mueve la cámara, así que los marcadores no cambian de lugar entre intentos.
+  - **Intentos:** cada uno toca el marcador de una ruta, espera, toca el de otra y lee el nombre de la tarjeta a los 2.5 s.
+    - Las esperas fueron 0.1, 0.3, 0.5, 0.8, 1, 1.5, 2, 3, 4, 0.2, 0.4, 0.6, 1.2, 2.5, 0.1, 0.7, 1.8, 3.5, 0.3 y 1 s.
+    - Se cubrieron los 6 cambios posibles entre las tres rutas.
+    - Los 20 dieron la ruta tocada. En la captura final, el anillo de selección y la tarjeta coinciden (Bosque de los Attenuatas).
+  - **Límite:** los toques fueron de `adb shell input tap`, no de un dedo. Si el fallo vuelve a verse a mano, se reabre con la nueva evidencia.
+- [x] T62 — Avisar cuando falla el inicio de una actividad y permitir reintentar, sin dejar nada grabando ni una actividad en `RECORDING`. Correr M36. (spec 003, CA-16; CA-13)
+
+  Hecho (2026-11-09). **M36 pasa en el emulador Pixel_8_Pro** con la cuenta de Postman y contactos activos (modo en segundo plano). El fallo se forzó con un `throw` temporal, solo en el primer intento, justo después de `createActivity`, el caso que más limpieza necesita. Al terminar el caso se quitó el `throw`.
+  - **Primer intento:** la pantalla sigue en "Nueva actividad" con el aviso de error "No se pudo iniciar la actividad · Intenta de nuevo.", y "Iniciar actividad" sigue abajo. En el registro sale `Error iniciando la actividad: FALLA_INICIO_TEMPORAL`, sin "Uncaught (in promise)". La actividad creada (87) queda cerrada con `endedAt = startedAt` y se sube, como en CA-10. No queda ninguna en `RECORDING`.
+  - **Reintento:** inicia y graba ("Grabando · Senderismo", 1 punto). Al detenerla (88), la base no tiene ninguna actividad en `RECORDING`.
+  - **Código:**
+    - `lib/activity/inicio.ts`: `iniciarOLimpiar` (si falla, limpia y devuelve el error original) y `cierrePendiente` (hora de cierre como en CA-10, compartida con la salida de la pantalla).
+    - `activityTracker.hook.ts`: `start()` ya no deja escapar el error. Limpia lo que alcanzó a arrancar (GPS o tarea, barómetro, escucha de puntos), cierra la actividad si ya existía y expone `startFailed`.
+    - `activityPage.tsx`: muestra el aviso.
+  - **Pruebas:** `lib/activity/inicio.test.ts` (7).
+  - **Datos de prueba:** las actividades 87 y 88, vacías, quedaron subidas en la cuenta de Postman.
 
 ## Fase 3 — Pruebas
 
-- [ ] T46 — `fileParallelism: false` en `vitest.config.e2e.ts`, y correr la suite 5 veces seguidas. (CA-22, D10)
-- [ ] T47 — Revisar la lista de CA-23 del plan. Escribir las pruebas que falten y anotar por qué no aplican las demás. (CA-23)
-- [ ] T48 — Revisar que cada bug corregido en la fase 2 tenga una prueba que falle sin la corrección. (CA-24)
+- [x] T46 — `fileParallelism: false` en `vitest.config.e2e.ts`, y correr la suite 5 veces seguidas. (CA-22, D10)
+
+  Hecho (2026-11-10). `fileParallelism: false` en `backend/vitest.config.e2e.ts`, con comentario. `npm run test:e2e` corrió 5 veces seguidas contra la base de Supabase y pasó las 5: 7 archivos y 88 pruebas cada vez, en 56, 44, 44, 44 y 45 s.
+- [x] T47 — Revisar la lista de CA-23 del plan. Escribir las pruebas que falten y anotar por qué no aplican las demás. (CA-23)
+
+  Hecho (2026-11-10). Se revisaron todos los `.ts` de `frontend/lib` y `backend/src` sin prueba propia: 21 y 32 archivos, además de la lista del plan.
+  - **Pruebas nuevas, frontend (+17):**
+    - `lib/safety/areYouOk.test.ts` (10), con Expo, la base y la tarea de ubicación simulados. Cubre `umbralesDeActividad` y lo que hace cada evento del detector: programar con los umbrales de la sesión, sin hora, preguntar, alertar e ignorar los ajenos. También que un error al crear la alerta queda en el log, y `responderEstoyBien` con y sin actividad y desde la notificación.
+    - `lib/safety/notifications.test.ts` (4): `esRespuestaEstoyBien` y el contenido de la pregunta (umbrales en el texto, `sticky`, canal y categoría con "Estoy bien" una sola vez).
+    - `lib/map/offlineZones.test.ts` (+3): la regla de T36 que estaba dentro de `offlinePacks.ts` ("completo" con 0 recursos sigue descargando y se vuelve a escuchar) pasó a `avanceDePaquete` en `offlineZones.ts`, que es lógica pura. `offlinePacks.ts` la usa sin cambiar su comportamiento.
+    - `lib/db/activityMetrics.ts` ya tenía prueba desde T43.
+  - **Pruebas nuevas, backend (+11):**
+    - `auth/auth.controller.spec.ts` (2): `LocalAuthGuard` y el token del id validado.
+    - `user/user.controller.spec.ts` (3): `JwtAuthGuard` en todo menos el registro, y cada endpoint de `/user/me` con el id del token (constitución 3.3).
+    - `user/normalizar-email.spec.ts` (2).
+    - `safety/safety.types.spec.ts` (4): `MOTIVO_API`, `aSafetyAlert` y `aSafetySession`.
+  - **No aplican, con su motivo:**
+    - **Constantes y textos:** `lib/api/queryClient.ts`, `lib/map/camera.ts`, `lib/map/messages.ts`, `lib/metrics/constants.ts`, `lib/routes/constants.ts`, `lib/theme/*` y `backend/src/telegram/telegram.sender.ts` (interfaz y un texto).
+    - **Envolturas nativas sin decisiones propias:**
+      - `lib/map/mapbox.ts` (token).
+      - `lib/map/offlinePacks.ts` (`offlineManager`; su regla ya se probó en `avanceDePaquete`).
+      - `lib/sensors/barometer.ts` (`expo-sensors`; se ve con 004 M3 y M5).
+      - `lib/auth/tokenStorage.ts` (`expo-secure-store`).
+      - `lib/db/sqlite.ts` (abre la base; el reintento está en `espera.ts`, con prueba).
+      - `lib/safety/locationTask.ts` (`TaskManager`; `aUbicacion` solo copia campos y el procesador tiene `recording.test.ts`).
+    - **Ensamblado de piezas que ya tienen prueba:** `lib/safety/index.ts` (`safetySync` y `sessionActions`) y `lib/sync/index.ts` (`syncEngine`; `isOnline` usa `hayConexion`, con prueba).
+    - **Utilidades de prueba:** `lib/db/testing.ts` y `lib/metrics/testing.ts`.
+    - **Backend, módulos y arranque:** `*.module.ts`, `main.ts`, `app.module.ts`, `app.service.ts`, `prisma.service.ts`, `prisma/db.ts` y `auth/types/*.d.ts`. `configurar-http.ts` lo usan todas las e2e.
+    - **Backend, cubiertos en otros archivos:**
+      - `auth/strategies/local.strategies.ts` (`auth.e2e-spec.ts`).
+      - `telegram/log.sender.ts` y `telegram.config.ts` (`telegram.module.spec.ts` y `safety.e2e-spec.ts`).
+      - `telegram/webhook-secret.guard.ts` (`telegram.controller.spec.ts`).
+      - `user/entities/user.entity.ts` (sin lógica).
+    - **DTOs** (`activity-point`, `activity-upload`, `update-emergency-contact`, `finish-session`, `session-location`, `upsert-session`, `delete-account`, `update-email` y `update-password`): son reglas declarativas de `class-validator`, y las e2e los recorren por el `ValidationPipe`. Varios casos 400 de `/user/me` ya están en `user.e2e-spec.ts`. No se prueba cada regla por separado.
+  - Vitest pasa en el frontend (766) y en el backend (468); `tsc` y lint, sin errores.
+- [x] T48 — Revisar que cada bug corregido en la fase 2 tenga una prueba que falle sin la corrección. (CA-24)
+
+  Hecho (2026-11-10). Cada arreglo de la fase 2 se quitó un momento, se corrió su prueba y se restauró el archivo (mutación con `sed` y copia de respaldo). T44 y T45 no cambiaron código.
+
+  | Arreglo | Sin el arreglo | Falla |
+  |---|---|---|
+  | T39, reintento de `database is locked` (`espera.ts`) | no reintentar | 3 de 8 en `espera.test.ts` |
+  | T39, `busy_timeout` en la conexión de la transacción | sin el `PRAGMA` | 1 de 8 en `espera.test.ts` |
+  | T39, puntos por lotes (`insertDownloadedActivity`) | el código de antes, un `executeAsync` por punto | 1 de 13 en `activities.test.ts` |
+  | T40, `503` en `mensajeDeFallo` | sin la rama del `503` | 1 de 31 en `status.test.ts` |
+  | T40, filtro del `503` | sin registrarlo en `configurarHttp` | 1 de 6 en `prisma-disponibilidad.filter.spec.ts` |
+  | T41, `sinSaltos` al publicar | sin `sinSaltos` | 1 de 71 en `route.service.spec.ts` (la e2e ya se había comprobado en T41) |
+  | T41, `sequence = ANY(...)` | `sequence >=` como antes, con `sinSaltos` | 1 de 23 en `route-publish.e2e-spec.ts` |
+  | T43, distancia sin puntos viejos | sin `withoutOldPoints` | 4 de 6 en `activityMetrics.test.ts` |
+  | T62, limpiar un inicio fallido (`inicio.ts`) | sin `limpiar()` | 3 de 7 en `inicio.test.ts` |
+  | T63, fin nunca antes del inicio y reparación (F1) | sin comparar con el inicio, `MIN` en lugar de `MAX`, sin reparar | 1 de 8 en `inicio.test.ts` y 3 de 16 en `activities.test.ts` |
+  | T64, cobertura del barómetro (F3) | la regla de al menos 2 lecturas | 1 de 17 en `summary.test.ts` |
+
+  - **Prueba reforzada:** la de lotes calcula lo que espera con `PUNTOS_POR_LOTE`, así que con lotes de 1 punto seguía pasando, aunque la transacción volviera a ser larga. Se agregó `expect(PUNTOS_POR_LOTE).toBeGreaterThanOrEqual(100)`; con lotes de 1 ahora falla.
+  - **Sin prueba automática, con su motivo:**
+    - `busy_timeout` y `conReintentos` en la conexión principal (`sqlite.ts`): solo los aplica al abrir expo-sqlite, que no corre en Vitest. Las dos funciones tienen prueba, y que estén conectadas se vio en M20.
+    - El script `datos:recalcular-distancias`: necesita la base. Su cálculo es `sinPuntosViejos` más `computeDistance` (`distancia.ts`), los dos con prueba. Se comprobó en M23 y con la ruta de prueba de T44.
+    - Lo que hace `activityTracker.hook.ts` con el resultado de `iniciarOLimpiar` (pantalla de React Native): M36.
+  - Vitest pasa en el frontend (766) y en el backend (468).
 
 ## Fase 4 — Prueba de campo
 
-- [ ] T49 — Compilar el build de campo con la URL del túnel y `EXPO_PUBLIC_BATTERY_TEST=1`, e instalarlo en los dos teléfonos. Descargar la zona del recorrido en cada uno. (CA-8, CA-20, RN-7, RN-12)
-- [ ] T50 — Ensayo cerca de casa, con datos móviles: 10 minutos grabando en cada teléfono y una alerta de prueba. (R6)
-- [ ] T51 — Correr M25, M26, M28 y M29 en la salida, y M4 paso 2 con TalkBack en un teléfono. (CA-1 a CA-3, CA-5 a CA-7, CA-38)
-- [ ] T52 — Correr M30, la medición de batería. Si no cumple, ajustar el mapa y volver a medir. (CA-8)
-- [ ] T53 — Correr M31 y M32 con el contacto real. (CA-9 a CA-11)
-- [ ] T54 — Correr M19 en la zona real, en modo avión. (CA-20, CA-21)
-- [ ] T55 — Correr M27, el recorrido simulado a velocidad de bicicleta. (CA-4)
-- [ ] T56 — Hacer el reporte en este archivo, con la revisión de M33. Clasificar cada fallo por severidad y decidir con el usuario. (CA-12, CA-19, CA-29, RN-2)
-- [ ] T57 — Corregir los fallos bloqueantes y los que el usuario pida, con su prueba si se puede. Repetir el caso que falló. (CA-19, CA-24)
+- [x] T49 — Compilar el build de campo con la URL del túnel y `EXPO_PUBLIC_BATTERY_TEST=1`, e instalarlo en los dos teléfonos. Descargar la zona del recorrido en cada uno. (CA-8, CA-20, RN-7, RN-12)
+
+  **Build instalado (2026-11-10). El usuario descargó la zona del recorrido en los dos teléfonos.**
+  - `C:\dev\sbc` se movió al commit `2d4e18c`; no hubo cambios nativos desde el anterior.
+  - Se compiló con `./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a`, con `EXPO_PUBLIC_BACKEND_IP` igual a la URL del túnel **sin `/` final** y `EXPO_PUBLIC_BATTERY_TEST=1`. Queda en `C:\dev\sbc\frontend\android\app\build\outputs\apk\release\app-release.apk`, de 67 MB.
+  - El paquete tiene la URL del túnel, ningún `localhost` ni `10.0.2.2`, y el código de T41 a T48.
+  - Se firma con la misma clave que la versión de desarrollo, así que se instaló encima con `adb install -r` en el S9+ y el Nothing Phone 2, y conservó sesión y actividades.
+  - Con `adb reverse` quitado, los dos abren sin la computadora y cargan Rutas por el túnel.
+- [x] T50 — Ensayo cerca de casa, con datos móviles: 10 minutos grabando en cada teléfono y una alerta de prueba. (R6)
+
+  Hecho por el usuario el 2026-11-10, en los dos teléfonos. En el servidor queda la alerta de inactividad de la prueba, cancelada, en la sesión del Nothing de las 21:35.
+- [x] T51 — Correr M25, M26, M28 y M29 en la salida, y M4 paso 2 con TalkBack en un teléfono. (CA-1 a CA-3, CA-5 a CA-7, CA-38)
+
+  Cerrada (2026-11-20): se corrieron todos los casos. CA-1, CA-3, CA-6, CA-7 y CA-38 cumplen. CA-2 (elevación con GPS) y CA-5 no cumplen por F5, pasado a la 012.
+
+  **M28 (2026-11-18):** el usuario publicó la actividad del S9+ de la caminata. La ruta mide 4 461 m (la distancia de la actividad) y el eje del perfil llega a 4 996 m (+12 %). El perfil tiene 20 saltos de más de 30 m entre puntos seguidos: sale de la altitud del GPS de cada punto, así que hereda F5 aunque la actividad se midió con barómetro. No cumple; ver F5 y F6.
+
+  **M4 (2026-11-20), en el Nothing con una actividad grabando y TalkBack 17.1 activado por `adb`, pasa:**
+  - Paso 1: un toque corto en el escudo mostró "Pedir ayuda — Mantén presionado 2 segundos para avisar a tus contactos." y no creó alerta (revisado en el servidor). Fue un toque de `adb`, que no pasa por TalkBack.
+  - Paso 2: el usuario enfocó a mano los dos botones con TalkBack, y los anuncios fueron los esperados: "Pedir ayuda" con la instrucción, y "Detener actividad".
+  - La sesión no tuvo alertas. Al final se apagó TalkBack y quedó solo el servicio de accesibilidad que ya estaba. **CA-38 cumple.**
+
+  **M25 revisado con los datos de la salida (2026-11-20):** además del reporte, se leyó la base del Nothing (copia por `run-as`).
+  - **Nothing:** una sola actividad de 17:42:40 a 18:50:43 (1:08:02), "Sincronizada", con distancia, duración y elevación. Tiene 410 puntos, del inicio a 1 s antes del fin. Solo hay un hueco de más de 60 s (141 s, parado). La única otra actividad cercana es el inicio de prueba de 6 s de las 17:41. No hay cierres registrados de la app (`dumpsys dropbox`), y la app no está exenta de la optimización de batería (`deviceidle whitelist`), así que grabó con el ahorro normal.
+  - **S9+:** según el reporte, 1:08:26, 394 puntos cada ~10 s, sincronizada y con su resumen. Los huecos son los mismos tramos parados. No estaba conectado para revisar su base ni su ajuste de batería.
+  - **Pantalla bloqueada:** según los ajustes de batería de cada teléfono, ~9 min de pantalla en el Nothing y ~17 min en el S9+ durante una salida de 68 min. Los dos estuvieron bloqueados más de 30 minutos y siguieron llegando puntos.
+  - **S9+, revisado por USB el mismo día:** la app no está exenta de la optimización de batería (`deviceidle whitelist`) y tiene el modo por defecto para correr en segundo plano (`appops`). El registro del sistema (`dumpsys dropbox`) cubre el 2026-11-18 y no tiene cierres ni ANR de la app. Su build de campo no es depurable, así que su base no se pudo leer.
+  - **CA-1, CA-3 y CA-7 cumplen.**
+
+  **M29 revisado:**
+  - **004 M4 en el Nothing, pasa:** en T3 (1:13) y en la salida (1:08) grabó normal y el resumen dice "Elevación estimada con GPS".
+  - **004 M3 y M5 en el S9+ (2026-11-20, por el usuario):** una sola actividad de senderismo de 5:51 (10:24 a 10:30): 5 min quieto al aire libre y luego **un piso** de la escalera de su casa, no tres. Sincronizada; en el servidor queda con 5 puntos y "barómetro" como fuente.
+    - **M5, pasa:** distancia 0 m en el resumen, menos de 20 m. La suma punto a punto da 24 m, pero incluye caminar hasta la escalera.
+    - **M3, parcial:** la elevación sale del barómetro y la subida es de 3.8 m, que corresponde a un piso (~3 m). M3 pide 3 pisos y entre 6 y 12 m; con un piso no se puede comparar con ese rango. **Decidido con el usuario (2026-11-20):** se acepta como M3. Con un piso, el barómetro midió una subida de la altura esperada, y la salida del 2026-11-18 ya midió 212 m con barómetro contra 199 m de Strava.
+  - **CA-6 cumple.**
+- [x] T52 — Correr M30, la medición de batería. Si no cumple, ajustar el mapa y volver a medir. (CA-8)
+
+  **Dato de la salida (2026-11-18), no sustituye a M30:** según los ajustes de batería de cada teléfono, el día de la caminata de ~1 h 08 min. **Nothing:** menos de 1 %, con 9 min de uso en pantalla y 1 h 15 min en segundo plano. **S9+:** 8.4 %, con 17 min en pantalla y 3 h 2 min en segundo plano; el segundo plano dura casi el triple que la caminata, así que incluye tiempo fuera de la grabación. La pantalla estuvo bloqueada casi todo el tiempo, así que mide sobre todo la grabación en segundo plano, no el mapa. CA-8 sigue pendiente: pide comparar el consumo por hora con "Sin mapa", 2D y 3D en pantalla.
+
+  **M30 en el Nothing, con el teléfono quieto (2026-11-18):** en lugar del S9+. Build de diagnóstico de F5 (con `EXPO_PUBLIC_BATTERY_TEST=1`), zona descargada, pantalla encendida, brillo fijo y en el mismo lugar. El cable carga el teléfono, así que cada vuelta se midió desconectada: `Charge counter` de `dumpsys battery` justo antes de desconectar y al reconectar, ~30 min después.
+
+  | Vuelta | Vista | Duración | Charge counter (µAh) | Nivel | Consumo | Frente a "Sin mapa" |
+  |---|---|---|---|---|---|---|
+  | 1 | 3D | 30:08 | 1 499 000 → 1 341 000 | 43 → 39 % | ~315 mAh/h | −13 % |
+  | 2 | 2D | 30:02 | 1 383 000 → 1 213 000 | 40 → 35 % | ~340 mAh/h | −6 % |
+  | 3 | Sin mapa | 30:14 | 1 225 000 → 1 043 000 | 35 → 30 % | ~361 mAh/h | — |
+
+  - Cumple los límites: 3D no supera a "Sin mapa" (límite +30 %) ni a 2D (límite +15 %).
+  - El consumo sube en el orden en que se corrieron las vueltas y no por vista. Con menos carga baja el voltaje y el mismo trabajo gasta más carga, así que la diferencia parece del orden, no del mapa. Quieto, el mapa no suma un consumo medible.
+  - **Reservas:** sin movimiento, la cámara no sigue al marcador ni gira con el rumbo, que es lo que más dibuja el mapa; M30 pide "el mismo recorrido". Tampoco se corrió en el S9+. Para cerrar CA-8 falta repetirlo caminando, en otro orden ("Sin mapa" primero) y con la misma carga al empezar cada vuelta.
+  - **Decidido con el usuario (2026-11-20):** se acepta CA-8 con esta medición y sus reservas. No hay tiempo para otra salida antes de la entrega.
+- [x] T53 — Correr M31 y M32 con el contacto real. (CA-9 a CA-11)
+
+  Hecho (2026-11-19 y 2026-11-20) en el Nothing Phone 2 con la build de diagnóstico de F5 (URL del túnel), la cuenta del usuario y el contacto real "Diego Contacto" (en Telegram, "Blu CN"). Backend local con `TELEGRAM_MODE=polling`. Los casos se manejaron por `adb` y se comprobaron en la base del servidor.
+  - **Túnel:** daba `502` en ~1 de cada 4 peticiones desde el teléfono. Para separarlo de la app, el backend pasó al puerto 3001 detrás de un proxy en el 3000 que registra cada petición. Ninguna petición fallida llegó al backend, y todas pasaron al reintentar. No es fallo de la app, salvo que no se recupera sola (F7).
+  - **008 M1, pasa:**
+    - Nombre vacío: "El nombre es obligatorio". 41 caracteres: "El nombre debe tener como máximo 40 caracteres". En los dos no se guarda.
+    - Con un nombre válido: "Pendiente de aceptar" y la hoja de compartir del sistema con el texto de la invitación.
+    - El contacto real aceptó la invitación y quedó "Activo", con su nombre de Telegram.
+    - "Enviar mensaje de prueba": la app dice "Mensaje de prueba enviado". La bienvenida y esta prueba no se confirmaron una por una en Telegram, pero la misma cuenta recibió después la alerta, la ubicación y el "está bien" (ver M32).
+    - Con 3 contactos desaparece "Agregar contacto" y sale "Puedes tener como máximo 3 contactos de emergencia."
+    - Editar el nombre y quitar (con confirmación) se guardan.
+    - Al cerrar y abrir la app se ven los mismos contactos.
+  - **008 M2, pasa:** con el bot bloqueado, la prueba deja el contacto en "No recibe mensajes" (`UNREACHABLE` en el servidor), con la explicación y "Compartir invitación". Al compartirla de nuevo, desbloquear y aceptarla, vuelve a "Activo".
+  - **008 M3, pasos 1 y 2, pasan:**
+    - Paso 1, sin contactos activos (con el bot bloqueado): "Empezar" muestra el aviso, "Configurar contactos" e "Iniciar actividad". "Configurar contactos" abre Seguridad encima y atrás regresa a la grabación.
+    - Paso 2, con el contacto activo: "Seguridad activa: … avisaríamos a Diego Contacto." y la hora de regreso opcional.
+    - **Pasos 3 y 4:** el usuario decidió no quitar "Permitir todo el tiempo"; quedan cubiertos por las pruebas de T66 (`decidirSegundoPlano`).
+  - **M32, pasa:** 5 min sin moverse y 1 min de cuenta regresiva, con el teléfono quieto y la app abierta. Se registraron la vibración de la app (`dumpsys vibrator_manager`), el cierre de la notificación y las alertas en la base.
+    - 10 de 10 preguntas respondidas con "Estoy bien" entre 3 y 10 s después de aparecer (09:14 a 10:01). La sesión no tiene alertas.
+    - El usuario confirma que sonó y vibró en las 10.
+    - En la pregunta 5, Android marcó la vibración de la app como `ignored_for_higher_importance` porque coincidió con dos vibraciones cortas del sistema. Aun así, el usuario sintió vibración.
+  - **Alerta real del 2026-11-19, por la prueba y no por la app:** en un primer intento de M32, una vigilancia por `adb` debía tocar "Estoy bien" detectando un cambio de foco de ventana. El aviso no cambia el foco, así que nadie respondió. A las 23:22 la app creó la alerta por inactividad y el contacto recibió la alerta y la ubicación. El usuario la canceló a las 23:29 y el contacto recibió "está bien". La app hizo lo esperado.
+  - Al terminar se quitó el contacto de prueba pendiente; queda solo el contacto real.
+- [x] T54 — Correr M19 en la zona real, en modo avión. (CA-20, CA-21)
+
+  **Avance (2026-11-18):** en la salida, en modo avión y dentro de la zona descargada, el mapa se vio con el terreno, no un fondo azul (CA-20, parte). No se revisaron el cambio entre 3D y 2D, el modo oscuro ni la grabación fuera de la zona (CA-21); quedan para otra salida.
+
+  **Avance (2026-11-19), en un teléfono real, en modo avión y grabando dentro de la zona descargada:** el cambio entre 3D y 2D funciona, y el de claro a oscuro también, en las dos vistas. **CA-20 cumple.** Al mover la cámara fuera de la zona, en 3D las texturas se ven borrosas y en 2D se ve bien. Fuera de la zona solo hay lo que el mapa ya tenía guardado, así que no es un fondo azul ni un fallo de CA-20. Falta CA-21: grabar con la ubicación fuera de la zona, no solo mover la cámara.
+
+  **CA-21 (2026-11-20), en casa, fuera de la zona descargada, con el Nothing y la cuenta de Postman:** se hizo en casa porque no hubo tiempo para otra salida antes de la entrega. Modo avión, Wi-Fi y datos apagados; sin red activa y sin ping, comprobado por `adb`.
+  - **Resultado:** el usuario grabó 2:09 caminando por la casa. La actividad quedó en el teléfono con 4 puntos, métricas y "Pendiente de sincronizar". El usuario vio el recorrido dibujado y el aviso de que el mapa no está disponible sin conexión, como pide la spec 010 (CA-15).
+  - **Al volver la red:** se sincronizó sola en ~1 min, con los mismos 4 puntos en el servidor.
+  - **CA-21 cumple.**
+  - **Observación, no es fallo:** el primer punto llegó 74 s después de iniciar. Sin red el GPS no recibe ayuda (A-GPS), y dentro de una casa tarda más en fijar posición. La app espera la primera ubicación nueva sin usar una vieja (spec 003, CA-13).
+- [x] T55 — Correr M27, el recorrido simulado a velocidad de bicicleta. (CA-4)
+
+  Corrido el 2026-11-18 en el emulador `Pixel_8_Pro` (development build, Metro con el código de T67 y backend aparte en `TELEGRAM_MODE=log`), con una cuenta desechable. Un script manda una ubicación por `adb emu geo fix` según el tiempo real, a 20 km/h, sobre una carretera con curvas. El emulador no tenía el permiso en segundo plano, así que grabó en primer plano, con un punto cada ~2 s. Resultado: 5:33, 1.79 km, 19.4 km/h, 160 puntos; la distancia queda 1.8 % bajo la suma punto a punto. En 3D la cámara sigue al marcador con el rumbo y el trazo sale continuo; en 2D, igual. **El usuario lo da por aceptable (2026-11-18).** Queda escrito que no se probó en una bicicleta real. Un primer intento se descartó: quedaron dos scripts mandando ubicaciones a la vez y el trazo salió en pedazos; los saltos no sumaron distancia (la regla de 50 m/s funcionó), pero esa actividad no cuenta.
+- [x] T56 — Hacer el reporte en este archivo, con la revisión de M33. Clasificar cada fallo por severidad y decidir con el usuario. (CA-12, CA-19, CA-29, RN-2)
+
+  Hecho (2026-11-20): el reporte está en "Reporte de la prueba de campo". Lo decidido con el usuario: F5 (Mayor) pasa a la 012; F6 (Menor) y F7 (Mayor) se corrigen en T57; F8 (Menor) se acepta. F7 subió de Menor a Mayor: la función no sirve hasta reabrir la app. Falta el nombre del sendero, que lo agrega el usuario.
+- [x] T57 — Corregir los fallos bloqueantes y los que el usuario pida, con su prueba si se puede. Repetir el caso que falló. (CA-19, CA-24)
+
+  **Decidido el 2026-11-12, antes de repetir la salida:** se corrigen F1, F2 y F3 en T63 a T66; F4 se decide con los datos de la caminata (M26).
+- [x] T63 — F1: cerrar sin "Detener" nunca deja el fin antes del inicio, en `closeOrphanActivities` y `cierrePendiente`. Al abrir la app, corregir las actividades pendientes que ya lo tengan, recalcular sus métricas y quitar su error de subida. (spec 003, CA-10; CA-24)
+
+  Hecho (2026-11-12). `cierrePendiente` (`lib/activity/inicio.ts`) y `closeOrphanActivities` usan el inicio si el último punto es anterior. `repararFinAntesDelInicio` (`lib/db/activities.ts`) corre al abrir la app, entre cerrar huérfanas y `computeMissingMetrics`: pone el fin igual al inicio, borra las métricas para que se recalculen, conserva la fuente de elevación y quita el error. Sin el arreglo fallan 4 pruebas: 1 en `inicio.test.ts` y 3 en `activities.test.ts`. **En el Nothing (2026-11-12):** al abrir esta versión, la actividad del 2026-11-07 que seguía rechazada se corrigió y subió sola, con el fin igual al inicio, 1 punto y duración 0.
+- [x] T64 — F3: usar GPS para la elevación cuando las lecturas del barómetro no cubren la actividad. (spec 004, CA-13, RN-7; CA-24)
+
+  Hecho (2026-11-12). `barometerCovers` (`lib/metrics/summary.ts`) suma los tramos de más de 60 s sin lecturas, del inicio al fin, y exige menos del 10 % de la duración (`MAX_BARO_GAP_MS`, `MAX_BARO_UNCOVERED`). `computeActivityMetrics` recibe las lecturas con su hora. Con la regla anterior (al menos 2 lecturas) falla 1 de 17 en `summary.test.ts`. Las actividades ya sincronizadas con 0 m no se recalculan.
+- [x] T65 — F3: módulo nativo `modules/barometro` que sigue leyendo con la pantalla apagada, con la hora del sensor; `lib/sensors/barometer.ts` lo usa en Android. Probar en el S9+ 10 min con la pantalla apagada. (spec 004, CA-12, CA-14; plan D16)
+
+  Hecho (2026-11-12). El módulo tiene `disponible`, `iniciar`, `detener` y el evento `onLectura`, con la hora calculada desde `event.timestamp`. `barometer.ts` lo usa si existe y, si no, sigue con `expo-sensors` (3 pruebas en `barometer.test.ts`, con el módulo simulado). El autolinking lo encuentra en `modules/` sin `prebuild`. Se compiló la versión de campo en `C:\dev\sbc` y se instaló en el S9+, ya con "Permitir todo el tiempo". **Prueba:** senderismo de ~10 min con la pantalla bloqueada casi todo el tiempo y el teléfono quieto. El resumen dice "Elevación medida con barómetro", con 0 / 0 m. Como T64 solo usa el barómetro si las lecturas cubren el 90 % de la actividad, hubo lecturas con la pantalla apagada; los 0 m son el umbral de ruido de 3 m con el teléfono quieto. La base no se pudo leer directo: la versión de campo no es depurable (`run-as`).
+- [x] T66 — F2: si falta el permiso en segundo plano y el sistema ya no deja pedirlo, avisar antes de iniciar y ofrecer abrir los ajustes. (spec 008, CA-10)
+
+  Hecho (2026-11-12). La decisión pasa a `decidirSegundoPlano` (`lib/activity/segundoPlano.ts`, 4 pruebas). Con contactos activos y el permiso bloqueado, la pantalla muestra "Falta “Permitir todo el tiempo”" con "Grabar así" y "Abrir ajustes". "Abrir ajustes" o cerrar el aviso no crean la actividad: al volver se presiona "Iniciar" otra vez. No se vio en un teléfono: el Nothing ya tenía "Permitir todo el tiempo" al instalar esta versión, y el usuario decidió no quitarlo; queda verificado con las pruebas.
+
+- [x] T67 — F4: la distancia solo promedia los puntos a 50 m o menos del punto nuevo, en el teléfono y en el servidor. (spec 004, plan D3; CA-4, CA-24)
+
+  Hecho (2026-11-18). `SMOOTHING_RADIUS_M = 50` en `lib/metrics/constants.ts` y `backend/src/activity/distancia.ts`; el plan de la 004 se actualizó primero (D3, "Distancia", historial). Se eligió con los puntos reales de la salida: el carro del 2026-11-11 pasa de −8 a −16 % a entre −5.2 y −2.4 % de Strava, y la caminata del 2026-11-18 queda igual (+4.6 y +5.2 %). Prueba nueva en `distance.test.ts` y `distancia.spec.ts`: carretera con curvas a 25 m/s, un punto cada 10 s, error ≤ 5 %. Sin el radio, esa prueba falla en los dos lados. Las actividades ya guardadas conservan su distancia.
+
+- [x] T68 — F6: el eje del perfil de una ruta termina en la distancia de la ruta. (spec 007, RN-8; CA-5, CA-24)
+
+  Hecho (2026-11-20). Primero se actualizó la spec 007: RN-8 y su historial. `perfilDe` (`backend/src/route/elevation-profile.ts`) recibe la distancia de la ruta y escala la distancia acumulada para que el eje termine en ella; sin ella, o con 0, queda la suma punto a punto, que es lo que usa el seed. `route.service.ts` le pasa la distancia de la actividad.
+  - **Pruebas:** dos nuevas en `elevation-profile.spec.ts`. La del zigzag con +12 %, como en M28, falla sin el cambio (12 432 contra 11 119.5 m).
+  - **e2e:** "un salto imposible no se dibuja…" ahora espera que el eje termine en los 3 000 m de la ruta, con tramos parejos, en lugar de 28 × 111 m.
+  - **Rutas ya publicadas:** conservan su perfil.
+  - **M28 no se repitió:** el perfil sigue heredando F5, pasado a la 012.
+- [x] T69 — F7: las consultas que fallaron se repiten al volver la red o la app al frente. (CA-24)
+
+  Hecho (2026-11-20).
+  - **Código:** `lib/api/reconexion.ts` tiene `crearQueryClient` y `conectarConsultas`. `crearQueryClient` usa `networkMode: 'always'` para que las consultas sigan corriendo sin red, como la copia local de los contactos, y vuelve a encender `refetchOnReconnect`, que TanStack apaga con ese modo. `conectarConsultas` conecta `onlineManager` con `expo-network` y `focusManager` con `AppState`. `lib/api/queryClient.ts` usa `crearQueryClient` y `App.tsx` llama a `conectarConsultas`.
+  - **Pruebas:** tres en `reconexion.test.ts`, con TanStack real y las fuentes de red y app simuladas: la consulta con error se repite al volver la red, se repite al volver la app al frente, y sin red sigue corriendo. Sin conectar las fuentes fallan las dos primeras.
+  - **No se vio en un teléfono:** la build instalada es la de campo, de antes del cambio. Queda verificado con las pruebas.
+
+  **Después de T68 y T69:** Vitest pasa en el frontend (783) y en el backend (471), las e2e pasan (88), `tsc` del frontend pasa y `npm run lint` del backend termina sin errores, con las 3 advertencias de siempre.
+**M33, revisado con el usuario (2026-11-18):** se conservan 30 m, 10 minutos y 2 minutos. En la caminata, la parada más larga dentro de 30 m fue de 3.4 min, no hubo "¿Estás bien?" sin motivo ni alertas, y el tiempo y la cuenta regresiva ya los puede cambiar cada usuario. La spec 008 no cambia.
 
 ## Fase 5 — Regresión y cierre
 
-- [ ] T58 — Correr M34, los casos pendientes de las specs 005, 007, 008 y 009. 009 M1 lo hace el usuario. (CA-26)
-- [ ] T59 — Agregar a la colección de Postman los endpoints nuevos y correrla en Postman. (CA-27)
-- [ ] T60 — Correr pruebas unitarias de backend y frontend, e2e y lint. (CA-25)
-- [ ] T61 — Ejecutar `/spec-verify`. Actualizar los estados de 004, 009, 010 y 011 y `specs/roadmap.md`. Anotar en la 012 que debe quitar el túnel y comprobar que no define `EXPO_PUBLIC_BATTERY_TEST`. (CA-28, RN-7)
+- [x] T58 — Correr M34, los casos pendientes de las specs 005, 007, 008 y 009. 009 M1 lo hace el usuario. (CA-26)
+
+  Avance (2026-11-18), en el emulador con la misma preparación que T55:
+  - **005 M3, pasa:** con 3 actividades grabadas en modo avión, al quitarlo se tocó "Empezar" → "Iniciar actividad" de inmediato. La grabación arrancó normal y a los 21 s las 3 ya estaban sincronizadas, con la nueva aún grabando.
+  - **007 M1, pasa:** una pendiente no ofrece publicar y dice "Para publicarla como ruta, primero tiene que subirse a tu cuenta."; una sincronizada de 424 m dice "Una ruta debe medir al menos 1.5 km."; la de 1.79 km ofrece "Publicar como ruta".
+  - **007 M6, pasa:** se publicó la de 1.79 km, se editó el nombre, se archivó (queda "Archivada" en "Mis rutas", desaparece del mapa y de la búsqueda cercana), se volvió a publicar (regresa al mapa) y se borró (sale de "Mis rutas" y el resumen vuelve a ofrecer "Publicar como ruta").
+  - **008 M8 paso 4, pasa:** se inició con regreso a 1 h, se cambió a 3 h con conexión (el servidor guardó la nueva) y se adelantó la sesión 1 h 31 min en la base, de modo que la hora anterior ya habría vencido con su margen. En dos corridas de la tarea no hubo aviso. Como control, al vencer también la hora nueva el servidor sí mandó "no ha confirmado su regreso".
+  - **008 M10, pasa:** con "Permitir todo el tiempo" en el emulador, 5 min con la pantalla bloqueada y el GPS en movimiento: 64 puntos, sin tramos de más de 5 s sin puntos. Al detener desaparece la notificación de grabación y el servicio sale de primer plano. Después de 11 min (más que los 10 de inactividad) no llegó pregunta ni alerta.
+  - **007 M8, pasa (2026-11-20), con los dos teléfonos reales:**
+    - En el S9+, con la cuenta de Postman, se guardó "El Salto" como favorita (`PUT /routes/:id/favorite` → `204`). La cuenta quedó con 2: El Salto (hoy) y Cañón de Doña Petra (2026-11-02).
+    - En el Nothing, con la cuenta del usuario, que no tiene favoritas, "Mis favoritas" muestra "Nada por aquí todavía" y explica cómo guardarlas.
+    - El usuario cerró sesión en el Nothing y entró con la cuenta de Postman. "Mis favoritas" muestra las mismas 2, con El Salto primero, igual que en el S9+.
+  - **009 M1, pasa (2026-11-20, por el usuario, en un teléfono real):** en claro y en oscuro, la app coincide con Figma. Con letra grande (`font_scale` 1.3) y la app reabierta no se corta nada. Si se cambia la letra con la app abierta, se cortan textos hasta reabrirla (F8, límite conocido de la spec 003).
+  - **M34 completo. CA-26 cumple.**
+- [x] T59 — Agregar a la colección de Postman los endpoints nuevos y correrla en Postman. (CA-27)
+
+  Colección actualizada (2026-11-18): carpeta "Cuenta (spec 011)" con 25 peticiones y sus pruebas. Crea una cuenta temporal (no toca la de las variables `email` y `password`), edita nombre y avatar (`400` con avatar inexistente y nombre corto, `null` quita el avatar), cambia correo (`403`, `409`) y contraseña (`400`, `403`, login nuevo `200` y anterior `401`), publica una ruta, comprueba el `409` al borrar con una alerta activa y el `403` con contraseña incorrecta, la borra (`204`) y verifica el `401` del token y del login, y que la ruta publicada queda con autor "Cuenta eliminada". **Corrida (2026-11-18):** con un runner propio que ejecuta los mismos scripts de la colección (el subconjunto de `pm` que usa, con `chai`), no con la app de Postman, contra un backend aparte en el puerto 3001 con `TELEGRAM_MODE=log` y el secreto del webhook. Se corrió con una cuenta desechable en `email` y `password`, porque la carpeta de seguridad borra todos los contactos de esa cuenta y la de Postman tiene contactos reales en el S9+; la advertencia quedó en la descripción de esa carpeta. Las 78 solicitudes y sus 134 pruebas pasan. En la primera corrida fallaron 7 pruebas de la carpeta nueva por errores de la propia colección (el `400` trae el detalle en `errors`, y la ruta de prueba medía menos de 1.5 km); se corrigieron. Al final se borró la cuenta desechable y la ruta sin autor que deja la carpeta; no quedan cuentas de prueba.
+- [x] T60 — Correr pruebas unitarias de backend y frontend, e2e y lint. (CA-25)
+
+  Hecho (2026-11-18), después de T67: Vitest pasa en el frontend (780) y en el backend (469); las e2e del backend pasan (88) y no dejan cuentas de prueba. `npm run lint` del backend termina sin errores, con 3 advertencias de variables sin usar en `user.entity.ts` y `user.service.ts` que ya estaban. `tsc` del frontend y `nest build` pasan. `tsc` sobre todo el backend marca `supertest/types` en `test/app.e2e-spec.ts`, que viene del primer commit y no afecta las e2e. El frontend no tiene lint configurado.
+- [x] T61 — Ejecutar `/spec-verify`. Actualizar los estados de 004, 009, 010 y 011 y `specs/roadmap.md`. Anotar en la 012 que debe quitar el túnel y comprobar que no define `EXPO_PUBLIC_BATTERY_TEST`. (CA-28, RN-7)
+
+  Hecho (2026-11-20). `/spec-verify`: 783 pruebas en el frontend, 471 en el backend y 88 e2e pasan; `tsc` y lint, sin errores. Se revisaron los artículos 2, 3 y 4 de la constitución. El usuario confirmó los estados: 004, 009 y 010 pasan a Implementada y la 011 a Implementada con pendientes (CA-2 y CA-5 por F5, pasado a la 012; CA-58 en parte). `roadmap.md` lo refleja y anota para la 012 que hay que quitar el túnel y `EXPO_PUBLIC_BATTERY_TEST`, y corregir F5.
 
 ## Cobertura
 
@@ -279,35 +568,35 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | Caso manual M25 | Manual, teléfono real | Pendiente |
-| CA-2 | Caso manual M26 | Manual, teléfono real | Pendiente |
-| CA-3 | Caso manual M25 | Manual, teléfono real | Pendiente |
-| CA-4 | Caso manual M27 | Manual, simulado | Pendiente |
-| CA-5 | Caso manual M28 | Manual, teléfono real | Pendiente |
-| CA-6 | Caso manual M29 | Manual, teléfono real | Pendiente |
-| CA-7 | Caso manual M25 | Manual, teléfono real | Pendiente |
-| CA-8 | Caso manual M30 | Manual, teléfono real | Pendiente |
-| CA-9 | Caso manual M31 | Manual, teléfono real | Pendiente |
-| CA-10 | Caso manual M32 | Manual, teléfono real | Pendiente |
-| CA-11 | Caso manual M32 | Manual, teléfono real | Pendiente |
-| CA-12 | Caso manual M33 | Revisión | Pendiente |
-| CA-13 | Caso manual M20 | Manual | Pendiente |
-| CA-14 | `prisma-disponibilidad.filter.spec.ts`, `frontend/lib/routes/status.test.ts` y caso manual M21 | Automatizada y manual | Pendiente |
-| CA-15 | `backend/src/route/recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Pendiente |
-| CA-16 | `recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Pendiente |
-| CA-17 | `backend/src/activity/distancia.spec.ts`, `frontend/lib/metrics/oldPoints.test.ts` y caso manual M23 | Automatizada y manual | Pendiente |
-| CA-18 | Caso manual M24 | Manual, teléfono real | Pendiente |
-| CA-19 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |
-| CA-20 | Caso manual M19 | Manual, teléfono real | Pendiente |
-| CA-21 | Caso manual M19 | Manual, teléfono real | Pendiente |
-| CA-22 | `npm run test:e2e`, 5 veces seguidas | Automatizada | Pendiente |
-| CA-23 | Pruebas nuevas y lista revisada en T47 | Automatizada y revisión | Pendiente |
-| CA-24 | Revisión de T48 y T57 | Revisión | Pendiente |
-| CA-25 | `npm test` y `npm run test:e2e` en backend, Vitest en frontend, y `npm run lint` | Automatizada | Pendiente |
-| CA-26 | Caso manual M34 | Manual | Pendiente |
-| CA-27 | Caso manual M35 | Postman | Pendiente |
-| CA-28 | Revisión de estados en T61 | Revisión | Pendiente |
-| CA-29 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |
+| CA-1 | Caso manual M25 | Manual, teléfono real | Cumple (salida del 2026-11-18, revisada el 2026-11-20) |
+| CA-2 | Caso manual M26 | Manual, teléfono real | No cumple: la distancia (+5.1 %) y el barómetro (+6.5 %) sí; la elevación con GPS no, por F5, pasado a la 012 |
+| CA-3 | Caso manual M25 | Manual, teléfono real | Cumple (salida del 2026-11-18) |
+| CA-4 | Caso manual M27 | Manual, simulado | Cumple (2026-11-18, T55): aceptado por el usuario; no probado en bici real |
+| CA-5 | Caso manual M28 | Manual, teléfono real | No cumple: el perfil hereda F5, pasado a la 012. El eje (F6) se corrige en T57 |
+| CA-6 | Caso manual M29 | Manual, teléfono real | Cumple (2026-11-20): 004 M4 en el Nothing y M5 en el S9+; M3 con 1 piso (3.8 m, barómetro), aceptado por el usuario |
+| CA-7 | Caso manual M25 | Manual, teléfono real | Cumple (salida del 2026-11-18; ajustes de batería revisados por USB el 2026-11-20) |
+| CA-8 | Caso manual M30 | Manual, teléfono real | Cumple, aceptado por el usuario (2026-11-20): medido con el teléfono quieto en el Nothing, no caminando |
+| CA-9 | Caso manual M31 | Manual, teléfono real | Cumple (2026-11-19, Nothing; 008 M3 pasos 3 y 4 por las pruebas de T66) |
+| CA-10 | Caso manual M32 | Manual, teléfono real | Cumple (2026-11-20, Nothing): sonó y vibró en las 10 |
+| CA-11 | Caso manual M32 | Manual, teléfono real | Cumple (2026-11-20, Nothing): 10 de 10, sin alertas |
+| CA-12 | Caso manual M33 | Revisión | Cumple (2026-11-18): se conservan los valores |
+| CA-13 | Caso manual M20, `lib/db/espera.test.ts` y `activities.test.ts` | Manual y automatizada | Cumple (emulador) |
+| CA-14 | `prisma-disponibilidad.filter.spec.ts`, `frontend/lib/routes/status.test.ts` y caso manual M21 | Automatizada y manual | Cumple (Vitest y emulador) |
+| CA-15 | `backend/src/route/recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
+| CA-16 | `recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
+| CA-17 | `backend/src/activity/distancia.spec.ts`, `frontend/lib/metrics/oldPoints.test.ts` y caso manual M23 | Automatizada y manual | Cumple (Vitest, emulador y script con ruta de prueba) |
+| CA-18 | Caso manual M24 | Manual, teléfono real | Cumple por RN-3: no reproducible (20 de 20 en el Nothing Phone 2) |
+| CA-19 | Reporte de campo en este archivo (T56) | Revisión | Cumple (2026-11-20): F1 a F8 tienen severidad y resolución |
+| CA-20 | Caso manual M19 | Manual, teléfono real | Cumple (2026-11-19) |
+| CA-21 | Caso manual M19 | Manual, teléfono real | Cumple (2026-11-20, Nothing, en casa fuera de la zona) |
+| CA-22 | `npm run test:e2e`, 5 veces seguidas | Automatizada | Cumple (5 de 5, 88 pruebas) |
+| CA-23 | Pruebas nuevas y lista revisada en T47 | Automatizada y revisión | Cumple (28 pruebas nuevas; resto anotado) |
+| CA-24 | Revisión de T48 y T57 | Revisión | Cumple (2026-11-20): T63 a T69 tienen pruebas que fallan sin la corrección, salvo T65 y T66, verificadas como se anota en cada una |
+| CA-25 | `npm test` y `npm run test:e2e` en backend, Vitest en frontend, y `npm run lint` | Automatizada | Cumple (2026-11-20, `/spec-verify`): 783 pruebas en el frontend, 471 en el backend y 88 e2e pasan; `tsc` del frontend pasa; lint sin errores, con 3 advertencias |
+| CA-26 | Caso manual M34 | Manual | Cumple (2026-11-20): emulador, y 007 M8 y 009 M1 en teléfonos reales |
+| CA-27 | Caso manual M35 | Postman | Cumple (2026-11-18, T59): 134 pruebas, con un runner de los scripts de la colección |
+| CA-28 | Revisión de estados en T61 | Revisión | Cumple (2026-11-20): 004, 009 y 010 pasan a Implementada, confirmado por el usuario; `roadmap.md` actualizado |
+| CA-29 | Reporte de campo en este archivo (T56) | Revisión | Cumple (2026-11-20), salvo el nombre del sendero, que lo agrega el usuario |
 | CA-30 | Caso manual M1 | Manual | Cumple (emulador) |
 | CA-31 | `frontend/lib/map/offlineZones.test.ts` y caso manual M17 | Automatizada y manual | Cumple (Vitest y emulador) |
 | CA-32 | Caso manual M17 | Manual | Cumple (emulador) |
@@ -316,7 +605,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-35 | Caso manual M1 | Manual | Cumple (emulador) |
 | CA-36 | Caso manual M2 | Manual | Cumple (emulador) |
 | CA-37 | Caso manual M3 | Manual | Cumple (emulador) |
-| CA-38 | Caso manual M4 | Manual | Parcial: falta TalkBack |
+| CA-38 | Caso manual M4 | Manual | Cumple (paso 1 en el emulador y en el Nothing; paso 2 con TalkBack en el Nothing, 2026-11-20) |
 | CA-39 | Caso manual M1 | Manual | Cumple (emulador) |
 | CA-40 | Caso manual M1 | Manual | Cumple (emulador) |
 | CA-41 | `user.service.spec.ts`, `update-profile.dto.spec.ts`, `user.e2e-spec.ts`, `frontend/lib/account/profile.test.ts` y caso manual M5 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
@@ -336,7 +625,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-55 | `routeCache.test.ts`, `status.test.ts` y caso manual M13 | Automatizada y manual | Cumple (Vitest y emulador) |
 | CA-56 | `routeCache.test.ts`, `status.test.ts` y caso manual M13 | Automatizada y manual | Cumple (Vitest y emulador) |
 | CA-57 | `status.test.ts` y caso manual M13 | Automatizada y manual | Cumple (Vitest y emulador) |
-| CA-58 | Caso manual M14 | Manual | Cumple en parte (emulador): favoritas y "Mis rutas"; publicar sin probar |
+| CA-58 | Caso manual M14 | Manual | Cumple en parte (emulador): favoritas y "Mis rutas" piden conexión. Publicar sin red no se corrió; en el código usa la misma revisión de red (`useRouteMutations`) que las favoritas |
 | CA-59 | Caso manual M15 | Manual | Cumple (emulador) |
 | CA-60 | `routeCache.test.ts` y caso manual M16 | Automatizada y manual | Cumple (Vitest y emulador) |
 
@@ -546,18 +835,139 @@ Antes de la fase 4, salvo que digan otra cosa, se pueden correr en el emulador, 
 1. Correr la colección completa en Postman, con el backend local.
 - **Esperado:** todas las solicitudes pasan, incluidos los cuatro endpoints de `/user/me`.
 
+**M36 — Fallo al iniciar (spec 003, CA-16)**
+1. Forzar que el primer inicio falle después de crear la actividad (un `throw` temporal en `start()`, solo en el primer intento) y presionar "Iniciar actividad".
+2. Revisar la pantalla, el registro y la base del teléfono.
+3. Presionar "Iniciar actividad" de nuevo, grabar unos segundos y detener.
+4. Quitar el `throw`.
+- **Esperado:** en el paso 2 la pantalla sigue en "Nueva actividad" con "No se pudo iniciar la actividad. Intenta de nuevo.", no sale "Uncaught (in promise)", y la actividad creada queda cerrada como en CA-10, sin ninguna en `RECORDING`. En el paso 3 la actividad inicia y se graba normalmente.
+
 ## Reporte de la prueba de campo
 
 Se llena en T56. Sin dirección de casa ni datos de los contactos.
 
 - **Fecha y lugar:**
-- **Teléfonos:** Galaxy S9+, Nothing Phone 2
-- **Tipo de actividad:**
-- **Resultados por CA:**
+  - Salida principal el 2026-11-18, de 17:42 a 18:50 UTC, en un sendero de Baja California de ~4.2 km y ~200 m de subida, según Strava. Falta el nombre del sendero, que lo pone el usuario.
+  - Ensayo y pruebas cerca de casa el 2026-11-10 y el 2026-11-11.
+  - Casos en teléfono real del 2026-11-18 al 2026-11-20: M19, M30 a M32, M4 y el resto de M25 y M29.
+- **Teléfonos:** Galaxy S9+ (SM-G9650, con barómetro) y Nothing Phone 2 (A065, Android 16, sin barómetro). Build de campo con la URL del túnel y `EXPO_PUBLIC_BATTERY_TEST=1`. En el Nothing, desde el 2026-11-18, la build de diagnóstico de F5. Strava como referencia.
+- **Tipo de actividad:** senderismo, de 1:08 en los dos teléfonos. Las pruebas de bicicleta y carro se simularon en el emulador (CA-4) o se grabaron en carro (F4).
+- **Resultados por CA** (el detalle está en "Verificación" y en cada tarea):
+  - Cumplen en teléfono real: CA-1, CA-3, CA-6, CA-7, CA-9, CA-10, CA-11, CA-20 y CA-38.
+  - CA-4 cumple con la simulación del emulador; el usuario la dio por aceptable.
+  - CA-12 (M33): se conservan los valores.
+  - CA-18: no se pudo reproducir (20 de 20).
+  - CA-2 y CA-5 no cumplen por F5, pasado a la 012. La distancia de CA-2 se aceptó con +5.1 %.
+  - CA-8 cumple con el teléfono quieto; falta caminando.
+  - CA-21 falta grabar fuera de la zona.
+  - CA-26: la regresión pasa.
 - **Fallos:**
 
 | Fallo | Severidad | Resolución |
 |---|---|---|
+| F1 — Una actividad cerrada sin "Detener" puede quedar con el fin antes del inicio y no subir nunca (ver abajo) | Bloqueante | Corregido en T63; la actividad del Nothing subió |
+| F2 — Con la pantalla bloqueada, los dos teléfonos dejan de grabar puntos durante casi toda la salida, y la detección de inactividad tampoco corre (ver abajo) | Mayor. En los dos fue el permiso, no el código | Corregido: aviso antes de iniciar (T66). En la salida del 2026-11-18 los dos grabaron sin huecos |
+| F3 — Con la pantalla apagada el barómetro no entrega lecturas, y la actividad queda con fuente "barómetro" y 0 m de elevación (ver abajo) | Mayor; afecta CA-2 | Corregido en T64 y T65. En la salida del 2026-11-18 el S9+ midió 212 m con barómetro contra 201 m de Strava |
+| F4 — A velocidad de carro o bici, con un punto cada 10 s, el suavizado de la distancia recorta 8 a 16 % (ver abajo) | Menor; afecta CA-4 | Corregido en T67: con los puntos reales, el carro queda entre −5.2 y −2.4 % de Strava y la caminata igual |
+| F5 — En segundo plano, la altitud del GPS alterna entre la real y un valor casi fijo (~−15 m), y la elevación con GPS sale casi 4 veces la real (ver abajo) | Mayor; afecta CA-2 en teléfonos sin barómetro y el perfil de las rutas (M28) | **Pasado a la 012** (decidido con el usuario, 2026-11-20). CA-2 y CA-5 quedan sin cumplir por F5. Los datos de `diag_f5`, tomados solo con el teléfono quieto, muestran altitudes fijas con precisión vertical de 1 m, así que filtrar por `altitudeAccuracy` quizá no baste; falta la caminata de diagnóstico |
+| F6 — El eje del perfil de una ruta mide la suma punto a punto, no la distancia de la ruta: en M28, 4 996 contra 4 461 m (+12 %) | Menor; afecta M28 | Corregido en T68 (decidido con el usuario, 2026-11-20). Las rutas ya publicadas conservan su perfil |
+| F7 — Si el backend no responde al abrir la app, Inicio queda en "No se pudo cargar tu perfil" y no se recupera cuando vuelve la conexión; hay que cerrar y abrir la app (ver abajo) | Mayor: la función no sirve hasta reabrir la app | Corregido en T69 (decidido con el usuario, 2026-11-20); verificado con pruebas, no en un teléfono |
+| F8 — Si se cambia el tamaño de letra con la app abierta, los textos que ya estaban en pantalla se cortan hasta reabrirla: en Seguridad, los botones de "Tiempo sin moverme" y "Cuenta regresiva" muestran el número sin "min", y en "Mis actividades" se corta la distancia (ver abajo) | Menor. Es el límite ya anotado en la spec 003 (CA-14) | **Aceptado por el usuario** (2026-11-20): es el costo de que cambiar la letra no corte la grabación |
+
+- **F7, detalle (2026-11-19):** antes de M31, en el Nothing, la app se abrió con el túnel apagado. Ya con el túnel arriba, el teléfono llegaba al backend (`curl` desde el teléfono y `GET /user/profile` con la cuenta de Postman, ambos por el túnel, respondían), pero Inicio seguía con el error y sin el aviso de "Seguridad activa". Al cerrar y abrir la app cargó todo. En el frontend no se usan `onlineManager` ni `focusManager` de TanStack Query, así que la consulta con error no se repite al volver la red ni al regresar a la app. Ninguna spec lo pide de forma explícita: la 010 (CA-16) habla solo del mapa.
+  Pasó dos veces el 2026-11-19: la segunda, el túnel daba `502` en 1 de cada 3 peticiones (tras 5 a 11 s), con el backend respondiendo en local. Con la app abierta en un `502`, la tarjeta de Seguridad de Inicio sí era correcta: el usuario había quitado a su único contacto al empezar M1.
+- **F8, detalle (2026-11-20):** en 009 M1, hecho por el usuario en un teléfono real. En modo claro todo coincide. Con la letra del sistema en la opción más grande, se cortan al menos dos textos:
+  - En Seguridad, los botones de "Tiempo sin moverme" y "Cuenta regresiva" muestran el número y no "min".
+  - En "Mis actividades", la distancia.
+  
+  - **Causa:** el usuario cambió el tamaño de letra sin cerrar la app. Con la app reabierta y `font_scale` 1.3 (la opción que tenía el Nothing), las dos pantallas se ven completas: los botones bajan de fila con "min", y las distancias y los tiempos caben.
+  - **Ya estaba documentado:** es el límite anotado en la spec 003 (CA-14). `fontScale` está en `configChanges` para que cambiar la letra no corte la grabación (hallazgo de la spec 010). Por eso React Native no vuelve a medir los textos que ya están en pantalla; las pantallas nuevas sí salen bien.
+  - **009 M1 con letra grande pasa** con la app reabierta, que es como lo prueba M1. Queda decidir en T56 si se acepta el límite o se fuerza a volver a medir los textos al cambiar la letra.
+
+**Antes de la salida (2026-11-10).** Actividades grabadas por el usuario sin backend ni internet, sincronizadas después por USB. No cuentan como la prueba de campo (M25 a M33), pero dejan datos y un fallo.
+- **Mismo recorrido en los dos teléfonos**, grabado como ciclismo. Por la velocidad (mediana 25 km/h, máximo 113 km/h), parece hecho en carro.
+
+  | | S9+ | Nothing Phone 2 |
+  |---|---|---|
+  | Duración | 7:24 | 7:29 |
+  | Distancia | 4 433 m | 4 440 m (0.2 % de diferencia) |
+  | Puntos | 190, cada 2 s | 190, cada 2 s; un hueco de 34 s al empezar |
+  | Precisión, mediana | 3.2 m | 3.8 m |
+  | Elevación | barómetro: +51 / −42 m | GPS: +28 / −14 m |
+  | Desnivel neto | +8 m por presión, +7 m por GPS | +15 m por GPS |
+
+  Ninguno tiene huecos durante el recorrido, saltos de más de 50 m/s ni la ubicación vieja al inicio. Sin app de referencia no sirve para CA-2.
+- **Regreso en el S9+**, también como ciclismo: 4.03 km en 6:45, +26 / −33 m. El desnivel neto es parecido al de ida, en sentido contrario.
+- **Un senderismo de 70 s en el S9+**, quieto: 2 puntos y 0 m.
+- **Teléfono y servidor** tienen la misma distancia, la misma elevación y el mismo número de puntos en las 4.
+- **F1, detalle:** en el Nothing Phone 2, una actividad del 2026-11-07 seguía en `PENDING_SYNC` con el error "El fin de la actividad no puede ser anterior al inicio".
+  - **Causa:** su único punto tiene la hora del GPS 95 ms antes de `startedAt`. Al cerrarla sin "Detener", `endedAt` tomó la hora del último punto.
+  - **Dónde:** `closeOrphanActivities` (`lib/db/activities.ts`) y `cierrePendiente` (`lib/activity/inicio.ts`) hacen lo mismo. Un primer punto unos ms antes del inicio es normal: la del Nothing de este día empezó con uno 0.6 s antes.
+  - **Corrección propuesta:** usar como fin el mayor entre el último punto y el inicio, y reparar una vez las actividades pendientes que ya tengan el fin antes del inicio. Toca la spec 003, CA-10.
+
+**Salida (2026-11-11), senderismo, 08:21 a 09:17.** Los dos teléfonos con sesión de seguridad y Strava en el Nothing como referencia. Las dos actividades se sincronizaron solas.
+
+| | S9+ | Nothing Phone 2 | Strava |
+|---|---|---|---|
+| Duración | 55:38 | 55:43 | — |
+| Distancia | 1 180 m (−72 %) | 2 107 m (−51 %) | 4.29 km |
+| Elevación ganada | 31 m, barómetro | 124 m, GPS (−41 %) | 208 m |
+| Puntos | 62 | 37 | — |
+
+- **Resultado:** CA-1 y CA-2 no cumplen, por F2. La distancia y la elevación no se pueden juzgar contra RN-10 hasta que la grabación no tenga huecos. CA-3 cumple: el primer punto de cada uno es de la hora de inicio.
+- **F2, detalle:** los puntos llegan cada 4 a 6 s y con precisión de 3 a 6 m mientras hay, pero se cortan.
+  - **S9+:** sin puntos de 08:24:34 a 08:29:12 y de 08:29:49 a 09:15:55 (46 min).
+  - **Nothing:** seis huecos de 3 a 20 min. Entre ellos solo hay puntos sueltos, casi siempre de a dos.
+  - **Los dos vuelven a las 09:15:55,** con menos de un segundo de diferencia, y siguen bien hasta "Detener" a las 09:17.
+  - **No llegó ningún "¿Estás bien?" ni alerta** en 46 min sin puntos. El detector solo corre cuando llega una ubicación (segundo plano) o con el temporizador de la pantalla (primer plano). Que tampoco corriera indica que la app entera dejó de ejecutarse, no solo el GPS.
+  - **No hay saltos ni puntos descartados:** el procesador solo descarta los que están a menos de 5 m del anterior y la ubicación vieja del primer minuto.
+- **Causas posibles, por confirmar:**
+  1. Grabó en primer plano (`watchPositionAsync`) porque faltaba el permiso "Permitir todo el tiempo". Con la pantalla bloqueada, ese modo no recibe puntos.
+  2. Grabó en segundo plano, pero el ahorro de batería de Samsung y de Nothing detuvo el servicio.
+- **Para distinguirlas:** si se vio la notificación fija de "grabando", el permiso de ubicación de SendaBC en cada teléfono, y el registro del teléfono (`adb logcat`) si todavía lo guarda.
+- **S9+, causa confirmada (1):** `ACCESS_BACKGROUND_LOCATION` está denegado con la marca `USER_SET`, así que grabó en primer plano. El registro muestra la pantalla apagada (en reposo) hasta las 09:15:54, cuando se desbloqueó con la huella. El primer punto después del hueco es de las 09:15:55. Es lo que la spec 008 (CA-10) define sin ese permiso: la app avisa con "Detección solo con la app abierta" y no vuelve a pedir el permiso si el sistema ya no deja preguntar. M25 pide el permiso concedido, así que en el S9+ falló la preparación, no el código.
+- **Nothing, misma causa:** `ACCESS_BACKGROUND_LOCATION` está denegado con `USER_SET|USER_FIXED` ("no volver a preguntar"), así que la app no lo pide de nuevo. Su registro empieza a las 09:15 y ya no muestra los huecos. Los puntos sueltos entre los huecos coinciden con ratos en que la app estaba en pantalla.
+- **Para decidir en T56:** el aviso es fácil de pasar por alto y, con la pantalla apagada, la actividad pierde puntos sin que el usuario lo note. Se puede pedir un aviso más claro antes de iniciar, con un acceso directo a los ajustes del permiso.
+- **Visto de paso, descartado después:** se sospechó que `expo-location` ignoraba el `timeInterval` de 10 s en segundo plano (`as? Long` en `LocationArguments.kt`). Las actividades de la tarde, ya en segundo plano, tienen un punto cada 10 s: el intervalo sí se respeta. Los puntos cada 4 s de la mañana eran del modo primer plano (2 s más el mínimo de 5 m).
+
+**Más tarde (2026-11-11), en carro, como ciclismo.** Los dos teléfonos ya en segundo plano, con la pantalla apagada todo el tiempo. Strava en el Nothing. No cuentan para M25 (no es senderismo), pero prueban el segundo plano y dejan F3 y F4.
+
+| | A1, S9+ | A1, Nothing | A1, Strava | A2, S9+ | A2, Nothing | A2, Strava |
+|---|---|---|---|---|---|---|
+| Distancia | 4 385 m (−16 %) | 4 536 m (−14 %) | 5.25 km | 3 313 m (−8 %) | 3 271 m (−9 %) | 3.59 km |
+| Suma punto a punto | 5 207 m (−1 %) | 5 152 m (−2 %) | | 3 614 m (+1 %) | 3 538 m (−1 %) | |
+| Elevación ganada | 0 m, barómetro | 61 m, GPS (+11 %) | 55 m | 0 m, barómetro | 12.5 m, GPS (−1.5 m) | 14 m |
+| Puntos | 67 | 70 | | 31 | 30 | |
+
+- **Segundo plano:** puntos cada 9 a 10 s durante todo el recorrido, con la pantalla apagada. Sin huecos, salvo de 38 a 48 s al empezar (primer fijo del GPS) y uno de ~40 s en A1, en el mismo sitio en los dos teléfonos (parado: los puntos a menos de 5 m del anterior no se guardan). Esto cumple lo que M25 pide del tiempo bloqueado.
+- **Elevación con GPS (Nothing):** dentro de RN-10 en las dos (±30 % o ±30 m).
+- **F3, detalle:** `expo-sensors` deja de escuchar el sensor cuando la actividad de Android pasa a segundo plano (`OnActivityEntersBackground` → `onHostPause` en `SensorProxy.kt`). Con la pantalla apagada no llegan lecturas. `finalizeMetrics` usa la fuente elegida al iniciar sin revisar si hubo lecturas, así que la actividad queda con 0 / 0 m y fuente "barómetro". En la salida de la mañana pasó a medias: solo cuenta lo que hubo con la pantalla encendida.
+  - **Opciones para T56:** usar la altitud del GPS cuando las lecturas no cubren la actividad (sencillo, pierde la precisión del barómetro), o leer el barómetro desde código nativo dentro del servicio en primer plano (más trabajo). Toca la spec 004 (CA-12 a CA-14) y su RN-3.
+- **F4, detalle:** la suma punto a punto queda a 2 % o menos de Strava. Lo que se pierde viene del promedio de 5 puntos (`SMOOTHING_WINDOW`): a 10 s entre puntos y 30 a 100 km/h, la ventana abarca cientos de metros y corta las curvas. A pie (~14 m entre puntos) la ventana abarca ~60 m y debería perder mucho menos, pero falta confirmarlo en M26. Con bici a 20 km/h la ventana abarca ~270 m.
+  - **Opciones para T56:** que la ventana dependa del tiempo o la distancia entre puntos en lugar de la cantidad, o no suavizar cuando los puntos están lejos entre sí. Toca la spec 004 (plan D3) y el cálculo del backend (`distancia.ts`, D7).
+
+**Salida (2026-11-18), senderismo, 17:42 a 18:50 (UTC).** Los dos teléfonos con "Permitir todo el tiempo" y la versión con T63 a T66. Strava como referencia. Las dos actividades se sincronizaron solas.
+
+| | S9+ | Nothing Phone 2 | Strava |
+|---|---|---|---|
+| Duración | 1:08:26 | 1:08:02 | ~1 h, recortada a la hora de "Detener" |
+| Distancia | 4 461 m (+5.2 %) | 4 458 m (+5.1 %) | 4.24 km |
+| Suma punto a punto | 4 996 m | 4 775 m | |
+| Elevación ganada | 212 m, barómetro (+6.5 %) | 774 m, GPS (+289 %) | 199 m |
+| Puntos | 394, cada ~10 s | 410, cada ~10 s | |
+| Precisión, mediana | 9 m | 3 m | |
+
+- **F2 resuelto en campo:** puntos cada 9 a 10 s durante todo el recorrido, con la pantalla bloqueada. Solo hay tramos de 64 a 141 s sin puntos guardados, en el mismo sitio en los dos (parado: no se guardan puntos a menos de 5 m). Cumple lo que M25 pide del tiempo bloqueado.
+- **CA-3:** el primer punto del Nothing es de la hora de inicio; el del S9+ es de 26 s antes, a 11 m del siguiente, dentro del margen de 30 s (spec 003, RN-5). No hay ubicación vieja.
+- **F3 resuelto en campo:** el S9+ midió con barómetro toda la salida, con la pantalla bloqueada. 212 m contra 199 m está dentro de RN-10 (±15 %).
+- **Otra actividad del Nothing,** de 6 s y 1 punto, a las 17:41: un inicio de prueba sin recorrido.
+- **F5, detalle:** en los dos teléfonos, la altitud del GPS salta entre la real (sube de −17 a ~120 m) y un valor casi fijo de −13 a −20 m, a veces en puntos seguidos y a veces durante varios minutos (de 18:24 a 18:34 en el S9+, siempre −13 m mientras avanza). Son 173 de 394 puntos en el S9+ y 130 de 410 en el Nothing. La precisión horizontal de esos puntos es normal (8 a 11 m), así que el filtro de precisión no los quita. Un valor fijo mientras la persona avanza indica que esa ubicación no trae altitud medida. Con el promedio de 5 y el umbral de 10 m, cada salto suma una subida falsa de ~100 m.
+  - En la caminata del 2026-11-11 (primer plano, punto cada 2 s) y en el carro (segundo plano, terreno casi plano) no se vio, o no pesó.
+  - **Probado con los puntos de hoy, sin cambiar el código:** la mediana de 15 en lugar del promedio de 5 deja 492 m en el Nothing; descartar las altitudes que implican más de 0.5 m/s de velocidad vertical deja 412 m. Ninguna llega a RN-10 (±30 %): son demasiados puntos malos.
+  - **Opción para T56:** guardar la precisión vertical de cada punto (`coords.altitudeAccuracy` de `expo-location`) e ignorar la altitud de los puntos sin ella o con una mala. Falta comprobar en un teléfono que esos puntos la traen vacía o grande. Para eso, el 2026-11-18 se instaló en el Nothing un build de diagnóstico (solo en `C:\dev\sbc`, sin commit): guarda en la tabla `diag_f5` cada ubicación tal como llega, con `altitudeAccuracy`, y es depurable para leerla con `run-as`. Falta una caminata de 15 a 20 min con la pantalla bloqueada. Toca la spec 004 (CA-11, RN-3) y la tabla de puntos del teléfono.
+- **Strava:** sin recortar marcaba 5.04 km y 201 m, porque siguió grabando después de "Detener". El usuario la recortó a la hora de fin de la app: 4.24 km, ~1 h y 199 m. Strava empezó un poco antes que la app, con el usuario quieto, así que cubre el mismo recorrido; la diferencia de tiempo es cómo cuenta Strava el tiempo.
+- **Distancia (CA-2):** los dos teléfonos quedan 5.1 y 5.2 % arriba de Strava, apenas fuera de ±5 % (RN-10), y a menos de 0.1 % entre sí. **Decidido con el usuario (2026-11-18):** se acepta como dentro de CA-2; la diferencia con el límite es menor que el error de la referencia. CA-2 queda pendiente solo por la elevación con GPS (F5).
+- **F4 a pie:** el suavizado no recorta de más. La distancia suavizada queda 11 % (S9+) y 7 % (Nothing) bajo la suma punto a punto, y aun así un poco arriba de Strava: a pie quita ruido. F4 solo afecta a velocidad de bici o carro.
 
 ## Commits
 

@@ -60,6 +60,7 @@ describe('Publicar rutas, detalle y favoritas (e2e, spec 007)', () => {
   // Actividades del servidor (id de POST /activities/sync).
   let larga: string; // A, 3 km, 28 puntos
   let corta: string; // A, 1 km
+  let conSalto: string; // A, 3 km, 29 puntos con un salto imposible a la mitad
   let deB: string; // B, 3 km
   // La ruta que A publica con `larga`; la comparten las pruebas en orden.
   let ruta: string;
@@ -125,9 +126,16 @@ describe('Publicar rutas, detalle y favoritas (e2e, spec 007)', () => {
 
     ({ id: userA, token: tokenA } = await crearUsuario(emailA, 'Autora A'));
     ({ id: userB, token: tokenB } = await crearUsuario(emailB, 'Autor B'));
-    [larga, corta] = await subir(tokenA, [
+    // El punto 15 está ~100 km al este, 30 s después del anterior: un salto que la app no
+    // suma a la distancia (spec 004, CA-25). Los demás siguen la línea de 3 km.
+    const saltada = actividad(3_000, 29);
+    saltada.points = saltada.points.map((p) =>
+      p.sequence === 15 ? { ...p, longitude: INICIO.lng + 1 } : p,
+    );
+    [larga, corta, conSalto] = await subir(tokenA, [
       actividad(3_000, 28),
       actividad(1_000, 10),
+      saltada,
     ]);
     [deB] = await subir(tokenB, [actividad(3_000, 28)]);
 
@@ -445,6 +453,28 @@ describe('Publicar rutas, detalle y favoritas (e2e, spec 007)', () => {
   it('B quita de favoritas la ruta borrada y desaparece de su lista (CA-19)', async () => {
     await como(tokenB).delete(`/routes/${ruta}/favorite`).expect(204);
     expect(await favoritaDe(tokenB, ruta)).toBeUndefined();
+  });
+
+  it('un salto imposible no se dibuja en el recorrido ni suma al perfil (spec 011, CA-15, CA-16)', async () => {
+    const res = await como(tokenA)
+      .post('/routes')
+      .send({ activityId: conSalto, name: 'Cañada con salto' })
+      .expect(201);
+
+    // [longitud, latitud]: ningún vértice se va hacia el punto falso.
+    for (const [lng] of res.body.path as [number, number][]) {
+      expect(lng).toBeCloseTo(INICIO.lng, 6);
+    }
+    expect(res.body.start.longitude).toBeCloseTo(INICIO.lng, 6);
+    // 28 puntos sin el salto. El eje termina en la distancia de la ruta (spec 007, RN-8; spec
+    // 011, F6), y los tramos quedan parejos: si el salto de ~200 km de ida y vuelta contara, un
+    // solo tramo se llevaría casi todo el eje.
+    const perfil = res.body.elevationProfile as [number, number][];
+    expect(perfil).toHaveLength(28);
+    expect(res.body.distanceMeters).toBe(3_000);
+    expect(perfil.at(-1)![0]).toBeCloseTo(3_000, -1);
+    const tramos = perfil.slice(1).map(([d], i) => d - perfil[i][0]);
+    expect(Math.max(...tramos)).toBeLessThan(3 * Math.min(...tramos));
   });
 
   it('un id que no es UUID responde 404', async () => {

@@ -1,6 +1,6 @@
 # 004 — Métricas de actividad y resumen
 
-- **Estado:** Implementada con pendientes (aprobada 2026-10-05)
+- **Estado:** Implementada (aprobada 2026-10-05; cerrada 2026-11-20)
 - **Semana:** 4
 - **Autor(es):**
 - **Fecha:** 2026-10-05
@@ -47,8 +47,8 @@ Estas métricas corresponden a los campos de actividad del modelo de datos del s
 
 - **CA-10 (HU-2):** La elevación ganada es la suma de las subidas del recorrido y la elevación perdida es la suma de las bajadas, ambas en valor positivo. Una no reduce a la otra.
 - **CA-11 (HU-2):** Las variaciones de altitud menores al umbral de ruido no suman ni a la elevación ganada ni a la perdida. Umbral: **3 m** con barómetro y **10 m** con GPS. Dado un conjunto de lecturas de prueba que oscilan dentro del umbral sin subir ni bajar de verdad, ambas elevaciones son 0.
-- **CA-12 (HU-2):** Dado un teléfono con barómetro, la elevación se calcula con los cambios de presión registrados durante la actividad, y el resumen indica "Elevación medida con barómetro".
-- **CA-13 (HU-2):** Dado un teléfono sin barómetro, o si el sistema no permite leerlo (p. ej. se negó el permiso de sensores de movimiento), la actividad se graba igual, la elevación se calcula con la altitud GPS y el resumen indica "Elevación estimada con GPS".
+- **CA-12 (HU-2):** Dado un teléfono con barómetro, la elevación se calcula con los cambios de presión registrados durante la actividad, también con la pantalla apagada o la app en segundo plano, y el resumen indica "Elevación medida con barómetro".
+- **CA-13 (HU-2):** Dado un teléfono sin barómetro, si el sistema no permite leerlo (p. ej. se negó el permiso de sensores de movimiento), o si sus lecturas no cubren la actividad (RN-7), la actividad se graba igual, la elevación se calcula con la altitud GPS y el resumen indica "Elevación estimada con GPS".
 - **CA-14 (HU-2):** Las lecturas del barómetro se toman solo mientras hay una actividad grabando y se guardan en el teléfono junto con la actividad, sin necesidad de conexión.
 
 ### Métricas en vivo
@@ -64,6 +64,7 @@ Estas métricas corresponden a los campos de actividad del modelo de datos del s
 
 ### Historial
 
+- 2026-11-20 — Pasa a Implementada por la spec 011 (CA-6, M29). M3 se hizo en el S9+ con un piso, 3.8 m con barómetro, aceptado por el usuario. M4 se hizo en el Nothing Phone 2 y M5 en el S9+, con 0 m. La elevación con GPS en segundo plano (011, F5) pasa a la 012.
 - 2026-10-08 — Implementada con pendientes: T1–T20 hechas, 71 pruebas Vitest pasan y la mayoría de los CA se verificaron en el emulador. Faltan los casos M2, M3, M4, M5, M7 (paso 1) y M8 (ver `tasks.md`).
 - 2026-10-06 — Se agrega CA-25 (saltos de ubicación imposibles), hallado al probar en el emulador: el primer punto fue la ubicación por defecto del emulador y la distancia sumó ~789 km. Aprobado por el usuario.
 - **CA-20 (HU-6):** Desde la pestaña Actividades puedo abrir "Mis actividades": una lista de las actividades terminadas del usuario de la sesión, de la más reciente a la más antigua, con fecha, tipo, duración y distancia.
@@ -80,6 +81,7 @@ Estas métricas corresponden a los campos de actividad del modelo de datos del s
 - RN-4: Las métricas del resumen y del historial se calculan a partir de lo guardado en el teléfono, no de lo que se mostró en pantalla durante la grabación.
 - RN-5: El ritmo o la velocidad promedio se derivan de la distancia y la duración; no se guardan como dato aparte.
 - RN-6: El historial solo muestra actividades con dueño igual al usuario de la sesión. Las actividades grabadas antes de que existiera el dueño (spec 003, T1) no aparecen.
+- RN-7: Las lecturas del barómetro cubren la actividad si los tramos de más de 60 s sin lecturas suman menos del 10 % de su duración, contando del inicio a la primera lectura y de la última al fin. Si no la cubren, toda la actividad usa GPS (RN-3).
 
 ## Requisitos no funcionales
 
@@ -112,6 +114,7 @@ Resueltas el 2026-10-05:
 
 ## Historial
 
+- 2026-11-12 — CA-12 pide las lecturas también con la pantalla apagada; CA-13 y RN-7 nuevos: si las lecturas no cubren la actividad, se usa GPS. La spec 011 (prueba de campo, F3) encontró que con la pantalla apagada no llegaba ninguna lectura y la actividad quedaba con 0 m y fuente "barómetro". Aprobado por el usuario.
 - 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). CA-20: "Mis actividades" se abre desde la pestaña Actividades, no desde un botón de la pantalla principal (spec 009, RN-2). La "pantalla principal" de CA-2 es la pestaña Inicio. Casos M1, M2 y M6 a M8.
 - 2026-10-05 — Aprobada por el usuario.

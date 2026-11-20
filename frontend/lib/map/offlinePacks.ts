@@ -4,10 +4,12 @@ import {
   ZONE_MAX_ZOOM,
   ZONE_MIN_ZOOM,
   ZONE_STYLE_KEYS,
+  avanceDePaquete,
   boundsParaMapbox,
   nombreDePaquete,
   type PackInfo,
   type PackLive,
+  type PackProgress,
   type ZoneBounds,
   type ZoneMetadata,
   type ZoneStyle,
@@ -47,21 +49,14 @@ export function paquetesVivos(): Record<string, PackLive> {
   return vivos;
 }
 
-type Avance = { name: string; state: string; percentage: number | null; requiredResourceCount?: number };
-
-function alAvanzar(_pack: unknown, status: Avance) {
-  // El primer aviso de Mapbox llega con 0 de 0 recursos, y rnmapbox lo marca como completo y deja
-  // de escuchar ese paquete (T36: la zona salía lista sin haberse descargado). Solo es completo
-  // con recursos; si no, se vuelve a escuchar cuando rnmapbox termine de quitar el oyente.
-  const requeridos = status.requiredResourceCount ?? 0;
-  const completo = status.state === 'complete' && requeridos > 0;
-  if (status.state === 'complete' && !completo) {
+function alAvanzar(_pack: unknown, status: PackProgress & { name: string }) {
+  // Un "completo" sin recursos no lo es (T36, avanceDePaquete): se vuelve a escuchar cuando
+  // rnmapbox termine de quitar el oyente.
+  const { live, resubscribe } = avanceDePaquete(status);
+  if (resubscribe) {
     setTimeout(() => void offline.subscribe(status.name, alAvanzar, alFallar), 0);
   }
-  vivos[status.name] = {
-    state: completo ? 'complete' : 'active',
-    percentage: completo ? 100 : requeridos > 0 ? status.percentage : 0,
-  };
+  vivos[status.name] = live;
   avisar();
 }
 

@@ -8,6 +8,8 @@ import {
   type ActivityType,
 } from '../../lib/db/activities';
 import { finalizeMetrics } from '../../lib/db/activityMetrics';
+import { cierrePendiente, iniciarOLimpiar } from '../../lib/activity/inicio';
+import { decidirSegundoPlano, type ModoGrabacion } from '../../lib/activity/segundoPlano';
 import { getDetectorState, saveDetectorState } from '../../lib/db/safety';
 import { syncEngine } from '../../lib/sync';
 import { createLiveMetrics } from '../../lib/metrics/summary';
@@ -32,12 +34,15 @@ export type PermissionError = 'denied' | 'blocked';
 // background: tarea de expo-task-manager, sigue con la pantalla bloqueada (spec 008, D4).
 // foreground: watchPositionAsync con la pantalla encendida, como en la spec 003 (sin el permiso
 // en segundo plano, CA-10).
-export type TrackerMode = 'background' | 'foreground';
+export type TrackerMode = ModoGrabacion;
 
 export type StartOptions = {
   // Explica para qué es el permiso en segundo plano y dice si el usuario quiere darlo. Solo se
   // pasa con contactos activos: sin ellos no hay a quién avisar (spec 008, CA-10).
   explicarSegundoPlano?: () => Promise<boolean>;
+  // Con contactos activos, si el sistema ya no deja pedir el permiso: avisa antes de iniciar.
+  // Devuelve true para grabar así, o false si el usuario fue a los ajustes (spec 008, CA-10).
+  avisarSinPermisoSegundoPlano?: () => Promise<boolean>;
   // Se llama con la actividad ya creada y antes de empezar a grabar, para crear su sesión de
   // seguridad: el detector solo corre si existe (spec 008, T18). Un fallo no impide grabar
   // (constitución 2.1).
@@ -65,15 +70,15 @@ async function detenerDetector(localId: number) {
   }
 }
 
-// ¿Hay permiso en segundo plano? Si no, y hay a quién avisar, lo explica y lo pide (CA-10). La
-// app funciona sin él (constitución 3.5).
-async function permisoSegundoPlano(opciones: StartOptions) {
-  const actual = await Location.getBackgroundPermissionsAsync();
-  if (actual.granted) return true;
-  if (!actual.canAskAgain || !opciones.explicarSegundoPlano) return false;
-  if (!(await opciones.explicarSegundoPlano())) return false;
-  return (await Location.requestBackgroundPermissionsAsync()).granted;
-}
+// ¿Hay permiso en segundo plano? Si no, y hay a quién avisar, lo explica y lo pide, o avisa si
+// el sistema ya no deja pedirlo (CA-10). La app funciona sin él (constitución 3.5).
+const modoDeGrabacion = (opciones: StartOptions) =>
+  decidirSegundoPlano({
+    permiso: () => Location.getBackgroundPermissionsAsync(),
+    pedir: () => Location.requestBackgroundPermissionsAsync(),
+    explicar: opciones.explicarSegundoPlano,
+    avisarSinPermiso: opciones.avisarSinPermisoSegundoPlano,
+  });
 
 export function useActivityTracker() {
   const { request } = useLocationPermission();
@@ -90,6 +95,8 @@ export function useActivityTracker() {
   // Métricas en vivo, con los mismos umbrales que el resumen (spec 004, CA-15, CA-16)
   // No se pudo cerrar la actividad al detener (spec 003, CA-12)
   const [stopFailed, setStopFailed] = useState(false);
+  // No se pudo iniciar la actividad; "Iniciar actividad" sigue disponible (spec 003, CA-16)
+  const [startFailed, setStartFailed] = useState(false);
   const [liveDistance, setLiveDistance] = useState(0);
   const [liveElevationGain, setLiveElevationGain] = useState(0);
 
@@ -112,7 +119,10 @@ export function useActivityTracker() {
     if (busy.current || modeRef.current || !userId) return;
     busy.current = true;
 
-    try {
+    const iniciar = async () => {
+      // Sin restos de un intento anterior: la limpieza solo cierra la actividad de este (CA-16)
+      activityId.current = null;
+      startedAtRef.current = null;
       const permiso = await request();
       if (!permiso.granted) {
         setPermissionError(permiso.canAskAgain ? 'denied' : 'blocked');
@@ -120,7 +130,10 @@ export function useActivityTracker() {
       }
       setPermissionError(null);
       // Con el permiso de primer plano ya concedido se puede pedir el de segundo plano (D4).
-      const modo: TrackerMode = (await permisoSegundoPlano(opciones)) ? 'background' : 'foreground';
+      // Si el usuario fue a los ajustes, no se crea nada: vuelve y presiona "Iniciar" otra vez.
+      const decision = await modoDeGrabacion(opciones);
+      if (decision === 'cancelar') return;
+      const modo: TrackerMode = decision;
 
       // 1. Fuente de la elevación: barómetro si existe y hay permiso; si no, GPS (spec 004, CA-12, CA-13)
       const elevationSource = await prepareBarometer();
@@ -201,10 +214,35 @@ export function useActivityTracker() {
       // (CA-11; spec 008, D4)
       if (modo === 'foreground') keepScreenOn();
       setStatus('recording');
+    };
+
+    try {
+      setStartFailed(false);
+      // Si falla a medias, no queda nada grabando ni una actividad en RECORDING, y se avisa en
+      // pantalla para reintentar (spec 003, CA-16)
+      const resultado = await iniciarOLimpiar(iniciar, limpiarInicioFallido, console.log);
+      if (!resultado.ok) {
+        console.log('Error iniciando la actividad:', resultado.error);
+        if (mounted.current) setStartFailed(true);
+      }
     } finally {
       busy.current = false;
     }
   }, [request, userId]);
+
+  // Deshace un inicio fallido: deja de escuchar lo que alcanzó a arrancar y, si la actividad ya
+  // se había creado, la cierra como en CA-10 antes de permitir reintentar (spec 003, CA-16; RN-1)
+  const limpiarInicioFallido = async () => {
+    dejarDeGrabar();
+    const cierre = cierrePendiente(activityId.current, lastPointAt.current, startedAtRef.current);
+    activityId.current = null;
+    startedAtRef.current = null;
+    if (mounted.current) {
+      setActivityLocalId(null);
+      setStartedAt(null);
+    }
+    if (cierre) await cerrarActividad(cierre.id, cierre.endedAt);
+  };
 
   // Deja de escuchar el GPS (o detiene la tarea), el barómetro y los puntos guardados.
   const dejarDeGrabar = () => {
@@ -290,11 +328,14 @@ export function useActivityTracker() {
   const closeOnUnmount = () => {
     if (!dejarDeGrabar()) return;
 
-    const id = activityId.current;
-    const endedAt = lastPointAt.current ?? startedAtRef.current;
-    if (id == null || !endedAt) return;
+    const cierre = cierrePendiente(activityId.current, lastPointAt.current, startedAtRef.current);
+    if (cierre) void cerrarActividad(cierre.id, cierre.endedAt);
+  };
+
+  // Cierra una actividad que dejó de grabarse sin "Detener" (al salir o al fallar el inicio)
+  const cerrarActividad = (id: number, endedAt: string) => {
     void detenerDetector(id);
-    finishActivity(id, endedAt)
+    return finishActivity(id, endedAt)
       .then(() => sessionActions.terminar(id, endedAt))
       // Como al detener: sin esto se vería sin métricas y sin subir hasta reabrir la app.
       .then(() => finalizeMetrics(id))
@@ -322,6 +363,7 @@ export function useActivityTracker() {
     startedAt,
     permissionError,
     stopFailed,
+    startFailed,
     liveDistance,
     liveElevationGain,
     start,

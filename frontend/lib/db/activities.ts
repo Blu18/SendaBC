@@ -1,5 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import type { ActivityMetrics, BarometerReading, ElevationSource } from '../metrics/summary';
+import { transaccionExclusiva } from './espera';
 import { getDb } from './sqlite';
 
 // Mismos valores que los enums ActivityType / ActivityStatus de Prisma (spec 005 los sube tal cual).
@@ -121,19 +122,39 @@ export async function countPoints(localId: number) {
 }
 
 // Cierra las actividades que quedaron en RECORDING (app cerrada o pantalla abandonada).
-// endedAt = hora del último punto, o startedAt si no tiene puntos (CA-10). Devuelve cuántas cerró.
+// endedAt = hora del último punto, o startedAt si no tiene puntos o si el último punto es
+// anterior al inicio (CA-10, F1 de la spec 011). Las horas son ISO 8601 en UTC con el mismo
+// formato, así que MAX compara bien como texto. Devuelve cuántas cerró.
 export async function closeOrphanActivities() {
   const db = await getDb();
   const result = await db.runAsync(
     `UPDATE activities
      SET status = 'PENDING_SYNC',
-         endedAt = COALESCE(
-           (SELECT p.recordedAt FROM activity_points p
-            WHERE p.activity_id = activities.local_id
-            ORDER BY p.sequence DESC LIMIT 1),
+         endedAt = MAX(
+           COALESCE(
+             (SELECT p.recordedAt FROM activity_points p
+              WHERE p.activity_id = activities.local_id
+              ORDER BY p.sequence DESC LIMIT 1),
+             startedAt
+           ),
            startedAt
          )
      WHERE status = 'RECORDING'`
+  );
+  return result.changes;
+}
+
+// Corrige las actividades pendientes que ya quedaron con el fin antes del inicio, como cerraba
+// closeOrphanActivities antes de la spec 011 (F1): el servidor las rechaza y nunca suben. El fin
+// pasa a ser el inicio, sus métricas se borran para que computeMissingMetrics las recalcule y se
+// quita el error, para que vuelvan a intentar subirse (spec 003, CA-10). Devuelve cuántas corrigió.
+export async function repararFinAntesDelInicio() {
+  const db = await getDb();
+  const result = await db.runAsync(
+    `UPDATE activities
+     SET endedAt = startedAt, distance_meters = NULL, duration_seconds = NULL,
+         elevation_gain_meters = NULL, elevation_loss_meters = NULL, sync_error = NULL
+     WHERE status = 'PENDING_SYNC' AND endedAt < startedAt`
   );
   return result.changes;
 }
@@ -289,12 +310,16 @@ export async function listClientIds() {
   return new Set(rows.map((r) => r.id));
 }
 
+// Puntos por INSERT al guardar una actividad recuperada. Con 7 columnas son 3 500
+// parámetros, lejos del tope de SQLite (32 766).
+export const PUNTOS_POR_LOTE = 500;
+
 // Guarda una actividad recuperada como SYNCED, con sus métricas y puntos, en una sola
 // transacción. No trae lecturas del barómetro (RN-6). Devuelve su local_id.
 export async function insertDownloadedActivity(activity: DownloadedActivity, userId: string) {
   const db = await getDb();
   let localId = 0;
-  await db.withExclusiveTransactionAsync(async (tx) => {
+  await transaccionExclusiva(db, async (tx) => {
     const result = await tx.runAsync(
       `INSERT INTO activities
          (client_generated_id, user_id, type, status, startedAt, endedAt, elevation_source,
@@ -316,15 +341,15 @@ export async function insertDownloadedActivity(activity: DownloadedActivity, use
     );
     localId = result.lastInsertRowId;
 
-    // Una sentencia preparada para los miles de puntos de una actividad larga.
-    const insert = await tx.prepareAsync(
-      `INSERT INTO activity_points
-       (activity_id, sequence, latitude, longitude, altitude, accuracy, recordedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
-    );
-    try {
-      for (const p of activity.points) {
-        await insert.executeAsync([
+    // Los miles de puntos de una actividad larga van en lotes: con un INSERT por punto la
+    // transacción duraba más que la espera de las otras escrituras (spec 011, CA-13; plan, R2).
+    for (let i = 0; i < activity.points.length; i += PUNTOS_POR_LOTE) {
+      const lote = activity.points.slice(i, i + PUNTOS_POR_LOTE);
+      await tx.runAsync(
+        `INSERT INTO activity_points
+         (activity_id, sequence, latitude, longitude, altitude, accuracy, recordedAt)
+         VALUES ${lote.map(() => '(?, ?, ?, ?, ?, ?, ?)').join(', ')}`,
+        lote.flatMap((p) => [
           localId,
           p.sequence,
           p.latitude,
@@ -332,10 +357,8 @@ export async function insertDownloadedActivity(activity: DownloadedActivity, use
           p.altitude,
           p.accuracy,
           p.recordedAt,
-        ]);
-      }
-    } finally {
-      await insert.finalizeAsync();
+        ])
+      );
     }
   });
   return localId;
@@ -343,6 +366,26 @@ export async function insertDownloadedActivity(activity: DownloadedActivity, use
 
 // Actividades terminadas con métricas pendientes: cerradas al abrir la app o
 // grabadas antes de la v3 (spec 004, CA-19).
+// Actividades terminadas que ya tienen distancia, para recalcular las que tienen puntos viejos
+// (spec 011, RN-11). Incluye las de cualquier cuenta y las sincronizadas.
+export async function listActivityIdsWithDistance() {
+  const db = await getDb();
+  const rows = await db.getAllAsync<{ localId: number }>(
+    `SELECT local_id AS localId FROM activities
+     WHERE status != 'RECORDING' AND distance_meters IS NOT NULL`
+  );
+  return rows.map((r) => r.localId);
+}
+
+// Guarda solo la distancia: ni el estado ni las demás métricas cambian (spec 011, RN-11).
+export async function saveDistance(localId: number, distanceMeters: number) {
+  const db = await getDb();
+  await db.runAsync(`UPDATE activities SET distance_meters = ? WHERE local_id = ?`, [
+    distanceMeters,
+    localId,
+  ]);
+}
+
 export async function listActivityIdsMissingMetrics() {
   const db = await getDb();
   const rows = await db.getAllAsync<{ localId: number }>(

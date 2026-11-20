@@ -50,6 +50,23 @@ function explicarSegundoPlano() {
     );
 }
 
+// Si el sistema ya no deja pedir el permiso en segundo plano, se avisa antes de iniciar y se
+// ofrecen los ajustes (spec 008, CA-10; spec 011, F2). true = grabar así.
+function avisarSinPermisoSegundoPlano() {
+    return new Promise<boolean>((resolve) =>
+        Alert.alert(SAFETY_MESSAGES.sinPermisoTitulo, SAFETY_MESSAGES.sinPermisoAntes, [
+            { text: SAFETY_MESSAGES.grabarAsi, style: 'cancel', onPress: () => resolve(true) },
+            {
+                text: SAFETY_MESSAGES.abrirAjustes,
+                onPress: () => {
+                    void Linking.openSettings();
+                    resolve(false);
+                },
+            },
+        ], { cancelable: true, onDismiss: () => resolve(false) })
+    );
+}
+
 // Al detener con una alerta activa se pregunta si se cancela antes (CA-26).
 type DecisionAlerta = 'cancelar' | 'mantener' | 'seguir';
 function preguntarPorAlerta() {
@@ -120,6 +137,7 @@ export default function ActivityPage() {
         startedAt,
         permissionError,
         stopFailed,
+        startFailed,
         liveDistance,
         liveElevationGain,
         start,
@@ -152,16 +170,22 @@ export default function ActivityPage() {
     const [sinNotificaciones, setSinNotificaciones] = useState(false);
     const pregunta = useAreYouOk(activityLocalId, recording);
 
+    // start() atrapa sus errores y los muestra con startFailed (spec 003, CA-16).
     const handleStart = async () => {
-        if (!hayContactos) return start(type);
-        // Se pide junto con el de ubicación (plan): también muestra la notificación del servicio
-        // que graba con la pantalla bloqueada (Android 13+).
-        setSinNotificaciones(!(await pedirPermisoNotificaciones()));
-        // La sesión de seguridad se crea con la actividad y se encola para el servidor (T18).
-        return start(type, {
-            explicarSegundoPlano,
-            alCrear: (localId) => sessionActions.iniciar(localId, userId!, regreso),
-        });
+        try {
+            if (!hayContactos) return await start(type);
+            // Se pide junto con el de ubicación (plan): también muestra la notificación del servicio
+            // que graba con la pantalla bloqueada (Android 13+).
+            setSinNotificaciones(!(await pedirPermisoNotificaciones()));
+            // La sesión de seguridad se crea con la actividad y se encola para el servidor (T18).
+            await start(type, {
+                explicarSegundoPlano,
+                avisarSinPermisoSegundoPlano,
+                alCrear: (localId) => sessionActions.iniciar(localId, userId!, regreso),
+            });
+        } catch (e) {
+            console.log('Error iniciando la actividad:', e);
+        }
     };
     const elapsed = useElapsedSeconds(startedAt, recording);
 
@@ -327,6 +351,17 @@ export default function ActivityPage() {
                 <Appear>
                     {recording && hayContactos && sinNotificaciones && (
                         <Notice title="Sin notificaciones" description={SAFETY_MESSAGES.sinNotificaciones} />
+                    )}
+                </Appear>
+
+                {/* No se pudo iniciar: "Iniciar actividad" sigue abajo para reintentar (spec 003, CA-16) */}
+                <Appear>
+                    {startFailed && !recording && (
+                        <Notice
+                            type="error"
+                            title="No se pudo iniciar la actividad"
+                            description="Intenta de nuevo."
+                        />
                     )}
                 </Appear>
 
