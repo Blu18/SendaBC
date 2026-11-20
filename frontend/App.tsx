@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, AppState, StyleSheet, View } from 'react-native';
+import * as Network from 'expo-network';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar';
 import Register from './pages/auth/register';
@@ -35,6 +36,7 @@ import { sessionActions } from './lib/safety';
 import { computeMissingMetrics, recalcularDistanciasViejas } from './lib/db/activityMetrics';
 import { setUnauthorizedHandler } from './lib/api/client';
 import { queryClient } from './lib/api/queryClient';
+import { conectarConsultas } from './lib/api/reconexion';
 import { fontFamilies, type Theme } from './lib/theme';
 import { getReducedMotion } from './hooks/theme/useReducedMotion';
 import { useTheme, useThemedStyles } from './hooks/theme/useTheme';
@@ -162,6 +164,18 @@ declare module '@react-navigation/native' {
 }
 
 const Navigation = createStaticNavigation(RootStack)
+
+// Las consultas que fallaron se repiten al volver la red o la app al frente (spec 011, F7).
+conectarConsultas({
+  suscribirRed: (oyente) => {
+    const subscription = Network.addNetworkStateListener(oyente)
+    return () => subscription.remove()
+  },
+  suscribirApp: (oyente) => {
+    const subscription = AppState.addEventListener('change', oyente)
+    return () => subscription.remove()
+  },
+})
 const navigationRef = createNavigationContainerRef()
 
 // Tema de React Navigation con los tokens (spec 009): fondo de pantallas, encabezados y
