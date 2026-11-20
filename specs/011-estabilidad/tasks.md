@@ -425,6 +425,20 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
   - Paso 1: un toque corto en el escudo mostró "Pedir ayuda — Mantén presionado 2 segundos para avisar a tus contactos." y no creó alerta (revisado en el servidor). Fue un toque de `adb`, que no pasa por TalkBack.
   - Paso 2: el usuario enfocó a mano los dos botones con TalkBack, y los anuncios fueron los esperados: "Pedir ayuda" con la instrucción, y "Detener actividad".
   - La sesión no tuvo alertas. Al final se apagó TalkBack y quedó solo el servicio de accesibilidad que ya estaba. **CA-38 cumple.**
+
+  **M25 revisado con los datos de la salida (2026-11-20):** además del reporte, se leyó la base del Nothing (copia por `run-as`).
+  - **Nothing:** una sola actividad de 17:42:40 a 18:50:43 (1:08:02), "Sincronizada", con distancia, duración y elevación. Tiene 410 puntos, del inicio a 1 s antes del fin. Solo hay un hueco de más de 60 s (141 s, parado). La única otra actividad cercana es el inicio de prueba de 6 s de las 17:41. No hay cierres registrados de la app (`dumpsys dropbox`), y la app no está exenta de la optimización de batería (`deviceidle whitelist`), así que grabó con el ahorro normal.
+  - **S9+:** según el reporte, 1:08:26, 394 puntos cada ~10 s, sincronizada y con su resumen. Los huecos son los mismos tramos parados. No estaba conectado para revisar su base ni su ajuste de batería.
+  - **Pantalla bloqueada:** según los ajustes de batería de cada teléfono, ~9 min de pantalla en el Nothing y ~17 min en el S9+ durante una salida de 68 min. Los dos estuvieron bloqueados más de 30 minutos y siguieron llegando puntos.
+  - **S9+, revisado por USB el mismo día:** la app no está exenta de la optimización de batería (`deviceidle whitelist`) y tiene el modo por defecto para correr en segundo plano (`appops`). El registro del sistema (`dumpsys dropbox`) cubre el 2026-11-18 y no tiene cierres ni ANR de la app. Su build de campo no es depurable, así que su base no se pudo leer.
+  - **CA-1, CA-3 y CA-7 cumplen.**
+
+  **M29 revisado:**
+  - **004 M4 en el Nothing, pasa:** en T3 (1:13) y en la salida (1:08) grabó normal y el resumen dice "Elevación estimada con GPS".
+  - **004 M3 y M5 en el S9+ (2026-11-20, por el usuario):** una sola actividad de senderismo de 5:51 (10:24 a 10:30): 5 min quieto al aire libre y luego **un piso** de la escalera de su casa, no tres. Sincronizada; en el servidor queda con 5 puntos y "barómetro" como fuente.
+    - **M5, pasa:** distancia 0 m en el resumen, menos de 20 m. La suma punto a punto da 24 m, pero incluye caminar hasta la escalera.
+    - **M3, parcial:** la elevación sale del barómetro y la subida es de 3.8 m, que corresponde a un piso (~3 m). M3 pide 3 pisos y entre 6 y 12 m; con un piso no se puede comparar con ese rango. **Decidido con el usuario (2026-11-20):** se acepta como M3. Con un piso, el barómetro midió una subida de la altura esperada, y la salida del 2026-11-18 ya midió 212 m con barómetro contra 199 m de Strava.
+  - **CA-6 cumple.**
 - [ ] T52 — Correr M30, la medición de batería. Si no cumple, ajustar el mapa y volver a medir. (CA-8)
 
   **Dato de la salida (2026-11-18), no sustituye a M30:** según los ajustes de batería de cada teléfono, el día de la caminata de ~1 h 08 min. **Nothing:** menos de 1 %, con 9 min de uso en pantalla y 1 h 15 min en segundo plano. **S9+:** 8.4 %, con 17 min en pantalla y 3 h 2 min en segundo plano; el segundo plano dura casi el triple que la caminata, así que incluye tiempo fuera de la grabación. La pantalla estuvo bloqueada casi todo el tiempo, así que mide sobre todo la grabación en segundo plano, no el mapa. CA-8 sigue pendiente: pide comparar el consumo por hora con "Sin mapa", 2D y 3D en pantalla.
@@ -521,13 +535,13 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | Caso manual M25 | Manual, teléfono real | Pendiente |
+| CA-1 | Caso manual M25 | Manual, teléfono real | Cumple (salida del 2026-11-18, revisada el 2026-11-20) |
 | CA-2 | Caso manual M26 | Manual, teléfono real | Pendiente |
-| CA-3 | Caso manual M25 | Manual, teléfono real | Pendiente |
+| CA-3 | Caso manual M25 | Manual, teléfono real | Cumple (salida del 2026-11-18) |
 | CA-4 | Caso manual M27 | Manual, simulado | Cumple (2026-11-18, T55): aceptado por el usuario; no probado en bici real |
 | CA-5 | Caso manual M28 | Manual, teléfono real | Pendiente |
-| CA-6 | Caso manual M29 | Manual, teléfono real | Pendiente |
-| CA-7 | Caso manual M25 | Manual, teléfono real | Pendiente |
+| CA-6 | Caso manual M29 | Manual, teléfono real | Cumple (2026-11-20): 004 M4 en el Nothing y M5 en el S9+; M3 con 1 piso (3.8 m, barómetro), aceptado por el usuario |
+| CA-7 | Caso manual M25 | Manual, teléfono real | Cumple (salida del 2026-11-18; ajustes de batería revisados por USB el 2026-11-20) |
 | CA-8 | Caso manual M30 | Manual, teléfono real | Pendiente: cumple quieto en el Nothing (2026-11-18); falta caminando |
 | CA-9 | Caso manual M31 | Manual, teléfono real | Cumple (2026-11-19, Nothing; 008 M3 pasos 3 y 4 por las pruebas de T66) |
 | CA-10 | Caso manual M32 | Manual, teléfono real | Cumple (2026-11-20, Nothing): sonó y vibró en las 10 |
