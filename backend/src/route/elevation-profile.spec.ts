@@ -91,4 +91,30 @@ describe('perfilDe (spec 007, RN-8, CA-11)', () => {
     expect(perfilDe([punto(0, null), punto(1, null)])).toBeNull();
     expect(perfilDe([])).toBeNull();
   });
+
+  it('con la distancia de la ruta, el eje termina en ella y no en la suma punto a punto (spec 011, F6)', () => {
+    // Zigzag de ruido: la suma punto a punto es mayor que la distancia de la ruta, como en
+    // M28 (4 996 contra 4 461 m).
+    const puntos = Array.from({ length: 101 }, (_, i) => ({
+      lat: (i % 2) * 0.0005,
+      lng: i / 1000,
+      altitudeMeters: 100 + i,
+    }));
+    const sinEscalar = perfilDe(puntos)!;
+    const distanciaRuta = 100 * M_POR_MILESIMA;
+    expect(sinEscalar.at(-1)![0]).toBeGreaterThan(distanciaRuta * 1.1);
+
+    const perfil = perfilDe(puntos, distanciaRuta)!;
+    expect(perfil[0][0]).toBe(0);
+    expect(perfil.at(-1)![0]).toBeCloseTo(distanciaRuta, 0);
+    // Escala uniforme: el punto de en medio queda a la mitad.
+    expect(perfil[50][0]).toBeCloseTo(distanciaRuta / 2, -1);
+    expect(perfil.map(([, a]) => a)).toEqual(sinEscalar.map(([, a]) => a));
+  });
+
+  it('sin distancia de la ruta, o con 0, deja la suma punto a punto', () => {
+    const puntos = [punto(0, 100), punto(1, 110), punto(3, 105)];
+    expect(perfilDe(puntos, 0)).toEqual(perfilDe(puntos));
+    expect(perfilDe(puntos, undefined)).toEqual(perfilDe(puntos));
+  });
 });

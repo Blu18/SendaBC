@@ -31,15 +31,29 @@ const redondear = (m: number) => Math.round(m * 10) / 10;
  * Perfil de un recorrido con sus puntos en orden. La distancia acumulada cuenta todos los
  * puntos, pero solo entran al perfil los que tienen altitud. Se muestrea por distancia a
  * MAX_PUNTOS_PERFIL como máximo, conservando el primero y el último. Sin altitudes, `null`.
+ *
+ * Con `distanciaTotalM` (la distancia de la ruta, RN-1), la distancia acumulada se escala para
+ * que el eje termine en ella: la suma punto a punto incluye el ruido del GPS y sale mayor
+ * (spec 007, RN-8; spec 011, F6). Sin ella, o con 0, queda la suma punto a punto.
  */
-export function perfilDe(puntos: PuntoPerfil[]): Perfil | null {
+export function perfilDe(
+  puntos: PuntoPerfil[],
+  distanciaTotalM?: number,
+): Perfil | null {
+  let suma = 0;
+  for (let i = 1; i < puntos.length; i++) suma += haversine(puntos[i - 1], puntos[i]);
+  const escala =
+    distanciaTotalM !== undefined && distanciaTotalM > 0 && suma > 0
+      ? distanciaTotalM / suma
+      : 1;
+
   const conAltitud: Perfil = [];
   let acumulada = 0;
   for (let i = 0; i < puntos.length; i++) {
     if (i > 0) acumulada += haversine(puntos[i - 1], puntos[i]);
     const altitud = puntos[i].altitudeMeters;
     if (altitud === null || !Number.isFinite(altitud)) continue;
-    const distancia = redondear(acumulada);
+    const distancia = redondear(acumulada * escala);
     // Con el GPS detenido, varios puntos caen en la misma distancia: se queda el primero.
     if (conAltitud.length > 0 && distancia <= conAltitud.at(-1)![0]) continue;
     conAltitud.push([distancia, redondear(altitud)]);

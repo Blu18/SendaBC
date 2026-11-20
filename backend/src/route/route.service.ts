@@ -240,7 +240,7 @@ export class RouteService {
           const secuencias = puntos.map((p) => p.sequence);
 
           const elevacion = actividad.elevationGainMeters ?? 0;
-          const perfil = perfilDe(puntos);
+          const perfil = perfilDe(puntos, distancia);
           const id = randomUUID();
           await tx.$executeRaw`
             INSERT INTO routes (id, name, description, region, type, difficulty,

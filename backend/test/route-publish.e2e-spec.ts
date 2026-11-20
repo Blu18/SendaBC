@@ -466,11 +466,15 @@ describe('Publicar rutas, detalle y favoritas (e2e, spec 007)', () => {
       expect(lng).toBeCloseTo(INICIO.lng, 6);
     }
     expect(res.body.start.longitude).toBeCloseTo(INICIO.lng, 6);
-    // 28 puntos sin el salto: el eje del perfil mide solo la línea, 28 tramos de 111 m (el
-    // hueco del punto quitado cuenta doble), no los ~200 km de ida y vuelta.
-    expect(res.body.elevationProfile).toHaveLength(28);
-    expect(res.body.elevationProfile.at(-1)[0]).toBeCloseTo(28 * 111.2, -1);
+    // 28 puntos sin el salto. El eje termina en la distancia de la ruta (spec 007, RN-8; spec
+    // 011, F6), y los tramos quedan parejos: si el salto de ~200 km de ida y vuelta contara, un
+    // solo tramo se llevaría casi todo el eje.
+    const perfil = res.body.elevationProfile as [number, number][];
+    expect(perfil).toHaveLength(28);
     expect(res.body.distanceMeters).toBe(3_000);
+    expect(perfil.at(-1)![0]).toBeCloseTo(3_000, -1);
+    const tramos = perfil.slice(1).map(([d], i) => d - perfil[i][0]);
+    expect(Math.max(...tramos)).toBeLessThan(3 * Math.min(...tramos));
   });
 
   it('un id que no es UUID responde 404', async () => {
