@@ -420,6 +420,11 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 - [ ] T51 — Correr M25, M26, M28 y M29 en la salida, y M4 paso 2 con TalkBack en un teléfono. (CA-1 a CA-3, CA-5 a CA-7, CA-38)
 
   **M28 (2026-11-18):** el usuario publicó la actividad del S9+ de la caminata. La ruta mide 4 461 m (la distancia de la actividad) y el eje del perfil llega a 4 996 m (+12 %). El perfil tiene 20 saltos de más de 30 m entre puntos seguidos: sale de la altitud del GPS de cada punto, así que hereda F5 aunque la actividad se midió con barómetro. No cumple; ver F5 y F6.
+
+  **M4 (2026-11-20), en el Nothing con una actividad grabando y TalkBack 17.1 activado por `adb`, pasa:**
+  - Paso 1: un toque corto en el escudo mostró "Pedir ayuda — Mantén presionado 2 segundos para avisar a tus contactos." y no creó alerta (revisado en el servidor). Fue un toque de `adb`, que no pasa por TalkBack.
+  - Paso 2: el usuario enfocó a mano los dos botones con TalkBack, y los anuncios fueron los esperados: "Pedir ayuda" con la instrucción, y "Detener actividad".
+  - La sesión no tuvo alertas. Al final se apagó TalkBack y quedó solo el servicio de accesibilidad que ya estaba. **CA-38 cumple.**
 - [ ] T52 — Correr M30, la medición de batería. Si no cumple, ajustar el mapa y volver a medir. (CA-8)
 
   **Dato de la salida (2026-11-18), no sustituye a M30:** según los ajustes de batería de cada teléfono, el día de la caminata de ~1 h 08 min. **Nothing:** menos de 1 %, con 9 min de uso en pantalla y 1 h 15 min en segundo plano. **S9+:** 8.4 %, con 17 min en pantalla y 3 h 2 min en segundo plano; el segundo plano dura casi el triple que la caminata, así que incluye tiempo fuera de la grabación. La pantalla estuvo bloqueada casi todo el tiempo, así que mide sobre todo la grabación en segundo plano, no el mapa. CA-8 sigue pendiente: pide comparar el consumo por hora con "Sin mapa", 2D y 3D en pantalla.
@@ -553,7 +558,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-35 | Caso manual M1 | Manual | Cumple (emulador) |
 | CA-36 | Caso manual M2 | Manual | Cumple (emulador) |
 | CA-37 | Caso manual M3 | Manual | Cumple (emulador) |
-| CA-38 | Caso manual M4 | Manual | Parcial: falta TalkBack |
+| CA-38 | Caso manual M4 | Manual | Cumple (paso 1 en el emulador y en el Nothing; paso 2 con TalkBack en el Nothing, 2026-11-20) |
 | CA-39 | Caso manual M1 | Manual | Cumple (emulador) |
 | CA-40 | Caso manual M1 | Manual | Cumple (emulador) |
 | CA-41 | `user.service.spec.ts`, `update-profile.dto.spec.ts`, `user.e2e-spec.ts`, `frontend/lib/account/profile.test.ts` y caso manual M5 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
