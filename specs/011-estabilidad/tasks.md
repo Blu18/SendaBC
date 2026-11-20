@@ -435,7 +435,29 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
   - Cumple los límites: 3D no supera a "Sin mapa" (límite +30 %) ni a 2D (límite +15 %).
   - El consumo sube en el orden en que se corrieron las vueltas y no por vista. Con menos carga baja el voltaje y el mismo trabajo gasta más carga, así que la diferencia parece del orden, no del mapa. Quieto, el mapa no suma un consumo medible.
   - **Reservas:** sin movimiento, la cámara no sigue al marcador ni gira con el rumbo, que es lo que más dibuja el mapa; M30 pide "el mismo recorrido". Tampoco se corrió en el S9+. Para cerrar CA-8 falta repetirlo caminando, en otro orden ("Sin mapa" primero) y con la misma carga al empezar cada vuelta.
-- [ ] T53 — Correr M31 y M32 con el contacto real. (CA-9 a CA-11)
+- [x] T53 — Correr M31 y M32 con el contacto real. (CA-9 a CA-11)
+
+  Hecho (2026-11-19 y 2026-11-20) en el Nothing Phone 2 con la build de diagnóstico de F5 (URL del túnel), la cuenta del usuario y el contacto real "Diego Contacto" (en Telegram, "Blu CN"). Backend local con `TELEGRAM_MODE=polling`. Los casos se manejaron por `adb` y se comprobaron en la base del servidor.
+  - **Túnel:** daba `502` en ~1 de cada 4 peticiones desde el teléfono. Para separarlo de la app, el backend pasó al puerto 3001 detrás de un proxy en el 3000 que registra cada petición. Ninguna petición fallida llegó al backend, y todas pasaron al reintentar. No es fallo de la app, salvo que no se recupera sola (F7).
+  - **008 M1, pasa:**
+    - Nombre vacío: "El nombre es obligatorio". 41 caracteres: "El nombre debe tener como máximo 40 caracteres". En los dos no se guarda.
+    - Con un nombre válido: "Pendiente de aceptar" y la hoja de compartir del sistema con el texto de la invitación.
+    - El contacto real aceptó la invitación y quedó "Activo", con su nombre de Telegram.
+    - "Enviar mensaje de prueba": la app dice "Mensaje de prueba enviado". La bienvenida y esta prueba no se confirmaron una por una en Telegram, pero la misma cuenta recibió después la alerta, la ubicación y el "está bien" (ver M32).
+    - Con 3 contactos desaparece "Agregar contacto" y sale "Puedes tener como máximo 3 contactos de emergencia."
+    - Editar el nombre y quitar (con confirmación) se guardan.
+    - Al cerrar y abrir la app se ven los mismos contactos.
+  - **008 M2, pasa:** con el bot bloqueado, la prueba deja el contacto en "No recibe mensajes" (`UNREACHABLE` en el servidor), con la explicación y "Compartir invitación". Al compartirla de nuevo, desbloquear y aceptarla, vuelve a "Activo".
+  - **008 M3, pasos 1 y 2, pasan:**
+    - Paso 1, sin contactos activos (con el bot bloqueado): "Empezar" muestra el aviso, "Configurar contactos" e "Iniciar actividad". "Configurar contactos" abre Seguridad encima y atrás regresa a la grabación.
+    - Paso 2, con el contacto activo: "Seguridad activa: … avisaríamos a Diego Contacto." y la hora de regreso opcional.
+    - **Pasos 3 y 4:** el usuario decidió no quitar "Permitir todo el tiempo"; quedan cubiertos por las pruebas de T66 (`decidirSegundoPlano`).
+  - **M32, pasa:** 5 min sin moverse y 1 min de cuenta regresiva, con el teléfono quieto y la app abierta. Se registraron la vibración de la app (`dumpsys vibrator_manager`), el cierre de la notificación y las alertas en la base.
+    - 10 de 10 preguntas respondidas con "Estoy bien" entre 3 y 10 s después de aparecer (09:14 a 10:01). La sesión no tiene alertas.
+    - El usuario confirma que sonó y vibró en las 10.
+    - En la pregunta 5, Android marcó la vibración de la app como `ignored_for_higher_importance` porque coincidió con dos vibraciones cortas del sistema. Aun así, el usuario sintió vibración.
+  - **Alerta real del 2026-11-19, por la prueba y no por la app:** en un primer intento de M32, una vigilancia por `adb` debía tocar "Estoy bien" detectando un cambio de foco de ventana. El aviso no cambia el foco, así que nadie respondió. A las 23:22 la app creó la alerta por inactividad y el contacto recibió la alerta y la ubicación. El usuario la canceló a las 23:29 y el contacto recibió "está bien". La app hizo lo esperado.
+  - Al terminar se quitó el contacto de prueba pendiente; queda solo el contacto real.
 - [ ] T54 — Correr M19 en la zona real, en modo avión. (CA-20, CA-21)
 
   **Avance (2026-11-18):** en la salida, en modo avión y dentro de la zona descargada, el mapa se vio con el terreno, no un fondo azul (CA-20, parte). No se revisaron el cambio entre 3D y 2D, el modo oscuro ni la grabación fuera de la zona (CA-21); quedan para otra salida.
@@ -502,9 +524,9 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-6 | Caso manual M29 | Manual, teléfono real | Pendiente |
 | CA-7 | Caso manual M25 | Manual, teléfono real | Pendiente |
 | CA-8 | Caso manual M30 | Manual, teléfono real | Pendiente: cumple quieto en el Nothing (2026-11-18); falta caminando |
-| CA-9 | Caso manual M31 | Manual, teléfono real | Pendiente |
-| CA-10 | Caso manual M32 | Manual, teléfono real | Pendiente |
-| CA-11 | Caso manual M32 | Manual, teléfono real | Pendiente |
+| CA-9 | Caso manual M31 | Manual, teléfono real | Cumple (2026-11-19, Nothing; 008 M3 pasos 3 y 4 por las pruebas de T66) |
+| CA-10 | Caso manual M32 | Manual, teléfono real | Cumple (2026-11-20, Nothing): sonó y vibró en las 10 |
+| CA-11 | Caso manual M32 | Manual, teléfono real | Cumple (2026-11-20, Nothing): 10 de 10, sin alertas |
 | CA-12 | Caso manual M33 | Revisión | Cumple (2026-11-18): se conservan los valores |
 | CA-13 | Caso manual M20, `lib/db/espera.test.ts` y `activities.test.ts` | Manual y automatizada | Cumple (emulador) |
 | CA-14 | `prisma-disponibilidad.filter.spec.ts`, `frontend/lib/routes/status.test.ts` y caso manual M21 | Automatizada y manual | Cumple (Vitest y emulador) |
@@ -786,6 +808,10 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
 | F4 — A velocidad de carro o bici, con un punto cada 10 s, el suavizado de la distancia recorta 8 a 16 % (ver abajo) | Menor; afecta CA-4 | Corregido en T67: con los puntos reales, el carro queda entre −5.2 y −2.4 % de Strava y la caminata igual |
 | F5 — En segundo plano, la altitud del GPS alterna entre la real y un valor casi fijo (~−15 m), y la elevación con GPS sale casi 4 veces la real (ver abajo) | Mayor; afecta CA-2 en teléfonos sin barómetro y el perfil de las rutas (M28) | Por decidir en T56 |
 | F6 — El eje del perfil de una ruta mide la suma punto a punto, no la distancia de la ruta: en M28, 4 996 contra 4 461 m (+12 %) | Menor; afecta M28 | Por decidir en T56 |
+| F7 — Si el backend no responde al abrir la app, Inicio queda en "No se pudo cargar tu perfil" y no se recupera cuando vuelve la conexión; hay que cerrar y abrir la app (ver abajo) | Menor | Por decidir en T56 |
+
+- **F7, detalle (2026-11-19):** antes de M31, en el Nothing, la app se abrió con el túnel apagado. Ya con el túnel arriba, el teléfono llegaba al backend (`curl` desde el teléfono y `GET /user/profile` con la cuenta de Postman, ambos por el túnel, respondían), pero Inicio seguía con el error y sin el aviso de "Seguridad activa". Al cerrar y abrir la app cargó todo. En el frontend no se usan `onlineManager` ni `focusManager` de TanStack Query, así que la consulta con error no se repite al volver la red ni al regresar a la app. Ninguna spec lo pide de forma explícita: la 010 (CA-16) habla solo del mapa.
+  Pasó dos veces el 2026-11-19: la segunda, el túnel daba `502` en 1 de cada 3 peticiones (tras 5 a 11 s), con el backend respondiendo en local. Con la app abierta en un `502`, la tarjeta de Seguridad de Inicio sí era correcta: el usuario había quitado a su único contacto al empezar M1.
 
 **Antes de la salida (2026-11-10).** Actividades grabadas por el usuario sin backend ni internet, sincronizadas después por USB. No cuentan como la prueba de campo (M25 a M33), pero dejan datos y un fallo.
 - **Mismo recorrido en los dos teléfonos**, grabado como ciclismo. Por la velocidad (mediana 25 km/h, máximo 113 km/h), parece hecho en carro.
