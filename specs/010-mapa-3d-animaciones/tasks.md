@@ -191,7 +191,7 @@ Los 28 criterios tienen al menos una tarea y una forma de verificarse. RN-5 se c
 | CA-25 | Caso manual M17 | Manual | Cumple con límites de T22: lo de abajo sube de golpe y `FlatList` puede repetir la entrada |
 | CA-26 | Caso manual M18 | Manual | Cumple (emulador). Un toque inmediato se perdió una vez, a repetir en la 011 |
 | CA-27 | Caso manual M19 | Manual | Cumple (emulador) |
-| CA-28 | Caso manual M20 | Manual | Parcial: ver T25 y "Pendientes conocidos" |
+| CA-28 | Caso manual M20 | Manual | Cumple (2026-11-20): la regresión pendiente se corrió en la spec 011 (CA-9, CA-26 y M29) |
 | RN-3 | `frontend/lib/map/track.test.ts` | Automatizada | Cumple (Vitest) |
 | RN-5 | `frontend/lib/theme/motion.test.ts` y caso manual M15 | Automatizada y manual | Cumple: Vitest y medición en T20; las pestañas solo por valor nominal |
 
@@ -334,6 +334,8 @@ Un commit por tarea cuando sea posible. Mínimo para la semana:
 | `docs(010)` | T26 | `docs(010): verificación y cierre` |
 
 ## Pendientes conocidos
+
+**Resueltos en la spec 011 (2026-11-20):** todos los de esta lista. El texto recortado al cambiar la letra con la app abierta queda aceptado (011, F8).
 
 - Límites de batería: se miden en 011-estabilidad.
 - 004 M3 sigue pendiente de un teléfono con barómetro (spec 009).

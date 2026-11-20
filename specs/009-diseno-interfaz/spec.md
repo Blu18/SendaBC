@@ -1,6 +1,6 @@
 # 009 — Diseño de la interfaz: prototipo en Figma e implementación en la app
 
-- **Estado:** Implementada con pendientes
+- **Estado:** Implementada (cerrada 2026-11-20)
 - **Semana:** 9
 - **Autor(es):**
 - **Fecha:** 2026-10-30
@@ -80,6 +80,7 @@ Ninguna. Ver las decisiones resueltas en el historial.
 
 ## Historial
 
+- 2026-11-20 — Pasa a Implementada: el único pendiente, 004 M3 en un teléfono con barómetro, se corrió en la spec 011 (M29). 009 M1 se repitió en un teléfono real en la 011 (M34).
 - 2026-11-06 — "Fuera de alcance": la pantalla de grabación ya tiene mapa, por la spec 010 (T25).
 - 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-05 — Implementada con pendientes, confirmado por el usuario: 14 de 15 CA verificados. CA-15 queda parcial porque falta 004 M3 (teléfono con barómetro), pendiente desde antes del rediseño. El usuario acepta la diferencia 8 con el prototipo (Editar ruta sin chips de dificultad).

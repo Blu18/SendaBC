@@ -64,12 +64,12 @@ Los 25 CA están cubiertos por al menos una tarea.
 | CA-6 | `summary.test.ts` › distancia 0 · `metrics.test.ts` › `—` | Automatizada | Cumple (Vitest; M9 muestra `—`) |
 | CA-7 | `geo.test.ts` · `distance.test.ts` › recorrido conocido ≤ 1 % | Automatizada | Cumple (Vitest) |
 | CA-8 | `distance.test.ts` › descarta precisión > 20 m | Automatizada | Cumple (Vitest) |
-| CA-9 | `distance.test.ts` › quieto 5 min < 20 m · M5 | Ambas | Vitest ok · falta M5 en dispositivo |
+| CA-9 | `distance.test.ts` › quieto 5 min < 20 m · M5 | Ambas | Cumple: Vitest ok · M5 en el S9+ al aire libre, 0 m (spec 011, M29, 2026-11-20) |
 | CA-10 | `elevation.test.ts` › ganancia y pérdida | Automatizada | Cumple (Vitest; ganancia y pérdida de 50 m simuladas (emulador, 2026-10-06)) |
 | CA-11 | `elevation.test.ts` › oscilaciones dentro del umbral | Automatizada | Cumple (Vitest) |
-| CA-12 | `summary.test.ts` › fuente barómetro · M3 | Ambas | Vitest ok · barómetro simulado ok (emulador, 2026-10-06) · falta M3 en dispositivo |
-| CA-13 | `summary.test.ts` › menos de 2 lecturas → GPS · M4 | Ambas | Vitest ok · falta M4 en dispositivo |
-| CA-14 | M3 (la fuente queda en barómetro, lo que exige lecturas guardadas) + revisión de código (solo se escucha entre iniciar y detener) | Manual | Barómetro simulado ok (emulador, 2026-10-06) · falta M3 en dispositivo |
+| CA-12 | `summary.test.ts` › fuente barómetro · M3 | Ambas | Cumple: Vitest ok · M3 en el S9+ con un piso, 3.8 m con barómetro, aceptado por el usuario (spec 011, M29, 2026-11-20) |
+| CA-13 | `summary.test.ts` › menos de 2 lecturas → GPS · M4 | Ambas | Cumple: Vitest ok · M4 en el Nothing Phone 2, sin barómetro: "Elevación estimada con GPS" (spec 011, M29) |
+| CA-14 | M3 (la fuente queda en barómetro, lo que exige lecturas guardadas) + revisión de código (solo se escucha entre iniciar y detener) | Manual | Cumple: M3 en el S9+ quedó con fuente barómetro, lo que exige lecturas guardadas (spec 011, M29, 2026-11-20) |
 | CA-15 | M1 | Manual | Cumple (emulador, 2026-10-06) |
 | CA-16 | `summary.test.ts` › acumulador incremental = cálculo completo | Automatizada | Cumple (Vitest; en vivo = resumen (emulador, 2026-10-06)) |
 | CA-17 | `distance.test.ts`, `elevation.test.ts`, `summary.test.ts` (0 y 1 punto) · M9 | Ambas | Cumple (Vitest + M9 emulador, 2026-10-06) |

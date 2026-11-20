@@ -1,6 +1,6 @@
 # 011 — Estabilidad: prueba de campo, bugs, pruebas y pulido
 
-- **Estado:** En progreso (aprobada 2026-11-06)
+- **Estado:** Implementada con pendientes (aprobada 2026-11-06; cerrada 2026-11-20)
 - **Semana:** 9
 - **Autor(es):**
 - **Fecha:** 2026-11-06
@@ -180,6 +180,7 @@ Ninguna pendiente.
 
 ## Historial
 
+- 2026-11-20 — Cierre (T61): Implementada con pendientes. CA-2 (solo la elevación con GPS) y CA-5 no cumplen por F5, que pasa a la 012. CA-58 cumple en parte: publicar sin red no se corrió en un teléfono. CA-8 se aceptó con la medición quieta y CA-21 se hizo en casa, porque no hubo tiempo para otra salida. Aprobado por el usuario.
 - 2026-11-12 — Fallos de la prueba de campo (T56, en parte): el usuario decide corregir F1, F2 y F3 antes de repetir la salida, y F4 después. Cambian la spec 003 (CA-10), la 004 (CA-12, CA-13, RN-7) y la 008 (CA-10); se corrigen en T63 a T66. Esta spec no cambia.
 - 2026-11-09 — Al cerrar T39 se vio que, si falla el inicio, la pantalla se queda en "Nueva actividad" sin avisar. El usuario aprueba agregar CA-16 a la spec 003 (RN-4); se corrige en T62. Esta spec no cambia.
 - 2026-11-09 — Al implementar T39, M20 reproduce `database is locked`, pero con `busy_timeout` solo siguen fallando 16 de 20 intentos: la transacción de la recuperación dura más que la espera. El usuario aprueba insertar los puntos recuperados por lotes, y se anota en el plan (R2). Con los lotes la actividad siempre inicia, pero algunas escrituras sueltas fallan sin esperar; el usuario aprueba reintentarlas (R2). La spec no cambia.

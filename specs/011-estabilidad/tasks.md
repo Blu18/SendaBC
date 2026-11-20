@@ -417,7 +417,9 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 - [x] T50 — Ensayo cerca de casa, con datos móviles: 10 minutos grabando en cada teléfono y una alerta de prueba. (R6)
 
   Hecho por el usuario el 2026-11-10, en los dos teléfonos. En el servidor queda la alerta de inactividad de la prueba, cancelada, en la sesión del Nothing de las 21:35.
-- [ ] T51 — Correr M25, M26, M28 y M29 en la salida, y M4 paso 2 con TalkBack en un teléfono. (CA-1 a CA-3, CA-5 a CA-7, CA-38)
+- [x] T51 — Correr M25, M26, M28 y M29 en la salida, y M4 paso 2 con TalkBack en un teléfono. (CA-1 a CA-3, CA-5 a CA-7, CA-38)
+
+  Cerrada (2026-11-20): se corrieron todos los casos. CA-1, CA-3, CA-6, CA-7 y CA-38 cumplen. CA-2 (elevación con GPS) y CA-5 no cumplen por F5, pasado a la 012.
 
   **M28 (2026-11-18):** el usuario publicó la actividad del S9+ de la caminata. La ruta mide 4 461 m (la distancia de la actividad) y el eje del perfil llega a 4 996 m (+12 %). El perfil tiene 20 saltos de más de 30 m entre puntos seguidos: sale de la altitud del GPS de cada punto, así que hereda F5 aunque la actividad se midió con barómetro. No cumple; ver F5 y F6.
 
@@ -439,7 +441,7 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
     - **M5, pasa:** distancia 0 m en el resumen, menos de 20 m. La suma punto a punto da 24 m, pero incluye caminar hasta la escalera.
     - **M3, parcial:** la elevación sale del barómetro y la subida es de 3.8 m, que corresponde a un piso (~3 m). M3 pide 3 pisos y entre 6 y 12 m; con un piso no se puede comparar con ese rango. **Decidido con el usuario (2026-11-20):** se acepta como M3. Con un piso, el barómetro midió una subida de la altura esperada, y la salida del 2026-11-18 ya midió 212 m con barómetro contra 199 m de Strava.
   - **CA-6 cumple.**
-- [ ] T52 — Correr M30, la medición de batería. Si no cumple, ajustar el mapa y volver a medir. (CA-8)
+- [x] T52 — Correr M30, la medición de batería. Si no cumple, ajustar el mapa y volver a medir. (CA-8)
 
   **Dato de la salida (2026-11-18), no sustituye a M30:** según los ajustes de batería de cada teléfono, el día de la caminata de ~1 h 08 min. **Nothing:** menos de 1 %, con 9 min de uso en pantalla y 1 h 15 min en segundo plano. **S9+:** 8.4 %, con 17 min en pantalla y 3 h 2 min en segundo plano; el segundo plano dura casi el triple que la caminata, así que incluye tiempo fuera de la grabación. La pantalla estuvo bloqueada casi todo el tiempo, así que mide sobre todo la grabación en segundo plano, no el mapa. CA-8 sigue pendiente: pide comparar el consumo por hora con "Sin mapa", 2D y 3D en pantalla.
 
@@ -454,6 +456,7 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
   - Cumple los límites: 3D no supera a "Sin mapa" (límite +30 %) ni a 2D (límite +15 %).
   - El consumo sube en el orden en que se corrieron las vueltas y no por vista. Con menos carga baja el voltaje y el mismo trabajo gasta más carga, así que la diferencia parece del orden, no del mapa. Quieto, el mapa no suma un consumo medible.
   - **Reservas:** sin movimiento, la cámara no sigue al marcador ni gira con el rumbo, que es lo que más dibuja el mapa; M30 pide "el mismo recorrido". Tampoco se corrió en el S9+. Para cerrar CA-8 falta repetirlo caminando, en otro orden ("Sin mapa" primero) y con la misma carga al empezar cada vuelta.
+  - **Decidido con el usuario (2026-11-20):** se acepta CA-8 con esta medición y sus reservas. No hay tiempo para otra salida antes de la entrega.
 - [x] T53 — Correr M31 y M32 con el contacto real. (CA-9 a CA-11)
 
   Hecho (2026-11-19 y 2026-11-20) en el Nothing Phone 2 con la build de diagnóstico de F5 (URL del túnel), la cuenta del usuario y el contacto real "Diego Contacto" (en Telegram, "Blu CN"). Backend local con `TELEGRAM_MODE=polling`. Los casos se manejaron por `adb` y se comprobaron en la base del servidor.
@@ -477,11 +480,17 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
     - En la pregunta 5, Android marcó la vibración de la app como `ignored_for_higher_importance` porque coincidió con dos vibraciones cortas del sistema. Aun así, el usuario sintió vibración.
   - **Alerta real del 2026-11-19, por la prueba y no por la app:** en un primer intento de M32, una vigilancia por `adb` debía tocar "Estoy bien" detectando un cambio de foco de ventana. El aviso no cambia el foco, así que nadie respondió. A las 23:22 la app creó la alerta por inactividad y el contacto recibió la alerta y la ubicación. El usuario la canceló a las 23:29 y el contacto recibió "está bien". La app hizo lo esperado.
   - Al terminar se quitó el contacto de prueba pendiente; queda solo el contacto real.
-- [ ] T54 — Correr M19 en la zona real, en modo avión. (CA-20, CA-21)
+- [x] T54 — Correr M19 en la zona real, en modo avión. (CA-20, CA-21)
 
   **Avance (2026-11-18):** en la salida, en modo avión y dentro de la zona descargada, el mapa se vio con el terreno, no un fondo azul (CA-20, parte). No se revisaron el cambio entre 3D y 2D, el modo oscuro ni la grabación fuera de la zona (CA-21); quedan para otra salida.
 
   **Avance (2026-11-19), en un teléfono real, en modo avión y grabando dentro de la zona descargada:** el cambio entre 3D y 2D funciona, y el de claro a oscuro también, en las dos vistas. **CA-20 cumple.** Al mover la cámara fuera de la zona, en 3D las texturas se ven borrosas y en 2D se ve bien. Fuera de la zona solo hay lo que el mapa ya tenía guardado, así que no es un fondo azul ni un fallo de CA-20. Falta CA-21: grabar con la ubicación fuera de la zona, no solo mover la cámara.
+
+  **CA-21 (2026-11-20), en casa, fuera de la zona descargada, con el Nothing y la cuenta de Postman:** se hizo en casa porque no hubo tiempo para otra salida antes de la entrega. Modo avión, Wi-Fi y datos apagados; sin red activa y sin ping, comprobado por `adb`.
+  - **Resultado:** el usuario grabó 2:09 caminando por la casa. La actividad quedó en el teléfono con 4 puntos, métricas y "Pendiente de sincronizar". El usuario vio el recorrido dibujado y el aviso de que el mapa no está disponible sin conexión, como pide la spec 010 (CA-15).
+  - **Al volver la red:** se sincronizó sola en ~1 min, con los mismos 4 puntos en el servidor.
+  - **CA-21 cumple.**
+  - **Observación, no es fallo:** el primer punto llegó 74 s después de iniciar. Sin red el GPS no recibe ayuda (A-GPS), y dentro de una casa tarda más en fijar posición. La app espera la primera ubicación nueva sin usar una vieja (spec 003, CA-13).
 - [x] T55 — Correr M27, el recorrido simulado a velocidad de bicicleta. (CA-4)
 
   Corrido el 2026-11-18 en el emulador `Pixel_8_Pro` (development build, Metro con el código de T67 y backend aparte en `TELEGRAM_MODE=log`), con una cuenta desechable. Un script manda una ubicación por `adb emu geo fix` según el tiempo real, a 20 km/h, sobre una carretera con curvas. El emulador no tenía el permiso en segundo plano, así que grabó en primer plano, con un punto cada ~2 s. Resultado: 5:33, 1.79 km, 19.4 km/h, 160 puntos; la distancia queda 1.8 % bajo la suma punto a punto. En 3D la cámara sigue al marcador con el rumbo y el trazo sale continuo; en 2D, igual. **El usuario lo da por aceptable (2026-11-18).** Queda escrito que no se probó en una bicicleta real. Un primer intento se descartó: quedaron dos scripts mandando ubicaciones a la vez y el trazo salió en pedazos; los saltos no sumaron distancia (la regla de 50 m/s funcionó), pero esa actividad no cuenta.
@@ -547,7 +556,9 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 - [x] T60 — Correr pruebas unitarias de backend y frontend, e2e y lint. (CA-25)
 
   Hecho (2026-11-18), después de T67: Vitest pasa en el frontend (780) y en el backend (469); las e2e del backend pasan (88) y no dejan cuentas de prueba. `npm run lint` del backend termina sin errores, con 3 advertencias de variables sin usar en `user.entity.ts` y `user.service.ts` que ya estaban. `tsc` del frontend y `nest build` pasan. `tsc` sobre todo el backend marca `supertest/types` en `test/app.e2e-spec.ts`, que viene del primer commit y no afecta las e2e. El frontend no tiene lint configurado.
-- [ ] T61 — Ejecutar `/spec-verify`. Actualizar los estados de 004, 009, 010 y 011 y `specs/roadmap.md`. Anotar en la 012 que debe quitar el túnel y comprobar que no define `EXPO_PUBLIC_BATTERY_TEST`. (CA-28, RN-7)
+- [x] T61 — Ejecutar `/spec-verify`. Actualizar los estados de 004, 009, 010 y 011 y `specs/roadmap.md`. Anotar en la 012 que debe quitar el túnel y comprobar que no define `EXPO_PUBLIC_BATTERY_TEST`. (CA-28, RN-7)
+
+  Hecho (2026-11-20). `/spec-verify`: 783 pruebas en el frontend, 471 en el backend y 88 e2e pasan; `tsc` y lint, sin errores. Se revisaron los artículos 2, 3 y 4 de la constitución. El usuario confirmó los estados: 004, 009 y 010 pasan a Implementada y la 011 a Implementada con pendientes (CA-2 y CA-5 por F5, pasado a la 012; CA-58 en parte). `roadmap.md` lo refleja y anota para la 012 que hay que quitar el túnel y `EXPO_PUBLIC_BATTERY_TEST`, y corregir F5.
 
 ## Cobertura
 
@@ -564,7 +575,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-5 | Caso manual M28 | Manual, teléfono real | No cumple: el perfil hereda F5, pasado a la 012. El eje (F6) se corrige en T57 |
 | CA-6 | Caso manual M29 | Manual, teléfono real | Cumple (2026-11-20): 004 M4 en el Nothing y M5 en el S9+; M3 con 1 piso (3.8 m, barómetro), aceptado por el usuario |
 | CA-7 | Caso manual M25 | Manual, teléfono real | Cumple (salida del 2026-11-18; ajustes de batería revisados por USB el 2026-11-20) |
-| CA-8 | Caso manual M30 | Manual, teléfono real | Pendiente: cumple quieto en el Nothing (2026-11-18); falta caminando |
+| CA-8 | Caso manual M30 | Manual, teléfono real | Cumple, aceptado por el usuario (2026-11-20): medido con el teléfono quieto en el Nothing, no caminando |
 | CA-9 | Caso manual M31 | Manual, teléfono real | Cumple (2026-11-19, Nothing; 008 M3 pasos 3 y 4 por las pruebas de T66) |
 | CA-10 | Caso manual M32 | Manual, teléfono real | Cumple (2026-11-20, Nothing): sonó y vibró en las 10 |
 | CA-11 | Caso manual M32 | Manual, teléfono real | Cumple (2026-11-20, Nothing): 10 de 10, sin alertas |
@@ -574,17 +585,17 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-15 | `backend/src/route/recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
 | CA-16 | `recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
 | CA-17 | `backend/src/activity/distancia.spec.ts`, `frontend/lib/metrics/oldPoints.test.ts` y caso manual M23 | Automatizada y manual | Cumple (Vitest, emulador y script con ruta de prueba) |
-| CA-18 | Caso manual M24 | Manual, teléfono real | No reproducible (20/20 en Nothing Phone 2, RN-3) |
+| CA-18 | Caso manual M24 | Manual, teléfono real | Cumple por RN-3: no reproducible (20 de 20 en el Nothing Phone 2) |
 | CA-19 | Reporte de campo en este archivo (T56) | Revisión | Cumple (2026-11-20): F1 a F8 tienen severidad y resolución |
 | CA-20 | Caso manual M19 | Manual, teléfono real | Cumple (2026-11-19) |
-| CA-21 | Caso manual M19 | Manual, teléfono real | Pendiente |
+| CA-21 | Caso manual M19 | Manual, teléfono real | Cumple (2026-11-20, Nothing, en casa fuera de la zona) |
 | CA-22 | `npm run test:e2e`, 5 veces seguidas | Automatizada | Cumple (5 de 5, 88 pruebas) |
 | CA-23 | Pruebas nuevas y lista revisada en T47 | Automatizada y revisión | Cumple (28 pruebas nuevas; resto anotado) |
 | CA-24 | Revisión de T48 y T57 | Revisión | Cumple (2026-11-20): T63 a T69 tienen pruebas que fallan sin la corrección, salvo T65 y T66, verificadas como se anota en cada una |
-| CA-25 | `npm test` y `npm run test:e2e` en backend, Vitest en frontend, y `npm run lint` | Automatizada | Cumple (2026-11-18, T60) |
+| CA-25 | `npm test` y `npm run test:e2e` en backend, Vitest en frontend, y `npm run lint` | Automatizada | Cumple (2026-11-20, `/spec-verify`): 783 pruebas en el frontend, 471 en el backend y 88 e2e pasan; `tsc` del frontend pasa; lint sin errores, con 3 advertencias |
 | CA-26 | Caso manual M34 | Manual | Cumple (2026-11-20): emulador, y 007 M8 y 009 M1 en teléfonos reales |
 | CA-27 | Caso manual M35 | Postman | Cumple (2026-11-18, T59): 134 pruebas, con un runner de los scripts de la colección |
-| CA-28 | Revisión de estados en T61 | Revisión | Pendiente |
+| CA-28 | Revisión de estados en T61 | Revisión | Cumple (2026-11-20): 004, 009 y 010 pasan a Implementada, confirmado por el usuario; `roadmap.md` actualizado |
 | CA-29 | Reporte de campo en este archivo (T56) | Revisión | Cumple (2026-11-20), salvo el nombre del sendero, que lo agrega el usuario |
 | CA-30 | Caso manual M1 | Manual | Cumple (emulador) |
 | CA-31 | `frontend/lib/map/offlineZones.test.ts` y caso manual M17 | Automatizada y manual | Cumple (Vitest y emulador) |
@@ -614,7 +625,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-55 | `routeCache.test.ts`, `status.test.ts` y caso manual M13 | Automatizada y manual | Cumple (Vitest y emulador) |
 | CA-56 | `routeCache.test.ts`, `status.test.ts` y caso manual M13 | Automatizada y manual | Cumple (Vitest y emulador) |
 | CA-57 | `status.test.ts` y caso manual M13 | Automatizada y manual | Cumple (Vitest y emulador) |
-| CA-58 | Caso manual M14 | Manual | Cumple en parte (emulador): favoritas y "Mis rutas"; publicar sin probar |
+| CA-58 | Caso manual M14 | Manual | Cumple en parte (emulador): favoritas y "Mis rutas" piden conexión. Publicar sin red no se corrió; en el código usa la misma revisión de red (`useRouteMutations`) que las favoritas |
 | CA-59 | Caso manual M15 | Manual | Cumple (emulador) |
 | CA-60 | `routeCache.test.ts` y caso manual M16 | Automatizada y manual | Cumple (Vitest y emulador) |
 

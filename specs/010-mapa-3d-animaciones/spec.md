@@ -1,6 +1,6 @@
 # 010 — Mapa 3D al grabar y animaciones de la interfaz
 
-- **Estado:** Implementada con pendientes (2026-11-06)
+- **Estado:** Implementada (2026-11-06; cerrada 2026-11-20)
 - **Semana:** 9
 - **Autor(es):**
 - **Fecha:** 2026-11-05
@@ -110,6 +110,7 @@ Ninguna. Ver las decisiones resueltas en el historial. El proveedor del mapa se 
 
 ## Historial
 
+- 2026-11-20 — Pasa a Implementada: la spec 011 cerró sus pendientes. Batería (CA-8, aceptada con el teléfono quieto), ubicación vieja (CA-3), `database is locked` (CA-13), zona sin red (CA-20, CA-21), regresión de CA-28 (011 CA-9 y CA-26) y 004 M3. El texto recortado al cambiar la letra con la app abierta queda aceptado (011, F8).
 - 2026-11-06 — Cambios por la spec 011: CA-6 admite "Pedir ayuda" y "Detener actividad" como botones flotantes sobre el mapa (CA-30, CA-35). Aprobado por el usuario.
 - 2026-11-06 — Implementada con pendientes, confirmado por el usuario: 27 de 28 CA verificados. CA-28 queda parcial: faltan casos de regresión de las specs 007, 008 y 009 (ver T25). La medición de batería pasa a 011-estabilidad.
 - 2026-11-05 — Prototipo de la grabación con mapa aprobado por el usuario (CA-19): https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX. Ya se puede programar `activityPage` (RN-9).
