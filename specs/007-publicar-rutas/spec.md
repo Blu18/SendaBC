@@ -107,7 +107,7 @@ Con la spec 006, el catálogo muestra rutas cercanas, pero solo tiene las rutas 
 
 ## Fuera de alcance
 
-- Mostrar el detalle o las favoritas sin conexión → **011-estabilidad**. Mapas de fondo sin conexión en el detalle → no está en el roadmap.
+- Mostrar el detalle o las favoritas sin conexión → **011-estabilidad**. Mapas de fondo sin conexión en el detalle → **013-inicio-rediseno** (CA-34), con las zonas descargadas en la 011.
 - Recortar el inicio y el final del recorrido por privacidad → no está en el roadmap (decisión P6: se publica completo).
 - Avisos o notificaciones sobre rutas (por ejemplo, cuando alguien guarda una ruta mía) → no está en el roadmap.
 - Comentarios, calificaciones y fotos de rutas → no está en el roadmap.
@@ -142,6 +142,7 @@ No quedan preguntas abiertas.
 
 ## Historial
 
+- 2026-11-20 — Cambios por la spec 013: el mapa del detalle de ruta pasa de Google Maps a Mapbox, con el estilo del mapa de la grabación (013, CA-30, CA-32). Los CA de esta spec no cambian (013, RN-9). El final del recorrido se marca con un círculo y ya no muestra la etiqueta "Inicio" o "Final" al tocar un marcador. Dentro de una zona descargada, el detalle muestra el fondo del mapa sin conexión (013, CA-34). Aprobado por el usuario con la spec 013.
 - 2026-11-20 — Cambio por la spec 011 (F6): RN-8 aclara que el eje de distancia del perfil termina en la distancia de la ruta. Antes medía la suma punto a punto, con el ruido del GPS: en la prueba de campo, 4 996 m en una ruta de 4 461 m (+12 %). Las rutas ya publicadas conservan su perfil. Aprobado por el usuario en la 011, T56.
 - 2026-11-06 — Cambios por la spec 011: RN-1 y RN-10 admiten corregir una distancia inflada (RN-11) y quitar saltos al publicar (CA-15, CA-16). Se agrega RN-11, para las rutas de una cuenta borrada (CA-48). El detalle y las favoritas se pueden consultar sin conexión (CA-55, CA-56). Los mapas de fondo sin conexión quedan descartados. Aprobado por el usuario.
 - 2026-11-06 — Se agregan CA-28 y RN-10, y RN-1 admite esa excepción. En la spec 010 (T25), una actividad grabada antes de la spec 003 CA-13 se publicó con su punto viejo: una ruta de 1.56 km con un perfil de 148 km. Aprobado por el usuario.

@@ -84,7 +84,7 @@ Como publicar llega hasta la 007, esta semana el catálogo se alimenta con un co
 - Publicar una actividad como ruta pública → **007-publicar-rutas**.
 - Vista de detalle de una ruta (mapa completo, perfil de elevación, dificultad estimada) → **007-publicar-rutas**.
 - Guardar rutas como favoritas → **007-publicar-rutas**.
-- Mostrar la última búsqueda sin conexión → **011-estabilidad**. Mapas de fondo sin conexión en Explorar → no está en el roadmap.
+- Mostrar la última búsqueda sin conexión → **011-estabilidad**. Mapas de fondo sin conexión en Explorar → **013-inicio-rediseno** (CA-34), con las zonas descargadas en la 011.
 - Una lista de rutas además del mapa.
 - Navegación guiada paso a paso o seguir una ruta en vivo.
 - Buscar rutas por nombre o por región.
@@ -103,6 +103,7 @@ Resueltas el 2026-10-16:
 
 ## Historial
 
+- 2026-11-20 — Cambios por la spec 013: el mapa de Explorar pasa de Google Maps a Mapbox, con el estilo del mapa de la grabación y en modo claro y oscuro (013, CA-30, CA-31). Los CA de esta spec no cambian (013, RN-9). Dentro de una zona descargada, Explorar muestra el fondo del mapa sin conexión (013, CA-34). Aprobado por el usuario con la spec 013.
 - 2026-11-06 — Cambios por la spec 011: CA-15 muestra la última búsqueda guardada sin conexión (CA-53, CA-54), RN-3 admite recalcular una distancia inflada (RN-11) y los mapas de fondo sin conexión quedan descartados. Aprobado por el usuario.
 - 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). CA-1: "Explorar rutas" es la pestaña Rutas (spec 009, RN-2). "Abrir" es entrar a la pestaña desde otra: vuelve a empezar centrada en el usuario, con 25 km y todas (CA-1, CA-11 y CA-12); al volver del detalle conserva el mapa. Casos M1, M4 y M7.

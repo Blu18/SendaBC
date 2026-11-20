@@ -82,13 +82,20 @@ Una tarea detiene el trabajo: T2. `mainPage` (T22) no se programa hasta que el u
   - Se conserva el alto de 280.
   - Se quitaron `pathToCoordinates` y la exportación de `regionForPath`: ya ningún archivo de código importa `react-native-maps`.
   - Sin probar en el dispositivo (M11, M12).
-- [ ] T11 — Quitar `react-native-maps`: dependencia, plugin en `app.config.ts`, `GOOGLE_MAPS_ANDROID_API_KEY` en `.env.local` y en el README del frontend. Comprobar con `grep -r "react-native-maps" frontend --exclude-dir=node_modules` y compilar un development build nuevo desde `C:\dev\sbc`. (CA-33)
+- [x] T11 — Quitar `react-native-maps`: dependencia, plugin en `app.config.ts`, `GOOGLE_MAPS_ANDROID_API_KEY` en `.env.local` y en el README del frontend. Comprobar con `grep -r "react-native-maps" frontend --exclude-dir=node_modules` y compilar un development build nuevo desde `C:\dev\sbc`. (CA-33)
 
   Avance (2026-11-20), código hecho y build pendiente:
   - Se desinstaló `react-native-maps` y se quitaron el plugin de `app.config.ts` y la línea `GOOGLE_MAPS_ANDROID_API_KEY` de `.env.local`. El README del frontend no la mencionaba.
   - El `grep` no encuentra `react-native-maps` fuera de `node_modules`, `.expo` y `android`. `tsc` no da errores y pasan 788 pruebas.
   - Falta el development build: `C:\dev\sbc` tiene cambios sin commit de la 011 sobre `cdb2440` y no había un dispositivo conectado.
-- [ ] T12 — Docs: constitución v1.10 (quita `react-native-maps`, agrega `react-native-svg` al stack, con entrada en su historial). Nota en el historial de la 011 (RN-8 ampliada por la 013, CA-34) y de las specs 006 y 007 (el mapa cambia de proveedor; los CA no cambian, RN-9). (CA-33, CA-34)
+  - Build (2026-11-20): en lugar de `C:\dev\sbc` se usó un worktree nuevo, `C:\dev\sbc13`, en `47b5c2f`. Con `expo prebuild -p android --clean` y `gradlew assembleDebug -PreactNativeArchitectures=x86_64,arm64-v8a` dio BUILD SUCCESSFUL en 3 min 41 s. El APK queda en `C:\dev\sbc13rontendndroidppuild\outputspk\debugpp-debug.apk` (187 MB). El `AndroidManifest.xml` ya no tiene la clave de Google. Falta instalarlo y recorrer las pantallas (M13).
+- [x] T12 — Docs: constitución v1.10 (quita `react-native-maps`, agrega `react-native-svg` al stack, con entrada en su historial). Nota en el historial de la 011 (RN-8 ampliada por la 013, CA-34) y de las specs 006 y 007 (el mapa cambia de proveedor; los CA no cambian, RN-9). (CA-33, CA-34)
+
+  Hecho (2026-11-20):
+  - Constitución v1.10: el stack quita `react-native-maps`, describe `@rnmapbox/maps` como el de todos los mapas y agrega `react-native-svg`, con su entrada en el historial.
+  - En 006 y 007, una entrada en el historial, y su "Fuera de alcance" de mapas de fondo sin conexión ahora remite a la 013.
+  - En 011, RN-8 extiende las zonas descargadas a Explorar y al detalle, y se quita esa exclusión de "Fuera de alcance".
+  - Los planes de 006 y 007 se dejan como registro histórico de la clave de Google.
 
 ## Fase D — Inicio
 
