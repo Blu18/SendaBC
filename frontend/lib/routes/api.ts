@@ -29,10 +29,12 @@ export type NearbySearch = {
 };
 
 // Rutas publicadas cerca de `center`. Nunca lanza: sin red o tiempo agotado devuelve
-// { error }, una respuesta no exitosa { status } (como lib/sync/api.ts).
+// { error }, una respuesta no exitosa { status } (como lib/sync/api.ts). Con `limit`, solo las
+// más cercanas: Inicio pide 5 (spec 013, CA-9); sin él, el servidor devuelve hasta 50.
 export async function fetchNearbyRoutes(
   token: string,
-  { center, radiusKm, type }: NearbySearch
+  { center, radiusKm, type }: NearbySearch,
+  { limit }: { limit?: number } = {}
 ): Promise<ApiResult<NearbyRoute[]>> {
   const query = new URLSearchParams({
     lat: String(center.latitude),
@@ -40,6 +42,7 @@ export async function fetchNearbyRoutes(
     radiusKm: String(radiusKm),
   });
   if (type) query.set('type', type);
+  if (limit !== undefined) query.set('limit', String(limit));
 
   let response: Response;
   try {
@@ -147,6 +150,28 @@ export function listMyRoutes(token: string) {
 
 export function listFavorites(token: string) {
   return pedir('/routes/favorites', token, {}, aLista<FavoriteRoute>);
+}
+
+// --- Inicio (spec 013) ---
+
+// Contrato de GET /routes/popular (spec 013, plan). Trae cuántas cuentas la guardaron, nunca
+// cuáles (RN-8).
+export type PopularRoute = {
+  id: string;
+  name: string;
+  type: ActivityType;
+  difficulty: RouteDifficulty | null;
+  region: string | null;
+  distanceMeters: number | null;
+  elevationGainMeters: number | null;
+  favoritesCount: number;
+  isMine: boolean;
+};
+
+// Las rutas con más favoritas de todo Baja California, como máximo 5 (CA-13). Una lista vacía
+// significa que ninguna tiene favoritas (CA-15).
+export function fetchPopularRoutes(token: string) {
+  return pedir('/routes/popular', token, {}, aLista<PopularRoute>);
 }
 
 // Guardar y quitar son idempotentes en el servidor (CA-16).

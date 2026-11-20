@@ -20,11 +20,13 @@ const {
   insertPoint,
   listClientIds,
   listFinishedActivities,
+  listRecentActivities,
   listUploadable,
   markSynced,
   markSyncError,
   repararFinAntesDelInicio,
   saveMetrics,
+  summarizeSince,
   PUNTOS_POR_LOTE,
 } = await import('./activities');
 
@@ -349,5 +351,66 @@ describe('getRecordingActivity y getLastPoint (spec 008)', () => {
 
     await finishActivity(id);
     expect(await getRecordingActivity()).toBeNull();
+  });
+});
+
+describe('Inicio: listRecentActivities y summarizeSince (spec 013, CA-3, CA-6, RN-2 a RN-4)', () => {
+  it('las 3 terminadas más recientes del usuario, de la más nueva a la más vieja', async () => {
+    const vieja = await terminada(A, '2026-11-10T10:00:00.000Z');
+    const media = await terminada(A, '2026-11-15T10:00:00.000Z');
+    const nueva = await terminada(A, '2026-11-19T10:00:00.000Z');
+    const otra = await terminada(A, '2026-11-12T10:00:00.000Z');
+    await terminada(B, '2026-11-20T10:00:00.000Z');
+    await createActivity(A, 'HIKING', 'GPS', '2026-11-20T09:00:00.000Z'); // en grabación
+
+    const ids = (await listRecentActivities(A, 3)).map((a) => a.localId);
+
+    expect(ids).toEqual([nueva, media, otra]);
+    expect(ids).not.toContain(vieja);
+  });
+
+  it('con menos actividades que el límite devuelve las que hay; sin ninguna, una lista vacía', async () => {
+    const id = await terminada(A, '2026-11-19T10:00:00.000Z');
+    expect((await listRecentActivities(A, 3)).map((a) => a.localId)).toEqual([id]);
+    expect(await listRecentActivities(B, 3)).toEqual([]);
+  });
+
+  it('suma las métricas guardadas de las que empezaron desde la fecha, subidas o pendientes', async () => {
+    await terminada(A, '2026-11-12T10:00:00.000Z'); // antes del periodo
+    const subida = await terminada(A, '2026-11-14T10:00:00.000Z');
+    await markSynced(subida, 'srv-1');
+    await terminada(A, '2026-11-19T10:00:00.000Z'); // pendiente
+    await terminada(B, '2026-11-19T10:00:00.000Z'); // otra cuenta
+    await createActivity(A, 'HIKING', 'GPS', '2026-11-20T09:00:00.000Z'); // en grabación
+
+    expect(await summarizeSince(A, '2026-11-13T12:00:00.000Z')).toEqual({
+      count: 2,
+      distanceMeters: 2 * metricas.distanceMeters,
+      durationSeconds: 2 * metricas.durationSeconds,
+      elevationGainMeters: 2 * metricas.elevationGainMeters,
+    });
+  });
+
+  it('una actividad que empezó justo en el límite cuenta; una sin métricas cuenta sin sumar', async () => {
+    await terminada(A, '2026-11-13T10:00:00.000Z');
+    await terminada(A, '2026-11-15T10:00:00.000Z', false);
+
+    expect(await summarizeSince(A, '2026-11-13T10:00:00.000Z')).toEqual({
+      count: 2,
+      distanceMeters: metricas.distanceMeters,
+      durationSeconds: metricas.durationSeconds,
+      elevationGainMeters: metricas.elevationGainMeters,
+    });
+  });
+
+  it('sin actividades en el periodo, todo en cero', async () => {
+    await terminada(A, '2026-11-01T10:00:00.000Z');
+
+    expect(await summarizeSince(A, '2026-11-13T00:00:00.000Z')).toEqual({
+      count: 0,
+      distanceMeters: 0,
+      durationSeconds: 0,
+      elevationGainMeters: 0,
+    });
   });
 });

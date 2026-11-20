@@ -240,6 +240,46 @@ export async function listFinishedActivities(userId: string) {
   );
 }
 
+// --- Inicio (spec 013) ---
+
+// Las `limit` actividades terminadas más recientes del usuario de la sesión, subidas o no (CA-3,
+// RN-2). Una actividad en grabación no aparece.
+export async function listRecentActivities(userId: string, limit: number) {
+  const db = await getDb();
+  return db.getAllAsync<Activity>(
+    `SELECT ${ACTIVITY_COLUMNS} FROM activities
+     WHERE status != 'RECORDING' AND user_id = ?
+     ORDER BY startedAt DESC
+     LIMIT ?`,
+    [userId, limit]
+  );
+}
+
+export type ActivityTotals = {
+  count: number;
+  distanceMeters: number;
+  durationSeconds: number;
+  elevationGainMeters: number;
+};
+
+// Totales de las actividades terminadas del usuario que empezaron en `desdeIso` o después (CA-6,
+// RN-2 a RN-4). Suma las métricas ya guardadas (spec 004) sin recalcularlas; una actividad sin
+// métricas cuenta en el número y no suma nada. startedAt se guarda en ISO 8601 UTC, así que la
+// comparación de texto respeta el orden de las fechas.
+export async function summarizeSince(userId: string, desdeIso: string): Promise<ActivityTotals> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<ActivityTotals>(
+    `SELECT COUNT(*) AS count,
+            COALESCE(SUM(distance_meters), 0) AS distanceMeters,
+            COALESCE(SUM(duration_seconds), 0) AS durationSeconds,
+            COALESCE(SUM(elevation_gain_meters), 0) AS elevationGainMeters
+     FROM activities
+     WHERE status != 'RECORDING' AND user_id = ? AND startedAt >= ?`,
+    [userId, desdeIso]
+  );
+  return row ?? { count: 0, distanceMeters: 0, durationSeconds: 0, elevationGainMeters: 0 };
+}
+
 // --- Sincronización (spec 005) ---
 
 // Actividad recuperada del servidor, lista para guardarse en el teléfono (CA-20, CA-21).
