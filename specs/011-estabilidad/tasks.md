@@ -485,8 +485,10 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 - [x] T55 — Correr M27, el recorrido simulado a velocidad de bicicleta. (CA-4)
 
   Corrido el 2026-11-18 en el emulador `Pixel_8_Pro` (development build, Metro con el código de T67 y backend aparte en `TELEGRAM_MODE=log`), con una cuenta desechable. Un script manda una ubicación por `adb emu geo fix` según el tiempo real, a 20 km/h, sobre una carretera con curvas. El emulador no tenía el permiso en segundo plano, así que grabó en primer plano, con un punto cada ~2 s. Resultado: 5:33, 1.79 km, 19.4 km/h, 160 puntos; la distancia queda 1.8 % bajo la suma punto a punto. En 3D la cámara sigue al marcador con el rumbo y el trazo sale continuo; en 2D, igual. **El usuario lo da por aceptable (2026-11-18).** Queda escrito que no se probó en una bicicleta real. Un primer intento se descartó: quedaron dos scripts mandando ubicaciones a la vez y el trazo salió en pedazos; los saltos no sumaron distancia (la regla de 50 m/s funcionó), pero esa actividad no cuenta.
-- [ ] T56 — Hacer el reporte en este archivo, con la revisión de M33. Clasificar cada fallo por severidad y decidir con el usuario. (CA-12, CA-19, CA-29, RN-2)
-- [ ] T57 — Corregir los fallos bloqueantes y los que el usuario pida, con su prueba si se puede. Repetir el caso que falló. (CA-19, CA-24)
+- [x] T56 — Hacer el reporte en este archivo, con la revisión de M33. Clasificar cada fallo por severidad y decidir con el usuario. (CA-12, CA-19, CA-29, RN-2)
+
+  Hecho (2026-11-20): el reporte está en "Reporte de la prueba de campo". Lo decidido con el usuario: F5 (Mayor) pasa a la 012; F6 (Menor) y F7 (Mayor) se corrigen en T57; F8 (Menor) se acepta. F7 subió de Menor a Mayor: la función no sirve hasta reabrir la app. Falta el nombre del sendero, que lo agrega el usuario.
+- [x] T57 — Corregir los fallos bloqueantes y los que el usuario pida, con su prueba si se puede. Repetir el caso que falló. (CA-19, CA-24)
 
   **Decidido el 2026-11-12, antes de repetir la salida:** se corrigen F1, F2 y F3 en T63 a T66; F4 se decide con los datos de la caminata (M26).
 - [x] T63 — F1: cerrar sin "Detener" nunca deja el fin antes del inicio, en `closeOrphanActivities` y `cierrePendiente`. Al abrir la app, corregir las actividades pendientes que ya lo tengan, recalcular sus métricas y quitar su error de subida. (spec 003, CA-10; CA-24)
@@ -506,6 +508,21 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
   Hecho (2026-11-18). `SMOOTHING_RADIUS_M = 50` en `lib/metrics/constants.ts` y `backend/src/activity/distancia.ts`; el plan de la 004 se actualizó primero (D3, "Distancia", historial). Se eligió con los puntos reales de la salida: el carro del 2026-11-11 pasa de −8 a −16 % a entre −5.2 y −2.4 % de Strava, y la caminata del 2026-11-18 queda igual (+4.6 y +5.2 %). Prueba nueva en `distance.test.ts` y `distancia.spec.ts`: carretera con curvas a 25 m/s, un punto cada 10 s, error ≤ 5 %. Sin el radio, esa prueba falla en los dos lados. Las actividades ya guardadas conservan su distancia.
 
+- [x] T68 — F6: el eje del perfil de una ruta termina en la distancia de la ruta. (spec 007, RN-8; CA-5, CA-24)
+
+  Hecho (2026-11-20). Primero se actualizó la spec 007: RN-8 y su historial. `perfilDe` (`backend/src/route/elevation-profile.ts`) recibe la distancia de la ruta y escala la distancia acumulada para que el eje termine en ella; sin ella, o con 0, queda la suma punto a punto, que es lo que usa el seed. `route.service.ts` le pasa la distancia de la actividad.
+  - **Pruebas:** dos nuevas en `elevation-profile.spec.ts`. La del zigzag con +12 %, como en M28, falla sin el cambio (12 432 contra 11 119.5 m).
+  - **e2e:** "un salto imposible no se dibuja…" ahora espera que el eje termine en los 3 000 m de la ruta, con tramos parejos, en lugar de 28 × 111 m.
+  - **Rutas ya publicadas:** conservan su perfil.
+  - **M28 no se repitió:** el perfil sigue heredando F5, pasado a la 012.
+- [x] T69 — F7: las consultas que fallaron se repiten al volver la red o la app al frente. (CA-24)
+
+  Hecho (2026-11-20).
+  - **Código:** `lib/api/reconexion.ts` tiene `crearQueryClient` y `conectarConsultas`. `crearQueryClient` usa `networkMode: 'always'` para que las consultas sigan corriendo sin red, como la copia local de los contactos, y vuelve a encender `refetchOnReconnect`, que TanStack apaga con ese modo. `conectarConsultas` conecta `onlineManager` con `expo-network` y `focusManager` con `AppState`. `lib/api/queryClient.ts` usa `crearQueryClient` y `App.tsx` llama a `conectarConsultas`.
+  - **Pruebas:** tres en `reconexion.test.ts`, con TanStack real y las fuentes de red y app simuladas: la consulta con error se repite al volver la red, se repite al volver la app al frente, y sin red sigue corriendo. Sin conectar las fuentes fallan las dos primeras.
+  - **No se vio en un teléfono:** la build instalada es la de campo, de antes del cambio. Queda verificado con las pruebas.
+
+  **Después de T68 y T69:** Vitest pasa en el frontend (783) y en el backend (471), las e2e pasan (88), `tsc` del frontend pasa y `npm run lint` del backend termina sin errores, con las 3 advertencias de siempre.
 **M33, revisado con el usuario (2026-11-18):** se conservan 30 m, 10 minutos y 2 minutos. En la caminata, la parada más larga dentro de 30 m fue de 3.4 min, no hubo "¿Estás bien?" sin motivo ni alertas, y el tiempo y la cuenta regresiva ya los puede cambiar cada usuario. La spec 008 no cambia.
 
 ## Fase 5 — Regresión y cierre
@@ -541,10 +558,10 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
 | CA-1 | Caso manual M25 | Manual, teléfono real | Cumple (salida del 2026-11-18, revisada el 2026-11-20) |
-| CA-2 | Caso manual M26 | Manual, teléfono real | Pendiente |
+| CA-2 | Caso manual M26 | Manual, teléfono real | No cumple: la distancia (+5.1 %) y el barómetro (+6.5 %) sí; la elevación con GPS no, por F5, pasado a la 012 |
 | CA-3 | Caso manual M25 | Manual, teléfono real | Cumple (salida del 2026-11-18) |
 | CA-4 | Caso manual M27 | Manual, simulado | Cumple (2026-11-18, T55): aceptado por el usuario; no probado en bici real |
-| CA-5 | Caso manual M28 | Manual, teléfono real | Pendiente |
+| CA-5 | Caso manual M28 | Manual, teléfono real | No cumple: el perfil hereda F5, pasado a la 012. El eje (F6) se corrige en T57 |
 | CA-6 | Caso manual M29 | Manual, teléfono real | Cumple (2026-11-20): 004 M4 en el Nothing y M5 en el S9+; M3 con 1 piso (3.8 m, barómetro), aceptado por el usuario |
 | CA-7 | Caso manual M25 | Manual, teléfono real | Cumple (salida del 2026-11-18; ajustes de batería revisados por USB el 2026-11-20) |
 | CA-8 | Caso manual M30 | Manual, teléfono real | Pendiente: cumple quieto en el Nothing (2026-11-18); falta caminando |
@@ -558,17 +575,17 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-16 | `recorrido.spec.ts`, `route-publish.e2e-spec.ts` y caso manual M22 | Automatizada y manual | Cumple (Vitest, e2e y emulador) |
 | CA-17 | `backend/src/activity/distancia.spec.ts`, `frontend/lib/metrics/oldPoints.test.ts` y caso manual M23 | Automatizada y manual | Cumple (Vitest, emulador y script con ruta de prueba) |
 | CA-18 | Caso manual M24 | Manual, teléfono real | No reproducible (20/20 en Nothing Phone 2, RN-3) |
-| CA-19 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |
+| CA-19 | Reporte de campo en este archivo (T56) | Revisión | Cumple (2026-11-20): F1 a F8 tienen severidad y resolución |
 | CA-20 | Caso manual M19 | Manual, teléfono real | Cumple (2026-11-19) |
 | CA-21 | Caso manual M19 | Manual, teléfono real | Pendiente |
 | CA-22 | `npm run test:e2e`, 5 veces seguidas | Automatizada | Cumple (5 de 5, 88 pruebas) |
 | CA-23 | Pruebas nuevas y lista revisada en T47 | Automatizada y revisión | Cumple (28 pruebas nuevas; resto anotado) |
-| CA-24 | Revisión de T48 y T57 | Revisión | Fase 2 cumple (T48); falta T57 |
+| CA-24 | Revisión de T48 y T57 | Revisión | Cumple (2026-11-20): T63 a T69 tienen pruebas que fallan sin la corrección, salvo T65 y T66, verificadas como se anota en cada una |
 | CA-25 | `npm test` y `npm run test:e2e` en backend, Vitest en frontend, y `npm run lint` | Automatizada | Cumple (2026-11-18, T60) |
 | CA-26 | Caso manual M34 | Manual | Cumple (2026-11-20): emulador, y 007 M8 y 009 M1 en teléfonos reales |
 | CA-27 | Caso manual M35 | Postman | Cumple (2026-11-18, T59): 134 pruebas, con un runner de los scripts de la colección |
 | CA-28 | Revisión de estados en T61 | Revisión | Pendiente |
-| CA-29 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |
+| CA-29 | Reporte de campo en este archivo (T56) | Revisión | Cumple (2026-11-20), salvo el nombre del sendero, que lo agrega el usuario |
 | CA-30 | Caso manual M1 | Manual | Cumple (emulador) |
 | CA-31 | `frontend/lib/map/offlineZones.test.ts` y caso manual M17 | Automatizada y manual | Cumple (Vitest y emulador) |
 | CA-32 | Caso manual M17 | Manual | Cumple (emulador) |
@@ -819,9 +836,20 @@ Antes de la fase 4, salvo que digan otra cosa, se pueden correr en el emulador, 
 Se llena en T56. Sin dirección de casa ni datos de los contactos.
 
 - **Fecha y lugar:**
-- **Teléfonos:** Galaxy S9+, Nothing Phone 2
-- **Tipo de actividad:**
-- **Resultados por CA:**
+  - Salida principal el 2026-11-18, de 17:42 a 18:50 UTC, en un sendero de Baja California de ~4.2 km y ~200 m de subida, según Strava. Falta el nombre del sendero, que lo pone el usuario.
+  - Ensayo y pruebas cerca de casa el 2026-11-10 y el 2026-11-11.
+  - Casos en teléfono real del 2026-11-18 al 2026-11-20: M19, M30 a M32, M4 y el resto de M25 y M29.
+- **Teléfonos:** Galaxy S9+ (SM-G9650, con barómetro) y Nothing Phone 2 (A065, Android 16, sin barómetro). Build de campo con la URL del túnel y `EXPO_PUBLIC_BATTERY_TEST=1`. En el Nothing, desde el 2026-11-18, la build de diagnóstico de F5. Strava como referencia.
+- **Tipo de actividad:** senderismo, de 1:08 en los dos teléfonos. Las pruebas de bicicleta y carro se simularon en el emulador (CA-4) o se grabaron en carro (F4).
+- **Resultados por CA** (el detalle está en "Verificación" y en cada tarea):
+  - Cumplen en teléfono real: CA-1, CA-3, CA-6, CA-7, CA-9, CA-10, CA-11, CA-20 y CA-38.
+  - CA-4 cumple con la simulación del emulador; el usuario la dio por aceptable.
+  - CA-12 (M33): se conservan los valores.
+  - CA-18: no se pudo reproducir (20 de 20).
+  - CA-2 y CA-5 no cumplen por F5, pasado a la 012. La distancia de CA-2 se aceptó con +5.1 %.
+  - CA-8 cumple con el teléfono quieto; falta caminando.
+  - CA-21 falta grabar fuera de la zona.
+  - CA-26: la regresión pasa.
 - **Fallos:**
 
 | Fallo | Severidad | Resolución |
@@ -830,10 +858,10 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
 | F2 — Con la pantalla bloqueada, los dos teléfonos dejan de grabar puntos durante casi toda la salida, y la detección de inactividad tampoco corre (ver abajo) | Mayor. En los dos fue el permiso, no el código | Corregido: aviso antes de iniciar (T66). En la salida del 2026-11-18 los dos grabaron sin huecos |
 | F3 — Con la pantalla apagada el barómetro no entrega lecturas, y la actividad queda con fuente "barómetro" y 0 m de elevación (ver abajo) | Mayor; afecta CA-2 | Corregido en T64 y T65. En la salida del 2026-11-18 el S9+ midió 212 m con barómetro contra 201 m de Strava |
 | F4 — A velocidad de carro o bici, con un punto cada 10 s, el suavizado de la distancia recorta 8 a 16 % (ver abajo) | Menor; afecta CA-4 | Corregido en T67: con los puntos reales, el carro queda entre −5.2 y −2.4 % de Strava y la caminata igual |
-| F5 — En segundo plano, la altitud del GPS alterna entre la real y un valor casi fijo (~−15 m), y la elevación con GPS sale casi 4 veces la real (ver abajo) | Mayor; afecta CA-2 en teléfonos sin barómetro y el perfil de las rutas (M28) | Por decidir en T56 |
-| F6 — El eje del perfil de una ruta mide la suma punto a punto, no la distancia de la ruta: en M28, 4 996 contra 4 461 m (+12 %) | Menor; afecta M28 | Por decidir en T56 |
-| F7 — Si el backend no responde al abrir la app, Inicio queda en "No se pudo cargar tu perfil" y no se recupera cuando vuelve la conexión; hay que cerrar y abrir la app (ver abajo) | Menor | Por decidir en T56 |
-| F8 — Si se cambia el tamaño de letra con la app abierta, los textos que ya estaban en pantalla se cortan hasta reabrirla: en Seguridad, los botones de "Tiempo sin moverme" y "Cuenta regresiva" muestran el número sin "min", y en "Mis actividades" se corta la distancia (ver abajo) | Menor. Es el límite ya anotado en la spec 003 (CA-14) | Por decidir en T56 si se corrige o se acepta |
+| F5 — En segundo plano, la altitud del GPS alterna entre la real y un valor casi fijo (~−15 m), y la elevación con GPS sale casi 4 veces la real (ver abajo) | Mayor; afecta CA-2 en teléfonos sin barómetro y el perfil de las rutas (M28) | **Pasado a la 012** (decidido con el usuario, 2026-11-20). CA-2 y CA-5 quedan sin cumplir por F5. Los datos de `diag_f5`, tomados solo con el teléfono quieto, muestran altitudes fijas con precisión vertical de 1 m, así que filtrar por `altitudeAccuracy` quizá no baste; falta la caminata de diagnóstico |
+| F6 — El eje del perfil de una ruta mide la suma punto a punto, no la distancia de la ruta: en M28, 4 996 contra 4 461 m (+12 %) | Menor; afecta M28 | Corregido en T68 (decidido con el usuario, 2026-11-20). Las rutas ya publicadas conservan su perfil |
+| F7 — Si el backend no responde al abrir la app, Inicio queda en "No se pudo cargar tu perfil" y no se recupera cuando vuelve la conexión; hay que cerrar y abrir la app (ver abajo) | Mayor: la función no sirve hasta reabrir la app | Corregido en T69 (decidido con el usuario, 2026-11-20); verificado con pruebas, no en un teléfono |
+| F8 — Si se cambia el tamaño de letra con la app abierta, los textos que ya estaban en pantalla se cortan hasta reabrirla: en Seguridad, los botones de "Tiempo sin moverme" y "Cuenta regresiva" muestran el número sin "min", y en "Mis actividades" se corta la distancia (ver abajo) | Menor. Es el límite ya anotado en la spec 003 (CA-14) | **Aceptado por el usuario** (2026-11-20): es el costo de que cambiar la letra no corte la grabación |
 
 - **F7, detalle (2026-11-19):** antes de M31, en el Nothing, la app se abrió con el túnel apagado. Ya con el túnel arriba, el teléfono llegaba al backend (`curl` desde el teléfono y `GET /user/profile` con la cuenta de Postman, ambos por el túnel, respondían), pero Inicio seguía con el error y sin el aviso de "Seguridad activa". Al cerrar y abrir la app cargó todo. En el frontend no se usan `onlineManager` ni `focusManager` de TanStack Query, así que la consulta con error no se repite al volver la red ni al regresar a la app. Ninguna spec lo pide de forma explícita: la 010 (CA-16) habla solo del mapa.
   Pasó dos veces el 2026-11-19: la segunda, el túnel daba `502` en 1 de cada 3 peticiones (tras 5 a 11 s), con el backend respondiendo en local. Con la app abierta en un `502`, la tarjeta de Seguridad de Inicio sí era correcta: el usuario había quitado a su único contacto al empezar M1.
