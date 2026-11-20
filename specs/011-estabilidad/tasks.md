@@ -510,7 +510,7 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 
 ## Fase 5 — Regresión y cierre
 
-- [ ] T58 — Correr M34, los casos pendientes de las specs 005, 007, 008 y 009. 009 M1 lo hace el usuario. (CA-26)
+- [x] T58 — Correr M34, los casos pendientes de las specs 005, 007, 008 y 009. 009 M1 lo hace el usuario. (CA-26)
 
   Avance (2026-11-18), en el emulador con la misma preparación que T55:
   - **005 M3, pasa:** con 3 actividades grabadas en modo avión, al quitarlo se tocó "Empezar" → "Iniciar actividad" de inmediato. La grabación arrancó normal y a los 21 s las 3 ya estaban sincronizadas, con la nueva aún grabando.
@@ -518,7 +518,12 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
   - **007 M6, pasa:** se publicó la de 1.79 km, se editó el nombre, se archivó (queda "Archivada" en "Mis rutas", desaparece del mapa y de la búsqueda cercana), se volvió a publicar (regresa al mapa) y se borró (sale de "Mis rutas" y el resumen vuelve a ofrecer "Publicar como ruta").
   - **008 M8 paso 4, pasa:** se inició con regreso a 1 h, se cambió a 3 h con conexión (el servidor guardó la nueva) y se adelantó la sesión 1 h 31 min en la base, de modo que la hora anterior ya habría vencido con su margen. En dos corridas de la tarea no hubo aviso. Como control, al vencer también la hora nueva el servidor sí mandó "no ha confirmado su regreso".
   - **008 M10, pasa:** con "Permitir todo el tiempo" en el emulador, 5 min con la pantalla bloqueada y el GPS en movimiento: 64 puntos, sin tramos de más de 5 s sin puntos. Al detener desaparece la notificación de grabación y el servicio sale de primer plano. Después de 11 min (más que los 10 de inactividad) no llegó pregunta ni alerta.
-  - **Pendiente:** 007 M8 en el segundo teléfono y 009 M1, que hace el usuario.
+  - **007 M8, pasa (2026-11-20), con los dos teléfonos reales:**
+    - En el S9+, con la cuenta de Postman, se guardó "El Salto" como favorita (`PUT /routes/:id/favorite` → `204`). La cuenta quedó con 2: El Salto (hoy) y Cañón de Doña Petra (2026-11-02).
+    - En el Nothing, con la cuenta del usuario, que no tiene favoritas, "Mis favoritas" muestra "Nada por aquí todavía" y explica cómo guardarlas.
+    - El usuario cerró sesión en el Nothing y entró con la cuenta de Postman. "Mis favoritas" muestra las mismas 2, con El Salto primero, igual que en el S9+.
+  - **009 M1, pasa (2026-11-20, por el usuario, en un teléfono real):** en claro y en oscuro, la app coincide con Figma. Con letra grande (`font_scale` 1.3) y la app reabierta no se corta nada. Si se cambia la letra con la app abierta, se cortan textos hasta reabrirla (F8, límite conocido de la spec 003).
+  - **M34 completo. CA-26 cumple.**
 - [x] T59 — Agregar a la colección de Postman los endpoints nuevos y correrla en Postman. (CA-27)
 
   Colección actualizada (2026-11-18): carpeta "Cuenta (spec 011)" con 25 peticiones y sus pruebas. Crea una cuenta temporal (no toca la de las variables `email` y `password`), edita nombre y avatar (`400` con avatar inexistente y nombre corto, `null` quita el avatar), cambia correo (`403`, `409`) y contraseña (`400`, `403`, login nuevo `200` y anterior `401`), publica una ruta, comprueba el `409` al borrar con una alerta activa y el `403` con contraseña incorrecta, la borra (`204`) y verifica el `401` del token y del login, y que la ruta publicada queda con autor "Cuenta eliminada". **Corrida (2026-11-18):** con un runner propio que ejecuta los mismos scripts de la colección (el subconjunto de `pm` que usa, con `chai`), no con la app de Postman, contra un backend aparte en el puerto 3001 con `TELEGRAM_MODE=log` y el secreto del webhook. Se corrió con una cuenta desechable en `email` y `password`, porque la carpeta de seguridad borra todos los contactos de esa cuenta y la de Postman tiene contactos reales en el S9+; la advertencia quedó en la descripción de esa carpeta. Las 78 solicitudes y sus 134 pruebas pasan. En la primera corrida fallaron 7 pruebas de la carpeta nueva por errores de la propia colección (el `400` trae el detalle en `errors`, y la ruta de prueba medía menos de 1.5 km); se corrigieron. Al final se borró la cuenta desechable y la ruta sin autor que deja la carpeta; no quedan cuentas de prueba.
@@ -560,7 +565,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-23 | Pruebas nuevas y lista revisada en T47 | Automatizada y revisión | Cumple (28 pruebas nuevas; resto anotado) |
 | CA-24 | Revisión de T48 y T57 | Revisión | Fase 2 cumple (T48); falta T57 |
 | CA-25 | `npm test` y `npm run test:e2e` en backend, Vitest en frontend, y `npm run lint` | Automatizada | Cumple (2026-11-18, T60) |
-| CA-26 | Caso manual M34 | Manual | Pendiente |
+| CA-26 | Caso manual M34 | Manual | Cumple (2026-11-20): emulador, y 007 M8 y 009 M1 en teléfonos reales |
 | CA-27 | Caso manual M35 | Postman | Cumple (2026-11-18, T59): 134 pruebas, con un runner de los scripts de la colección |
 | CA-28 | Revisión de estados en T61 | Revisión | Pendiente |
 | CA-29 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |
@@ -828,9 +833,17 @@ Se llena en T56. Sin dirección de casa ni datos de los contactos.
 | F5 — En segundo plano, la altitud del GPS alterna entre la real y un valor casi fijo (~−15 m), y la elevación con GPS sale casi 4 veces la real (ver abajo) | Mayor; afecta CA-2 en teléfonos sin barómetro y el perfil de las rutas (M28) | Por decidir en T56 |
 | F6 — El eje del perfil de una ruta mide la suma punto a punto, no la distancia de la ruta: en M28, 4 996 contra 4 461 m (+12 %) | Menor; afecta M28 | Por decidir en T56 |
 | F7 — Si el backend no responde al abrir la app, Inicio queda en "No se pudo cargar tu perfil" y no se recupera cuando vuelve la conexión; hay que cerrar y abrir la app (ver abajo) | Menor | Por decidir en T56 |
+| F8 — Si se cambia el tamaño de letra con la app abierta, los textos que ya estaban en pantalla se cortan hasta reabrirla: en Seguridad, los botones de "Tiempo sin moverme" y "Cuenta regresiva" muestran el número sin "min", y en "Mis actividades" se corta la distancia (ver abajo) | Menor. Es el límite ya anotado en la spec 003 (CA-14) | Por decidir en T56 si se corrige o se acepta |
 
 - **F7, detalle (2026-11-19):** antes de M31, en el Nothing, la app se abrió con el túnel apagado. Ya con el túnel arriba, el teléfono llegaba al backend (`curl` desde el teléfono y `GET /user/profile` con la cuenta de Postman, ambos por el túnel, respondían), pero Inicio seguía con el error y sin el aviso de "Seguridad activa". Al cerrar y abrir la app cargó todo. En el frontend no se usan `onlineManager` ni `focusManager` de TanStack Query, así que la consulta con error no se repite al volver la red ni al regresar a la app. Ninguna spec lo pide de forma explícita: la 010 (CA-16) habla solo del mapa.
   Pasó dos veces el 2026-11-19: la segunda, el túnel daba `502` en 1 de cada 3 peticiones (tras 5 a 11 s), con el backend respondiendo en local. Con la app abierta en un `502`, la tarjeta de Seguridad de Inicio sí era correcta: el usuario había quitado a su único contacto al empezar M1.
+- **F8, detalle (2026-11-20):** en 009 M1, hecho por el usuario en un teléfono real. En modo claro todo coincide. Con la letra del sistema en la opción más grande, se cortan al menos dos textos:
+  - En Seguridad, los botones de "Tiempo sin moverme" y "Cuenta regresiva" muestran el número y no "min".
+  - En "Mis actividades", la distancia.
+  
+  - **Causa:** el usuario cambió el tamaño de letra sin cerrar la app. Con la app reabierta y `font_scale` 1.3 (la opción que tenía el Nothing), las dos pantallas se ven completas: los botones bajan de fila con "min", y las distancias y los tiempos caben.
+  - **Ya estaba documentado:** es el límite anotado en la spec 003 (CA-14). `fontScale` está en `configChanges` para que cambiar la letra no corte la grabación (hallazgo de la spec 010). Por eso React Native no vuelve a medir los textos que ya están en pantalla; las pantallas nuevas sí salen bien.
+  - **009 M1 con letra grande pasa** con la app reabierta, que es como lo prueba M1. Queda decidir en T56 si se acepta el límite o se fuerza a volver a medir los textos al cambiar la letra.
 
 **Antes de la salida (2026-11-10).** Actividades grabadas por el usuario sin backend ni internet, sincronizadas después por USB. No cuentan como la prueba de campo (M25 a M33), pero dejan datos y un fallo.
 - **Mismo recorrido en los dos teléfonos**, grabado como ciclismo. Por la velocidad (mediana 25 km/h, máximo 113 km/h), parece hecho en carro.
