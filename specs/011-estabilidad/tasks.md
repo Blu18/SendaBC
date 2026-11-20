@@ -439,6 +439,8 @@ Dos tareas detienen el trabajo: T2 (si el relieve no funciona sin red, se vuelve
 - [ ] T54 — Correr M19 en la zona real, en modo avión. (CA-20, CA-21)
 
   **Avance (2026-11-18):** en la salida, en modo avión y dentro de la zona descargada, el mapa se vio con el terreno, no un fondo azul (CA-20, parte). No se revisaron el cambio entre 3D y 2D, el modo oscuro ni la grabación fuera de la zona (CA-21); quedan para otra salida.
+
+  **Avance (2026-11-19), en un teléfono real, en modo avión y grabando dentro de la zona descargada:** el cambio entre 3D y 2D funciona, y el de claro a oscuro también, en las dos vistas. **CA-20 cumple.** Al mover la cámara fuera de la zona, en 3D las texturas se ven borrosas y en 2D se ve bien. Fuera de la zona solo hay lo que el mapa ya tenía guardado, así que no es un fondo azul ni un fallo de CA-20. Falta CA-21: grabar con la ubicación fuera de la zona, no solo mover la cámara.
 - [x] T55 — Correr M27, el recorrido simulado a velocidad de bicicleta. (CA-4)
 
   Corrido el 2026-11-18 en el emulador `Pixel_8_Pro` (development build, Metro con el código de T67 y backend aparte en `TELEGRAM_MODE=log`), con una cuenta desechable. Un script manda una ubicación por `adb emu geo fix` según el tiempo real, a 20 km/h, sobre una carretera con curvas. El emulador no tenía el permiso en segundo plano, así que grabó en primer plano, con un punto cada ~2 s. Resultado: 5:33, 1.79 km, 19.4 km/h, 160 puntos; la distancia queda 1.8 % bajo la suma punto a punto. En 3D la cámara sigue al marcador con el rumbo y el trazo sale continuo; en 2D, igual. **El usuario lo da por aceptable (2026-11-18).** Queda escrito que no se probó en una bicicleta real. Un primer intento se descartó: quedaron dos scripts mandando ubicaciones a la vez y el trazo salió en pedazos; los saltos no sumaron distancia (la regla de 50 m/s funcionó), pero esa actividad no cuenta.
@@ -511,7 +513,7 @@ Los 60 criterios tienen al menos una tarea y una forma de verificarse.
 | CA-17 | `backend/src/activity/distancia.spec.ts`, `frontend/lib/metrics/oldPoints.test.ts` y caso manual M23 | Automatizada y manual | Cumple (Vitest, emulador y script con ruta de prueba) |
 | CA-18 | Caso manual M24 | Manual, teléfono real | No reproducible (20/20 en Nothing Phone 2, RN-3) |
 | CA-19 | Reporte de campo en este archivo (T56) | Revisión | Pendiente |
-| CA-20 | Caso manual M19 | Manual, teléfono real | Pendiente |
+| CA-20 | Caso manual M19 | Manual, teléfono real | Cumple (2026-11-19) |
 | CA-21 | Caso manual M19 | Manual, teléfono real | Pendiente |
 | CA-22 | `npm run test:e2e`, 5 veces seguidas | Automatizada | Cumple (5 de 5, 88 pruebas) |
 | CA-23 | Pruebas nuevas y lista revisada en T47 | Automatizada y revisión | Cumple (28 pruebas nuevas; resto anotado) |
