@@ -11,3 +11,10 @@ export const MAP_UNAVAILABLE = {
   title: 'Mapa no disponible',
   description: 'La grabación sigue. Tus puntos y métricas se guardan.',
 };
+
+// Mapa de Explorar y del detalle de ruta (spec 013, T8). Las rutas y sus datos siguen en
+// pantalla aunque el mapa no se pueda dibujar.
+export const ROUTE_MAP_UNAVAILABLE = {
+  title: 'Mapa no disponible',
+  description: 'Vuelve a abrir esta pantalla para intentarlo de nuevo.',
+};

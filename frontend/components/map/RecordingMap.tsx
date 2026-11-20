@@ -12,7 +12,7 @@ import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 import { CAMERA_MOVE_MS, LOOK_AHEAD_PADDING, PITCH_3D, ZOOM_FOLLOWING, ZOOM_OVERVIEW } from "../../lib/map/camera";
 import { MAP_OFFLINE, MAP_UNAVAILABLE, MAP_WAITING_GPS } from "../../lib/map/messages";
 import { TERRAIN_URL, localMapStyle, mapStyle } from "../../lib/map/style";
-import { BAJA_CALIFORNIA_REGION } from "../../lib/routes/constants";
+import { BAJA_CALIFORNIA_CENTER } from "../../lib/routes/constants";
 import type { Theme } from "../../lib/theme";
 
 // Datos de relieve de Mapbox, probados en la Sierra de Juárez (spec 010, T4).
@@ -118,7 +118,7 @@ export default function RecordingMap({ activityLocalId, overlay }: Props) {
                                           padding: LOOK_AHEAD_PADDING,
                                       }
                                     : {
-                                          centerCoordinate: [BAJA_CALIFORNIA_REGION.longitude, BAJA_CALIFORNIA_REGION.latitude],
+                                          centerCoordinate: BAJA_CALIFORNIA_CENTER,
                                           zoomLevel: ZOOM_OVERVIEW,
                                       }
                             }

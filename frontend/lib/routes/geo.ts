@@ -1,13 +1,9 @@
 import { haversineMeters, type Coordinates } from '../metrics/geo';
+import type { LngLat } from '../map/track';
 import { MOVE_THRESHOLD } from './constants';
 
 // Grados de latitud por kilómetro, aproximado: solo sirve para encuadrar el mapa.
 const DEG_LAT_PER_KM = 1 / 111.2;
-
-// Recorrido del backend ([longitud, latitud]) al formato de react-native-maps (CA-2).
-export function pathToCoordinates(path: [number, number][]): Coordinates[] {
-  return path.map(([longitude, latitude]) => ({ latitude, longitude }));
-}
 
 // Distancia en línea recta desde el usuario hasta el inicio de la ruta, en metros (CA-7,
 // RN-2). Sin ubicación del usuario no hay distancia (CA-14).
@@ -36,7 +32,7 @@ const MIN_DELTA_DEG = 0.005;
 
 // Región del mapa que muestra el recorrido completo (spec 007, CA-10). `path` en [lng, lat];
 // sin puntos, la región alrededor de `start`.
-export function regionForPath(path: [number, number][], start: Coordinates) {
+function regionForPath(path: [number, number][], start: Coordinates) {
   const lngs = path.length > 0 ? path.map(([lng]) => lng) : [start.longitude];
   const lats = path.length > 0 ? path.map(([, lat]) => lat) : [start.latitude];
   const [minLng, maxLng] = [Math.min(...lngs), Math.max(...lngs)];
@@ -50,8 +46,35 @@ export function regionForPath(path: [number, number][], start: Coordinates) {
 }
 
 // Región del mapa centrada en `center` que muestra el círculo de búsqueda completo (CA-1, CA-10).
-export function regionAround(center: Coordinates, radiusKm: number) {
+function regionAround(center: Coordinates, radiusKm: number) {
   const latitudeDelta = 2 * radiusKm * DEG_LAT_PER_KM;
   const longitudeDelta = latitudeDelta / Math.cos((center.latitude * Math.PI) / 180);
   return { ...center, latitudeDelta, longitudeDelta };
+}
+
+// --- Encuadres para Mapbox (spec 013, T7) ---
+// Mapbox recibe los límites como esquinas en [longitud, latitud]. regionForPath y regionAround
+// calculan centro y tamaño, y boundsForPath y boundsAround los convierten en esquinas.
+export type Bounds = { ne: LngLat; sw: LngLat };
+
+function boundsFromCenter(center: LngLat, lngSpan: number, latSpan: number): Bounds {
+  const [lng, lat] = center;
+  return {
+    ne: [lng + lngSpan / 2, lat + latSpan / 2],
+    sw: [lng - lngSpan / 2, lat - latSpan / 2],
+  };
+}
+
+// Límites que muestran el recorrido completo, con 25 % de margen por lado y al menos ≈ 500 m
+// (spec 007, CA-10; spec 013, CA-32). `path` en [lng, lat]; sin puntos, alrededor de `start`.
+export function boundsForPath(path: [number, number][], start: Coordinates): Bounds {
+  const r = regionForPath(path, start);
+  return boundsFromCenter([r.longitude, r.latitude], r.longitudeDelta, r.latitudeDelta);
+}
+
+// Límites centrados en `center` que muestran el círculo de búsqueda completo (spec 006, CA-1,
+// CA-10; spec 013, CA-31).
+export function boundsAround(center: Coordinates, radiusKm: number): Bounds {
+  const r = regionAround(center, radiusKm);
+  return boundsFromCenter([r.longitude, r.latitude], r.longitudeDelta, r.latitudeDelta);
 }
