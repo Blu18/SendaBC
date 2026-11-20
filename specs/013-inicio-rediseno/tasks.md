@@ -99,25 +99,78 @@ Una tarea detiene el trabajo: T2. `mainPage` (T22) no se programa hasta que el u
 
 ## Fase D — Inicio
 
-- [ ] T13 — `lib/db/activities.ts`: `listRecentActivities(userId, limit)` y `summarizeSince(userId, desdeIso)` (conteo y sumas de distancia, duración y elevación ganada; solo terminadas y del usuario). Pruebas en `activities.test.ts`: excluye la actividad en grabación y las de otra cuenta, incluye las subidas y las pendientes, y considera el límite de 7 días. (CA-3, CA-6, RN-2, RN-3)
-- [ ] T14 — `lib/home/summary.ts`: `inicioDeUltimos7Dias(ahora)` (7 × 24 h) y el formato de la franja de totales con los formateadores de la 004, con totales en cero. Pruebas en `summary.test.ts`. (CA-6, RN-4)
-- [ ] T15 — `lib/map/thumbnail.ts`: encuadre Web Mercator (centro y zoom con margen), proyección a coordenadas del `Svg`, reducción a ≤ 200 puntos y URL de la Static Images API **sin** el recorrido. Pruebas en `thumbnail.test.ts`, incluido un recorrido de un solo punto y uno recto. (CA-3, CA-8)
-- [ ] T16 — `lib/routes/api.ts`: `fetchPopularRoutes` y el parámetro `limit` en `fetchNearbyRoutes`. Pruebas en `api.test.ts`. (CA-9, CA-13)
-- [ ] T17 — Instalar `react-native-svg` con `npx expo install`. `components/map/TrackThumbnail.tsx`: imagen estática del tema y el recorrido en `Svg` encima. Sin red o si la imagen falla, fondo liso `surface` con el recorrido. Lleva `accessibilityLabel`. (CA-3, CA-8, CA-28)
-- [ ] T18 — `hooks/home/useHomeActivities.ts`: las 3 recientes con sus puntos, los totales de 7 días y los pendientes, con recarga en `useFocusEffect`. (CA-3, CA-6, CA-7, CA-19, CA-21)
-- [ ] T19 — `hooks/home/useHomeRoutes.ts`:
+- [x] T13 — `lib/db/activities.ts`: `listRecentActivities(userId, limit)` y `summarizeSince(userId, desdeIso)` (conteo y sumas de distancia, duración y elevación ganada; solo terminadas y del usuario). Pruebas en `activities.test.ts`: excluye la actividad en grabación y las de otra cuenta, incluye las subidas y las pendientes, y considera el límite de 7 días. (CA-3, CA-6, RN-2, RN-3)
+
+  Hecho: `summarizeSince` devuelve `ActivityTotals` (`count`, `distanceMeters`, `durationSeconds` y `elevationGainMeters`), con ceros si no hay actividades. La fecha se compara como texto, porque `startedAt` se guarda en ISO 8601 UTC. Una actividad sin métricas cuenta en el número pero no suma. 5 pruebas nuevas; el frontend pasa 793.
+- [x] T14 — `lib/home/summary.ts`: `inicioDeUltimos7Dias(ahora)` (7 × 24 h) y el formato de la franja de totales con los formateadores de la 004, con totales en cero. Pruebas en `summary.test.ts`. (CA-6, RN-4)
+
+  Hecho: `inicioDeUltimos7Dias`, `formatTotalDuration` y `weekSummaryText`, con 7 pruebas; el frontend pasa 800.
+  - La duración total sale como "5 h 12 min", igual que en Figma. `formatDuration` de la 004 la mostraría como "05:12:00", que parece una hora del día.
+  - Distancia y elevación usan los formatos de la 004, así que la distancia lleva dos decimales ("23.40 km"), no uno como en Figma ("23.4 km"). Sin distancia se muestra "0 km".
+  - "actividad" va en singular cuando es 1.
+- [x] T15 — `lib/map/thumbnail.ts`: encuadre Web Mercator (centro y zoom con margen), proyección a coordenadas del `Svg`, reducción a ≤ 200 puntos y URL de la Static Images API **sin** el recorrido. Pruebas en `thumbnail.test.ts`, incluido un recorrido de un solo punto y uno recto. (CA-3, CA-8)
+
+  Hecho: `frameThumbnail(path, width, height)` devuelve centro, zoom y trazo SVG. `simplifyPoints` reduce el recorrido a 200 puntos. `staticMapUrl` arma la URL con estilo, centro, zoom y tamaño `@2x`, sin el recorrido. 11 pruebas; el frontend pasa 811.
+  - El zoom se redondea a centésimas antes de dibujar, para que la imagen y el trazo usen la misma escala. El máximo es 15.
+  - La URL va con `logo=false&attribution=false`, porque en 88 px no caben. Los términos de Mapbox piden entonces mostrar la atribución en otro lugar. **Pendiente para T22:** una línea "© Mapbox © OpenStreetMap" en Inicio, por ejemplo bajo "Tus actividades".
+- [x] T16 — `lib/routes/api.ts`: `fetchPopularRoutes` y el parámetro `limit` en `fetchNearbyRoutes`. Pruebas en `api.test.ts`. (CA-9, CA-13)
+
+  Hecho: el tipo `PopularRoute` y `fetchPopularRoutes(token)`, que usa `pedir` y devuelve `RouteResult` como las otras listas de la 007. `fetchNearbyRoutes` recibe un tercer parámetro opcional, `{ limit }`, y así `NearbySearch` y las búsquedas de Explorar no cambian. 5 pruebas nuevas; el frontend pasa 816.
+- [x] T17 — Instalar `react-native-svg` con `npx expo install`. `components/map/TrackThumbnail.tsx`: imagen estática del tema y el recorrido en `Svg` encima. Sin red o si la imagen falla, fondo liso `surface` con el recorrido. Lleva `accessibilityLabel`. (CA-3, CA-8, CA-28)
+
+  Hecho: `react-native-svg` 15.15.4, la versión que recomienda la documentación de Expo 57. `TrackThumbnail` recibe `path` en `[lng, lat]`, `width`, `height`, `accessibilityLabel` y `lineColor` (`data` o `primary`).
+  - El trazo lleva un borde del color de la superficie para que se lea sobre cualquier fondo.
+  - Si la imagen falla (`onError`), queda el fondo `surface`. Sin token de Mapbox no se pide la imagen.
+  - Es código nativo: el APK de `C:\dev\sbc13` (T11) no lo trae, así que **hay que recompilar** antes de los casos en el dispositivo (T24).
+  - Al commitear, `package.json` se separa otra vez del cambio de `expo` que ya estaba en el árbol.
+- [x] T18 — `hooks/home/useHomeActivities.ts`: las 3 recientes con sus puntos, los totales de 7 días y los pendientes, con recarga en `useFocusEffect`. (CA-3, CA-6, CA-7, CA-19, CA-21)
+
+  Hecho: devuelve `recent` (cada actividad con su `path`), `totals`, `pending`, `loading` y `reload`.
+  - Se recarga con `useFocusEffect` y también con `useSyncDataChanged`, como el historial.
+  - El recorrido de cada miniatura sale de `activityThumbnailPath`, nuevo en `lib/map/thumbnail.ts` con 3 pruebas. Usa `computeTrack`, igual que el mapa de la grabación, así que descarta los puntos imprecisos. Si ningún punto alcanza la precisión, usa todos.
+  - Si una lectura falla, conserva lo último que leyó.
+  - El frontend pasa 819 pruebas.
+- [x] T19 — `hooks/home/useHomeRoutes.ts`:
   - `useNearbyHome` lee el permiso sin pedirlo, toma la posición como Explorar y consulta con `radiusKm=25` y `limit=5`;
   - `usePopularRoutes`;
   - keys `['routes', 'home-nearby' | 'popular', userId]`, que no escriben en `routeCache` (D6). (CA-9, CA-11, CA-13, CA-17, CA-22)
-- [ ] T20 — `hooks/auth/useLogout.ts` con el aviso de pendientes, sacado de `mainPage`. Botón "Cerrar sesión" al final de `profilePage`. (CA-24, CA-25)
-- [ ] T21 — Componentes en `components/home/`:
+
+  Hecho: los dos hooks devuelven `items`, `status` (`loading`, `ready`, `empty`, `offline`, `noPermission` o `error`) y `retry`.
+  - El estado sale de `lib/home/routes.ts` (`homeRoutesStatus`, `esSinConexion` y las constantes de 25 km y 5 rutas), con 7 pruebas; el frontend pasa 826.
+  - Sin conexión, o si la petición no llega al servidor, el resultado es "sin conexión" y no un error.
+  - Al volver la red o la app al frente, `refetchOnReconnect` y `refetchOnWindowFocus` (011, F7) repiten las consultas en pantalla, así que también se actualiza el permiso si el usuario lo da desde los ajustes.
+  - Con el GPS apagado, la consulta de cercanas da `error`.
+- [x] T20 — `hooks/auth/useLogout.ts` con el aviso de pendientes, sacado de `mainPage`. Botón "Cerrar sesión" al final de `profilePage`. (CA-24, CA-25)
+
+  Hecho:
+  - `useLogout` tiene la misma lógica que tenía Inicio: cuenta las actividades pendientes, avisa con `pendingUploadsWarning` y regresa a la bienvenida con `navigation.reset`.
+  - En el perfil, el botón `BgBtn` "Cerrar sesión" va después de las tarjetas de la cuenta, con la nota del diseño. **También aparece cuando el perfil no carga o está cargando**: si no, sin red no habría forma de cerrar sesión, y antes sí se podía desde Inicio.
+  - Se quitaron de `mainPage` el botón y su lógica (CA-24). El resto de Inicio se rehace en T22.
+  - `tsc` sin errores y 826 pruebas; se verifica en el dispositivo con M8.
+- [x] T21 — Componentes en `components/home/`:
   - `WeekSummary`;
   - `ActivityCard`, con miniatura, tipo, fecha, distancia y duración;
   - `RouteCard`, para el carrusel de cercanas;
   - `PopularRouteRow`, con número y favoritas.
 
   Cada uno con nombre accesible. (CA-3, CA-6, CA-9, CA-13, CA-28)
-- [ ] T22 — Reescribir `pages/main/mainPage.tsx` según el diseño aprobado. En este orden: saludo y avatar (genéricos si falla el perfil); `WeekSummary`; Cerca de ti, con "Ver mapa" y avisos de sin permiso, sin rutas y sin conexión; Tus actividades, con "Ver todas" y mensaje vacío; Populares, oculta si viene vacía; Listo para salir (`SafetyCard`, pendientes, Mapas sin conexión). Al final, el botón fijo "Empezar actividad" sobre la barra de pestañas. Sin "Cerrar sesión". (CA-1, CA-2, CA-4, CA-5, CA-7, CA-10, CA-11, CA-12, CA-15, CA-16, CA-18, CA-19, CA-20, CA-22, CA-23, CA-24, CA-27)
+
+  Hecho: los cuatro componentes, con el estilo de los de Figma.
+  - Los textos y lo que dice el lector de pantalla salen de `lib/home/cards.ts` (`activityCardText`, `nearbyRouteText` y `popularRouteText`), con 7 pruebas; el frontend pasa 833.
+  - La tarjeta de actividad usa el mismo formato que el historial: fecha con `formatStartedAt` y duración con `formatDuration` (CA-3).
+  - Las rutas propias llevan "Tuya" (RN-5).
+  - La posición de las populares usa `secondaryText` en lugar de `secondary`, para cumplir el contraste en los dos modos.
+- [x] T22 — Reescribir `pages/main/mainPage.tsx` según el diseño aprobado. En este orden: saludo y avatar (genéricos si falla el perfil); `WeekSummary`; Cerca de ti, con "Ver mapa" y avisos de sin permiso, sin rutas y sin conexión; Tus actividades, con "Ver todas" y mensaje vacío; Populares, oculta si viene vacía; Listo para salir (`SafetyCard`, pendientes, Mapas sin conexión). Al final, el botón fijo "Empezar actividad" sobre la barra de pestañas. Sin "Cerrar sesión". (CA-1, CA-2, CA-4, CA-5, CA-7, CA-10, CA-11, CA-12, CA-15, CA-16, CA-18, CA-19, CA-20, CA-22, CA-23, CA-24, CA-27)
+
+  Hecho: `mainPage` con las secciones del diseño D; cada sección tiene encabezado para el lector de pantalla.
+  - "Ver mapa" aparece solo con rutas cercanas y "Ver todas" solo con actividades.
+  - Populares se oculta si la respuesta viene vacía.
+  - El saludo es "Hola" sin perfil y ya no hay aviso de error del perfil (CA-23).
+  - "Empezar actividad" es un `PrimaryButton` fijo fuera del `ScrollView`.
+  - Nuevos: `components/home/PrepRow.tsx` y `lib/home/messages.ts`, con los textos de Figma y 3 pruebas.
+  - Diferencias con Figma, anotadas en la spec: los contactos van con `SafetyCard`, por el aviso del 911, y al final está la atribución "Mapas © Mapbox © OpenStreetMap" (RN-10).
+  - Con el GPS apagado, las cercanas muestran "No se pudieron cargar las rutas" con "Reintentar".
+  - `tsc` sin errores y 836 pruebas. Falta verlo en el dispositivo, con un build nuevo por `react-native-svg`.
 - [ ] T23 — Revisión de accesibilidad: encabezados de sección, orden de lectura, áreas de toque de 48 dp, contraste AA en los dos modos, movimiento reducido y letra al máximo sin cortes. Corregir lo que salga. (CA-27, CA-28, CA-29)
 
 ## Cierre

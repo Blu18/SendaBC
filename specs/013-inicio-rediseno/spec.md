@@ -99,6 +99,7 @@ De paso, Explorar rutas y el detalle de ruta pasan a usar el mismo mapa que la g
 - RN-7: La cercanía usa la misma medida que Explorar rutas (spec 006, RN-1), con un radio fijo de 25 km.
 - RN-8: El número de favoritas de una ruta se muestra, pero nunca quién la guardó.
 - RN-9: El cambio de mapa no cambia ningún criterio de las specs 006 y 007; solo el proveedor, el estilo y el fondo sin red en las zonas descargadas (CA-34). Esto amplía la spec 011, RN-8 (las zonas descargadas ya no se usan solo al grabar); se anota en su historial al implementar. Las miniaturas de Inicio usan el mismo estilo de mapa.
+- RN-10: Las imágenes de fondo de las miniaturas no llevan logo ni atribución dentro, porque no caben. Por eso Inicio muestra "Mapas © Mapbox © OpenStreetMap", como piden los términos del proveedor.
 
 ## Requisitos no funcionales
 
@@ -147,3 +148,4 @@ De paso, Explorar rutas y el detalle de ruta pasan a usar el mismo mapa que la g
 - 2026-11-20 — Aprobada por el usuario.
 - 2026-11-20 — En progreso. Inicio (propuesta D) en Figma, en claro y oscuro con sus estados (T1): https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX?node-id=57-3359. Falta la aprobación del usuario (T2, CA-26).
 - 2026-11-20 — Prototipo de Inicio en Figma aprobado por el usuario (CA-26), sin cambios: https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX?node-id=57-3359. Ya se puede programar `mainPage` (T22).
+- 2026-11-20 — Se agrega RN-10 (atribución de los mapas en Inicio), que no estaba en el prototipo. En "Listo para salir", los contactos se muestran con la tarjeta de seguridad de la spec 008 y no con una fila, para conservar el aviso del 911 (CA-18, "como hoy"). CA-27 se revisa con esas dos diferencias. Anotado al implementar T22.
