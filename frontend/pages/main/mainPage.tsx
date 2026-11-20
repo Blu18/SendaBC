@@ -1,72 +1,58 @@
-import { View, Text, StyleSheet, ActivityIndicator, Alert, ScrollView } from "react-native";
+import type { ReactNode } from "react";
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Appear from "../../components/ui/Appear";
 import { useProfile } from "../../hooks/auth/auth.hooks";
-import { useAuth } from "../../context/AuthContext";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import TextBtn from "../../components/ui/buttons/TextBtn";
-import Card from "../../components/ui/Card";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Notice from "../../components/ui/Notice";
-import Icon from "../../components/ui/Icon";
 import PressableScale from "../../components/ui/PressableScale";
 import Avatar from "../../components/account/Avatar";
 import SafetyCard from "../../components/safety/SafetyCard";
+import WeekSummary from "../../components/home/WeekSummary";
+import ActivityCard from "../../components/home/ActivityCard";
+import RouteCard from "../../components/home/RouteCard";
+import PopularRouteRow from "../../components/home/PopularRouteRow";
+import PrepRow from "../../components/home/PrepRow";
+import { useHomeActivities } from "../../hooks/home/useHomeActivities";
+import { useNearbyHome, usePopularRoutes } from "../../hooks/home/useHomeRoutes";
 import { useEmergencyContacts } from "../../hooks/safety/useEmergencyContacts";
+import { HOME_MESSAGES, pendingTitle } from "../../lib/home/messages";
+import { weekSummaryText } from "../../lib/home/summary";
 import { contactosActivos } from "../../lib/safety/contacts";
-import { darkTheme, lightTheme, type Theme } from "../../lib/theme";
+import type { Theme } from "../../lib/theme";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
-import { countPendingUploads } from "../../lib/db/activities";
-import { pendingUploadsWarning } from "../../lib/format/activity";
 
+// Inicio (spec 013, propuesta D · A + C aprobada en Figma, T2). De arriba abajo: saludo, totales
+// de los últimos 7 días, rutas cerca de ti, tus actividades, rutas populares y "Listo para salir".
+// "Empezar actividad" queda fijo sobre la barra de pestañas (CA-1). Lo que viene del teléfono se
+// ve sin conexión (CA-21); las secciones de rutas dicen si falta conexión (CA-22).
 export default function MainPage() {
     const navigation = useNavigation();
-    const { logout, userId } = useAuth();
     const profile = useProfile();
+    const { recent, totals, pending } = useHomeActivities();
+    const nearby = useNearbyHome();
+    const popular = usePopularRoutes();
     const { contacts, status: contactsStatus } = useEmergencyContacts();
     const nombresActivos = contactosActivos(contacts).map((c) => c.name);
     const theme = useTheme();
     const styles = useThemedStyles(makeStyles);
 
-    const cerrarSesion = async () => {
-        await logout();
-        navigation.reset({ index: 0, routes: [{ name: 'Index' }] });
-    };
-
-    // Spec 005, CA-24: con actividades sin subir, avisar antes de cerrar sesión. Las actividades
-    // no se borran: se suben cuando esa cuenta vuelva a iniciar sesión (RN-4).
-    const handleLogout = async () => {
-        let pendientes = 0;
-        try {
-            if (userId) pendientes = await countPendingUploads(userId);
-        } catch (e) {
-            // Sin el conteo se cierra sesión igual: los datos se conservan en el teléfono.
-            console.log('Error contando actividades sin subir:', e);
-        }
-
-        const aviso = pendingUploadsWarning(pendientes);
-        if (!aviso) {
-            await cerrarSesion();
-            return;
-        }
-        Alert.alert('Actividades sin subir', aviso, [
-            { text: 'Cancelar', style: 'cancel' },
-            { text: 'Cerrar sesión', style: 'destructive', onPress: () => void cerrarSesion() },
-        ]);
-    };
-
-    // "Empezar" va sobre la tarjeta primary: usa primary y onPrimary del modo contrario, como en
-    // Figma (los dos pares ya están en la tabla de contraste, CA-3).
-    const inverse = theme.scheme === 'dark' ? lightTheme.colors : darkTheme.colors;
+    const abrirRuta = (id: string) => navigation.navigate("RouteDetail", { id });
+    const verMapa = () => navigation.navigate("Home", { screen: "ExploreRoutes" });
+    const cargando = <ActivityIndicator color={theme.colors.primary} style={styles.loading} />;
+    const pendientes = pendingTitle(pending);
 
     return (
         <View style={styles.container}>
             <ScreenHeader
-                title={profile.data ? `Hola, ${profile.data.displayName}` : 'Inicio'}
+                // Sin perfil (sin red y sin caché) el saludo es genérico y todo lo demás sigue (CA-23).
+                title={profile.data ? `Hola, ${profile.data.displayName}` : "Hola"}
                 actions={
-                    // Avatar de la cuenta (spec 011, CA-42): abre el perfil.
+                    // Avatar de la cuenta (spec 011, CA-42): abre el perfil, donde está "Cerrar sesión" (CA-24).
                     <PressableScale
-                        onPress={() => navigation.navigate('Profile')}
+                        onPress={() => navigation.navigate("Profile")}
                         accessibilityRole="button"
                         accessibilityLabel="Tu perfil"
                         style={styles.avatarBtn}
@@ -77,50 +63,143 @@ export default function MainPage() {
                 }
             />
             <ScrollView contentContainerStyle={styles.content}>
-                {profile.isLoading && <ActivityIndicator size="large" color={theme.colors.primary} />}
-                <Appear>
-                    {profile.isError && (
-                        <Notice
-                            type="error"
-                            title="No se pudo cargar tu perfil"
-                            description="Tus actividades se siguen grabando en el teléfono."
-                        />
+                {/* Totales de los últimos 7 días (CA-6). */}
+                {totals && <WeekSummary summary={weekSummaryText(totals)} />}
+
+                {/* Rutas cerca de ti (CA-9 a CA-12). */}
+                <Section
+                    title="Cerca de ti"
+                    action={nearby.status === "ready" ? <TextBtn text="Ver mapa" onPress={verMapa} /> : null}
+                >
+                    {nearby.status === "loading" && cargando}
+                    {nearby.status === "ready" && (
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            style={styles.carousel}
+                            contentContainerStyle={styles.carouselContent}
+                        >
+                            {nearby.items.map((route) => (
+                                <RouteCard key={route.id} route={route} onPress={() => abrirRuta(route.id)} />
+                            ))}
+                        </ScrollView>
                     )}
-                </Appear>
+                    <Appear style={styles.group}>
+                        {nearby.status === "empty" && (
+                            <>
+                                <Notice {...HOME_MESSAGES.nearbyEmpty} />
+                                <TextBtn text="Explorar el mapa" onPress={verMapa} style={styles.linkBtn} />
+                            </>
+                        )}
+                        {nearby.status === "noPermission" && <Notice {...HOME_MESSAGES.nearbyNoPermission} />}
+                        {nearby.status === "offline" && <Notice type="offline" {...HOME_MESSAGES.nearbyOffline} />}
+                        {nearby.status === "error" && (
+                            <>
+                                <Notice type="error" {...HOME_MESSAGES.nearbyError} />
+                                <TextBtn text="Reintentar" onPress={nearby.retry} style={styles.linkBtn} />
+                            </>
+                        )}
+                    </Appear>
+                </Section>
 
-                <View style={styles.newActivity}>
-                    <Icon name="hiking" size={40} color="onPrimary" decorative />
-                    <Text style={styles.newActivityTitle}>Nueva actividad</Text>
-                    <Text style={styles.newActivityText}>
-                        Graba tu recorrido aunque no tengas señal. Se sube solo cuando vuelva la conexión.
-                    </Text>
-                    <PrimaryButton
-                        text="Empezar"
-                        style={{ backgroundColor: inverse.primary }}
-                        textStyle={{ color: inverse.onPrimary }}
-                        onPress={() => navigation.navigate('Activity')}
-                    />
-                </View>
+                {/* Tus actividades: las 3 más recientes (CA-3 a CA-5, CA-7). */}
+                <Section
+                    title="Tus actividades"
+                    action={
+                        recent.length > 0 ? (
+                            <TextBtn text="Ver todas" onPress={() => navigation.navigate("Home", { screen: "ActivityHistory" })} />
+                        ) : null
+                    }
+                >
+                    {totals && recent.length === 0 && <Notice {...HOME_MESSAGES.noActivities} />}
+                    {recent.map((activity) => (
+                        <ActivityCard
+                            key={activity.localId}
+                            activity={activity}
+                            onPress={() => navigation.navigate("ActivitySummary", { localId: activity.localId, origin: "history" })}
+                        />
+                    ))}
+                </Section>
 
-                {/* Resumen de seguridad (spec 008, CA-8); solo con la lista ya cargada, para no
-                    avisar "sin contactos" por un error de red. */}
-                <Text style={styles.sectionTitle} accessibilityRole="header">Seguridad</Text>
-                {contactsStatus === 'success' && (
-                    <SafetyCard nombres={nombresActivos} onConfigurar={() => navigation.navigate('Home', { screen: 'Safety' })} />
+                {/* Rutas populares de todo Baja California (CA-13 a CA-15). Sin favoritas, no aparece. */}
+                {popular.status !== "empty" && (
+                    <Section title="Populares">
+                        {popular.status === "loading" && cargando}
+                        {popular.status === "ready" && (
+                            <View style={styles.list}>
+                                {popular.items.map((route, i) => (
+                                    <PopularRouteRow
+                                        key={route.id}
+                                        route={route}
+                                        position={i + 1}
+                                        divider={i > 0}
+                                        onPress={() => abrirRuta(route.id)}
+                                    />
+                                ))}
+                            </View>
+                        )}
+                        <Appear style={styles.group}>
+                            {popular.status === "offline" && <Notice type="offline" {...HOME_MESSAGES.popularOffline} />}
+                            {popular.status === "error" && (
+                                <>
+                                    <Notice type="error" {...HOME_MESSAGES.popularError} />
+                                    <TextBtn text="Reintentar" onPress={popular.retry} style={styles.linkBtn} />
+                                </>
+                            )}
+                        </Appear>
+                    </Section>
                 )}
 
-                {/* Zonas del mapa para grabar sin señal (spec 011, CA-32, CA-33). */}
-                <Text style={styles.sectionTitle} accessibilityRole="header">Mapas</Text>
-                <Card
-                    title="Mapas sin conexión"
-                    description="Descarga una zona para ver el mapa al grabar aunque no tengas señal."
-                    onPress={() => navigation.navigate('OfflineZones')}
-                />
+                {/* Listo para salir (CA-18 a CA-20). Los contactos solo con la lista ya cargada, para
+                    no avisar "sin contactos" por un error de red (spec 008, CA-8). */}
+                <Section title="Listo para salir">
+                    {contactsStatus === "success" && (
+                        <SafetyCard nombres={nombresActivos} onConfigurar={() => navigation.navigate("Home", { screen: "Safety" })} />
+                    )}
+                    <View style={styles.list}>
+                        {pendientes && (
+                            <PrepRow
+                                icon="cloud-upload-outline"
+                                iconColor="secondaryText"
+                                title={pendientes}
+                                description={HOME_MESSAGES.pendingDescription}
+                            />
+                        )}
+                        <PrepRow
+                            icon="map-outline"
+                            iconColor="data"
+                            title={HOME_MESSAGES.offlineMaps.title}
+                            description={HOME_MESSAGES.offlineMaps.description}
+                            onPress={() => navigation.navigate("OfflineZones")}
+                            divider={pendientes !== null}
+                        />
+                    </View>
+                </Section>
 
-                <TextBtn text="Cerrar sesión" style={styles.logoutBtn} onPress={handleLogout} />
+                {/* Las miniaturas no llevan logo ni atribución dentro de la imagen (spec 013, T15). */}
+                <Text style={styles.attribution}>{HOME_MESSAGES.attribution}</Text>
             </ScrollView>
+
+            {/* Fijo sobre la barra de pestañas, visible sin desplazarse (CA-1, CA-2). */}
+            <View style={styles.startBar}>
+                <PrimaryButton text="Empezar actividad" onPress={() => navigation.navigate("Activity")} />
+            </View>
         </View>
-    )
+    );
+}
+
+// Sección con encabezado (para el lector de pantalla, CA-28) y una acción opcional a la derecha.
+function Section({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
+    const styles = useThemedStyles(makeStyles);
+    return (
+        <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle} accessibilityRole="header">{title}</Text>
+                {action}
+            </View>
+            {children}
+        </View>
+    );
 }
 
 const makeStyles = (t: Theme) => StyleSheet.create({
@@ -129,42 +208,71 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         backgroundColor: t.colors.background,
     },
     content: {
-        gap: t.spacing.lg,
+        gap: t.spacing.xl,
         padding: t.spacing.lg,
     },
-    newActivity: {
+    loading: {
+        alignSelf: "flex-start",
+        marginVertical: t.spacing.sm,
+    },
+    section: {
         gap: t.spacing.md,
-        padding: t.spacing.xl,
-        borderRadius: t.radius.lg,
-        backgroundColor: t.colors.primary,
     },
-    newActivityTitle: {
-        ...t.typography.headline,
-        color: t.colors.onPrimary,
-    },
-    newActivityText: {
-        ...t.typography.bodySmall,
-        color: t.colors.onPrimary,
+    sectionHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: t.spacing.sm,
+        minHeight: t.touchMin,
     },
     sectionTitle: {
         ...t.typography.title,
         color: t.colors.text,
+        flexShrink: 1,
+    },
+    group: {
+        gap: t.spacing.sm,
+    },
+    linkBtn: {
+        alignSelf: "flex-start",
+    },
+    // El carrusel llega hasta el borde derecho de la pantalla, para que se note que hay más.
+    carousel: {
+        marginRight: -t.spacing.lg,
+    },
+    carouselContent: {
+        gap: t.spacing.md,
+        paddingRight: t.spacing.lg,
+    },
+    list: {
+        borderRadius: t.radius.md,
+        backgroundColor: t.colors.surface,
+        overflow: "hidden",
+    },
+    attribution: {
+        ...t.typography.caption,
+        color: t.colors.textMuted,
+        textAlign: "center",
+    },
+    startBar: {
+        paddingHorizontal: t.spacing.lg,
+        paddingVertical: t.spacing.md,
+        backgroundColor: t.colors.background,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: t.colors.border,
     },
     // Área de toque de 48 dp (touchMin) alrededor del avatar de 40.
     avatarBtn: {
         width: t.touchMin,
         height: t.touchMin,
         borderRadius: t.touchMin / 2,
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
     },
     avatarPressed: {
         ...StyleSheet.absoluteFill,
         backgroundColor: t.colors.primary,
         opacity: 0.12,
-    },
-    logoutBtn: {
-        alignSelf: 'flex-start',
     },
 });
