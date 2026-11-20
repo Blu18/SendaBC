@@ -849,6 +849,108 @@
       ]
     },
     {
+      "name": "Inicio (spec 013)",
+      "item": [
+        {
+          "name": "Rutas cercanas con límite",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const rutas = pm.response.json();",
+                  "pm.test('como máximo 5, la más cercana primero (CA-9)', () => {",
+                  "  pm.expect(rutas.length).to.be.at.most(5);",
+                  "  const d = rutas.map((r) => r.distanceFromCenterMeters);",
+                  "  pm.expect(d).to.eql([...d].sort((a, b) => a - b));",
+                  "  d.forEach((m) => pm.expect(m).to.be.at.most(25000));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/nearby?lat={{lat}}&lng={{lng}}&radiusKm=25&limit=5"
+          }
+        },
+        {
+          "name": "Límite fuera de rango (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje en español', () => {",
+                  "  pm.expect(pm.response.json().errors.limit).to.include('El límite debe ser un entero entre 1 y 50');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/nearby?lat={{lat}}&lng={{lng}}&limit=51"
+          }
+        },
+        {
+          "name": "Rutas populares",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const rutas = pm.response.json();",
+                  "pm.test('como máximo 5, de más a menos favoritas (CA-13)', () => {",
+                  "  pm.expect(rutas.length).to.be.at.most(5);",
+                  "  const n = rutas.map((r) => r.favoritesCount);",
+                  "  pm.expect(n).to.eql([...n].sort((a, b) => b - a));",
+                  "});",
+                  "pm.test('solo rutas con favoritas y sin quién las guardó (CA-15, RN-8)', () => {",
+                  "  rutas.forEach((r) => {",
+                  "    pm.expect(r.favoritesCount).to.be.a('number').and.to.be.at.least(1);",
+                  "    pm.expect(r).to.have.keys('id', 'name', 'type', 'difficulty', 'region', 'distanceMeters', 'elevationGainMeters', 'favoritesCount', 'isMine');",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/popular"
+          }
+        },
+        {
+          "name": "Rutas populares sin token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/routes/popular"
+          }
+        }
+      ]
+    },
+    {
       "name": "Seguridad (spec 008)",
       "description": "Ejecutar en orden, después de \"2. Login\". Requiere el backend con TELEGRAM_MODE=log y TELEGRAM_WEBHOOK_SECRET igual a la variable webhookSecret, para simular que el contacto acepta la invitación sin Telegram. Cuidado: quita TODOS los contactos de la cuenta de las variables email y password, así que no se debe correr con una cuenta que tenga contactos reales. Quita los contactos de corridas anteriores, agrega uno, lo activa por el webhook, le manda la prueba, inicia una sesión con hora de regreso, manda una ubicación, crea y cancela una alerta, termina la actividad y quita el contacto.",
       "item": [
