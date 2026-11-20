@@ -16,7 +16,10 @@ import {
 import { PrismaService } from '../prisma.service.js';
 import { dificultadDe } from './difficulty.js';
 import type { CreateRouteDto } from './dto/create-route.dto.js';
-import type { NearbyQueryDto } from './dto/nearby-query.dto.js';
+import {
+  MAX_NEARBY_LIMIT,
+  type NearbyQueryDto,
+} from './dto/nearby-query.dto.js';
 import type { UpdateRouteDto } from './dto/update-route.dto.js';
 import { perfilDe, type Perfil } from './elevation-profile.js';
 import {
@@ -25,8 +28,12 @@ import {
   type PuntoRecorrido,
 } from './recorrido.js';
 
-// Como máximo 50 rutas, las más cercanas al centro (spec 006, CA-5).
-export const MAX_NEARBY_ROUTES = 50;
+// Como máximo 50 rutas, las más cercanas al centro (spec 006, CA-5). Quien llama puede pedir
+// menos con `limit` (spec 013, CA-9).
+export const MAX_NEARBY_ROUTES = MAX_NEARBY_LIMIT;
+
+// Rutas populares en Inicio: las 5 con más favoritas (spec 013, CA-13).
+export const MAX_POPULAR_ROUTES = 5;
 
 // Una ruta debe medir al menos 1.5 km (spec 007, RN-5).
 export const MIN_PUBLISH_DISTANCE_M = 1_500;
@@ -139,6 +146,19 @@ export type NearbyRoute = {
   isMine: boolean;
 };
 
+// Ruta popular (spec 013, CA-13). Lleva cuántas cuentas la guardaron, nunca cuáles (RN-8).
+export type PopularRoute = {
+  id: string;
+  name: string;
+  type: ActivityType;
+  difficulty: RouteDifficulty | null;
+  region: string | null;
+  distanceMeters: number | null;
+  elevationGainMeters: number | null;
+  favoritesCount: number;
+  isMine: boolean;
+};
+
 type NearbyRow = {
   id: string;
   name: string;
@@ -161,7 +181,7 @@ export class RouteService {
   // Rutas publicadas cuyo inicio está dentro del radio, la más cercana primero (CA-2 a CA-5,
   // CA-12). La ubicación solo se usa como centro de la consulta; no se guarda (constitución 3.5).
   async nearby(userId: string, query: NearbyQueryDto): Promise<NearbyRoute[]> {
-    const { lat, lng, radiusKm, type } = query;
+    const { lat, lng, radiusKm, type, limit = MAX_NEARBY_ROUTES } = query;
     const filtroTipo = type
       ? Prisma.sql`AND r.type = ${type}::"ActivityType"`
       : Prisma.empty;
@@ -179,9 +199,25 @@ export class RouteService {
         AND ST_DWithin(r."startPoint", centro.g, ${radiusKm * 1000})
         ${filtroTipo}
       ORDER BY "distanceFromCenterMeters"
-      LIMIT ${MAX_NEARBY_ROUTES}`;
+      LIMIT ${limit}`;
 
     return rows.map(toNearbyRoute);
+  }
+
+  // Las rutas publicadas con más favoritas de todo Baja California, sin importar la distancia
+  // (spec 013, CA-13, RN-6). Con el mismo número, la publicada más reciente primero (CA-14); la
+  // ruta se crea ya publicada, así que createdAt es su fecha de publicación. El JOIN deja fuera
+  // las rutas sin favoritas (CA-15) y la llave (userId, routeId) cuenta cada cuenta una vez.
+  async popular(userId: string): Promise<PopularRoute[]> {
+    return this.prisma.$queryRaw<PopularRoute[]>`
+      SELECT r.id, r.name, r.type, r.difficulty, r.region, r."distanceMeters",
+             r."elevationGainMeters", COUNT(*)::int AS "favoritesCount",
+             (r."createdByUserId" IS NOT DISTINCT FROM ${userId}::uuid) AS "isMine"
+      FROM routes r JOIN route_favorites f ON f."routeId" = r.id
+      WHERE r.status = 'PUBLISHED'
+      GROUP BY r.id
+      ORDER BY "favoritesCount" DESC, r."createdAt" DESC
+      LIMIT ${MAX_POPULAR_ROUTES}`;
   }
 
   // Publica una actividad del usuario del token como ruta y devuelve el id de la ruta

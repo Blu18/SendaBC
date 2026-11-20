@@ -10,6 +10,7 @@ import {
   AUTOR_CUENTA_ELIMINADA,
   esVisible,
   MAX_NEARBY_ROUTES,
+  MAX_POPULAR_ROUTES,
   RouteService,
 } from './route.service.js';
 
@@ -126,6 +127,15 @@ describe('RouteService.nearby (spec 006)', () => {
     expect(valores).toContain(50_000);
     expect(valores).toContain(USUARIO);
     expect(valores.at(-1)).toBe(MAX_NEARBY_ROUTES);
+  });
+
+  it('usa el límite pedido en lugar de 50 (spec 013, CA-9)', async () => {
+    const { service, prisma } = montar();
+
+    await service.nearby(USUARIO, { ...query, radiusKm: 25, limit: 5 });
+
+    expect(sqlDe(prisma)).toMatch(/LIMIT \?$/);
+    expect(valoresDe(prisma).at(-1)).toBe(5);
   });
 
   it('filtra por tipo solo cuando se pide (CA-12)', async () => {
@@ -978,5 +988,54 @@ describe('RouteService: rutas de una cuenta borrada (spec 011, CA-48, RN-16)', (
     await expect(service.remove(USUARIO, RUTA)).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+});
+
+describe('RouteService.popular (spec 013)', () => {
+  it('devuelve las filas tal cual, con el número de favoritas (CA-13)', async () => {
+    const { service, prisma } = montar();
+    const filas = [
+      {
+        id: 'r-1',
+        name: 'La Bufadora',
+        type: 'HIKING',
+        difficulty: 'MODERATE',
+        region: 'Ensenada',
+        distanceMeters: 7300,
+        elevationGainMeters: 410,
+        favoritesCount: 3,
+        isMine: false,
+      },
+    ];
+    prisma.$queryRaw.mockResolvedValue(filas);
+
+    expect(await service.popular(USUARIO)).toEqual(filas);
+  });
+
+  it('solo publicadas con favoritas, de más a menos y la más reciente si empatan, máximo 5 (CA-13 a CA-15, RN-5)', async () => {
+    const { service, prisma } = montar();
+
+    await service.popular(USUARIO);
+
+    const sql = sqlDe(prisma);
+    expect(sql).toContain(`r.status = 'PUBLISHED'`);
+    expect(sql).toContain('JOIN route_favorites f ON f."routeId" = r.id');
+    expect(sql).not.toMatch(/LEFT JOIN route_favorites/);
+    expect(sql).toContain('COUNT(*)::int AS "favoritesCount"');
+    expect(sql).toContain('GROUP BY r.id');
+    expect(sql).toContain('ORDER BY "favoritesCount" DESC, r."createdAt" DESC');
+    expect(MAX_POPULAR_ROUTES).toBe(5);
+    expect(valoresDe(prisma).at(-1)).toBe(MAX_POPULAR_ROUTES);
+  });
+
+  it('no devuelve quién guardó cada ruta y marca las del usuario (RN-5, RN-8)', async () => {
+    const { service, prisma } = montar();
+
+    await service.popular(USUARIO);
+
+    const sql = sqlDe(prisma);
+    expect(sql).not.toContain('f."userId"');
+    expect(sql).toContain('r."createdByUserId" IS NOT DISTINCT FROM ?::uuid');
+    expect(valoresDe(prisma)).toContain(USUARIO);
   });
 });
