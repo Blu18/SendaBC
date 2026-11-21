@@ -134,7 +134,7 @@ De paso, Explorar rutas y el detalle de ruta pasan a usar el mismo mapa que la g
 - [x] **P8 — "Actividades" populares y cercanas:** son **rutas publicadas**. HU-3, HU-4.
 - [x] **P9 — Cantidades:** hasta 5 cercanas en 25 km y hasta 5 populares. CA-9, CA-13.
 - [x] **P10 — Alcance de populares:** todo Baja California, sin importar la distancia. RN-6.
-- [x] **P11 — Miniatura sin red:** por ahora, solo la forma del recorrido sobre un fondo liso (CA-8). Decisión provisional: el usuario la confirma o la cambia al ver el diseño implementado.
+- [x] **P11 — Miniatura sin red:** por ahora, solo la forma del recorrido sobre un fondo liso (CA-8). Confirmada por el usuario el 2026-11-20, después de verla en el S9+. Si la imagen ya se había visto, se conserva desde la caché.
 - [x] **P12 — Diseño:** el elegido parte de una cuarta propuesta, D · A + C: métricas de 7 días y botón fijo de C; Cerca de ti, Tus actividades, Populares y Listo para salir de A, en ese orden. Confirmada por el usuario. CA-26.
 - [x] **P13 — Zonas descargadas en Explorar y en el detalle:** sí, se ven sin red. CA-34, RN-9. Pregunta original: con el mismo mapa que la grabación, las zonas descargadas (spec 011) podrían verse también en Explorar y en el detalle sin red. Hoy está fuera de alcance (011, RN-8). ¿Se agrega o se queda fuera?
 
@@ -149,3 +149,4 @@ De paso, Explorar rutas y el detalle de ruta pasan a usar el mismo mapa que la g
 - 2026-11-20 — En progreso. Inicio (propuesta D) en Figma, en claro y oscuro con sus estados (T1): https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX?node-id=57-3359. Falta la aprobación del usuario (T2, CA-26).
 - 2026-11-20 — Prototipo de Inicio en Figma aprobado por el usuario (CA-26), sin cambios: https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX?node-id=57-3359. Ya se puede programar `mainPage` (T22).
 - 2026-11-20 — Se agrega RN-10 (atribución de los mapas en Inicio), que no estaba en el prototipo. En "Listo para salir", los contactos se muestran con la tarjeta de seguridad de la spec 008 y no con una fila, para conservar el aviso del 911 (CA-18, "como hoy"). CA-27 se revisa con esas dos diferencias. Anotado al implementar T22.
+- 2026-11-20 — P11 queda como decisión definitiva: sin red y sin la imagen en caché, la miniatura muestra la forma del recorrido sobre fondo liso. La spec sigue En progreso hasta correr M9, M2 y lo que falta de M3, M6, M8, M10, M11 y M12; el usuario decide no cerrarla con pendientes.

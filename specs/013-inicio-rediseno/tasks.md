@@ -188,6 +188,18 @@ Una tarea detiene el trabajo: T2. `mainPage` (T22) no se programa hasta que el u
   Avance (2026-11-20): primera corrida en el S9+ (Android 10, modo oscuro) con el APK de `822daa8`, el backend local y Metro desde `C:\dev\sbc13`, por `adb reverse`. Ver "Resultado de los casos manuales" y "Pendientes conocidos". Falta el emulador y lo que quedó pendiente.
 - [ ] T25 — Preguntar al usuario la decisión final de P11 (miniatura sin red) y anotarla en la spec. Actualizar el estado de la spec y `specs/roadmap.md`.
 
+  Avance (2026-11-20): P11 confirmada por el usuario, anotada en la spec. El cierre espera los casos que faltan, por decisión del usuario:
+  - M9: TalkBack, letra al máximo y modo claro.
+  - M2: una cuenta sin actividades.
+  - M3: sin rutas cerca.
+  - M6: con contactos activos y con actividades sin subir.
+  - M8: el aviso de pendientes.
+  - M10: modo claro y los casos M1 a M8 de la 006.
+  - M11: el detalle guardado sin red.
+  - M12: una zona descargada que nunca se haya visto.
+
+  Al terminarlos, la spec pasa a Implementada y se actualiza `roadmap.md`.
+
 ## Verificación
 
 | CA | Cómo se verifica | Tipo | Estado |
