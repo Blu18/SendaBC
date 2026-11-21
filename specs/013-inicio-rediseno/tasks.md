@@ -171,7 +171,15 @@ Una tarea detiene el trabajo: T2. `mainPage` (T22) no se programa hasta que el u
   - Diferencias con Figma, anotadas en la spec: los contactos van con `SafetyCard`, por el aviso del 911, y al final está la atribución "Mapas © Mapbox © OpenStreetMap" (RN-10).
   - Con el GPS apagado, las cercanas muestran "No se pudieron cargar las rutas" con "Reintentar".
   - `tsc` sin errores y 836 pruebas. Falta verlo en el dispositivo, con un build nuevo por `react-native-svg`.
-- [ ] T23 — Revisión de accesibilidad: encabezados de sección, orden de lectura, áreas de toque de 48 dp, contraste AA en los dos modos, movimiento reducido y letra al máximo sin cortes. Corregir lo que salga. (CA-27, CA-28, CA-29)
+- [x] T23 — Revisión de accesibilidad: encabezados de sección, orden de lectura, áreas de toque de 48 dp, contraste AA en los dos modos, movimiento reducido y letra al máximo sin cortes. Corregir lo que salga. (CA-27, CA-28, CA-29)
+
+  Hecho (2026-11-20):
+  - **Contraste:** todos los pares de colores de Inicio ya están en `CONTRAST_PAIRS`, que se prueba en claro y oscuro. Son texto, `textMuted` y `data` sobre fondo y tarjeta; `primary` en los botones de texto y en "Tuya"; `secondaryText` en la posición y las favoritas; y `onPrimary` sobre `primary`. El trazo de las miniaturas lleva un borde `surface` para distinguirse del mapa.
+  - **Áreas de toque:** medidas en el S9+ con `uiautomator` (densidad 420), todo lo tocable de Inicio mide 48 dp o más. "Ver mapa" y "Ver todas" miden 51 dp, "Empezar actividad" 51 dp, las filas de populares de 60 a 98 dp y las tarjetas de 112 dp o más.
+  - **Encabezados y orden de lectura:** cada sección y "Últimos 7 días" tienen `accessibilityRole="header"`. El orden del código es el visual: la barra de "Empezar actividad" va después del contenido. Cada tarjeta se lee como un botón con todo su contenido y una pista de qué abre.
+  - **Letra grande:** se quitó `numberOfLines={2}` del nombre en `RouteCard`, el único texto de Inicio que se cortaba con "…" (CA-29). Los encabezados de sección se encogen y pasan a otra línea.
+  - **Movimiento reducido:** `Appear`, `PressableScale` y el encuadre de `RouteMap` ya lo respetan.
+  - **Pendiente para el usuario (M9):** TalkBack, letra al máximo y modo claro en el teléfono.
 
 ## Cierre
 

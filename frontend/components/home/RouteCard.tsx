@@ -34,7 +34,8 @@ export default function RouteCard({ route, onPress }: { route: NearbyRoute; onPr
             />
             <View style={styles.texts}>
                 <View style={styles.titleRow}>
-                    <Text style={styles.name} numberOfLines={2}>{t.name}</Text>
+                    {/* Sin límite de líneas: con letra grande el nombre crece y no se corta (CA-29). */}
+                    <Text style={styles.name}>{t.name}</Text>
                     {t.mine && <Text style={styles.mine}>Tuya</Text>}
                 </View>
                 <Text style={styles.kind}>{t.kind}</Text>
