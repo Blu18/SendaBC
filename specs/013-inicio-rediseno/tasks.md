@@ -192,10 +192,8 @@ Una tarea detiene el trabajo: T2. `mainPage` (T22) no se programa hasta que el u
   - M9: TalkBack, letra al máximo y modo claro.
   - M2: una cuenta sin actividades.
   - M3: sin rutas cerca.
-  - M6: con contactos activos y con actividades sin subir.
-  - M8: el aviso de pendientes.
+  - M6: con contactos activos (necesita Telegram).
   - M10: modo claro y los casos M1 a M8 de la 006.
-  - M11: el detalle guardado sin red.
   - M12: una zona descargada que nunca se haya visto.
 
   Al terminarlos, la spec pasa a Implementada y se actualiza `roadmap.md`.
@@ -222,20 +220,20 @@ Una tarea detiene el trabajo: T2. `mainPage` (T22) no se programa hasta que el u
 | CA-16 | M3, M5 | Manual | M3 y M5 aprobados |
 | CA-17 | `route-home.e2e-spec.ts` › el conteo cambia; M5 | Automatizada + manual | Pendiente |
 | CA-18 | M6 | Manual | Pendiente |
-| CA-19 | M6 | Manual | Pendiente |
+| CA-19 | M6 | Manual | M6 aprobado |
 | CA-20 | M6 | Manual | Pendiente |
 | CA-21 | M7 | Manual | M7 aprobado |
 | CA-22 | M7 | Manual | M7 aprobado (ver P-E) |
 | CA-23 | M7 | Manual | Pendiente |
 | CA-24 | M8 | Manual | M8 aprobado |
-| CA-25 | M8 | Manual | Pendiente |
+| CA-25 | M8 | Manual | M8 aprobado |
 | CA-26 | T2: aprobación anotada en el historial de la spec | Manual | Cumplido (2026-11-20) |
 | CA-27 | M1, M9 (comparación con Figma en los dos modos) | Manual | Pendiente |
 | CA-28 | M9 | Manual | Pendiente |
 | CA-29 | M9 | Manual | Pendiente |
 | CA-30 | M10, M11 | Manual | Pendiente |
 | CA-31 | `geo.test.ts` › `boundsAround`; M10 | Automatizada + manual | Pendiente |
-| CA-32 | `geo.test.ts` › `boundsForPath`; M11 | Automatizada + manual | Pendiente |
+| CA-32 | `geo.test.ts` › `boundsForPath`; M11 | Automatizada + manual | M11 aprobado |
 | CA-33 | M13 | Manual | M13 aprobado |
 | CA-34 | M12 | Manual | Pendiente |
 
@@ -325,20 +323,20 @@ Primera corrida, 2026-11-20, en el S9+ con la cuenta de prueba de Postman. Las p
 - **M3 — aprobado en parte.** Hay hasta 5 rutas a 25 km o menos, con "Tuya" en la propia y "a 96 m de ti". Al tocar una se abre su detalle, y "Ver mapa" abre la pestaña Rutas. Falta "sin rutas cerca", porque necesita fijar la ubicación en el mar. "Buscar en esta zona" sobre el mar sí muestra "Sin rutas cerca" en Explorar.
 - **M4 — aprobado.** Sin permiso de ubicación: "Activa tu ubicación para ver rutas cerca" y no aparece el diálogo del sistema. Populares y el resto de Inicio se ven normal. Al devolver el permiso, las cercanas regresan.
 - **M5 — aprobado.** Al guardar "Cerros de Ensenada" en favoritas y volver a Inicio, aparece en Populares con 1 favorita. Al quitarla, desaparece. El empate en 1 favorita sigue el orden de publicación (CA-14).
-- **M6 — aprobado en parte.** Sin contactos activos se ve la tarjeta de seguridad con "Configurar contactos" y el aviso del 911. Sin actividades pendientes no aparece la fila de pendientes. "Mapas sin conexión" abre la pantalla de zonas. Falta el caso con contactos activos y con actividades sin subir.
+- **M6 — aprobado, salvo contactos activos.** Sin contactos activos se ve la tarjeta de seguridad con "Configurar contactos" y el aviso del 911. "Mapas sin conexión" abre la pantalla de zonas. En la segunda corrida se grabó una actividad corta con el backend apagado: Inicio mostró "1 actividad sin subir" y "Se suben solas al volver la conexión". Además, los totales pasaron a 4 actividades y la nueva apareció primero en "Tus actividades". Al levantar el backend y volver la app al frente, la actividad se subió y la fila desapareció. Falta el caso con contactos activos, que necesita aceptar la invitación en Telegram.
 - **M7 — aprobado.** En modo avión:
   - el saludo, los totales, las actividades y "Listo para salir" salen del teléfono;
   - "Las rutas necesitan conexión" y "Las rutas populares necesitan conexión" aparecen sin errores en rojo;
   - las miniaturas ya vistas conservan su fondo, desde la caché de imágenes.
 
   Al quitar el modo avión sin salir de Inicio, Populares se carga en segundos. Cerca de ti tarda entre 20 y 35 s (ver "Pendientes conocidos"). No se probó el perfil sin caché (CA-23), porque el perfil estaba guardado.
-- **M8 — aprobado en parte.** Inicio ya no tiene "Cerrar sesión". En el perfil está al final, con la nota. Al tocarlo se llega a la bienvenida, y atrás sale de la app sin volver a Inicio. Las actividades se conservan al volver a entrar. Falta el aviso con actividades sin subir, que esta vez no había; su texto y su lógica no cambiaron (spec 005, pruebas de `pendingUploadsWarning`).
+- **M8 — aprobado.** Inicio ya no tiene "Cerrar sesión"; en el perfil está al final, con la nota. Sin pendientes, lleva a la bienvenida, y atrás sale de la app sin volver a Inicio. Las actividades se conservan al volver a entrar. En la segunda corrida, con 1 actividad sin subir, apareció "Tienes 1 actividad sin subir. Se subirá cuando vuelvas a iniciar sesión." con "Cancelar" y "Cerrar sesión", y "Cancelar" dejó la sesión abierta.
 - **M9 — pendiente para el usuario.** TalkBack, letra al máximo y modo claro cambian ajustes del teléfono, así que los hace el usuario. El modo claro no se aplicó con `cmd uimode` en el S9+. Con `uiautomator` se comprobó que las tarjetas tienen nombre accesible ("Senderismo, 18 de noviembre de 2026 9:42, 4.46 km, 01:08:26"; "1. El Salto · Ensenada · … · 1 persona la tiene en favoritas").
 - **M10 — aprobado en parte.** Explorar usa el mapa oscuro de Mapbox, con los inicios, los recorridos y la posición del usuario como capa propia.
   - La selección responde al primer toque, tanto en un marcador como en una línea delgada: la línea se resalta, el inicio lleva anillo y aparece la tarjeta. Tocar el mapa vacío quita la selección.
   - 50 km aleja el mapa y muestra más rutas. "Buscar en esta zona" funciona.
   - Falta el modo claro y repetir uno por uno los casos M1 a M8 de la 006.
-- **M11 — aprobado en parte.** El detalle de "Sendero Sauzal" se ve con el mapa de Mapbox, el recorrido completo encuadrado, el inicio y el final, y el logo de Mapbox visible. Falta el detalle de una ruta guardada, en modo avión.
+- **M11 — aprobado.** El detalle de "Sendero Sauzal" se ve con el mapa de Mapbox, el recorrido completo encuadrado, el inicio y el final, y el logo visible. En la segunda corrida se guardó "Cerros de Ensenada" en favoritas, se dejó descargar su detalle y se apagó el backend. Desde "Mis favoritas", el detalle abrió con "Datos guardados" y el recorrido completo sobre Mapbox, con el inicio verde y el final ocre. Después se quitó de favoritas.
 - **M12 — parcial.** Hay una zona descargada (10 de noviembre, unos 66 MB, 303 km²). En modo avión, Explorar muestra el fondo alrededor de Ensenada junto con la búsqueda guardada (011). No se pudo distinguir si el fondo viene de la zona o de la caché del mapa, porque esa área ya se había visto. Falta probarlo en una zona descargada que nunca se haya visto.
 - **M13 — aprobado.** El `grep` no encuentra `react-native-maps` y el manifiesto no tiene la clave de Google (T11). El APK sin Google Maps abre Inicio, Explorar, el detalle y la pantalla de zonas.
 
