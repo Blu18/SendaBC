@@ -240,9 +240,11 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     carousel: {
         marginRight: -t.spacing.lg,
     },
+    // Arriba y no estiradas: cada tarjeta mide lo que su contenido (pendiente P-A de T24).
     carouselContent: {
         gap: t.spacing.md,
         paddingRight: t.spacing.lg,
+        alignItems: "flex-start",
     },
     list: {
         borderRadius: t.radius.md,

@@ -138,6 +138,8 @@ function ExploreRoutes() {
     const [radiusKm, setRadiusKm] = useState<number>(DEFAULT_RADIUS_KM);
     const [type, setType] = useState<ActivityType | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    // Alto del aviso o de la tarjeta de abajo, para subir el logo de Mapbox por encima (T24, P-D).
+    const [altoAbajo, setAltoAbajo] = useState(0);
 
     const user = location.kind === 'granted' ? location.user : null;
 
@@ -305,6 +307,7 @@ function ExploreRoutes() {
                     onReady={() => setMapReady(true)}
                     onCenterChanged={setMapCenter}
                     onPress={onMapPress}
+                    ornamentsBottom={altoAbajo}
                 >
                     {/* El orden de las capas es el de dibujo: recorridos, la selección encima, los
                         inicios y al final mi posición. Seleccionar no mueve la cámara (CA-9). */}
@@ -412,7 +415,15 @@ function ExploreRoutes() {
                 )}
 
                 {/* Abajo: el aviso o la tarjeta de la ruta seleccionada */}
-                <View style={styles.bottom} pointerEvents="box-none">
+                <View
+                    style={styles.bottom}
+                    pointerEvents="box-none"
+                    // Sin aviso ni tarjeta solo queda el relleno: el logo se queda abajo.
+                    onLayout={(e) => {
+                        const alto = e.nativeEvent.layout.height;
+                        setAltoAbajo(alto > 2 * theme.spacing.lg + 1 ? alto - theme.spacing.lg : 0);
+                    }}
+                >
                     <Appear style={styles.avisoGroup}>
                         {aviso && (
                             <>

@@ -176,36 +176,38 @@ Una tarea detiene el trabajo: T2. `mainPage` (T22) no se programa hasta que el u
 ## Cierre
 
 - [ ] T24 — Development build en el emulador y en el S9+. Correr M1 a M13 y anotar los resultados abajo.
+
+  Avance (2026-11-20): primera corrida en el S9+ (Android 10, modo oscuro) con el APK de `822daa8`, el backend local y Metro desde `C:\dev\sbc13`, por `adb reverse`. Ver "Resultado de los casos manuales" y "Pendientes conocidos". Falta el emulador y lo que quedó pendiente.
 - [ ] T25 — Preguntar al usuario la decisión final de P11 (miniatura sin red) y anotarla en la spec. Actualizar el estado de la spec y `specs/roadmap.md`.
 
 ## Verificación
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | M1 | Manual | Pendiente |
-| CA-2 | M1 | Manual | Pendiente |
+| CA-1 | M1 | Manual | M1 aprobado |
+| CA-2 | M1 | Manual | M1 aprobado |
 | CA-3 | `activities.test.ts` › recientes; `thumbnail.test.ts`; M1 | Automatizada + manual | Pendiente |
-| CA-4 | M1 | Manual | Pendiente |
-| CA-5 | M1 | Manual | Pendiente |
+| CA-4 | M1 | Manual | M1 aprobado |
+| CA-5 | M1 | Manual | M1 aprobado |
 | CA-6 | `activities.test.ts` › `summarizeSince`; `summary.test.ts`; M1, M2 | Automatizada + manual | Pendiente |
 | CA-7 | M2 | Manual | Pendiente |
 | CA-8 | `thumbnail.test.ts`; M7 | Automatizada + manual | Pendiente |
 | CA-9 | `nearby-query.dto.spec.ts`, `route.service.spec.ts` y `route-home.e2e-spec.ts` › `limit`; M3 | Automatizada + manual | Pendiente |
 | CA-10 | M3 | Manual | Pendiente |
-| CA-11 | M4 | Manual | Pendiente |
-| CA-12 | M3 | Manual | Pendiente |
+| CA-11 | M4 | Manual | M4 aprobado |
+| CA-12 | M3 | Manual | M3 aprobado |
 | CA-13 | `route.service.spec.ts` y `route-home.e2e-spec.ts` › `popular`; M5 | Automatizada + manual | Pendiente |
 | CA-14 | `route.service.spec.ts` y `route-home.e2e-spec.ts` › empate | Automatizada | Cumplido (2026-11-20) |
 | CA-15 | `route.service.spec.ts` › solo con favoritas; `route-home.e2e-spec.ts` › sin favoritas no aparece; M5 | Automatizada + manual | Pendiente |
-| CA-16 | M3, M5 | Manual | Pendiente |
+| CA-16 | M3, M5 | Manual | M3 y M5 aprobados |
 | CA-17 | `route-home.e2e-spec.ts` › el conteo cambia; M5 | Automatizada + manual | Pendiente |
 | CA-18 | M6 | Manual | Pendiente |
 | CA-19 | M6 | Manual | Pendiente |
 | CA-20 | M6 | Manual | Pendiente |
-| CA-21 | M7 | Manual | Pendiente |
-| CA-22 | M7 | Manual | Pendiente |
+| CA-21 | M7 | Manual | M7 aprobado |
+| CA-22 | M7 | Manual | M7 aprobado (ver P-E) |
 | CA-23 | M7 | Manual | Pendiente |
-| CA-24 | M8 | Manual | Pendiente |
+| CA-24 | M8 | Manual | M8 aprobado |
 | CA-25 | M8 | Manual | Pendiente |
 | CA-26 | T2: aprobación anotada en el historial de la spec | Manual | Cumplido (2026-11-20) |
 | CA-27 | M1, M9 (comparación con Figma en los dos modos) | Manual | Pendiente |
@@ -214,7 +216,7 @@ Una tarea detiene el trabajo: T2. `mainPage` (T22) no se programa hasta que el u
 | CA-30 | M10, M11 | Manual | Pendiente |
 | CA-31 | `geo.test.ts` › `boundsAround`; M10 | Automatizada + manual | Pendiente |
 | CA-32 | `geo.test.ts` › `boundsForPath`; M11 | Automatizada + manual | Pendiente |
-| CA-33 | M13 | Manual | Pendiente |
+| CA-33 | M13 | Manual | M13 aprobado |
 | CA-34 | M12 | Manual | Pendiente |
 
 ### Casos manuales
@@ -294,6 +296,32 @@ Salvo que se indique otra cosa: development build con el backend local, una cuen
 2. Compilar el development build desde `C:\dev\sbc` y recorrer Explorar, el detalle, la grabación y las zonas.
 - **Esperado:** el grep no encuentra nada y no queda la clave de Google. El build compila y ninguna pantalla muestra el mapa de Google.
 
+### Resultado de los casos manuales
+
+Primera corrida, 2026-11-20, en el S9+ con la cuenta de prueba de Postman. Las pantallas se leyeron con `uiautomator dump` y capturas.
+
+- **M1 — aprobado.** "Empezar actividad" se ve sin desplazarse, fijo sobre la barra de pestañas, y abre "Nueva actividad" sin pasos intermedios. Las 3 actividades recientes van de la más nueva a la más vieja, con el mismo formato que el historial ("18 de noviembre de 2026 9:42", "4.46 km · 01:08:26"). Al tocar una se abre su resumen con los mismos datos, y "Ver todas" abre "Mis actividades". Los totales coinciden: 3 actividades, 4.46 km y 2:09 + 5:51 + 1:08:26 = "1 h 16 min".
+- **M2 — pendiente.** Necesita una cuenta sin actividades.
+- **M3 — aprobado en parte.** Hay hasta 5 rutas a 25 km o menos, con "Tuya" en la propia y "a 96 m de ti". Al tocar una se abre su detalle, y "Ver mapa" abre la pestaña Rutas. Falta "sin rutas cerca", porque necesita fijar la ubicación en el mar. "Buscar en esta zona" sobre el mar sí muestra "Sin rutas cerca" en Explorar.
+- **M4 — aprobado.** Sin permiso de ubicación: "Activa tu ubicación para ver rutas cerca" y no aparece el diálogo del sistema. Populares y el resto de Inicio se ven normal. Al devolver el permiso, las cercanas regresan.
+- **M5 — aprobado.** Al guardar "Cerros de Ensenada" en favoritas y volver a Inicio, aparece en Populares con 1 favorita. Al quitarla, desaparece. El empate en 1 favorita sigue el orden de publicación (CA-14).
+- **M6 — aprobado en parte.** Sin contactos activos se ve la tarjeta de seguridad con "Configurar contactos" y el aviso del 911. Sin actividades pendientes no aparece la fila de pendientes. "Mapas sin conexión" abre la pantalla de zonas. Falta el caso con contactos activos y con actividades sin subir.
+- **M7 — aprobado.** En modo avión:
+  - el saludo, los totales, las actividades y "Listo para salir" salen del teléfono;
+  - "Las rutas necesitan conexión" y "Las rutas populares necesitan conexión" aparecen sin errores en rojo;
+  - las miniaturas ya vistas conservan su fondo, desde la caché de imágenes.
+
+  Al quitar el modo avión sin salir de Inicio, Populares se carga en segundos. Cerca de ti tarda entre 20 y 35 s (ver "Pendientes conocidos"). No se probó el perfil sin caché (CA-23), porque el perfil estaba guardado.
+- **M8 — aprobado en parte.** Inicio ya no tiene "Cerrar sesión". En el perfil está al final, con la nota. Al tocarlo se llega a la bienvenida, y atrás sale de la app sin volver a Inicio. Las actividades se conservan al volver a entrar. Falta el aviso con actividades sin subir, que esta vez no había; su texto y su lógica no cambiaron (spec 005, pruebas de `pendingUploadsWarning`).
+- **M9 — pendiente para el usuario.** TalkBack, letra al máximo y modo claro cambian ajustes del teléfono, así que los hace el usuario. El modo claro no se aplicó con `cmd uimode` en el S9+. Con `uiautomator` se comprobó que las tarjetas tienen nombre accesible ("Senderismo, 18 de noviembre de 2026 9:42, 4.46 km, 01:08:26"; "1. El Salto · Ensenada · … · 1 persona la tiene en favoritas").
+- **M10 — aprobado en parte.** Explorar usa el mapa oscuro de Mapbox, con los inicios, los recorridos y la posición del usuario como capa propia.
+  - La selección responde al primer toque, tanto en un marcador como en una línea delgada: la línea se resalta, el inicio lleva anillo y aparece la tarjeta. Tocar el mapa vacío quita la selección.
+  - 50 km aleja el mapa y muestra más rutas. "Buscar en esta zona" funciona.
+  - Falta el modo claro y repetir uno por uno los casos M1 a M8 de la 006.
+- **M11 — aprobado en parte.** El detalle de "Sendero Sauzal" se ve con el mapa de Mapbox, el recorrido completo encuadrado, el inicio y el final, y el logo de Mapbox visible. Falta el detalle de una ruta guardada, en modo avión.
+- **M12 — parcial.** Hay una zona descargada (10 de noviembre, unos 66 MB, 303 km²). En modo avión, Explorar muestra el fondo alrededor de Ensenada junto con la búsqueda guardada (011). No se pudo distinguir si el fondo viene de la zona o de la caché del mapa, porque esa área ya se había visto. Falta probarlo en una zona descargada que nunca se haya visto.
+- **M13 — aprobado.** El `grep` no encuentra `react-native-maps` y el manifiesto no tiene la clave de Google (T11). El APK sin Google Maps abre Inicio, Explorar, el detalle y la pantalla de zonas.
+
 ## Commits propuestos
 
 | Commit | Tareas |
@@ -312,4 +340,18 @@ Cubre lo mínimo de la semana: `feat`, `test` y `chore`/`docs`.
 
 ## Pendientes conocidos
 
-Ninguno por ahora.
+Vistos en la primera corrida en el S9+ (2026-11-20):
+
+- **P-A, tarjetas de rutas cercanas (corregido, sin verificar en el teléfono):** quedan con espacio vacío debajo del texto. El carrusel las estira al alto de la más alta. Hay que alinearlas arriba.
+- **P-B, primer encuadre de Explorar (mitigado, sin verificar):** la primera vez que se abrió con "Ver mapa", el mapa quedó acercado sobre Ensenada y no en los 25 km alrededor del usuario. "Centrar en mi ubicación" lo arregló. No se repitió en dos intentos más, uno de ellos con la app recién abierta. Hay que vigilarlo.
+- **P-C, texto de la pantalla de zonas (corregido):** dice "Lo verás al grabar aunque no tengas señal", pero con CA-34 la zona también se ve en Explorar y en el detalle. Hay que actualizarlo.
+- **P-D, logo de Mapbox (corregido, sin verificar en el teléfono):** en Explorar, la tarjeta de la ruta seleccionada tapa el logo de Mapbox, y los términos piden que se vea. Hay que subir la tarjeta o mover el logo.
+- **P-E, Cerca de ti al volver la red:** tarda de 20 a 35 s, contra unos segundos de Populares. Probablemente espera la posición del GPS después del modo avión. Mientras tanto se queda con el aviso de sin conexión.
+- **Solo en el development build:** el botón flotante de las herramientas de desarrollo tapa el avatar, y en modo avión aparece un aviso de error de Mapbox ("Failed to load tile") en la consola de desarrollo.
+
+Correcciones (2026-11-20):
+- **P-A:** el carrusel alinea las tarjetas arriba (`alignItems: "flex-start"`).
+- **P-B:** `RouteMap` guarda un encuadre pedido antes de que el mapa cargue o tenga tamaño, y lo aplica en cuanto puede. No se pudo reproducir, así que es una mitigación de la causa más probable.
+- **P-C:** el texto dice "Lo verás al grabar y al consultar rutas aunque no tengas señal".
+- **P-D:** `RouteMap` recibe `ornamentsBottom`, y Explorar le pasa el alto del aviso o de la tarjeta de abajo. El logo y la atribución de Mapbox suben por encima.
+- **P-E:** sin cambios; se observa en la próxima prueba de campo.

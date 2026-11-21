@@ -30,6 +30,9 @@ type Props = {
     onPress?: () => void;
     // El mapa terminó de cargar y ya acepta movimientos de cámara.
     onReady?: () => void;
+    // Alto de lo que la pantalla pone sobre el borde de abajo del mapa (aviso o tarjeta): el logo y
+    // la atribución de Mapbox suben por encima, porque sus términos piden que se vean (T24, P-D).
+    ornamentsBottom?: number;
     // Capas y fuentes de Mapbox: recorridos, marcadores y la posición.
     children?: ReactNode;
     style?: StyleProp<ViewStyle>;
@@ -51,7 +54,7 @@ const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(props, ref)
 export default RouteMap;
 
 const RouteMapView = forwardRef<RouteMapHandle, Props>(function RouteMapView(
-    { initialBounds, accessibilityLabel, onCenterChanged, onPress, onReady, children, style },
+    { initialBounds, accessibilityLabel, onCenterChanged, onPress, onReady, ornamentsBottom = 0, children, style },
     ref
 ) {
     const { colors, scheme } = useTheme();
@@ -65,27 +68,65 @@ const RouteMapView = forwardRef<RouteMapHandle, Props>(function RouteMapView(
         if (online) setStyleFailed(false);
     }, [online]);
 
+    // Un encuadre pedido antes de que el mapa cargue o tenga tamaño se guarda y se aplica después.
+    // Una vez, al abrir Explorar, el primer encuadre no quedó en los 25 km (T24, P-B); no se pudo
+    // repetir, y esta es la causa más probable.
+    const cargado = useRef(false);
+    const conTamano = useRef(false);
+    const pendiente = useRef<{ bounds: Bounds; padding: number } | null>(null);
+    const aplicar = (bounds: Bounds, padding: number) =>
+        camera.current?.fitBounds(bounds.ne, bounds.sw, padding, reducedMotion ? 0 : CAMERA_MOVE_MS);
+    const aplicarPendiente = () => {
+        if (!pendiente.current || !cargado.current || !conTamano.current) return;
+        const { bounds, padding } = pendiente.current;
+        pendiente.current = null;
+        aplicar(bounds, padding);
+    };
+
     useImperativeHandle(
         ref,
         () => ({
-            fitBounds: ({ ne, sw }, padding = 0) =>
-                camera.current?.fitBounds(ne, sw, padding, reducedMotion ? 0 : CAMERA_MOVE_MS),
+            fitBounds: (bounds, padding = 0) => {
+                pendiente.current = { bounds, padding };
+                aplicarPendiente();
+            },
         }),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [reducedMotion]
     );
 
+    // Logo y atribución en su lugar de siempre (abajo a la izquierda), por encima de lo que tape.
+    const margen = 8;
+    const logoPosition = { left: margen, bottom: margen + ornamentsBottom };
+    const attributionPosition = { left: 96, bottom: margen + ornamentsBottom };
+
     return (
-        <View style={[styles.map, style]} accessible accessibilityRole="image" accessibilityLabel={accessibilityLabel}>
+        <View
+            style={[styles.map, style]}
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={accessibilityLabel}
+            onLayout={(e) => {
+                conTamano.current = e.nativeEvent.layout.width > 0 && e.nativeEvent.layout.height > 0;
+                aplicarPendiente();
+            }}
+        >
             <Mapbox.MapView
                 style={styles.map}
                 {...(styleFailed ? { styleJSON: localMapStyle(colors.background) } : { styleURL })}
                 scaleBarEnabled={false}
                 compassEnabled={false}
                 pitchEnabled={false}
+                logoPosition={logoPosition}
+                attributionPosition={attributionPosition}
                 onMapLoadingError={(error) => {
                     if (error?.type === "style") setStyleFailed(true);
                 }}
-                onDidFinishLoadingMap={onReady}
+                onDidFinishLoadingMap={() => {
+                    cargado.current = true;
+                    aplicarPendiente();
+                    onReady?.();
+                }}
                 onMapIdle={(state) => {
                     const [longitude, latitude] = state.properties.center as LngLat;
                     onCenterChanged?.({ latitude, longitude });
