@@ -342,10 +342,10 @@ Cubre lo mínimo de la semana: `feat`, `test` y `chore`/`docs`.
 
 Vistos en la primera corrida en el S9+ (2026-11-20):
 
-- **P-A, tarjetas de rutas cercanas (corregido, sin verificar en el teléfono):** quedan con espacio vacío debajo del texto. El carrusel las estira al alto de la más alta. Hay que alinearlas arriba.
+- **P-A, tarjetas de rutas cercanas (corregido y verificado en el S9+):** quedan con espacio vacío debajo del texto. El carrusel las estira al alto de la más alta. Hay que alinearlas arriba.
 - **P-B, primer encuadre de Explorar (mitigado, sin verificar):** la primera vez que se abrió con "Ver mapa", el mapa quedó acercado sobre Ensenada y no en los 25 km alrededor del usuario. "Centrar en mi ubicación" lo arregló. No se repitió en dos intentos más, uno de ellos con la app recién abierta. Hay que vigilarlo.
 - **P-C, texto de la pantalla de zonas (corregido):** dice "Lo verás al grabar aunque no tengas señal", pero con CA-34 la zona también se ve en Explorar y en el detalle. Hay que actualizarlo.
-- **P-D, logo de Mapbox (corregido, sin verificar en el teléfono):** en Explorar, la tarjeta de la ruta seleccionada tapa el logo de Mapbox, y los términos piden que se vea. Hay que subir la tarjeta o mover el logo.
+- **P-D, logo de Mapbox (corregido y verificado en el S9+):** en Explorar, la tarjeta de la ruta seleccionada tapa el logo de Mapbox, y los términos piden que se vea. Hay que subir la tarjeta o mover el logo.
 - **P-E, Cerca de ti al volver la red:** tarda de 20 a 35 s, contra unos segundos de Populares. Probablemente espera la posición del GPS después del modo avión. Mientras tanto se queda con el aviso de sin conexión.
 - **Solo en el development build:** el botón flotante de las herramientas de desarrollo tapa el avatar, y en modo avión aparece un aviso de error de Mapbox ("Failed to load tile") en la consola de desarrollo.
 
@@ -355,3 +355,4 @@ Correcciones (2026-11-20):
 - **P-C:** el texto dice "Lo verás al grabar y al consultar rutas aunque no tengas señal".
 - **P-D:** `RouteMap` recibe `ornamentsBottom`, y Explorar le pasa el alto del aviso o de la tarjeta de abajo. El logo y la atribución de Mapbox suben por encima.
 - **P-E:** sin cambios; se observa en la próxima prueba de campo.
+- Verificación (2026-11-20, `6bd0862` en el S9+): las tarjetas del carrusel miden lo que su contenido, y con la tarjeta de una ruta abierta el logo y la atribución de Mapbox quedan visibles encima. El encuadre al abrir Explorar desde "Ver mapa" salió bien otra vez.
