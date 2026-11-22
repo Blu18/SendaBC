@@ -95,7 +95,7 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
 
 ## Fase D — Pantallas (después de T2)
 
-- [ ] T11 — Reescribir `activitySummaryPage.tsx` en el orden de Figma:
+- [x] T11 — Reescribir `activitySummaryPage.tsx` en el orden de Figma:
   1. Tipo, fecha y estado.
   2. Distancia de 64 pt y la línea de contexto.
   3. `TerrainProfile` o, sin perfil, las cifras.
@@ -105,7 +105,23 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
   7. `PublishSection` y "Listo", sin cambios.
 
   La carga y "No se encontró la actividad" no cambian. (CA-1 a CA-12, CA-19, CA-22, CA-23, CA-24)
-- [ ] T12 — `activityHistoryPage.tsx` con `SectionList`: encabezado de mes con su total, como encabezado accesible, y las filas de cada mes en `GroupedList` (T18). Mantener `RefreshControl`, los avisos, la lista vacía y la navegación al resumen. (CA-13, CA-14, CA-16, CA-17, CA-18, CA-19, CA-22, CA-23, CA-24)
+
+  Hecho (2026-11-21): sigue la versión 3 de Figma.
+  - **Encabezado de la actividad:** `IconBadge` del tipo, tipo y fecha, y `SyncBadge`.
+  - **Distancia y logro:** la distancia con `typography.metricHero`; la unidad baja de renglón con letra grande. Debajo, la etiqueta de logro (estrella ocre y texto en `text`).
+  - **Perfil:** mientras se calcula, el lugar del perfil queda reservado (228 dp). Sin perfil, la subida y la bajada van con `Metric` en una tarjeta con sombra baja.
+  - **Tarjeta de ritmo o velocidad y duración**, con la fuente de la elevación y los puntos debajo.
+  - **Recorrido:** la miniatura de 128 dp de alto, a todo el ancho.
+  - **Barra de abajo:** `BottomBar` con "Publicar como ruta" y "Listo" lado a lado. Si solo hay un motivo para no publicar, van uno debajo del otro.
+
+  "No se encontró la actividad" también usa `BottomBar`. La lógica de publicar no cambió; pasó de un componente a `usePublishAction`.
+
+  **Token nuevo `metricHero` (64/68, negrita, cifras de ancho fijo):** la prueba de valores sueltos de la 009 (CA-10) no deja poner `fontSize: 64` en una pantalla, como proponía el plan. Por eso se agregó a `lib/theme/typography.ts`, y en Figma como estilo de texto "metricHero", aplicado a la distancia de los 14 resúmenes. Es la misma familia de letra; solo agrega un tamaño a la escala.
+
+  El frontend pasa 875 pruebas y `tsc` no marca errores. La verificación en pantalla es manual (M1 a M4, M6, M8 y M9).
+- [x] T12 — `activityHistoryPage.tsx` con una `FlatList` de meses (ver la nota de T18): encabezado de mes con su total, como encabezado accesible, y las filas de cada mes en `GroupedList` (T18). Mantener `RefreshControl`, los avisos, la lista vacía y la navegación al resumen. (CA-13, CA-14, CA-16, CA-17, CA-18, CA-19, CA-22, CA-23, CA-24)
+
+  Hecho (2026-11-21): una `FlatList` con un elemento por mes. Cada mes tiene un encabezado accesible ("Noviembre: 3 actividades, 24.60 km") y una `GroupedList` de `ActivityLogRow`, con divisores que empiezan a 92 dp, después de la miniatura. La lista monta pocos meses a la vez (`initialNumToRender` 2, `windowSize` 5). Con letra grande, el total del mes baja de renglón. Las filas ya no tienen la animación de `Appear`, que antes iba fila por fila. `RefreshControl`, los avisos, la lista vacía, la ayuda del pie y la navegación al resumen no cambian. El frontend pasa 875 pruebas y `tsc` no marca errores. La verificación es manual (M5 a M9).
 
 ## Fase E — Figma de la ampliación
 
@@ -130,12 +146,19 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
 
 ## Fase F — Estilo en la app
 
-- [ ] T18 — Piezas compartidas (D9, D10):
+- [x] T18 — Piezas compartidas (D9, D10):
   - `components/ui/BottomBar.tsx`: fondo `surface`, padding del sistema, sombra `bar` y área segura inferior.
   - `components/ui/GroupedList.tsx`: tarjeta `surface` con radio `lg` y sombra `low`, con divisores con sangría (prop `inset`).
   - `components/ui/IconBadge.tsx`: el ícono dentro de un círculo, con su color al 14 % como tinte.
 
   Sin pantallas todavía, salvo las de la 014 (T11 y T12). (CA-25, CA-29)
+
+  Hecho (2026-11-21):
+  - `BottomBar` acepta `direction` (`column` o `row`). No suma el área segura de abajo, porque el `SafeAreaView` de `App.tsx` ya la da.
+  - `GroupedList` pone divisores de 1 dp en `border` al 22 %, como en Figma, con margen izquierdo `inset`; sin `inset`, el padding de la fila.
+  - `IconBadge` acepta `name`, `color` y `size`; el ícono mide el 55 % del círculo.
+
+  `tsc` no marca errores. **Ajuste para T12:** las filas de una `SectionList` se dibujan por separado y no pueden quedar dentro de un `GroupedList`. Por eso T12 usa una `FlatList` con un elemento por mes, y cada elemento es su `GroupedList` con sus filas. La virtualización queda por mes: `initialNumToRender` y `windowSize` bajos, y `useTrackPath` sigue leyendo solo las filas montadas. CA-20 lo mide en M7.
 - [ ] T19 — Componentes existentes, según la tabla del plan:
   - `Card`: sin borde.
   - `TabBar`: sin `borderTop`, con sombra `bar`.

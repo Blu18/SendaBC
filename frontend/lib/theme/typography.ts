@@ -16,6 +16,7 @@ export type TypographyTokens = {
   headline: TextStyle;
   display: TextStyle;
   metric: TextStyle;
+  metricHero: TextStyle;
 };
 
 // Escala tipográfica: mismos nombres y valores que los estilos de texto de Figma.
@@ -31,6 +32,14 @@ export const typography: TypographyTokens = {
     fontFamily: fontFamilies.bold,
     fontSize: 48,
     lineHeight: 56,
+    fontVariant: ['tabular-nums'],
+  },
+  // Solo la distancia del resumen de actividad (spec 014): la cifra principal de la pantalla.
+  metricHero: {
+    fontFamily: fontFamilies.bold,
+    fontSize: 64,
+    lineHeight: 68,
+    letterSpacing: -1.5,
     fontVariant: ['tabular-nums'],
   },
 };

@@ -135,8 +135,8 @@ function monthTotalsText(section: MonthSection): string; // "3 actividades, 24.6
   7. Miniatura de 328 × 128, si hay recorrido (CA-11).
   8. `PublishSection` y "Listo", sin cambios (CA-12).
 
-  La distancia usa el estilo `metric` con `fontSize` 64 solo en esta pantalla, igual que en Figma. Si con letra grande no cabe en una línea, la unidad pasa abajo (CA-24). La carga y "No se encontró la actividad" no cambian.
-- **`pages/activity/activityHistoryPage.tsx` (cambia):** `FlatList` pasa a `SectionList` con `sections`.
+  La distancia usa `typography.metricHero` (64/68), un estilo nuevo de la escala solo para esta cifra, igual que el estilo "metricHero" de Figma. Antes decía `metric` con `fontSize` 64 en la pantalla, pero la prueba de la 009 (CA-10) no permite tamaños sueltos. Si con letra grande no cabe en una línea, la unidad pasa abajo (CA-24). La carga y "No se encontró la actividad" no cambian.
+- **`pages/activity/activityHistoryPage.tsx` (cambia):** la `FlatList` pasa a tener un elemento por mes de `sections`, y cada uno es una `GroupedList` con sus filas. Antes decía `SectionList`, pero sus filas se dibujan por separado y no pueden ir dentro de una tarjeta agrupada (ver tasks, T18).
   - Cada encabezado de mes tiene `accessibilityRole="header"` y su total (CA-23).
   - Las filas de un mes van en un contenedor `surface` con divisores de 1 px en `border` al 35 %, como en Figma.
   - `RefreshControl`, el aviso del deslizamiento, la lista vacía y la navegación al resumen no cambian (CA-18).
