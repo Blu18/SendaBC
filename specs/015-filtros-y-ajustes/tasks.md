@@ -123,12 +123,28 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - `computeMissingPeaks` calcula solo las pendientes y una sola vez, no cambia nada más y no toca la que se graba.
 
   El frontend pasa 903 pruebas y `tsc` no marca errores.
-- [ ] T6 — Mapa:
+- [x] T6 — Mapa:
   - `lib/map/viewMode.ts`: `siguienteVista` recibe si se permite "Sin mapa". Pruebas en `viewMode.test.ts`: los mapas de rutas alternan 3D y 2D aunque la prueba de batería esté activa.
   - `TERRAIN_EXAGGERATION` pasa de `RecordingMap` a `lib/map/camera.ts`.
 
   La grabación no cambia. (CA-12, CA-13)
-- [ ] T7 — `context/ActivityFiltersContext.tsx` en `App.tsx`, que se vacía al cerrar sesión. En `activityHistory.hook.ts`, agregar `filtered`, `limits` y `months`; `sections` ahora agrupa las filtradas. `tsc` sin errores; la verificación es manual (M2 y M3). (CA-6, CA-9, CA-10)
+
+  Hecho (2026-11-22):
+  - **`siguienteVista(view, allowNone)`:** el segundo parámetro ahora dice si se permite "Sin mapa".
+  - **`MapViewToggle`:** recibe `allowNone`, que por defecto es `BATTERY_TEST`, así que la grabación queda igual. Explorar y el detalle pasarán `allowNone={false}` en T13.
+  - **`TERRAIN_EXAGGERATION` (1.5):** está ahora en `lib/map/camera.ts` y `RecordingMap` la importa de ahí.
+  - **Prueba nueva** en `viewMode.test.ts`: sin "Sin mapa" se alterna entre 3D y 2D.
+
+  El frontend pasa 904 pruebas y `tsc` no marca errores.
+- [x] T7 — `context/ActivityFiltersContext.tsx` en `App.tsx`, que se vacía al cerrar sesión. En `activityHistory.hook.ts`, agregar `filtered`, `limits` y `months`; `sections` ahora agrupa las filtradas. `tsc` sin errores; la verificación es manual (M2 y M3). (CA-6, CA-9, CA-10)
+
+  Hecho (2026-11-22):
+  - **`ActivityFiltersProvider`:** guarda los filtros en memoria y ofrece `setFilters` (con una función que recibe los actuales) y `clearFilters`. Se vacía cuando cambia `userId`, al cerrar sesión o al entrar otra cuenta.
+  - **En `App.tsx`:** el proveedor va dentro de `SyncProvider` y alrededor de `Navigation`, así que los filtros siguen al cambiar de pestaña o al abrir un resumen.
+  - **`useActivityHistory`:** además de `activities`, devuelve `filtered`, `sections` (que ahora agrupa las filtradas), `limits` y `months` (calculados con todas), y `filters`.
+  - **`filters`:** son los elegidos ajustados a los límites actuales con `normalizeFilters`. Por eso un rango que quedó fuera, porque cambiaron las actividades, se corrige solo.
+
+  `tsc` no marca errores y el frontend pasa 904 pruebas. Mis actividades todavía no muestra los filtros (T9 y T10).
 
 ## Fase C — Interfaz (después de T2)
 
@@ -185,7 +201,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 | CA-9 | `filters.test.ts` › totales de las filtradas; M2 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
 | CA-10 | M3 | Manual (emulador) | Pendiente |
 | CA-11 | M4 | Manual (emulador) | Pendiente |
-| CA-12 | `viewMode.test.ts`; M5 | Automatizada + manual | Pendiente |
+| CA-12 | `viewMode.test.ts`; M5 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
 | CA-13 | M5 | Manual (emulador) | Pendiente |
 | CA-14 | M7 | Manual (S9+) | Pendiente |
 | CA-15 | M5 | Manual (emulador) | Pendiente |

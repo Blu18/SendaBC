@@ -9,13 +9,16 @@ export type { MapViewMode };
 type Props = {
     view: MapViewMode;
     onChange: (view: MapViewMode) => void;
+    // Si ofrece "Sin mapa". Por defecto, solo en la prueba de batería de la grabación; los mapas de
+    // rutas pasan false (spec 015).
+    allowNone?: boolean;
 };
 
 // "Botón de vista" de Figma: muestra la vista a la que se cambia (spec 010, CA-10, RN-8). En la
 // prueba de batería agrega "Sin mapa" (spec 011, CA-8, RN-7).
-export default function MapViewToggle({ view, onChange }: Props) {
+export default function MapViewToggle({ view, onChange, allowNone = BATTERY_TEST }: Props) {
     const styles = useThemedStyles(makeStyles);
-    const next = siguienteVista(view, BATTERY_TEST);
+    const next = siguienteVista(view, allowNone);
     const label = etiquetaDeVista(next);
     return (
         <PressableScale

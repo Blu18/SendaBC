@@ -21,6 +21,12 @@ describe('siguienteVista (spec 011, CA-8, RN-7)', () => {
   it('si se quedó en Sin mapa sin la prueba, vuelve a 3D', () => {
     expect(siguienteVista('none', false)).toBe('3D');
   });
+
+  it('los mapas de rutas no permiten "Sin mapa": alternan 3D y 2D aunque corra la prueba de batería (spec 015, CA-12)', () => {
+    // MapViewToggle recibe allowNone={false} en Explorar y en el detalle, sin importar BATTERY_TEST.
+    expect(siguienteVista('3D', false)).toBe('2D');
+    expect(siguienteVista('2D', false)).toBe('3D');
+  });
 });
 
 describe('batteryTestDe', () => {
