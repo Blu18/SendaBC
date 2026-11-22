@@ -214,7 +214,19 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
 
 ## Cierre
 
-- [ ] T13 — Datos de prueba para CA-20: `backend/prisma/seed/actividades-ejemplo.ts`, con `--quitar`, como el de rutas. Crea 200 actividades con puntos, de varios tipos y meses, para una cuenta de prueba. Se recuperan en el teléfono con la sincronización (spec 005), lo que de paso prueba RN-10. Agregar `seed:actividades` y `seed:actividades:quitar` a `package.json`. Solo es herramienta de prueba: no cambia endpoints ni el esquema. (CA-20)
+- [x] T13 — Datos de prueba para CA-20: `backend/prisma/seed/actividades-ejemplo.ts`, con `--quitar`, como el de rutas. Crea 200 actividades con puntos, de varios tipos y meses, para una cuenta de prueba. Se recuperan en el teléfono con la sincronización (spec 005), lo que de paso prueba RN-10. Agregar `seed:actividades` y `seed:actividades:quitar` a `package.json`. Solo es herramienta de prueba: no cambia endpoints ni el esquema. (CA-20)
+
+  Avance (2026-11-21):
+  - **Hecho:** el script `backend/prisma/seed/actividades-ejemplo.ts`, con los comandos `seed:actividades` y `seed:actividades:quitar`. La cuenta sale de `SEED_ACTIVIDADES_EMAIL` y `SEED_ACTIVIDADES_PASSWORD`, agregadas a `.env.example`.
+  - **Qué crea:** 200 actividades `SYNCED`, repartidas en 14 meses hacia atrás. Mitad son caminatas y el resto carreras y bici. Tienen puntos cada 15 s con altitud, cerca de Ensenada, y su recorrido como línea. El generador tiene semilla, así que cada corrida crea las mismas actividades, y cada corrida reemplaza las de esa cuenta.
+  - **Corrido (2026-11-21), con el visto bueno del usuario.** La cuenta `prueba-bitacora@senda.bc` se generó en `backend/.env`; su contraseña está solo ahí. Quedaron 200 actividades con 86 317 puntos en la base de Supabase, repartidas en 15 meses locales (de septiembre de 2025 a noviembre de 2026):
+    - 100 caminatas, de 3.1 a 14.9 km;
+    - 50 carreras, de 5.2 a 20.7 km;
+    - 50 salidas en bici, de 12.0 a 54.5 km.
+
+    Todas tienen recorrido y una subida de 84 a 962 m.
+  - **Corrección:** la primera corrida dejó distancias muy parecidas, porque las semillas consecutivas daban el mismo primer valor. Se mezcló la semilla y se volvió a correr, lo que reemplazó las actividades.
+  - El script compila con `tsc` en modo estricto, sin errores.
 - [ ] T14 — Development build en el S9+ (y el emulador para lo que lo necesite). Correr M1 a M12 y anotar los resultados abajo.
 - [ ] T15 — Si D1 o D4 no alcanzan sus límites en el S9+, actualizar el plan antes de cambiar el código. Cerrar la spec, actualizar su estado y `specs/roadmap.md`.
 

@@ -24,6 +24,8 @@
     "seed:rutas:generar": "node prisma/seed/gpx-a-json.ts",
     "seed:rutas": "node prisma/seed/rutas-ejemplo.ts",
     "seed:rutas:quitar": "node prisma/seed/rutas-ejemplo.ts --quitar",
+    "seed:actividades": "node prisma/seed/actividades-ejemplo.ts",
+    "seed:actividades:quitar": "node prisma/seed/actividades-ejemplo.ts --quitar",
     "datos:recalcular-distancias": "node prisma/scripts/recalcular-distancias.ts"
   },
   "dependencies": {
