@@ -233,7 +233,11 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
   - La 014 no agrega dependencias nativas, así que basta el APK de desarrollo de la 013 (con `react-native-svg` y `@rnmapbox/maps`) y Metro con el código nuevo.
   - El backend local corre en el puerto 3000. Metro corre desde `C:\dev\SendaBC\frontend` en el **8082**, con `EXPO_PUBLIC_BACKEND_IP=http://localhost:3000`, porque el 8081 lo ocupa un Metro viejo de `C:\dev\sbc13`. El bundle de Android compila (1706 módulos).
   - En el teléfono: `adb reverse tcp:8082 tcp:8082` y `tcp:3000 tcp:3000`, y abrir `exp+frontend://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8082`.
-- [ ] T15 — Si D1 o D4 no alcanzan sus límites en el S9+, actualizar el plan antes de cambiar el código. Cerrar la spec, actualizar su estado y `specs/roadmap.md`.
+
+  Corridos M1 a M7, M9, M10 y M11. Quedan M8, M12 y parte de M5 (ver "Pendientes conocidos"). La spec se cierra con ellos pendientes, por decisión del usuario (2026-11-22).
+- [x] T15 — Si D1 o D4 no alcanzan sus límites en el S9+, actualizar el plan antes de cambiar el código. Cerrar la spec, actualizar su estado y `specs/roadmap.md`.
+
+  Hecho (2026-11-22): en M7, con el build de entrega, D1 (perfil en menos de 300 ms) y D4 (memoria de 100 recorridos) se cumplieron, así que el plan no cambia. La spec queda como "Implementada con pendientes" y el roadmap se actualizó.
 
 ## Verificación
 
@@ -245,29 +249,29 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
 | CA-4 | `profile.test.ts` › GPS y barómetro; M1 | Automatizada + manual | M1 aprobado (S9+, 2026-11-21) |
 | CA-5 | `profile.test.ts` › cumbre; M1 | Automatizada + manual | M1 aprobado (S9+, 2026-11-21) |
 | CA-6 | `profile.test.ts` › cumbre conocida y pico aislado | Automatizada | Cumplido (2026-11-21) |
-| CA-7 | `profile.test.ts` › mínimo; M3 | Automatizada + manual | Pendiente |
+| CA-7 | `profile.test.ts` › mínimo; M3 | Automatizada + manual | M6 aprobado tras la corrección (S9+, 2026-11-22) |
 | CA-8 | M1, M2 | Manual | M1 y M2 aprobados (S9+, 2026-11-21) |
 | CA-9 | M1, M2 | Manual | M1 y M2 aprobados (S9+, 2026-11-21) |
 | CA-10 | M1, M6 | Manual | M1 y M6 aprobados (S9+) |
-| CA-11 | M3 | Manual | M3: corregido el caso de distancia 0; falta repetirlo |
+| CA-11 | M3 | Manual | M3 aprobado tras la corrección (S9+, 2026-11-22) |
 | CA-12 | M4 | Manual | M4: se cumple (ver resultados) |
 | CA-13 | `months.test.ts` › orden; M5 | Automatizada + manual | M5 aprobado (S9+, 2026-11-21) |
 | CA-14 | `months.test.ts` › títulos y totales; M5 | Automatizada + manual | M5 aprobado (S9+, 2026-11-21) |
 | CA-15 | `months.test.ts` › hora local y totales | Automatizada | Cumplido (2026-11-21) |
 | CA-16 | M5, M3 | Manual | M5 aprobado y M3 corregido (S9+, 2026-11-21) |
-| CA-17 | M5 | Manual | Pendiente: sin actividades pendientes o rechazadas en la cuenta |
+| CA-17 | M5 | Manual | Pendiente (pasa a la 012): sin actividades pendientes o rechazadas en la cuenta |
 | CA-18 | M5 | Manual | M5 aprobado (S9+, 2026-11-21) |
 | CA-19 | M6 | Manual | M6 aprobado (S9+, 2026-11-21) |
 | CA-20 | M7 | Manual | M7 aprobado con build de entrega (S9+, 2026-11-22): lista en menos de 1 s |
 | CA-21 | T2: aprobación anotada en el historial de la spec | Manual | Cumplido (2026-11-21) |
-| CA-22 | M1, M5, M8 (comparación con Figma en los dos modos); `contrast.test.ts` | Automatizada + manual | Pendiente |
-| CA-23 | M8; `contrast.test.ts` | Automatizada + manual | Pendiente |
+| CA-22 | M1, M5, M8 (comparación con Figma en los dos modos); `contrast.test.ts` | Automatizada + manual | `contrast.test.ts` pasa; M1 y M5 aprobados; M8 pendiente (pasa a la 012) |
+| CA-23 | M8; `contrast.test.ts` | Automatizada + manual | `contrast.test.ts` pasa; M8 pendiente (pasa a la 012) |
 | CA-24 | M9 | Manual | M9 aprobado (S9+, 2026-11-21) |
 | CA-25 | `shadows.test.ts`; M10 | Automatizada + manual | M10 aprobado (S9+, 2026-11-21) |
 | CA-26 | M11 | Manual | M11 aprobado (S9+, 2026-11-21) |
 | CA-27 | T17: aprobación anotada en el historial de la spec | Manual | Cumplido (2026-11-21) |
 | CA-28 | `contrast.test.ts`; M10 | Automatizada + manual | M10 aprobado (S9+, 2026-11-21) |
-| CA-29 | M12 | Manual | Pendiente |
+| CA-29 | M12 | Manual | Pendiente (pasa a la 012) |
 
 Todos los CA de la spec están cubiertos por al menos una tarea y una forma de verificarse.
 
@@ -407,6 +411,19 @@ Primera corrida en el S9+ (Android 10), 2026-11-21, con el APK de desarrollo de 
     - El S9+ queda con el build de entrega instalado. Para volver a probar con Metro hay que instalar otra vez un APK de desarrollo.
 - **M8 y M12:** pendientes.
 
+- **Repetición de M3 y M6 con sus correcciones (2026-11-22), por Claude por adb.** Como los casos reales son de la cuenta del usuario, se crearon dos actividades equivalentes en la cuenta de prueba, directamente en la base, y se recuperaron en el S9+:
+  - una de 30 puntos en el mismo lugar, con distancia 0;
+  - otra de 2.5 km con todas sus altitudes en 0 y fuente barómetro, sin lecturas en el servidor.
+
+  Se usó un APK de desarrollo para arm64 compilado desde `C:\dev\SendaBC\frontend`: el de entrega no se conecta a `http://localhost:3000`, porque en release Android bloquea el HTTP sin cifrar. Resultados:
+  - **M3 aprobado.** En la lista, la fila de 0 m muestra el ícono del deporte. Su resumen tampoco tiene miniatura, sin hueco, y muestra las cifras de elevación, el ritmo "—" y el motivo para no publicar.
+  - **M6 aprobado.** El resumen de los 2.5 km muestra la subida y la bajada como cifras en lugar del perfil plano, y debajo la miniatura del recorrido.
+
 ## Pendientes conocidos
 
-Ninguno por ahora.
+La spec se cerró el 2026-11-22 con estos casos sin correr. Pasan a la 012 (entrega), para correrlos con el APK de entrega o en la prueba de campo:
+
+- **M8 (CA-22, CA-23):** TalkBack en el resumen y en Mis actividades, y las dos pantallas comparadas con Figma en claro y oscuro. `contrast.test.ts` ya cubre la parte automatizada.
+- **M12 (CA-29):** desplazamiento rápido por Inicio, Mis rutas (con 20 rutas o más), Mis favoritas y Seguridad, y la prueba de batería de la 011 (30 % en 3D y 15 % en 2D).
+- **M5, pasos 3 y 5 (CA-17):** las insignias de pendiente y de "no se pudo subir" en la lista, y la lista vacía. La cuenta del usuario no tiene actividades en esos estados. La lista vacía se puede ver con la cuenta `013-m3` del Nothing Phone 2.
+- **M4, paso 3:** abrir desde el historial una actividad pendiente y ver su motivo para no publicar. Se puede revisar junto con M5.

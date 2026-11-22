@@ -1,6 +1,6 @@
 # 014 — Resumen, bitácora y estilo con sombras en toda la app
 
-- **Estado:** En progreso
+- **Estado:** Implementada con pendientes (aprobada 2026-11-21; cerrada 2026-11-22)
 - **Semana:** 10
 - **Autor(es):**
 - **Fecha:** 2026-11-21
@@ -152,3 +152,4 @@ Al aprobar el diseño del resumen y la bitácora (versión 3), el usuario decidi
 - 2026-11-21 — Ajuste del diseño aprobado, de acuerdo con el usuario, por contraste (CA-23, CA-28): el texto de la etiqueta de la línea de contexto pasa de ocre a `text`. Medía 3.87:1 en claro y ahora mide 9.91:1. La estrella y el tinte siguen en ocre. T6 hecha.
 - 2026-11-21 — Por el caso M3 en el S9+: una actividad con puntos pero con distancia 0 mostraba la miniatura de un recorrido que no existe. CA-11 y CA-16 ahora tratan la distancia 0 igual que la falta de puntos válidos: en el resumen no hay miniatura y en la lista va el ícono del deporte.
 - 2026-11-22 — Por el caso M6 en el S9+: una caminata recuperada del servidor, sin lecturas del barómetro y con todos sus puntos en altitud 0, dibujaba un perfil plano de "0 m aprox.". RN-6 ahora trata la altitud GPS de exactamente 0 como desconocida, así que esa actividad muestra las cifras (CA-7). Aprobado por el usuario.
+- 2026-11-22 — Implementada con pendientes, por decisión del usuario. Todas las tareas hechas, salvo T14 en parte, y M1 a M7, M9, M10 y M11 aprobados en el S9+. Pasan a la 012 los casos M8 (CA-22 y CA-23), M12 (CA-29) y los pasos 3 y 5 de M5 (CA-17). Detalle en tasks.md, "Pendientes conocidos".
