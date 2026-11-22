@@ -148,21 +148,56 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Fase C — Interfaz (después de T2)
 
-- [ ] T8 — `components/ui/RangeSlider.tsx` (D4):
+- [x] T8 — `components/ui/RangeSlider.tsx` (D4):
   - dos extremos con `PanResponder` que no se cruzan, con paso y los valores visibles;
   - cada extremo `adjustable` con su valor y `increment` y `decrement`;
   - área táctil mínima;
   - no suelta el gesto mientras se arrastra.
 
   Según el componente aprobado en Figma. (CA-4, CA-5, CA-17)
-- [ ] T9 — `components/activity/ActivityFiltersSheet.tsx`: `Modal` desde abajo con tipo, mes, distancia y altura, "Quitar filtros" y "Ver N actividades". Los cambios se aplican al momento. (CA-1, CA-2, CA-3, CA-4, CA-5, CA-7)
-- [ ] T10 — `activityHistoryPage.tsx`:
+
+  Hecho (2026-11-22):
+  - **Lógica pura en `lib/ui/rangeSlider.ts`:** `fractionOf`, `valueAtFraction` (ajusta al paso y a los límites), `moveThumb` (los extremos no se cruzan ni salen) y `stepThumb` (un paso, para TalkBack). Tiene 6 pruebas en `rangeSlider.test.ts`.
+  - **Componente:** riel `border` de 4 dp, rango en `primary` y perillas de 24 dp en `surface` con borde `primary` de 3 dp y sombra `low`, como el componente de Figma. Cada perilla tiene un área táctil de `touchMin`.
+  - **Riel a todo el ancho:** como en Figma, el riel ocupa el ancho del bloque. Las áreas táctiles se salen media perilla por cada lado, y un margen negativo las deja dentro del contenedor, porque en Android un toque fuera del padre no llega.
+  - **Arrastre:** cada perilla tiene su `PanResponder`, creado una vez, que lee los valores actuales por una referencia. `onPanResponderTerminationRequest` devuelve `false`, así que el panel no se desplaza mientras se arrastra.
+  - **TalkBack:** cada perilla es `adjustable`, con su nombre ("Distancia mínima") y su valor como texto ("5 km"), y las acciones `increment` y `decrement`.
+
+  `tsc` no marca errores y el frontend pasa 910 pruebas. Todavía no se ve en pantalla: lo usa el panel de T9, y se verifica en M1 y M8.
+- [x] T9 — `components/activity/ActivityFiltersSheet.tsx`: `Modal` desde abajo con tipo, mes, distancia y altura, "Quitar filtros" y "Ver N actividades". Los cambios se aplican al momento. (CA-1, CA-2, CA-3, CA-4, CA-5, CA-7)
+
+  Hecho (2026-11-22):
+  - **Estructura:** `Modal` transparente que sube desde abajo, sin animación si el sistema reduce el movimiento. El fondo está oscurecido al 40 % y cerrarlo con atrás o tocando el fondo cierra el panel.
+  - **Contenido**, en el orden de Figma:
+    - el asa, "Filtros" como encabezado y el botón de cerrar;
+    - tipo de actividad: chips "Todas" y los tres tipos, que bajan de renglón;
+    - mes: "Todos" y los meses con actividades, que se deslizan de lado;
+    - distancia y altura más alta, cada una con su rango elegido o "Cualquiera", el `RangeSlider` y sus límites.
+  - **Sin datos:** sin límites (ninguna actividad tiene ese dato), ese filtro no aparece.
+  - **Botones:** "Quitar filtros" y "Ver N actividades" lado a lado. Con `fontScale` de 1.3 o más, van uno debajo del otro, primero "Ver N actividades", como el marco de letra grande. "Ver 1 actividad" va en singular.
+  - **Cambios al momento:** cada cambio pasa por `onChange`. Los rangos se guardan con `normalizeRange`, así que en los límites el filtro queda inactivo (RN-8).
+  - **Altura máxima:** el panel mide hasta el 90 % de la pantalla y su contenido se desplaza; los botones quedan fijos abajo, sobre el área segura.
+
+  **Ajuste a Figma:** el panel tenía un radio de 24 sin variable. Se enlazó a `Radio/lg` (16), igual que la hoja de "¿Estás bien?", porque la app no tiene un radio de 24. Se aplicó al componente y a los dos marcos de letra grande.
+
+  `tsc` no marca errores y el frontend pasa 910 pruebas. Todavía no se abre desde ninguna pantalla (T10); se verifica en M1, M2 y M8.
+- [x] T10 — `activityHistoryPage.tsx`:
   - el botón "Filtros" en el encabezado, con el número de filtros activos;
   - la fila de chips de filtros activos con "Quitar filtros";
   - la lista con `sections` filtradas;
   - el `Notice` de sin resultados con "Quitar filtros".
 
   (CA-1, CA-7, CA-8, CA-9)
+
+  Hecho (2026-11-22):
+  - **`FiltersButton` (nuevo):** el ícono `filter-variant` y, con filtros, un contador en `primary` en la esquina. El lector de pantalla oye "Filtros, 2 activos". No aparece si no hay actividades, como en Figma.
+  - **`ActiveFilterChip` (nuevo):** el chip en `primary` con la "×". Tocarlo quita solo ese filtro ("Quitar filtro: Senderismo"). La fila de chips baja de renglón y termina en "Quitar filtros" (`TextBtn`).
+  - **Lista:** usa las `sections` filtradas del hook (T7), así que los totales de cada mes cuentan solo las filtradas.
+  - **Sin resultados:** con actividades pero sin coincidencias, aparece el `Notice` "Ninguna actividad coincide" con "Quitar filtros" (`BgBtn`), en lugar del aviso de lista vacía. La ayuda "Desliza hacia abajo para sincronizar." solo aparece si hay filas.
+  - **Panel:** `ActivityFiltersSheet` se abre con el botón y recibe los filtros, los límites, los meses y el número de filtradas.
+  - **Tokens:** el contador usaba un padding de 5 y un alto de línea de 18. La prueba de valores sueltos (009) no los permite, así que pasaron a `spacing.xs` y al alto de línea de `caption`.
+
+  `tsc` no marca errores, el frontend pasa 910 pruebas y `expo export` para Android compila. El Metro del puerto 8082, abierto desde ayer, no veía los archivos nuevos ("Unable to resolve"): hay que reiniciarlo con `--clear` antes de probar en el teléfono. Se verifica en M1, M2, M3 y M8.
 - [ ] T11 — `activityHistoryPage.tsx`: `BottomBar` con "Empezar actividad", que navega a `Activity` como en `mainPage`. Cambiar el texto de la lista vacía (D8) y el comentario que decía que no había botón. Comprobar que "Listo" regresa a Mis actividades sin cambiar el resumen. (CA-19, CA-20, RN-6)
 - [ ] T12 — `RouteMap.tsx`: props `view` y `onViewChange`. En 3D:
   - `RasterDemSource`, `Terrain` y sombreado;
