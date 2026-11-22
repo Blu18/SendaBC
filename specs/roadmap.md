@@ -18,7 +18,7 @@ Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. L
 | 9 | Diseño de la interfaz: prototipo en Figma e implementación en la app | [009-diseno-interfaz](009-diseno-interfaz/spec.md) | Implementada |
 | 9 | Mapa 3D al grabar y animaciones de la interfaz | [010-mapa-3d-animaciones](010-mapa-3d-animaciones/spec.md) | Implementada |
 | 9 | Pulido, prueba de campo, pruebas unitarias, bugs | [011-estabilidad](011-estabilidad/spec.md) | Implementada con pendientes (CA-2 y CA-5 por F5, pasado a la 012; CA-58 en parte) |
-| 10 | Rediseño de la pantalla de inicio y mapa de rutas con Mapbox | [013-inicio-rediseno](013-inicio-rediseno/spec.md) | En progreso |
+| 10 | Rediseño de la pantalla de inicio y mapa de rutas con Mapbox | [013-inicio-rediseno](013-inicio-rediseno/spec.md) | Implementada |
 | 10 | Cierre: README, manual, EAS Build, despliegue, demo | 012-entrega | Por escribir |
 
 ## Notas
@@ -33,4 +33,5 @@ Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. L
 - Para la 012 (desde la 011, 2026-11-20): el build de entrega no debe usar la URL del túnel de VS Code (Dev Tunnels) ni definir `EXPO_PUBLIC_BATTERY_TEST`, que solo existe para medir la batería (011, RN-7). El backend necesita su hospedaje propio.
 - La spec 011 pasa a la 012 el fallo F5 (2026-11-20): en segundo plano, la altitud del GPS salta a un valor casi fijo y la elevación de los teléfonos sin barómetro sale unas 4 veces la real; el perfil de las rutas también lo hereda. Por esto no cumplen 011 CA-2 (solo la elevación con GPS) ni CA-5. Detalle y datos en `011-estabilidad/tasks.md` (F5). Antes de corregirlo falta la caminata de diagnóstico con la pantalla bloqueada.
 - Orden (2026-11-20): la 013 (rediseño de Inicio) se hace antes de la 012 (entrega), para que la demo muestre el Inicio nuevo.
+- Para la 012 (desde la 013, 2026-11-21): en la prueba de campo, observar P-B (una vez, el primer encuadre de Explorar no quedó en los 25 km; está mitigado y no se pudo reproducir) y P-E ("Cerca de ti" en Inicio tarda de 20 a 35 s en volver después del modo avión). Detalle en `013-inicio-rediseno/tasks.md`. El APK de entrega debe compilarse de nuevo, porque la 013 agregó `react-native-svg` y quitó `react-native-maps`.
 - Numeración (2026-11-05): 010 es el mapa 3D y las animaciones, 011 es estabilidad y 012 es entrega. Antes, 009 y 010 eran estabilidad y entrega, y después 010 y 011. Las entradas fechadas de historiales y bitácoras conservan el número que tenían en su momento.

@@ -183,10 +183,10 @@ Una tarea detiene el trabajo: T2. `mainPage` (T22) no se programa hasta que el u
 
 ## Cierre
 
-- [ ] T24 — Development build en el emulador y en el S9+. Correr M1 a M13 y anotar los resultados abajo.
+- [x] T24 — Development build en el emulador y en el S9+. Correr M1 a M13 y anotar los resultados abajo.
 
   Avance (2026-11-20): primera corrida en el S9+ (Android 10, modo oscuro) con el APK de `822daa8`, el backend local y Metro desde `C:\dev\sbc13`, por `adb reverse`. Ver "Resultado de los casos manuales" y "Pendientes conocidos". Falta el emulador y lo que quedó pendiente.
-- [ ] T25 — Preguntar al usuario la decisión final de P11 (miniatura sin red) y anotarla en la spec. Actualizar el estado de la spec y `specs/roadmap.md`.
+- [x] T25 — Preguntar al usuario la decisión final de P11 (miniatura sin red) y anotarla en la spec. Actualizar el estado de la spec y `specs/roadmap.md`.
 
   Avance (2026-11-20): P11 confirmada por el usuario, anotada en la spec. El cierre espera los casos que faltan, por decisión del usuario:
   - M9: TalkBack, letra al máximo y modo claro.
@@ -198,44 +198,46 @@ Una tarea detiene el trabajo: T2. `mainPage` (T22) no se programa hasta que el u
 
   Al terminarlos, la spec pasa a Implementada y se actualiza `roadmap.md`.
 
+  Cierre (2026-11-21): el usuario aprobó M9, M2, M6 con contactos activos, M10 y M12 en el Nothing Phone 2. M3 y CA-23 se verificaron en el emulador. Los 34 CA están verificados. La spec pasa a Implementada y el roadmap se actualizó.
+
 ## Verificación
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
 | CA-1 | M1 | Manual | M1 aprobado |
 | CA-2 | M1 | Manual | M1 aprobado |
-| CA-3 | `activities.test.ts` › recientes; `thumbnail.test.ts`; M1 | Automatizada + manual | Pendiente |
+| CA-3 | `activities.test.ts` › recientes; `thumbnail.test.ts`; M1 | Automatizada + manual | M1 aprobado |
 | CA-4 | M1 | Manual | M1 aprobado |
 | CA-5 | M1 | Manual | M1 aprobado |
-| CA-6 | `activities.test.ts` › `summarizeSince`; `summary.test.ts`; M1, M2 | Automatizada + manual | Pendiente |
-| CA-7 | M2 | Manual | Pendiente |
-| CA-8 | `thumbnail.test.ts`; M7 | Automatizada + manual | Pendiente |
-| CA-9 | `nearby-query.dto.spec.ts`, `route.service.spec.ts` y `route-home.e2e-spec.ts` › `limit`; M3 | Automatizada + manual | Pendiente |
-| CA-10 | M3 | Manual | Pendiente |
+| CA-6 | `activities.test.ts` › `summarizeSince`; `summary.test.ts`; M1, M2 | Automatizada + manual | M1 y M2 aprobados |
+| CA-7 | M2 | Manual | M2 aprobado |
+| CA-8 | `thumbnail.test.ts`; M7 | Automatizada + manual | M7 aprobado |
+| CA-9 | `nearby-query.dto.spec.ts`, `route.service.spec.ts` y `route-home.e2e-spec.ts` › `limit`; M3 | Automatizada + manual | M3 aprobado |
+| CA-10 | M3 | Manual | M3 aprobado (emulador) |
 | CA-11 | M4 | Manual | M4 aprobado |
 | CA-12 | M3 | Manual | M3 aprobado |
-| CA-13 | `route.service.spec.ts` y `route-home.e2e-spec.ts` › `popular`; M5 | Automatizada + manual | Pendiente |
+| CA-13 | `route.service.spec.ts` y `route-home.e2e-spec.ts` › `popular`; M5 | Automatizada + manual | M5 aprobado |
 | CA-14 | `route.service.spec.ts` y `route-home.e2e-spec.ts` › empate | Automatizada | Cumplido (2026-11-20) |
-| CA-15 | `route.service.spec.ts` › solo con favoritas; `route-home.e2e-spec.ts` › sin favoritas no aparece; M5 | Automatizada + manual | Pendiente |
+| CA-15 | `route.service.spec.ts` › solo con favoritas; `route-home.e2e-spec.ts` › sin favoritas no aparece; M5 | Automatizada + manual | M5 aprobado |
 | CA-16 | M3, M5 | Manual | M3 y M5 aprobados |
-| CA-17 | `route-home.e2e-spec.ts` › el conteo cambia; M5 | Automatizada + manual | Pendiente |
-| CA-18 | M6 | Manual | Pendiente |
+| CA-17 | `route-home.e2e-spec.ts` › el conteo cambia; M5 | Automatizada + manual | M5 aprobado |
+| CA-18 | M6 | Manual | M6 aprobado |
 | CA-19 | M6 | Manual | M6 aprobado |
-| CA-20 | M6 | Manual | Pendiente |
+| CA-20 | M6 | Manual | M6 aprobado |
 | CA-21 | M7 | Manual | M7 aprobado |
 | CA-22 | M7 | Manual | M7 aprobado (ver P-E) |
-| CA-23 | M7 | Manual | Pendiente |
+| CA-23 | M7 | Manual | M7 aprobado (emulador, sin backend) |
 | CA-24 | M8 | Manual | M8 aprobado |
 | CA-25 | M8 | Manual | M8 aprobado |
 | CA-26 | T2: aprobación anotada en el historial de la spec | Manual | Cumplido (2026-11-20) |
-| CA-27 | M1, M9 (comparación con Figma en los dos modos) | Manual | Pendiente |
-| CA-28 | M9 | Manual | Pendiente |
-| CA-29 | M9 | Manual | Pendiente |
-| CA-30 | M10, M11 | Manual | Pendiente |
-| CA-31 | `geo.test.ts` › `boundsAround`; M10 | Automatizada + manual | Pendiente |
+| CA-27 | M1, M9 (comparación con Figma en los dos modos) | Manual | M1 y M9 aprobados |
+| CA-28 | M9 | Manual | M9 aprobado |
+| CA-29 | M9 | Manual | M9 aprobado |
+| CA-30 | M10, M11 | Manual | M10 y M11 aprobados |
+| CA-31 | `geo.test.ts` › `boundsAround`; M10 | Automatizada + manual | M10 aprobado |
 | CA-32 | `geo.test.ts` › `boundsForPath`; M11 | Automatizada + manual | M11 aprobado |
 | CA-33 | M13 | Manual | M13 aprobado |
-| CA-34 | M12 | Manual | Pendiente |
+| CA-34 | M12 | Manual | M12 aprobado |
 
 ### Casos manuales
 
@@ -319,25 +321,27 @@ Salvo que se indique otra cosa: development build con el backend local, una cuen
 Primera corrida, 2026-11-20, en el S9+ con la cuenta de prueba de Postman. Las pantallas se leyeron con `uiautomator dump` y capturas.
 
 - **M1 — aprobado.** "Empezar actividad" se ve sin desplazarse, fijo sobre la barra de pestañas, y abre "Nueva actividad" sin pasos intermedios. Las 3 actividades recientes van de la más nueva a la más vieja, con el mismo formato que el historial ("18 de noviembre de 2026 9:42", "4.46 km · 01:08:26"). Al tocar una se abre su resumen con los mismos datos, y "Ver todas" abre "Mis actividades". Los totales coinciden: 3 actividades, 4.46 km y 2:09 + 5:51 + 1:08:26 = "1 h 16 min".
-- **M2 — pendiente.** Necesita una cuenta sin actividades.
-- **M3 — aprobado en parte.** Hay hasta 5 rutas a 25 km o menos, con "Tuya" en la propia y "a 96 m de ti". Al tocar una se abre su detalle, y "Ver mapa" abre la pestaña Rutas. Falta "sin rutas cerca", porque necesita fijar la ubicación en el mar. "Buscar en esta zona" sobre el mar sí muestra "Sin rutas cerca" en Explorar.
+- **M2 — aprobado** por el usuario en el Nothing Phone 2 (2026-11-21), con una cuenta sin actividades.
+- **M3 — aprobado.** En el S9+ (2026-11-20): hasta 5 rutas a 25 km o menos, con "Tuya" en la propia y "a 96 m de ti". Al tocar una se abre su detalle y "Ver mapa" abre la pestaña Rutas. En el emulador `Pixel_8_Pro` (2026-11-21), con la ubicación en el mar frente a Eréndira (`adb emu geo fix -116.62 31.27`): "No hay rutas publicadas cerca de ti", "Busca en otra zona del mapa." y "Explorar el mapa", que abre la pestaña Rutas. En el emulador la posición solo llega si se le mandan posiciones seguidas; con una sola, `getCurrentPositionAsync` da "Current location is unavailable" y la sección muestra "No se pudieron cargar las rutas". Es del emulador: Explorar falla igual.
 - **M4 — aprobado.** Sin permiso de ubicación: "Activa tu ubicación para ver rutas cerca" y no aparece el diálogo del sistema. Populares y el resto de Inicio se ven normal. Al devolver el permiso, las cercanas regresan.
 - **M5 — aprobado.** Al guardar "Cerros de Ensenada" en favoritas y volver a Inicio, aparece en Populares con 1 favorita. Al quitarla, desaparece. El empate en 1 favorita sigue el orden de publicación (CA-14).
-- **M6 — aprobado, salvo contactos activos.** Sin contactos activos se ve la tarjeta de seguridad con "Configurar contactos" y el aviso del 911. "Mapas sin conexión" abre la pantalla de zonas. En la segunda corrida se grabó una actividad corta con el backend apagado: Inicio mostró "1 actividad sin subir" y "Se suben solas al volver la conexión". Además, los totales pasaron a 4 actividades y la nueva apareció primero en "Tus actividades". Al levantar el backend y volver la app al frente, la actividad se subió y la fila desapareció. Falta el caso con contactos activos, que necesita aceptar la invitación en Telegram.
+- **M6 — aprobado.** Sin contactos activos se ve la tarjeta de seguridad con "Configurar contactos" y el aviso del 911. "Mapas sin conexión" abre la pantalla de zonas. En la segunda corrida se grabó una actividad corta con el backend apagado: Inicio mostró "1 actividad sin subir" y "Se suben solas al volver la conexión". Además, los totales pasaron a 4 actividades y la nueva apareció primero en "Tus actividades". Al levantar el backend y volver la app al frente, la actividad se subió y la fila desapareció. Falta el caso con contactos activos, que necesita aceptar la invitación en Telegram. Con contactos activos, aprobado por el usuario en el Nothing Phone 2 (2026-11-21).
 - **M7 — aprobado.** En modo avión:
   - el saludo, los totales, las actividades y "Listo para salir" salen del teléfono;
   - "Las rutas necesitan conexión" y "Las rutas populares necesitan conexión" aparecen sin errores en rojo;
   - las miniaturas ya vistas conservan su fondo, desde la caché de imágenes.
 
   Al quitar el modo avión sin salir de Inicio, Populares se carga en segundos. Cerca de ti tarda entre 20 y 35 s (ver "Pendientes conocidos"). No se probó el perfil sin caché (CA-23), porque el perfil estaba guardado.
+  - Perfil sin cargar (CA-23), en el emulador (2026-11-21): con el backend apagado y la app recién abierta, el saludo es "Hola" y el resto de Inicio funciona (totales, actividades y perfil).
 - **M8 — aprobado.** Inicio ya no tiene "Cerrar sesión"; en el perfil está al final, con la nota. Sin pendientes, lleva a la bienvenida, y atrás sale de la app sin volver a Inicio. Las actividades se conservan al volver a entrar. En la segunda corrida, con 1 actividad sin subir, apareció "Tienes 1 actividad sin subir. Se subirá cuando vuelvas a iniciar sesión." con "Cancelar" y "Cerrar sesión", y "Cancelar" dejó la sesión abierta.
-- **M9 — pendiente para el usuario.** TalkBack, letra al máximo y modo claro cambian ajustes del teléfono, así que los hace el usuario. El modo claro no se aplicó con `cmd uimode` en el S9+. Con `uiautomator` se comprobó que las tarjetas tienen nombre accesible ("Senderismo, 18 de noviembre de 2026 9:42, 4.46 km, 01:08:26"; "1. El Salto · Ensenada · … · 1 persona la tiene en favoritas").
-- **M10 — aprobado en parte.** Explorar usa el mapa oscuro de Mapbox, con los inicios, los recorridos y la posición del usuario como capa propia.
+- **M9 — aprobado** por el usuario en el Nothing Phone 2 (2026-11-21): TalkBack, letra al máximo y modo claro. El S9+ no tiene TalkBack.
+- **M10 — aprobado.** Explorar usa el mapa oscuro de Mapbox, con los inicios, los recorridos y la posición del usuario como capa propia.
   - La selección responde al primer toque, tanto en un marcador como en una línea delgada: la línea se resalta, el inicio lleva anillo y aparece la tarjeta. Tocar el mapa vacío quita la selección.
   - 50 km aleja el mapa y muestra más rutas. "Buscar en esta zona" funciona.
   - Falta el modo claro y repetir uno por uno los casos M1 a M8 de la 006.
+  - Modo claro y los casos de la 006: aprobados por el usuario en el Nothing Phone 2 (2026-11-21).
 - **M11 — aprobado.** El detalle de "Sendero Sauzal" se ve con el mapa de Mapbox, el recorrido completo encuadrado, el inicio y el final, y el logo visible. En la segunda corrida se guardó "Cerros de Ensenada" en favoritas, se dejó descargar su detalle y se apagó el backend. Desde "Mis favoritas", el detalle abrió con "Datos guardados" y el recorrido completo sobre Mapbox, con el inicio verde y el final ocre. Después se quitó de favoritas.
-- **M12 — parcial.** Hay una zona descargada (10 de noviembre, unos 66 MB, 303 km²). En modo avión, Explorar muestra el fondo alrededor de Ensenada junto con la búsqueda guardada (011). No se pudo distinguir si el fondo viene de la zona o de la caché del mapa, porque esa área ya se había visto. Falta probarlo en una zona descargada que nunca se haya visto.
+- **M12 — aprobado** por el usuario en el Nothing Phone 2 (2026-11-21), con una zona descargada que no se había visto. En la primera corrida en el S9+ no se pudo distinguir la zona de la caché.
 - **M13 — aprobado.** El `grep` no encuentra `react-native-maps` y el manifiesto no tiene la clave de Google (T11). El APK sin Google Maps abre Inicio, Explorar, el detalle y la pantalla de zonas.
 
 ## Commits propuestos

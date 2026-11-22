@@ -1,6 +1,6 @@
 # 013 — Rediseño de la pantalla de inicio
 
-- **Estado:** En progreso
+- **Estado:** Implementada
 - **Semana:** 10
 - **Autor(es):**
 - **Fecha:** 2026-11-20
@@ -150,3 +150,4 @@ De paso, Explorar rutas y el detalle de ruta pasan a usar el mismo mapa que la g
 - 2026-11-20 — Prototipo de Inicio en Figma aprobado por el usuario (CA-26), sin cambios: https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX?node-id=57-3359. Ya se puede programar `mainPage` (T22).
 - 2026-11-20 — Se agrega RN-10 (atribución de los mapas en Inicio), que no estaba en el prototipo. En "Listo para salir", los contactos se muestran con la tarjeta de seguridad de la spec 008 y no con una fila, para conservar el aviso del 911 (CA-18, "como hoy"). CA-27 se revisa con esas dos diferencias. Anotado al implementar T22.
 - 2026-11-20 — P11 queda como decisión definitiva: sin red y sin la imagen en caché, la miniatura muestra la forma del recorrido sobre fondo liso. La spec sigue En progreso hasta correr M9, M2 y lo que falta de M3, M6, M8, M10, M11 y M12; el usuario decide no cerrarla con pendientes.
+- 2026-11-21 — Implementada. Los 34 CA están verificados: pruebas automáticas (backend, e2e, Postman y Vitest del frontend) y los casos M1 a M13 en el S9+, el Nothing Phone 2 y el emulador. Quedan anotados en `tasks.md` P-B (mitigado, sin reproducir) y P-E (las rutas cercanas tardan en volver después del modo avión), para observarlos en la prueba de campo de la 012.
