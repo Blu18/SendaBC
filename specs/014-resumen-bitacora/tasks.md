@@ -76,10 +76,22 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
 
 ## Fase C — Hooks y componentes
 
-- [ ] T7 — `activitySummary.hook.ts`: leer puntos y lecturas del barómetro, y devolver `profile`, `path` y `context` (este último con `listFinishedActivities`). Calcularlos después de mostrar la actividad (plan, D1). (CA-2, CA-4, CA-10, CA-19)
-- [ ] T8 — `useTrackPath.ts` (nuevo), con memoria de 100 recorridos que se vacía al recuperar actividades (D4). En `activityHistory.hook.ts`, agregar `sections` con `groupByMonth`. (CA-13, CA-16, CA-20)
-- [ ] T9 — `components/activity/TerrainProfile.tsx`: la cresta en `Svg` sobre las columnas de `perfilParaGrafica`, la base como `View` con subida y bajada (D5), la cumbre con su etiqueta y la descripción accesible. (CA-4, CA-5, CA-23, CA-24)
-- [ ] T10 — `components/activity/ActivityLogRow.tsx`: miniatura de 56 × 40 o el ícono del deporte, tipo, fecha, `SyncBadge` solo si no está sincronizada, distancia y duración, con nombre accesible. (CA-16, CA-17, CA-23)
+- [x] T7 — `activitySummary.hook.ts`: leer puntos y lecturas del barómetro, y devolver `profile`, `path` y `context` (este último con `listFinishedActivities`). Calcularlos después de mostrar la actividad (plan, D1). (CA-2, CA-4, CA-10, CA-19)
+
+  Hecho (2026-11-21): `useActivitySummary(localId, { details: true })` devuelve además `details` (`profile`, `path` y `context`), o `null` mientras se calculan. Los detalles se piden con una opción porque Publicar como ruta usa el mismo hook y no los necesita. Se calculan en un segundo efecto, cuando la actividad ya está en pantalla. Si fallan, el resumen queda sin perfil, recorrido ni línea, pero con sus cifras. Es un hook de React Native, así que no tiene prueba de Vitest: lo verifican M1 a M3 y M6. `tsc` no marca errores.
+- [x] T8 — `useTrackPath.ts` (nuevo), con memoria de 100 recorridos que se vacía al recuperar actividades (D4). En `activityHistory.hook.ts`, agregar `sections` con `groupByMonth`. (CA-13, CA-16, CA-20)
+
+  Hecho (2026-11-21): `useTrackPath(localId)` lee los puntos solo cuando la fila se monta y devuelve `null` mientras carga o si no hay recorrido. La memoria guarda los últimos 100 recorridos por id local, incluidos los vacíos, para no volver a leerlos. `clearTrackPathCache()` la vacía, y el hook del historial la llama cuando la sincronización cambia actividades. `useActivityHistory` devuelve además `sections`. `tsc` no marca errores; la verificación es manual (M5 y M7).
+- [x] T9 — `components/activity/TerrainProfile.tsx`: la cresta en `Svg` sobre las columnas de `perfilParaGrafica`, la base como `View` con subida y bajada (D5), la cumbre con su etiqueta y la descripción accesible. (CA-4, CA-5, CA-23, CA-24)
+
+  Hecho (2026-11-21): tarjeta `surface` con sombra `medium`, como la versión 3. Detalles:
+  - La cresta une las columnas de `perfilParaGrafica` con curvas cuadráticas por los puntos medios. La columna más baja conserva el 12 % del alto, para que la montaña siempre tenga cuerpo.
+  - La cumbre es un círculo `secondary` con borde `surface`, con una línea guía punteada en `onPrimary` al 45 % y la etiqueta flotante con sombra `low`, que no se sale de la tarjeta.
+  - Las etiquetas "Subida" y "Bajada" van en `onPrimary` al 100 %, no al 80 % como en Figma, para no bajar del contraste AA en texto de 12 px. La altitud sale con `formatElevation` ("1412 m aprox."), sin el espacio de miles de Figma.
+  - `tsc` no marca errores. La verificación es manual (M1, M3, M8 y M9).
+- [x] T10 — `components/activity/ActivityLogRow.tsx`: miniatura de 56 × 40 o el ícono del deporte, tipo, fecha, `SyncBadge` solo si no está sincronizada, distancia y duración, con nombre accesible. (CA-16, CA-17, CA-23)
+
+  Hecho (2026-11-21): la miniatura mide 64 × 48, como el componente aprobado en Figma (versión 3), no 56 × 40 como decía la tarea. Sin recorrido, o mientras se lee, la fila muestra el ícono del deporte en `primary` sobre un recuadro con 12 % de `primary`. La fila no tiene fondo propio, porque va dentro de `GroupedList` (T18). Su nombre accesible es "Senderismo, 28 oct 2026, 7:15, 8.31 km, 2:14:05" y agrega el estado solo si no está sincronizada. `tsc` no marca errores. La verificación es manual (M3, M5 y M8).
 
 ## Fase D — Pantallas (después de T2)
 
