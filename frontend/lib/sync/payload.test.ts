@@ -23,6 +23,7 @@ function actividad(extra: Partial<Activity> = {}): Activity {
     elevationLossMeters: 998.7,
     serverId: null,
     syncError: null,
+    peakAltitudeMeters: null,
     ...extra,
   };
 }

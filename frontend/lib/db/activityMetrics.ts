@@ -1,19 +1,36 @@
 import { computeDistance } from '../metrics/distance';
 import { hasOldPoints, withoutOldPoints } from '../metrics/oldPoints';
+import { activityProfile } from '../metrics/profile';
 import { computeActivityMetrics } from '../metrics/summary';
 import {
   getActivity,
   getActivityPoints,
   getBarometerReadings,
   listActivityIdsMissingMetrics,
+  listActivityIdsMissingPeak,
   listActivityIdsWithDistance,
   saveDistance,
   saveMetrics,
+  savePeak,
+  type Activity,
+  type ActivityPointInput,
 } from './activities';
 import { getSetting, setSetting } from './settings';
 
+// La cumbre del perfil de la spec 014, con los mismos puntos, lecturas y fuente que el resumen,
+// para que el filtro de altura dé la misma cifra (spec 015, CA-5, RN-5). null sin perfil.
+function peakOf(
+  activity: Pick<Activity, 'elevationSource'>,
+  points: ActivityPointInput[],
+  barometerReadings: Awaited<ReturnType<typeof getBarometerReadings>>
+) {
+  const profile = activityProfile({ points, barometerReadings, source: activity.elevationSource ?? 'GPS' });
+  return profile ? profile.cumbre.altitudM : null;
+}
+
 // Calcula las métricas de una actividad terminada con lo guardado en el teléfono y las
-// guarda junto a ella (spec 004, CA-18, RN-4). Devuelve null si no existe o sigue en curso.
+// guarda junto a ella (spec 004, CA-18, RN-4). También guarda su cumbre (spec 015, plan D1).
+// Devuelve null si no existe o sigue en curso.
 export async function finalizeMetrics(localId: number) {
   const activity = await getActivity(localId);
   if (!activity?.endedAt) return null;
@@ -31,7 +48,36 @@ export async function finalizeMetrics(localId: number) {
     endedAt: activity.endedAt,
   });
   await saveMetrics(localId, metrics);
+  await savePeak(localId, peakOf(activity, points, barometerReadings));
   return metrics;
+}
+
+// Calcula y guarda la cumbre de una actividad terminada (spec 015, CA-5; plan D1). Devuelve si la
+// guardó: no lo hace si la actividad no existe o sigue en curso.
+export async function computePeak(localId: number) {
+  const activity = await getActivity(localId);
+  if (!activity?.endedAt) return false;
+  const [points, barometerReadings] = await Promise.all([
+    getActivityPoints(localId),
+    getBarometerReadings(localId),
+  ]);
+  await savePeak(localId, peakOf(activity, points, barometerReadings));
+  return true;
+}
+
+// Calcula las cumbres pendientes: las actividades de antes de la v7 y las recuperadas cuya cumbre
+// no se pudo calcular al guardarlas (spec 015, plan D1). Si una falla, sigue con las demás; queda
+// pendiente y se reintenta en la siguiente apertura. Devuelve cuántas calculó.
+export async function computeMissingPeaks() {
+  let computed = 0;
+  for (const id of await listActivityIdsMissingPeak()) {
+    try {
+      if (await computePeak(id)) computed++;
+    } catch (e) {
+      console.log(`Error calculando la cumbre de la actividad ${id}:`, e);
+    }
+  }
+  return computed;
 }
 
 // Calcula las métricas pendientes al abrir la app: actividades cerradas por

@@ -158,6 +158,19 @@ export const MIGRATIONS: { version: number; sql: string }[] = [
       ALTER TABLE safety_sessions ADD COLUMN response_ms INTEGER;
     `,
   },
+  // v7: altura más alta de cada actividad, para filtrar Mis actividades (spec 015, CA-5, RN-5;
+  // plan, D1 y "Cambios a SQLite").
+  // - peak_altitude_meters: la cumbre del perfil de la spec 014. NULL si no tiene perfil o si
+  //   todavía no se calcula.
+  // - peak_calculated: 1 si ya se calculó (aunque dé NULL); 0 si falta. Las actividades de antes de
+  //   v7 quedan en 0 y computeMissingPeaks las calcula al abrir la app.
+  {
+    version: 7,
+    sql: `
+      ALTER TABLE activities ADD COLUMN peak_altitude_meters REAL;
+      ALTER TABLE activities ADD COLUMN peak_calculated INTEGER NOT NULL DEFAULT 0;
+    `,
+  },
 ];
 
 // Versión del esquema local (PRAGMA user_version): la del último paso.

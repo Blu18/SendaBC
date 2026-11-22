@@ -37,6 +37,9 @@ export type Activity = {
   elevationLossMeters: number | null;
   serverId: string | null; // id en el servidor, al subirla o recuperarla (spec 005)
   syncError: string | null; // motivo si el servidor la rechazó: "No se pudo subir" (spec 005, CA-11)
+  // Cumbre del perfil (spec 014), para el filtro de altura (spec 015, CA-5, RN-5). null si no tiene
+  // perfil o si todavía no se calcula.
+  peakAltitudeMeters: number | null;
 };
 
 const ACTIVITY_COLUMNS = `
@@ -53,7 +56,8 @@ const ACTIVITY_COLUMNS = `
   elevation_gain_meters AS elevationGainMeters,
   elevation_loss_meters AS elevationLossMeters,
   server_id AS serverId,
-  sync_error AS syncError`;
+  sync_error AS syncError,
+  peak_altitude_meters AS peakAltitudeMeters`;
 
 // Crea la actividad en RECORDING y devuelve su local_id (CA-4).
 // La fuente de la elevación se decide al iniciar (spec 004, RN-3).
@@ -431,6 +435,27 @@ export async function listActivityIdsMissingMetrics() {
   const rows = await db.getAllAsync<{ localId: number }>(
     `SELECT local_id AS localId FROM activities
      WHERE status != 'RECORDING' AND distance_meters IS NULL`
+  );
+  return rows.map((r) => r.localId);
+}
+
+// Guarda la cumbre del perfil y la marca como calculada, aunque sea null (sin perfil) (spec 015,
+// CA-5, RN-5; plan, D1). Solo cambia estas dos columnas: el estado y las métricas no se tocan.
+export async function savePeak(localId: number, peakAltitudeMeters: number | null) {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE activities SET peak_altitude_meters = ?, peak_calculated = 1 WHERE local_id = ?`,
+    [peakAltitudeMeters, localId]
+  );
+}
+
+// Actividades terminadas cuya cumbre falta calcular: las de antes de la v7 y las recuperadas del
+// servidor (spec 015, plan D1). Incluye las de cualquier cuenta, como las métricas pendientes.
+export async function listActivityIdsMissingPeak() {
+  const db = await getDb();
+  const rows = await db.getAllAsync<{ localId: number }>(
+    `SELECT local_id AS localId FROM activities
+     WHERE status != 'RECORDING' AND peak_calculated = 0`
   );
   return rows.map((r) => r.localId);
 }

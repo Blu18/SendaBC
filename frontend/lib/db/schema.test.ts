@@ -26,13 +26,13 @@ const columnas = (db: DatabaseSync, tabla: string) =>
 describe('pasosPendientes (constitución 5.3)', () => {
   it('las versiones van de 1 en 1 y la última es DB_VERSION', () => {
     expect(MIGRATIONS.map((p) => p.version)).toEqual(MIGRATIONS.map((_, i) => i + 1));
-    expect(DB_VERSION).toBe(6);
+    expect(DB_VERSION).toBe(7);
   });
 
   it('devuelve solo los pasos que faltan, en orden', () => {
-    expect(pasosPendientes(0).map((p) => p.version)).toEqual([1, 2, 3, 4, 5, 6]);
-    expect(pasosPendientes(5).map((p) => p.version)).toEqual([6]);
-    expect(pasosPendientes(6)).toEqual([]);
+    expect(pasosPendientes(0).map((p) => p.version)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(pasosPendientes(5).map((p) => p.version)).toEqual([6, 7]);
+    expect(pasosPendientes(7)).toEqual([]);
   });
 });
 
@@ -48,7 +48,7 @@ describe('SQLite v6 (spec 011, CA-50, CA-53; constitución 5.3)', () => {
 
     migrar(db);
 
-    expect(db.prepare('PRAGMA user_version').get()).toEqual({ user_version: 6 });
+    expect(db.prepare('PRAGMA user_version').get()).toEqual({ user_version: DB_VERSION });
     expect({ ...(db.prepare('SELECT client_generated_id, status FROM activities').get() as object) }).toEqual({
       client_generated_id: 'act-1',
       status: 'PENDING_SYNC',
@@ -110,11 +110,31 @@ describe('SQLite v6 (spec 011, CA-50, CA-53; constitución 5.3)', () => {
     expect(db.prepare('SELECT count(*) AS n FROM route_cache').get()).toEqual({ n: 3 });
   });
 
-  it('una base nueva llega a v6 con todos los pasos', () => {
+  it('una base nueva llega a la última versión con todos los pasos', () => {
     const db = baseEnVersion(0);
     migrar(db);
 
-    expect(db.prepare('PRAGMA user_version').get()).toEqual({ user_version: 6 });
+    expect(db.prepare('PRAGMA user_version').get()).toEqual({ user_version: DB_VERSION });
     expect(columnas(db, 'safety_sessions')).toEqual(expect.arrayContaining(['quiet_ms', 'response_ms']));
+  });
+});
+
+describe('SQLite v7 (spec 015, CA-5, RN-5; plan, D1)', () => {
+  it('migra una base v6 con actividades: quedan sin cumbre y por calcular', () => {
+    const db = baseEnVersion(6);
+    db.exec(`
+      INSERT INTO activities (client_generated_id, type, status, startedAt, user_id, distance_meters)
+        VALUES ('act-1', 'HIKING', 'SYNCED', '2026-11-01T15:00:00.000Z', 'usuario-a', 5740);
+    `);
+
+    migrar(db);
+
+    expect(db.prepare('PRAGMA user_version').get()).toEqual({ user_version: 7 });
+    expect(columnas(db, 'activities')).toEqual(expect.arrayContaining(['peak_altitude_meters', 'peak_calculated']));
+    expect({
+      ...(db
+        .prepare('SELECT client_generated_id, distance_meters, peak_altitude_meters, peak_calculated FROM activities')
+        .get() as object),
+    }).toEqual({ client_generated_id: 'act-1', distance_meters: 5740, peak_altitude_meters: null, peak_calculated: 0 });
   });
 });

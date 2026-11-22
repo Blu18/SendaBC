@@ -59,7 +59,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Fase B — Lógica pura y base local
 
-- [ ] T3 — `lib/activity/filters.ts`: `ActivityFilters`, `filterActivities`, `filterLimits`, `normalizeRange`, `availableMonths`, `activeFilterLabels` y `activeFilterCount` (plan, "Hooks / estado"). Pruebas en `filters.test.ts`:
+- [x] T3 — `lib/activity/filters.ts`: `ActivityFilters`, `filterActivities`, `filterLimits`, `normalizeRange`, `availableMonths`, `activeFilterLabels` y `activeFilterCount` (plan, "Hooks / estado"). Pruebas en `filters.test.ts`:
   - **Uno por uno:** por tipo; por mes en hora local, con una actividad a las 23:30 del último día; por distancia y por cumbre con los extremos incluidos.
   - **Sin dato:** una actividad sin distancia o sin cumbre queda fuera solo con su filtro activo.
   - **Combinados:** varios filtros a la vez, y ningún resultado.
@@ -69,12 +69,37 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - **Etiquetas:** los textos de los chips con los formatos de la spec 004.
 
   Las pruebas deben pasar con `TZ=UTC` y `TZ=America/Tijuana`. (CA-2, CA-3, CA-4, CA-5, CA-6, CA-9, RN-3, RN-4, RN-8)
-- [ ] T4 — SQLite v7 en `lib/db/schema.ts`: `peak_altitude_meters` y `peak_calculated`. En `lib/db/activities.ts`:
+
+  Hecho (2026-11-22):
+  - **`FilterableActivity`:** `filters.ts` trabaja con lo que necesita de una actividad, más `peakAltitudeMeters`, así no depende de que T4 agregue el campo a `Activity`.
+  - **Funciones nuevas,** además de las del plan:
+    - `NO_FILTERS`;
+    - `normalizeFilters`, que ajusta los dos rangos a la vez;
+    - los textos `formatFilterDistance`, `formatFilterAltitude`, `distanceRangeText` y `peakRangeText`, con "Cualquiera" sin filtro, como en Figma.
+  - **`months.ts`:** el título del mes pasó a `monthTitle`, que usan `groupByMonth` y los chips de mes.
+  - **Spec:** RN-4 pedía los formatos de la 004 ("5.00 km"). El diseño aprobado usa "5 – 20 km", así que RN-4 se corrigió primero, con nota en el historial.
+
+  Hay 19 pruebas en `filters.test.ts`. Pasan con la zona local, `UTC` y `America/Tijuana`. El frontend pasa 895 pruebas y `tsc` no marca errores.
+- [x] T4 — SQLite v7 en `lib/db/schema.ts`: `peak_altitude_meters` y `peak_calculated`. En `lib/db/activities.ts`:
   - `peakAltitudeMeters` en `Activity` y en `ACTIVITY_COLUMNS`;
   - `savePeak` y `listActivityIdsMissingPeak`.
 
   Prueba de la migración desde la v6 con el patrón de `pasosPendientes`, y pruebas de `savePeak` y `listActivityIdsMissingPeak` en `activities.test.ts`. (CA-5, RN-5)
-- [ ] T5 — `lib/db/activityMetrics.ts`:
+
+  Hecho (2026-11-22):
+  - **`schema.ts`:** paso 7 con `peak_altitude_meters REAL` y `peak_calculated INTEGER NOT NULL DEFAULT 0`.
+  - **`Activity`:** ahora tiene `peakAltitudeMeters`, que se lee en `ACTIVITY_COLUMNS`.
+  - **`savePeak`:** guarda la cumbre, o `null`, y marca la cumbre como calculada. El estado y las métricas no cambian.
+  - **`listActivityIdsMissingPeak`:** devuelve las actividades terminadas de cualquier cuenta con la cumbre por calcular, como `listActivityIdsMissingMetrics`.
+  - **Servidor:** `toUploadPayload` arma la carga campo por campo, así que la cumbre no se sube.
+
+  Pruebas:
+  - `schema.test.ts`: la base llega a v7, y una actividad de la v6 queda con la cumbre en `null` y por calcular.
+  - `activities.test.ts`: cuatro casos nuevos (terminada y en grabación, `savePeak` con valor y con `null`, y recuperada del servidor).
+  - Las actividades armadas a mano en las pruebas de `payload` y `syncEngine`, y la prueba de recuperar, se actualizaron con el campo nuevo.
+
+  El frontend pasa 900 pruebas y `tsc` no marca errores.
+- [x] T5 — `lib/db/activityMetrics.ts`:
   - **`finalizeMetrics`:** también guarda la cumbre de `activityProfile`, o `null` sin perfil.
   - **`computeMissingPeaks()` (nuevo):** sigue con las demás si una falla.
   - **Llamadas:** en `App.tsx`, después de `computeMissingMetrics`. En la sincronización, después de recuperar actividades y antes de avisar que cambiaron los datos.
@@ -84,6 +109,20 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - una actividad de menos de 200 m queda con `null` y `peak_calculated = 1`.
 
   (CA-5, RN-5)
+
+  Hecho (2026-11-22):
+  - **`peakOf`:** calcula `activityProfile` con los mismos puntos, lecturas y fuente que el resumen (`elevationSource ?? 'GPS'`), así la cifra es la misma.
+  - **`finalizeMetrics`:** reutiliza los puntos que ya leyó para las métricas.
+  - **`computePeak(localId)` (nueva):** calcula la cumbre de una sola actividad. `computeMissingPeaks` la usa.
+  - **Al abrir la app:** `computeMissingPeaks` corre en `App.tsx` después de `setLocalDataReady(true)`, sin bloquear la pantalla. La lista toma las cumbres al recibir el foco. Si el usuario ya está en Mis actividades cuando termina, las ve al volver a la pestaña. Se mide en M13.
+  - **En la sincronización:** `lib/sync/index.ts` pasa al motor `insertDownloadedWithPeak`, que guarda la actividad recuperada y calcula su cumbre antes de que el motor avise que cambiaron los datos. Si la cumbre falla, la actividad queda guardada con la cumbre pendiente para la siguiente apertura. El motor (`syncEngine.ts`) no cambió.
+
+  Tres pruebas nuevas en `activityMetrics.test.ts`:
+  - la cumbre guardada coincide con la del perfil del resumen;
+  - menos de 200 m queda calculada y en `null`;
+  - `computeMissingPeaks` calcula solo las pendientes y una sola vez, no cambia nada más y no toca la que se graba.
+
+  El frontend pasa 903 pruebas y `tsc` no marca errores.
 - [ ] T6 — Mapa:
   - `lib/map/viewMode.ts`: `siguienteVista` recibe si se permite "Sin mapa". Pruebas en `viewMode.test.ts`: los mapas de rutas alternan 3D y 2D aunque la prueba de batería esté activa.
   - `TERRAIN_EXAGGERATION` pasa de `RecordingMap` a `lib/map/camera.ts`.
@@ -136,14 +175,14 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
 | CA-1 | M1 | Manual (emulador) | Pendiente |
-| CA-2 | `filters.test.ts` › tipo; M1 | Automatizada + manual | Pendiente |
-| CA-3 | `filters.test.ts` › mes en hora local y meses disponibles; M1 | Automatizada + manual | Pendiente |
-| CA-4 | `filters.test.ts` › distancia, extremos y sin distancia; M1 | Automatizada + manual | Pendiente |
-| CA-5 | `filters.test.ts` › cumbre; `activities.test.ts` y pruebas de `computeMissingPeaks` › cumbre guardada; M1 | Automatizada + manual | Pendiente |
-| CA-6 | `filters.test.ts` › combinados; M2 | Automatizada + manual | Pendiente |
+| CA-2 | `filters.test.ts` › tipo; M1 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
+| CA-3 | `filters.test.ts` › mes en hora local y meses disponibles; M1 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
+| CA-4 | `filters.test.ts` › distancia, extremos y sin distancia; M1 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
+| CA-5 | `filters.test.ts` › cumbre; `activities.test.ts` y pruebas de `computeMissingPeaks` › cumbre guardada; M1 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
+| CA-6 | `filters.test.ts` › combinados; M2 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
 | CA-7 | M2 | Manual (emulador) | Pendiente |
-| CA-8 | `filters.test.ts` › sin resultados; M2 | Automatizada + manual | Pendiente |
-| CA-9 | `filters.test.ts` › totales de las filtradas; M2 | Automatizada + manual | Pendiente |
+| CA-8 | `filters.test.ts` › sin resultados; M2 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
+| CA-9 | `filters.test.ts` › totales de las filtradas; M2 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
 | CA-10 | M3 | Manual (emulador) | Pendiente |
 | CA-11 | M4 | Manual (emulador) | Pendiente |
 | CA-12 | `viewMode.test.ts`; M5 | Automatizada + manual | Pendiente |

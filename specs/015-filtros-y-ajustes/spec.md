@@ -68,7 +68,7 @@ Como en las specs 009, 013 y 014, todo cambio visual se diseña primero en Figma
 - RN-1: Los filtros de Mis actividades solo cambian lo que se muestra. No cambian, borran ni sincronizan actividades (constitución 2.3).
 - RN-2: Todas las actividades del teléfono entran al filtro, sin importar su estado de sincronización.
 - RN-3: Los meses se calculan en hora local, como la agrupación por mes de la spec 014.
-- RN-4: Las distancias y altitudes de los filtros usan los mismos formatos y unidades de la spec 004.
+- RN-4: Las distancias y altitudes de los filtros usan las unidades de la spec 004 (km y m). Los valores del control deslizante y de los chips van sin ceros de relleno, porque se mueven por pasos: "5 – 20 km", "5.5 km", "800 – 1400 m", como en el diseño aprobado.
 - RN-5: La altura más alta de una actividad es la cumbre de su perfil (spec 014, RN-6), con las mismas reglas: no existe si la actividad no tiene perfil.
 - RN-6: El botón fijo de Mis actividades no cambia el comportamiento de iniciar una actividad: es el mismo de Inicio. Solo cambia adónde regresa "Listo" (CA-20).
 - RN-7: La vista 2D o 3D no cambia qué rutas se buscan ni cómo se filtran (spec 006).
@@ -114,3 +114,4 @@ Como en las specs 009, 013 y 014, todo cambio visual se diseña primero en Figma
 - 2026-11-22 — Tareas T1 a T19 y casos M1 a M13 en tasks.md.
 - 2026-11-22 — En progreso: T1 (diseño en Figma) hecha; falta la aprobación del usuario (T2).
 - 2026-11-22 — El usuario aprueba el diseño de Figma (CA-22), sin cambios: sección https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX?node-id=99-6901 de la página Pantallas y los componentes de la sección "Filtros y ajustes (spec 015)" del Sistema de diseño. Ya se puede programar la interfaz.
+- 2026-11-22 — Al programar T3: RN-4 pedía los formatos de la spec 004, que dan "5.00 km". El diseño aprobado usa "5 – 20 km" y "3 km". RN-4 ahora dice las unidades de la 004 y los valores sin ceros de relleno, como en el diseño.

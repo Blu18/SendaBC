@@ -33,7 +33,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
 import { closeOrphanActivities, repararFinAntesDelInicio } from './lib/db/activities';
 import { sessionActions } from './lib/safety';
-import { computeMissingMetrics, recalcularDistanciasViejas } from './lib/db/activityMetrics';
+import { computeMissingMetrics, computeMissingPeaks, recalcularDistanciasViejas } from './lib/db/activityMetrics';
 import { setUnauthorizedHandler } from './lib/api/client';
 import { queryClient } from './lib/api/queryClient';
 import { conectarConsultas } from './lib/api/reconexion';
@@ -226,7 +226,12 @@ function Gate({ children }: { children: React.ReactNode }) {
       // Una sola vez: la distancia sin los puntos viejos del principio (spec 011, CA-17, RN-11).
       .then(() => recalcularDistanciasViejas())
       .catch((e) => console.log('Error recalculando distancias:', e))
-      .finally(() => setLocalDataReady(true));
+      .finally(() => {
+        setLocalDataReady(true);
+        // Después de mostrar la app, sin bloquearla: las cumbres que falten para el filtro de
+        // altura de Mis actividades (spec 015, plan D1). La lista las toma al recibir el foco.
+        computeMissingPeaks().catch((e) => console.log('Error calculando cumbres pendientes:', e));
+      });
   }, []);
 
   // Spec 002, CA-5: si una petición con token responde 401 (expirado o inválido), se cierra la
