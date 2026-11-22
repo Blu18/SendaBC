@@ -198,17 +198,75 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - **Tokens:** el contador usaba un padding de 5 y un alto de línea de 18. La prueba de valores sueltos (009) no los permite, así que pasaron a `spacing.xs` y al alto de línea de `caption`.
 
   `tsc` no marca errores, el frontend pasa 910 pruebas y `expo export` para Android compila. El Metro del puerto 8082, abierto desde ayer, no veía los archivos nuevos ("Unable to resolve"): hay que reiniciarlo con `--clear` antes de probar en el teléfono. Se verifica en M1, M2, M3 y M8.
-- [ ] T11 — `activityHistoryPage.tsx`: `BottomBar` con "Empezar actividad", que navega a `Activity` como en `mainPage`. Cambiar el texto de la lista vacía (D8) y el comentario que decía que no había botón. Comprobar que "Listo" regresa a Mis actividades sin cambiar el resumen. (CA-19, CA-20, RN-6)
-- [ ] T12 — `RouteMap.tsx`: props `view` y `onViewChange`. En 3D:
+- [x] T11 — `activityHistoryPage.tsx`: `BottomBar` con "Empezar actividad", que navega a `Activity` como en `mainPage`. Cambiar el texto de la lista vacía (D8) y el comentario que decía que no había botón. Comprobar que "Listo" regresa a Mis actividades sin cambiar el resumen. (CA-19, CA-20, RN-6)
+
+  Hecho (2026-11-22):
+  - **Botón fijo:** `BottomBar` con fondo `background` y `PrimaryButton` "Empezar actividad", igual que en Inicio. Va fuera de la `FlatList`, entre la lista y la barra de pestañas, así que no se mueve ni tapa la última fila.
+  - **Lista vacía:** el texto ahora es `Toca "Empezar actividad" para grabar la primera.` (D8, aprobado en Figma), y el comentario que justificaba no tener botón se cambió.
+  - **"Listo", revisado en el código:** `activityPage` reemplaza la grabación por el resumen (`navigation.replace`) y "Listo" usa `goBack()`. Desde esta pestaña regresa a Mis actividades, y atrás no vuelve ni al resumen ni a la grabación. El resumen no cambió. `useFocusEffect` recarga la lista con la actividad nueva.
+
+  `tsc` no marca errores, el frontend pasa 910 pruebas y `expo export` para Android compila. Se verifica en M10.
+- [x] T12 — `RouteMap.tsx`: props `view` y `onViewChange`. En 3D:
   - `RasterDemSource`, `Terrain` y sombreado;
   - la cámara con `PITCH_3D`;
   - el encuadre con `setCamera` (`bounds`, `padding` y `pitch`).
 
   Con el estilo local, sin 3D. (CA-12, CA-14, CA-16)
-- [ ] T13 — `exploreRoutesPage.tsx` y `routeDetailPage.tsx`: estado `view` que empieza en `'3D'`, y `MapViewToggle` donde diga Figma. El nombre accesible del botón dice la vista actual y a cuál cambia. (CA-12, CA-13, CA-15, CA-17, RN-7)
-- [ ] T14 — Chips de Explorar: espacio para la sombra `medium` dentro de cada `ScrollView` y margen negativo para que no se muevan (D7). (CA-18)
-- [ ] T15 — `WeekSummary` dentro de `Card` en `mainPage` (D9). Si Figma usa un par de color nuevo, agregarlo a `CONTRAST_PAIRS`. (CA-21)
-- [ ] T16 — Revisar el contraste de los pares de color nuevos de T8 a T15 en `CONTRAST_PAIRS` y en la tabla de Figma, para que `contrast.test.ts` siga pasando. (CA-21, CA-23)
+
+  Hecho (2026-11-22):
+  - **Solo la prop `view`** (`"3D"` o `"2D"`, por defecto `"2D"`), sin `onViewChange`: el botón y el estado son de la pantalla (T13), así que el mapa no necesita avisar.
+  - **En 3D:**
+    - `RasterDemSource` y `Terrain` con `TERRAIN_EXAGGERATION`, y el sombreado del estilo, igual que `RecordingMap`;
+    - el relieve va antes de las capas de la pantalla, así que las rutas quedan encima y siguen el terreno;
+    - con el estilo local (sin red y sin zona descargada, o si el estilo falla), `is3D` es falso y el mapa queda plano.
+  - **Encuadre:** `fitBounds` pasó a `setCamera` con `bounds`, `padding` y `pitch` juntos. La inclinación se lee de una referencia, porque el handle se crea una vez. El primer encuadre (`defaultSettings`) también lleva la inclinación.
+  - **Cambio de vista:** solo anima la inclinación. El centro y el acercamiento no cambian, así que la zona, las rutas y la selección se quedan (CA-12).
+
+  `tsc` no marca errores, el frontend pasa 910 pruebas y `expo export` para Android compila. El encuadre con inclinación es un riesgo del plan: se revisa en M5 (emulador) y el relieve en M7 (S9+).
+- [x] T13 — `exploreRoutesPage.tsx` y `routeDetailPage.tsx`: estado `view` que empieza en `'3D'`, y `MapViewToggle` donde diga Figma. El nombre accesible del botón dice la vista actual y a cuál cambia. (CA-12, CA-13, CA-15, CA-17, RN-7)
+
+  Hecho (2026-11-22):
+  - **Explorar:**
+    - `view` empieza en `"3D"`. `ExploreRoutes` se monta otra vez en cada apertura (`key`), así que vuelve a 3D (CA-13).
+    - A la derecha, el botón de vista y debajo "Centrar en mi ubicación", como en Figma.
+    - La fila de acciones del mapa pasó de un botón centrar en posición absoluta a tres columnas: espacio, "Buscar en esta zona" al centro y la columna de la derecha. Así los dos botones quedan dentro de su contenedor, porque en Android un toque fuera del padre no llega.
+    - La búsqueda, la selección y los filtros no cambiaron (RN-7).
+  - **Detalle de ruta:** el mapa va dentro de una vista de 280 dp con el botón arriba a la derecha. Queda fuera del mapa accesible, para que TalkBack lo encuentre. También empieza en 3D en cada apertura.
+  - **`MapViewToggle`:** las dos pantallas pasan `allowNone={false}`. El nombre accesible ahora dice la vista actual y a cuál cambia ("Mapa en 3D. Cambiar a 2D"), también en la grabación, donde antes decía "Cambiar el mapa a 2D". RN-8 de la spec 010 pide etiqueta de accesibilidad, así que la grabación sigue cumpliéndola.
+
+  `tsc` no marca errores, el frontend pasa 910 pruebas y `expo export` para Android compila. Se verifica en M5, M6 y M8.
+- [x] T14 — Chips de Explorar: espacio para la sombra `medium` dentro de cada `ScrollView` y margen negativo para que no se muevan (D7). (CA-18)
+
+  Hecho (2026-11-22):
+  - **Contenido de cada fila de chips:** ahora tiene `paddingTop` `sm` y `paddingBottom` `xxl` (32 dp; la sombra media llega a unos 28). Antes solo tenía `paddingBottom` `xs` (4 dp).
+  - **Margen negativo de la fila:** `marginTop` `-sm` y `marginBottom` `xs - xxl`, así que los chips quedan en el mismo lugar que antes.
+  - **El aire de arriba es `sm`,** igual que la separación entre filas, para que una fila no tape los toques de la de arriba.
+  - **Riesgo del plan:** la franja transparente de 32 dp bajo la segunda fila puede tomar toques que eran para el mapa. La fila de acciones del mapa va después y queda encima, así que sus botones no se afectan. Se revisa en M9.
+
+  `tsc` no marca errores y el frontend pasa 910 pruebas.
+- [x] T15 — `WeekSummary` dentro de `Card` en `mainPage` (D9). Si Figma usa un par de color nuevo, agregarlo a `CONTRAST_PAIRS`. (CA-21)
+
+  Hecho (2026-11-22):
+  - **Tarjeta:** en `mainPage`, `WeekSummary` va dentro de `Card` sin `onPress`: fondo `surface`, radio `lg`, sombra `low` y relleno `lg`, como la "Tarjeta de la semana" de Figma. `WeekSummary` no cambió.
+  - **Sin pares de color nuevos:** los textos usan `data`, `text` y `textMuted` sobre `surface`, que ya están en `CONTRAST_PAIRS`.
+
+  `tsc` no marca errores, el frontend pasa 910 pruebas y `expo export` para Android compila. Se verifica en M11.
+- [x] T16 — Revisar el contraste de los pares de color nuevos de T8 a T15 en `CONTRAST_PAIRS` y en la tabla de Figma, para que `contrast.test.ts` siga pasando. (CA-21, CA-23)
+
+  Hecho (2026-11-22): se listaron los colores de cada archivo nuevo o cambiado en T8 a T15. No hay pares nuevos:
+
+  | Elemento | Par | Mínimo |
+  |---|---|---|
+  | Riel del control deslizante | `border / surface` | 3:1 |
+  | Rango, perillas y valor del rango | `primary / surface` | 4.5:1 |
+  | Etiquetas y límites del panel | `text / surface` y `textMuted / surface` | 4.5:1 |
+  | Chips de filtro activo y contador | `onPrimary / primary` | 4.5:1 |
+  | "Quitar filtros" (botón de texto) | `primary / background` | 4.5:1 |
+  | Aviso sin resultados | los pares del aviso Info | 4.5:1 |
+  | Botón de vista | `text / surface` | 4.5:1 |
+  | Tarjeta de la semana | `data / surface`, `text / surface` y `textMuted / surface` | 4.5:1 |
+
+  Todos están en `CONTRAST_PAIRS` y en la tabla de Figma. El fondo oscurecido del panel (40 % del `text` claro) no lleva texto encima. `contrast.test.ts` y las demás pruebas del tema pasan (69).
 
 ## Cierre
 
@@ -245,9 +303,9 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 | CA-18 | M9 | Manual (emulador) | Pendiente |
 | CA-19 | M10 | Manual (emulador) | Pendiente |
 | CA-20 | M10 | Manual (emulador) | Pendiente |
-| CA-21 | M11; `contrast.test.ts` | Automatizada + manual | Pendiente |
+| CA-21 | M11; `contrast.test.ts` | Automatizada + manual | `contrast.test.ts` cumplido (2026-11-22); M11 pendiente |
 | CA-22 | T2: aprobación anotada en el historial de la spec | Manual | Cumplido (2026-11-22) |
-| CA-23 | M12; `contrast.test.ts` | Automatizada + manual | Pendiente |
+| CA-23 | M12; `contrast.test.ts` | Automatizada + manual | `contrast.test.ts` cumplido (2026-11-22); M12 pendiente |
 
 Los 23 CA de la spec están cubiertos por al menos una tarea y una forma de verificarse. Los requisitos no funcionales se verifican en M8 (accesibilidad), M4 (offline) y M7 y M13 (3D y tiempos).
 

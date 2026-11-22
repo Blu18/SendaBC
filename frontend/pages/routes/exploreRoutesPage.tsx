@@ -5,6 +5,7 @@ import * as Location from "expo-location";
 import { useNavigation, type ParamListBase } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import Appear from "../../components/ui/Appear";
+import MapViewToggle from "../../components/map/MapViewToggle";
 import RouteMap, { type RouteMapHandle } from "../../components/map/RouteMap";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
@@ -138,6 +139,9 @@ function ExploreRoutes() {
     const [radiusKm, setRadiusKm] = useState<number>(DEFAULT_RADIUS_KM);
     const [type, setType] = useState<ActivityType | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    // La pantalla se monta de nuevo en cada apertura (key), así que siempre empieza en 3D y no
+    // recuerda la vista anterior (spec 015, CA-13).
+    const [view, setView] = useState<"3D" | "2D">("3D");
     // Alto del aviso o de la tarjeta de abajo, para subir el logo de Mapbox por encima (T24, P-D).
     const [altoAbajo, setAltoAbajo] = useState(0);
 
@@ -308,6 +312,7 @@ function ExploreRoutes() {
                     onCenterChanged={setMapCenter}
                     onPress={onMapPress}
                     ornamentsBottom={altoAbajo}
+                    view={view}
                 >
                     {/* El orden de las capas es el de dibujo: recorridos, la selección encima, los
                         inicios y al final mi posición. Seleccionar no mueve la cámara (CA-9). */}
@@ -386,20 +391,27 @@ function ExploreRoutes() {
                         ))}
                     </ScrollView>
 
-                    {/* "Buscar en esta zona" al centro (CA-9) y centrar en mi ubicación a la derecha,
-                        solo con permiso (CA-10) */}
+                    {/* "Buscar en esta zona" al centro (CA-9). A la derecha, la vista del mapa (spec 015,
+                        CA-12) y debajo centrar en mi ubicación, solo con permiso (CA-10), como en Figma.
+                        Van en fila y no en posición absoluta: en Android, un toque fuera del padre no llega. */}
                     <View style={styles.mapActions} pointerEvents="box-none">
-                        {mostrarBuscarAqui && (
-                            <PrimaryButton text="Buscar en esta zona" style={[styles.searchHere, styles.floating]} onPress={buscarAqui} />
-                        )}
-                        {user && (
-                            <IconButton
-                                icon="crosshairs-gps"
-                                accessibilityLabel="Centrar en mi ubicación"
-                                onPress={recentrar}
-                                style={[styles.recenter, styles.floating]}
-                            />
-                        )}
+                        <View style={styles.mapActionsSide} />
+                        <View style={styles.mapActionsCenter} pointerEvents="box-none">
+                            {mostrarBuscarAqui && (
+                                <PrimaryButton text="Buscar en esta zona" style={[styles.searchHere, styles.floating]} onPress={buscarAqui} />
+                            )}
+                        </View>
+                        <View style={[styles.mapActionsSide, styles.mapActionsColumn]} pointerEvents="box-none">
+                            <MapViewToggle view={view} onChange={(v) => setView(v === "2D" ? "2D" : "3D")} allowNone={false} />
+                            {user && (
+                                <IconButton
+                                    icon="crosshairs-gps"
+                                    accessibilityLabel="Centrar en mi ubicación"
+                                    onPress={recentrar}
+                                    style={[styles.recenter, styles.floating]}
+                                />
+                            )}
+                        </View>
                     </View>
                 </View>
 
@@ -467,29 +479,43 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         paddingTop: t.spacing.md,
         gap: t.spacing.sm,
     },
-    // Ancho completo para que los chips se deslicen si no caben
+    // Ancho completo para que los chips se deslicen si no caben.
+    // Spec 015 (CA-18, plan D7): el ScrollView recorta lo que sale de él, y la sombra media de cada
+    // chip llega a unos 28 dp hacia abajo. Antes solo había 4 dp y la sombra se cortaba en una línea
+    // recta. Ahora el contenido tiene aire arriba (sm, lo que separa las filas) y abajo (xxl), y el
+    // margen negativo lo descuenta para que los chips queden donde estaban.
     chipRow: {
         alignSelf: 'stretch',
         flexGrow: 0,
+        marginTop: -t.spacing.sm,
+        marginBottom: t.spacing.xs - t.spacing.xxl,
     },
     chips: {
         paddingHorizontal: t.spacing.lg,
-        // Aire abajo para que no se corte la sombra
-        paddingBottom: t.spacing.xs,
+        paddingTop: t.spacing.sm,
+        paddingBottom: t.spacing.xxl,
         gap: t.spacing.sm,
     },
     mapActions: {
-        minHeight: t.touchMin,
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: t.spacing.sm,
         paddingHorizontal: t.spacing.lg,
+    },
+    mapActionsSide: {
+        width: t.touchMin,
+    },
+    mapActionsCenter: {
+        flex: 1,
         alignItems: 'center',
-        justifyContent: 'center',
+    },
+    mapActionsColumn: {
+        gap: t.spacing.sm,
     },
     searchHere: {
         alignSelf: 'center',
     },
     recenter: {
-        position: 'absolute',
-        right: t.spacing.lg,
         backgroundColor: t.colors.surface,
     },
     loadingArea: {

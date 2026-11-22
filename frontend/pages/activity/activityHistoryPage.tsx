@@ -9,7 +9,9 @@ import Appear from "../../components/ui/Appear";
 import GroupedList from "../../components/ui/GroupedList";
 import Notice from "../../components/ui/Notice";
 import ScreenHeader from "../../components/ui/ScreenHeader";
+import BottomBar from "../../components/ui/BottomBar";
 import BgBtn from "../../components/ui/buttons/BgBtn";
+import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import TextBtn from "../../components/ui/buttons/TextBtn";
 import { useActivityHistory } from "../../hooks/activity/activityHistory.hook";
 import { useActivityFilters } from "../../context/ActivityFiltersContext";
@@ -135,12 +137,12 @@ export default function ActivityHistoryPage() {
                                 <BgBtn text="Quitar filtros" onPress={clearFilters} />
                             </View>
                         ) : (
-                        // Sin actividades terminadas: invitar a iniciar una (CA-22). Sin botón propio:
-                        // grabar desde aquí haría que "Listo" regresara a esta lista y no al Inicio (CA-2)
+                        // Sin actividades terminadas: invitar a iniciar una con el botón de abajo (CA-22;
+                        // spec 015, plan D8). Desde aquí, "Listo" regresa a esta lista (spec 004, CA-2).
                         <Appear>
                             <Notice
                                 title="Aún no tienes actividades"
-                                description="Inicia una desde la pestaña Inicio y aquí verás su resumen."
+                                description='Toca "Empezar actividad" para grabar la primera.'
                             />
                         </Appear>
                         )
@@ -173,6 +175,12 @@ export default function ActivityHistoryPage() {
                     }}
                 />
             )}
+
+            {/* Fijo abajo, como en Inicio (spec 015, CA-19, CA-20, RN-6). La grabación se reemplaza
+                por el resumen al detener, así que "Listo" (goBack) regresa a esta pestaña. */}
+            <BottomBar style={styles.startBar}>
+                <PrimaryButton text="Empezar actividad" onPress={() => navigation.navigate("Activity")} />
+            </BottomBar>
 
             <ActivityFiltersSheet
                 visible={filtersOpen}
@@ -217,6 +225,10 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     },
     noResults: {
         gap: t.spacing.md,
+    },
+    // Como la "Barra de empezar" de Inicio: fondo de la pantalla y sombra hacia arriba.
+    startBar: {
+        backgroundColor: t.colors.background,
     },
     // Con letra grande el total baja de renglón en lugar de encimarse (CA-24).
     monthHeader: {

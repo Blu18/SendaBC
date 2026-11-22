@@ -24,7 +24,8 @@ export default function MapViewToggle({ view, onChange, allowNone = BATTERY_TEST
         <PressableScale
             onPress={() => onChange(next)}
             accessibilityRole="button"
-            accessibilityLabel={next === "none" ? "Quitar el mapa" : `Cambiar el mapa a ${label}`}
+            // Dice la vista actual y a cuál cambia: "Mapa en 3D. Cambiar a 2D" (spec 015, CA-17).
+            accessibilityLabel={`Mapa en ${etiquetaDeVista(view)}. ${next === "none" ? "Quitar el mapa" : `Cambiar a ${label}`}`}
             style={styles.btn}
             pressedStyle={styles.pressed}
         >
