@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import BottomBar from "../../components/ui/BottomBar";
 import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
@@ -99,13 +100,13 @@ export default function ChangeEmailPage() {
                     autoComplete="current-password"
                 />
             </ScrollView>
-            <View style={styles.actions}>
+            <BottomBar>
                 <PrimaryButton
                     text={cambiar.isPending ? "Guardando..." : "Cambiar correo"}
                     onPress={onGuardar}
                     disabled={cambiar.isPending}
                 />
-            </View>
+            </BottomBar>
         </View>
     );
 }
@@ -123,12 +124,5 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     actual: {
         ...t.typography.bodySmall,
         color: t.colors.textMuted,
-    },
-    actions: {
-        paddingHorizontal: t.spacing.lg,
-        paddingVertical: t.spacing.md,
-        backgroundColor: t.colors.surface,
-        borderTopWidth: 1,
-        borderTopColor: t.colors.border,
     },
 });

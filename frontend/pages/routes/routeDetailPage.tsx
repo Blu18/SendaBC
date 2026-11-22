@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert } from "re
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import Mapbox from "@rnmapbox/maps";
 import * as Location from "expo-location";
+import BottomBar from "../../components/ui/BottomBar";
 import Appear from "../../components/ui/Appear";
 import RouteMap from "../../components/map/RouteMap";
 import BgBtn from "../../components/ui/buttons/BgBtn";
@@ -241,13 +242,13 @@ export default function RouteDetailPage({ route: navRoute }: Props) {
                         <Notice {...aviso} />
                     </Appear>
                 </View>
-                <View style={styles.actions}>
+                <BottomBar>
                     {status === 'unavailable' ? (
                         <PrimaryButton text="Volver" onPress={() => navigation.goBack()} />
                     ) : (
                         <PrimaryButton text="Reintentar" onPress={retry} />
                     )}
-                </View>
+                </BottomBar>
             </View>
         );
     }
@@ -310,7 +311,7 @@ export default function RouteDetailPage({ route: navRoute }: Props) {
                 </View>
             </ScrollView>
 
-            <View style={styles.actions}>
+            <BottomBar>
                 {route.isMine ? (
                     <OwnerActions
                         route={route}
@@ -321,7 +322,7 @@ export default function RouteDetailPage({ route: navRoute }: Props) {
                 ) : (
                     <FavoriteButton route={route} />
                 )}
-            </View>
+            </BottomBar>
         </View>
     );
 }
@@ -399,13 +400,6 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     description: {
         ...t.typography.body,
         color: t.colors.text,
-    },
-    actions: {
-        paddingHorizontal: t.spacing.lg,
-        paddingVertical: t.spacing.md,
-        backgroundColor: t.colors.surface,
-        borderTopWidth: 1,
-        borderTopColor: t.colors.border,
     },
     actionGroup: {
         gap: t.spacing.sm,

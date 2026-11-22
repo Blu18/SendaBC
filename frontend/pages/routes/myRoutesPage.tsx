@@ -1,9 +1,10 @@
-import { View, FlatList, StyleSheet } from "react-native";
+import { View, ScrollView, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Appear from "../../components/ui/Appear";
 import RouteListNotice from "../../components/routes/RouteListNotice";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Card from "../../components/ui/Card";
+import GroupedList from "../../components/ui/GroupedList";
 import { useMyRoutes } from "../../hooks/routes/useRouteLists";
 import { ACTIVITY_TYPE_LABELS } from "../../lib/format/activity";
 import { formatDistance } from "../../lib/format/metrics";
@@ -22,25 +23,28 @@ export default function MyRoutesPage() {
         <View style={styles.container}>
             <ScreenHeader title="Mis rutas" onBack={() => navigation.goBack()} />
             {status === 'success' ? (
-                <FlatList
-                    data={routes}
-                    keyExtractor={(r) => r.id}
-                    contentContainerStyle={styles.list}
-                    renderItem={({ item }) => (
-                        <Appear>
-                            <Card
-                                title={item.name}
-                                description={[
-                                    formatDistance(item.distanceMeters),
-                                    ACTIVITY_TYPE_LABELS[item.type],
-                                    ROUTE_STATUS_LABELS[item.status],
-                                    formatPublishedAt(item.publishedAt),
-                                ].join(' · ')}
-                                onPress={() => navigation.navigate('RouteDetail', { id: item.id })}
-                            />
-                        </Appear>
-                    )}
-                />
+                // Una sola lista agrupada (spec 014, RN-13): las rutas de una cuenta son pocas, así que
+                // se dibujan todas en un ScrollView.
+                <ScrollView contentContainerStyle={styles.list}>
+                    <Appear>
+                        <GroupedList>
+                            {routes.map((item) => (
+                                <Card
+                                    key={item.id}
+                                    grouped
+                                    title={item.name}
+                                    description={[
+                                        formatDistance(item.distanceMeters),
+                                        ACTIVITY_TYPE_LABELS[item.type],
+                                        ROUTE_STATUS_LABELS[item.status],
+                                        formatPublishedAt(item.publishedAt),
+                                    ].join(' · ')}
+                                    onPress={() => navigation.navigate('RouteDetail', { id: item.id })}
+                                />
+                            ))}
+                        </GroupedList>
+                    </Appear>
+                </ScrollView>
             ) : (
                 <RouteListNotice status={status} messages={MY_ROUTES_MESSAGES} onRetry={retry} />
             )}

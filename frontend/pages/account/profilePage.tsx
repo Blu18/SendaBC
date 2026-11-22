@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import BottomBar from "../../components/ui/BottomBar";
 import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import BgBtn from "../../components/ui/buttons/BgBtn";
@@ -10,6 +11,7 @@ import TextField from "../../components/ui/TextField";
 import PressableScale from "../../components/ui/PressableScale";
 import Avatar from "../../components/account/Avatar";
 import Card from "../../components/ui/Card";
+import GroupedList from "../../components/ui/GroupedList";
 import { useProfile } from "../../hooks/auth/auth.hooks";
 import { useAccount } from "../../hooks/account/useAccount";
 import { useLogout } from "../../hooks/auth/useLogout";
@@ -152,31 +154,36 @@ export default function ProfilePage() {
                 </View>
 
                 <Text style={styles.sectionTitle} accessibilityRole="header">Cuenta</Text>
-                <Card
-                    title="Cambiar correo"
-                    description="Te pedimos tu contraseña para confirmarlo."
-                    onPress={() => navigation.navigate("ChangeEmail")}
-                />
-                <Card
-                    title="Cambiar contraseña"
-                    onPress={() => navigation.navigate("ChangePassword")}
-                />
-                <Card
-                    title="Borrar cuenta"
-                    description="Borra tus datos del servidor y de este teléfono."
-                    onPress={() => navigation.navigate("DeleteAccount")}
-                />
+                <GroupedList>
+                    <Card
+                        grouped
+                        title="Cambiar correo"
+                        description="Te pedimos tu contraseña para confirmarlo."
+                        onPress={() => navigation.navigate("ChangeEmail")}
+                    />
+                    <Card
+                        grouped
+                        title="Cambiar contraseña"
+                        onPress={() => navigation.navigate("ChangePassword")}
+                    />
+                    <Card
+                        grouped
+                        title="Borrar cuenta"
+                        description="Borra tus datos del servidor y de este teléfono."
+                        onPress={() => navigation.navigate("DeleteAccount")}
+                    />
+                </GroupedList>
 
                 {botonCerrarSesion}
                 <Text style={styles.hint}>Si tienes actividades sin subir, te avisaremos antes de salir.</Text>
             </ScrollView>
-            <View style={styles.actions}>
+            <BottomBar>
                 <PrimaryButton
                     text={guardar.isPending ? "Guardando..." : "Guardar"}
                     onPress={onGuardar}
                     disabled={guardar.isPending}
                 />
-            </View>
+            </BottomBar>
         </View>
     );
 }
@@ -233,12 +240,5 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         ...StyleSheet.absoluteFill,
         backgroundColor: t.colors.primary,
         opacity: 0.12,
-    },
-    actions: {
-        paddingHorizontal: t.spacing.lg,
-        paddingVertical: t.spacing.md,
-        backgroundColor: t.colors.surface,
-        borderTopWidth: 1,
-        borderTopColor: t.colors.border,
     },
 });

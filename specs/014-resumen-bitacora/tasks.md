@@ -159,7 +159,7 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
   - `IconBadge` acepta `name`, `color` y `size`; el ícono mide el 55 % del círculo.
 
   `tsc` no marca errores. **Ajuste para T12:** las filas de una `SectionList` se dibujan por separado y no pueden quedar dentro de un `GroupedList`. Por eso T12 usa una `FlatList` con un elemento por mes, y cada elemento es su `GroupedList` con sus filas. La virtualización queda por mes: `initialNumToRender` y `windowSize` bajos, y `useTrackPath` sigue leyendo solo las filas montadas. CA-20 lo mide en M7.
-- [ ] T19 — Componentes existentes, según la tabla del plan:
+- [x] T19 — Componentes existentes, según la tabla del plan:
   - `Card`: sin borde.
   - `TabBar`: sin `borderTop`, con sombra `bar`.
   - `ActivityCard`, `RouteCard`, `SafetyCard` y la tarjeta de contacto: sombra `low`.
@@ -167,15 +167,50 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
   - `PopularRouteRow`: dentro de `GroupedList`.
 
   Comprobar en modo claro que cada tarjeta sin borde se sigue distinguiendo del fondo. La que no, conserva su borde y se anota. (CA-25, CA-28)
-- [ ] T20 — `BottomBar` en lugar de `styles.actions` con `borderTopWidth` en:
+
+  Hecho (2026-11-21):
+  - `Card` perdió el borde y tiene sombra `low`. `TabBar` cambió el borde superior por la sombra `bar`.
+  - `ActivityCard` y `RouteCard` tienen sombra `low`.
+  - `SafetyCard` tiene sombra `low` y conserva su borde de color, porque ese borde dice el estado (activa o sin contactos), no separa del fondo.
+  - `PrepRow` usa `IconBadge` con el color de su ícono.
+  - `PopularRouteRow` ya no tenía fondo propio; su paso a `GroupedList` queda en T21, junto con el contenedor de mainPage. La tarjeta de contacto vive en `emergencyContactsPage` y queda en T22.
+
+  **Distinción sin borde (CA-28):** `surface` contra `background` mide 1.10:1 en claro y 1.15:1 en oscuro. En escala de grises son 245 contra 234 en claro y 38 contra 26 en oscuro. La diferencia de color existe, pero es sutil, como en el diseño aprobado. WCAG no pide 3:1 para el contorno de una tarjeta cuando su texto y su chevron ya dicen qué es. Se decide en M10 con la captura en escala de grises en el S9+; si alguna no se distingue, se le devuelve el borde. El frontend pasa 875 pruebas y `tsc` no marca errores.
+- [x] T20 — `BottomBar` en lugar de `styles.actions` con `borderTopWidth` en:
   - activityPage, activitySummaryPage, routeDetailPage, publishRoutePage, editRoutePage y profilePage;
   - changeEmailPage, changePasswordPage y deleteAccountPage;
   - la barra de "Empezar actividad" de mainPage.
 
   Los botones y su lógica no cambian. (CA-25, CA-26)
-- [ ] T21 — `GroupedList` en myRoutesPage, favoritesPage, la lista "Cuenta" de profilePage, y Populares y Listo para salir de mainPage. (CA-25, CA-26, CA-29)
-- [ ] T22 — exploreRoutesPage (tarjeta de la ruta seleccionada y "Buscar en esta zona" con sombra `medium`) y emergencyContactsPage (tarjetas con sombra `low`), según Figma. (CA-25, CA-26)
-- [ ] T23 — offlineZonesPage y pickZonePage según el diseño de T16. (CA-25, CA-26)
+
+  Hecho (2026-11-21): 12 barras en 9 pantallas pasaron a `BottomBar`. routeDetailPage, publishRoutePage y editRoutePage tenían dos cada una: la normal y la de error o carga. Se borró el estilo `actions` de cada pantalla; los botones y sus condiciones quedaron igual.
+  - La barra de "Empezar actividad" de mainPage usa `BottomBar` con el fondo `background`, como el componente "Barra de empezar" de Figma.
+  - El padding de abajo pasa de 12 a 16 dp, como en Figma.
+
+  El frontend pasa 875 pruebas y `tsc` no marca errores. La verificación es manual (M10 y M11).
+- [x] T21 — `GroupedList` en myRoutesPage, favoritesPage, la lista "Cuenta" de profilePage, y Populares y Listo para salir de mainPage. (CA-25, CA-26, CA-29)
+
+  Hecho (2026-11-21):
+  - `Card` acepta `grouped`: dentro de una `GroupedList` no pone fondo, radio ni sombra propios.
+  - `PrepRow` y `PopularRouteRow` ya no tienen la prop `divider`; los divisores los pone `GroupedList`. En Inicio empiezan a 52 dp en Populares (después del número) y a 68 dp en Listo para salir (después del ícono).
+  - Mis rutas y Mis favoritas pasan de una `FlatList` de tarjetas a un `ScrollView` con una sola `GroupedList`, porque una cuenta tiene pocas rutas. En favoritas, el aviso de datos guardados, la lista vacía, "Quitar" y la animación de salida de la fila (`useLeavingItems`) no cambian.
+  - La lista "Cuenta" del perfil va en una `GroupedList`.
+
+  El frontend pasa 875 pruebas y `tsc` no marca errores. La verificación es manual (M10 a M12).
+- [x] T22 — exploreRoutesPage (tarjeta de la ruta seleccionada y "Buscar en esta zona" con sombra `medium`) y emergencyContactsPage (tarjetas con sombra `low`), según Figma. (CA-25, CA-26)
+
+  Hecho (2026-11-21):
+  - **Explorar:** ya quedó con T6. Todo lo que flota sobre el mapa pasó de `floating` a `medium`: la tarjeta de la ruta seleccionada, "Buscar en esta zona", el botón de centrar, "Buscando rutas…" y las filas de chips. Las filas de chips ya tenían sombra desde la spec 013. Aunque RN-13 dice "chips sin sombra", se conserva porque flotan sobre el mapa, que es el caso de la sombra media.
+  - **Seguridad:** la tarjeta de cada contacto tiene sombra `low`.
+
+  El frontend pasa 875 pruebas y `tsc` no marca errores.
+- [x] T23 — offlineZonesPage y pickZonePage según el diseño de T16. (CA-25, CA-26)
+
+  Hecho (2026-11-21):
+  - **Mapas sin conexión:** cada zona ya tenía su tarjeta (`Card`), que ahora lleva sombra baja (T19). El riel de la barra de avance pasa a `border` al 30 %, y los botones "Reintentar" y "Borrar" se alinean a la izquierda, como en Figma.
+  - **Descargar zona:** el panel de abajo pasa a `BottomBar`, con separación `md`. El marco de la zona lleva sombra `medium`, porque flota sobre el mapa.
+
+  Los textos, los estados y la lógica no cambian. El frontend pasa 875 pruebas y `tsc` no marca errores.
 
 ## Cierre
 

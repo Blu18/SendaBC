@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import Icon, { type IconName } from "../ui/Icon";
+import IconBadge from "../ui/IconBadge";
 import PressableScale from "../ui/PressableScale";
 import { useThemedStyles } from "../../hooks/theme/useTheme";
 import { fontFamilies, type ColorTokens, type Theme } from "../../lib/theme";
@@ -11,15 +12,14 @@ type Props = {
     description: string;
     // Con onPress la fila es tocable y lleva chevron.
     onPress?: () => void;
-    divider?: boolean;
 };
 
 // Fila de "Listo para salir" en Inicio (spec 013, CA-19, CA-20; Figma "Fila de preparación").
-export default function PrepRow({ icon, iconColor, title, description, onPress, divider = false }: Props) {
+export default function PrepRow({ icon, iconColor, title, description, onPress }: Props) {
     const styles = useThemedStyles(makeStyles);
     const contenido = (
         <>
-            <Icon name={icon} color={iconColor} decorative />
+            <IconBadge name={icon} color={iconColor} />
             <View style={styles.texts}>
                 <Text style={styles.title}>{title}</Text>
                 <Text style={styles.description}>{description}</Text>
@@ -30,7 +30,7 @@ export default function PrepRow({ icon, iconColor, title, description, onPress, 
 
     if (!onPress) {
         return (
-            <View style={[styles.row, divider && styles.divider]} accessible accessibilityLabel={`${title}. ${description}`}>
+            <View style={styles.row} accessible accessibilityLabel={`${title}. ${description}`}>
                 {contenido}
             </View>
         );
@@ -40,7 +40,7 @@ export default function PrepRow({ icon, iconColor, title, description, onPress, 
             onPress={onPress}
             accessibilityRole="button"
             accessibilityLabel={`${title}. ${description}`}
-            style={[styles.row, divider && styles.divider]}
+            style={styles.row}
             pressedStyle={styles.pressed}
         >
             {contenido}
@@ -57,10 +57,6 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         paddingVertical: t.spacing.md,
         paddingHorizontal: t.spacing.lg,
         overflow: "hidden",
-    },
-    divider: {
-        borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: t.colors.border,
     },
     texts: {
         flex: 1,

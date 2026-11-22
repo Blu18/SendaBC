@@ -10,14 +10,13 @@ type Props = {
     route: PopularRoute;
     position: number; // 1 a 5
     // Línea arriba para separarla de la anterior en la lista.
-    divider?: boolean;
     onPress: () => void;
 };
 
 // Ruta popular en Inicio (spec 013, CA-13, CA-16; Figma "Fila de ruta popular"): posición,
 // nombre, zona, tipo, distancia y cuántas personas la tienen en favoritas, nunca quiénes (RN-8).
 // Al tocarla se abre su detalle.
-export default function PopularRouteRow({ route, position, divider = false, onPress }: Props) {
+export default function PopularRouteRow({ route, position, onPress }: Props) {
     const styles = useThemedStyles(makeStyles);
     const t = popularRouteText(route, position);
     return (
@@ -26,7 +25,7 @@ export default function PopularRouteRow({ route, position, divider = false, onPr
             accessibilityRole="button"
             accessibilityLabel={t.label}
             accessibilityHint="Abre el detalle de la ruta"
-            style={[styles.row, divider && styles.divider]}
+            style={styles.row}
             pressedStyle={styles.pressed}
         >
             <Text style={styles.rank}>{t.rank}</Text>
@@ -54,10 +53,6 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         paddingVertical: t.spacing.md,
         paddingHorizontal: t.spacing.lg,
         overflow: "hidden",
-    },
-    divider: {
-        borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: t.colors.border,
     },
     rank: {
         ...t.typography.title,

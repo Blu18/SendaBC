@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import BottomBar from "../../components/ui/BottomBar";
 import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
@@ -147,14 +148,14 @@ export default function DeleteAccountPage() {
                     />
                 </ScrollView>
             )}
-            <View style={styles.actions}>
+            <BottomBar>
                 <PrimaryButton
                     variant="danger"
                     text={remove.isPending ? "Borrando..." : "Borrar mi cuenta"}
                     onPress={() => void onBorrar()}
                     disabled={!estado || !!bloqueo || remove.isPending}
                 />
-            </View>
+            </BottomBar>
         </View>
     );
 }
@@ -180,12 +181,5 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         ...t.typography.body,
         fontFamily: t.typography.title.fontFamily,
         color: t.colors.text,
-    },
-    actions: {
-        paddingHorizontal: t.spacing.lg,
-        paddingVertical: t.spacing.md,
-        backgroundColor: t.colors.surface,
-        borderTopWidth: 1,
-        borderTopColor: t.colors.border,
     },
 });
