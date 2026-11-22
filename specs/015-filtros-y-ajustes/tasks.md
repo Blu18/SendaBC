@@ -270,12 +270,15 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 ## Cierre
 
-- [ ] T17 — Emulador:
+- [x] T17 — Emulador:
   - compilar el APK de desarrollo x86_64 desde `C:\dev\sbc`;
   - recuperar en el emulador la cuenta de prueba de la 014, con sus 200 actividades;
   - correr M1 a M6 y M8 a M12, y anotar los resultados abajo.
 
   Si la imagen no tiene TalkBack, esa parte de M8 pasa al S9+.
+
+  Hecho (2026-11-22), con tres correcciones y tres pasos pendientes (ver "Resultado de los casos manuales"):
+  - **APK:** se compiló desde `C:\dev\SendaBC\frontend`, que también es una ruta corta. El APK arm64 del S9+ se guardó aparte antes, para T18.
 - [ ] T18 — S9+: M7 y M13 (relieve real y tiempos), con Metro y el APK de desarrollo arm64 que ya tiene. Si algún tiempo no cumple, se anota y se propone el ajuste antes de cambiar el código (plan, "Riesgos").
 - [ ] T19 — Cerrar la spec: estado, historial y `specs/roadmap.md`.
 
@@ -283,29 +286,29 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | M1 | Manual (emulador) | Pendiente |
-| CA-2 | `filters.test.ts` › tipo; M1 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
-| CA-3 | `filters.test.ts` › mes en hora local y meses disponibles; M1 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
-| CA-4 | `filters.test.ts` › distancia, extremos y sin distancia; M1 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
-| CA-5 | `filters.test.ts` › cumbre; `activities.test.ts` y pruebas de `computeMissingPeaks` › cumbre guardada; M1 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
-| CA-6 | `filters.test.ts` › combinados; M2 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
-| CA-7 | M2 | Manual (emulador) | Pendiente |
-| CA-8 | `filters.test.ts` › sin resultados; M2 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
-| CA-9 | `filters.test.ts` › totales de las filtradas; M2 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
-| CA-10 | M3 | Manual (emulador) | Pendiente |
-| CA-11 | M4 | Manual (emulador) | Pendiente |
-| CA-12 | `viewMode.test.ts`; M5 | Automatizada + manual | Vitest cumplido (2026-11-22); manual pendiente |
-| CA-13 | M5 | Manual (emulador) | Pendiente |
-| CA-14 | M7 | Manual (S9+) | Pendiente |
-| CA-15 | M5 | Manual (emulador) | Pendiente |
-| CA-16 | M6 | Manual (emulador) | Pendiente |
-| CA-17 | M8 | Manual (emulador o S9+) | Pendiente |
-| CA-18 | M9 | Manual (emulador) | Pendiente |
-| CA-19 | M10 | Manual (emulador) | Pendiente |
-| CA-20 | M10 | Manual (emulador) | Pendiente |
-| CA-21 | M11; `contrast.test.ts` | Automatizada + manual | `contrast.test.ts` cumplido (2026-11-22); M11 pendiente |
+| CA-1 | M1 | Manual (emulador) | M1 aprobado (emulador, 2026-11-22) |
+| CA-2 | `filters.test.ts` › tipo; M1 | Automatizada + manual | Vitest y manual cumplidos (2026-11-22) |
+| CA-3 | `filters.test.ts` › mes en hora local y meses disponibles; M1 | Automatizada + manual | Vitest y manual cumplidos (2026-11-22) |
+| CA-4 | `filters.test.ts` › distancia, extremos y sin distancia; M1 | Automatizada + manual | Vitest y manual cumplidos (2026-11-22) |
+| CA-5 | `filters.test.ts` › cumbre; `activities.test.ts` y pruebas de `computeMissingPeaks` › cumbre guardada; M1 | Automatizada + manual | Vitest y manual cumplidos (2026-11-22) |
+| CA-6 | `filters.test.ts` › combinados; M2 | Automatizada + manual | Vitest y manual cumplidos (2026-11-22) |
+| CA-7 | M2 | Manual (emulador) | M2 aprobado (emulador, 2026-11-22) |
+| CA-8 | `filters.test.ts` › sin resultados; M2 | Automatizada + manual | Vitest y manual cumplidos (2026-11-22) |
+| CA-9 | `filters.test.ts` › totales de las filtradas; M2 | Automatizada + manual | Vitest y manual cumplidos (2026-11-22) |
+| CA-10 | M3 | Manual (emulador) | M3 aprobado, salvo el paso 4 (cambio de cuenta) |
+| CA-11 | M4 | Manual (emulador) | M4 aprobado (emulador, 2026-11-22) |
+| CA-12 | `viewMode.test.ts`; M5 | Automatizada + manual | Vitest y manual cumplidos (2026-11-22) |
+| CA-13 | M5 | Manual (emulador) | M5 aprobado (emulador, 2026-11-22) |
+| CA-14 | M7 | Manual (S9+) | Relieve visto en el emulador (M5); falta M7 en el S9+ |
+| CA-15 | M5 | Manual (emulador) | M5 aprobado (emulador, 2026-11-22) |
+| CA-16 | M6 | Manual (emulador) | M6 aprobado (emulador, 2026-11-22) |
+| CA-17 | M8 | Manual (emulador o S9+) | Nombres accesibles revisados; falta TalkBack encendido |
+| CA-18 | M9 | Manual (emulador) | M9 aprobado tras la corrección (emulador, 2026-11-22) |
+| CA-19 | M10 | Manual (emulador) | M10 aprobado (emulador, 2026-11-22) |
+| CA-20 | M10 | Manual (emulador) | M10 aprobado (emulador, 2026-11-22) |
+| CA-21 | M11; `contrast.test.ts` | Automatizada + manual | `contrast.test.ts` y M11 cumplidos (2026-11-22) |
 | CA-22 | T2: aprobación anotada en el historial de la spec | Manual | Cumplido (2026-11-22) |
-| CA-23 | M12; `contrast.test.ts` | Automatizada + manual | `contrast.test.ts` cumplido (2026-11-22); M12 pendiente |
+| CA-23 | M12; `contrast.test.ts` | Automatizada + manual | `contrast.test.ts` y M12 cumplidos (2026-11-22) |
 
 Los 23 CA de la spec están cubiertos por al menos una tarea y una forma de verificarse. Los requisitos no funcionales se verifican en M8 (accesibilidad), M4 (offline) y M7 y M13 (3D y tiempos).
 
@@ -408,7 +411,55 @@ Mínimo 3 en la semana (constitución 8.3):
 
 ## Resultado de los casos manuales
 
-Sin correr todavía.
+**T17, emulador `Pixel_8_Pro` (2026-11-22), corrido por Claude por adb.** APK de desarrollo x86_64 y Metro en el 8082. Metro corre con `CI=1` y así no vigila los archivos: después de cada corrección hubo que reiniciarlo. La cuenta es `prueba-bitacora@senda.bc`: se recuperaron sus 202 actividades (las 200 de T13 y las 2 que se agregaron para repetir los casos M3 y M6 de la 014), todas con la cumbre calculada. 200 tienen cumbre, de 324 a 1917 m; las 2 especiales no tienen perfil.
+
+- **M1, aprobado.** El panel tiene tipo, mes, distancia y altura más alta.
+  - **Conteos,** comparados con una consulta a la base copiada del emulador: "Ciclismo" deja 50; con 18.5 – 42.5 km, 28; con altura de 1150 a 1950 m, 17.
+  - **Control deslizante:** el arrastre ajusta al paso de 0.5 km y de 50 m.
+  - **Cumbre:** el resumen abierto desde la lista filtrada marca una cumbre de 1833 m, dentro del rango.
+  - **TalkBack:** cada extremo se anuncia con su nombre y su valor ("Distancia mínima, 0 km").
+- **M2, aprobado.**
+  - **Filtros combinados:** con tres filtros, el botón dice "Filtros, 3 activos" y cada mes cuenta solo los filtrados (Noviembre con ciclismo: "2 actividades, 84.51 km").
+  - **Sin resultados:** con un cuarto filtro sin coincidencias aparecen "Ver 0 actividades" y el aviso "Ninguna actividad coincide" con "Quitar filtros", distinto del de lista vacía.
+  - **Quitar:** la "×" de un chip quita solo ese filtro.
+- **M3, aprobado, salvo el paso 4.** Los filtros siguen al cambiar de pestaña y al abrir un resumen y volver. Al cerrar la app y abrirla, la lista empieza sin filtros. **Pendiente: paso 4** (cerrar sesión y entrar con otra cuenta). No se corrió porque pide la contraseña de otra cuenta. El contexto se vacía cuando cambia `userId`.
+- **M4, aprobado.** En modo avión, "Senderismo" deja 102 (las 100 caminatas y las 2 especiales), y el botón dice "Filtros, 1 activo", en singular.
+- **M5, aprobado.**
+  - **Al abrir:** Explorar empieza en 3D, inclinado. El encuadre con inclinación deja a la vista las rutas cercanas a Ensenada, con el relieve y la ruta sobre él (el riesgo del plan no se presentó).
+  - **Selección:** se elige una ruta en 3D y, al pasar a 2D, siguen la selección, su tarjeta y la zona.
+  - **Detalle:** abre en 3D, con el relieve y su botón en la esquina.
+  - **Al volver a abrir:** Explorar empieza otra vez en 3D.
+  - **Emulador:** la ubicación tardó en llegar; mientras, Explorar mostró "Sin tu ubicación". Además, el doble toque de adb es muy lento para Mapbox y no sirve para acercar.
+- **M6, aprobado.** En modo avión, Explorar abre con el mapa guardado, el botón alterna 3D y 2D sin errores y la app sigue viva. El aviso rojo "Mapbox [error] … Map load failed" es un registro de desarrollo, que el build de entrega no muestra.
+- **M8, en parte.**
+  - **Nombres accesibles,** revisados con el árbol de accesibilidad:
+    - "Filtros, N activos";
+    - "Quitar filtro: …";
+    - cada extremo del control deslizante con su valor;
+    - "Mapa en 3D. Cambiar a 2D";
+    - "Cerrar los filtros".
+  - **Letra grande:**
+    - con 130 %, los botones del panel quedaban lado a lado y "Ver 204 actividades" en dos renglones (**corrección 3**);
+    - corregido, en 130 % y en 200 % se apilan y no se corta ningún texto; en 200 % el panel cabe en el 90 % de la pantalla.
+  - **Pendiente:** recorrer las pantallas con TalkBack encendido y ajustar los extremos con sus gestos. TalkBack está instalado, pero no se puede manejar por adb. Pasa a T18 o al usuario.
+- **M9, aprobado tras la corrección 2.** En claro y en oscuro, cada chip tiene su sombra completa, también al deslizar la fila.
+- **M10, aprobado, salvo el paso 5.**
+  - **Desde Mis actividades:** el botón fijo no tapa la última fila, y la grabación empieza como desde Inicio. "Listo" regresa a Mis actividades con la actividad nueva arriba (Noviembre pasó de 12 a 13), y atrás no vuelve al resumen ni a la grabación.
+  - **Desde Inicio:** "Listo" regresa a Inicio.
+  - **Pendiente: paso 5** (lista vacía con el texto nuevo): no hay una cuenta vacía en el emulador. El texto se revisó en el código.
+- **M11, aprobado.** "Últimos 7 días" va en una tarjeta con sombra, en claro y en oscuro.
+- **M12, aprobado.** Mis actividades (sin y con filtros, panel, sin resultados), Explorar y el detalle en 3D y 2D, e Inicio coinciden con Figma en los dos modos. Diferencias:
+  - el radio del panel, ya ajustado en Figma a `Radio/lg` (T9);
+  - el mapa 3D real, que en Figma es una ilustración.
+
+**Correcciones durante T17** (`tsc` sin errores y 910 pruebas después de las tres):
+1. **Panel (`ActivityFiltersSheet`):**
+   - **Perillas:** se cortaban a la mitad en los extremos, porque el `ScrollView` del panel recorta. Ahora el `ScrollView` ocupa también el relleno del panel.
+   - **Botones:** quedaban sobre la barra de gestos de Android, porque dentro del `Modal` el área segura llegaba en 0. Ahora el panel tiene su propio `SafeAreaProvider` y un `SafeAreaView` abajo, y ya no usa `navigationBarTranslucent`.
+2. **Chips de Explorar:** los 32 dp de espacio bajo la segunda fila tomaban los toques del mapa; arrastrar desde ahí no lo movía. Se cambió a `overflow: 'visible'` en cada fila (plan, D7, actualizado). La sombra sigue completa y el mapa responde justo debajo de los chips.
+3. **Letra grande:** el umbral para apilar los botones del panel bajó de 1.3 a 1.25, porque Android entrega 130 % como un poco menos de 1.3.
+
+**Observación fuera de la 015:** en Inicio, las tarjetas de "Tus actividades" de 0 m muestran la miniatura de un mapa (spec 013). La 014 lo corrigió solo en el resumen y en Mis actividades.
 
 ## Pendientes conocidos
 

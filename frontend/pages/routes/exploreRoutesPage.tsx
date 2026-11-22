@@ -481,19 +481,16 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     },
     // Ancho completo para que los chips se deslicen si no caben.
     // Spec 015 (CA-18, plan D7): el ScrollView recorta lo que sale de él, y la sombra media de cada
-    // chip llega a unos 28 dp hacia abajo. Antes solo había 4 dp y la sombra se cortaba en una línea
-    // recta. Ahora el contenido tiene aire arriba (sm, lo que separa las filas) y abajo (xxl), y el
-    // margen negativo lo descuenta para que los chips queden donde estaban.
+    // chip llega a unos 28 dp hacia abajo, así que se cortaba en una línea recta. Con overflow
+    // visible, la sombra se dibuja fuera de la fila. Se probó antes darle a la fila 32 dp de aire
+    // abajo, pero esa franja transparente tomaba los toques del mapa (T17, M9).
     chipRow: {
         alignSelf: 'stretch',
         flexGrow: 0,
-        marginTop: -t.spacing.sm,
-        marginBottom: t.spacing.xs - t.spacing.xxl,
+        overflow: 'visible',
     },
     chips: {
         paddingHorizontal: t.spacing.lg,
-        paddingTop: t.spacing.sm,
-        paddingBottom: t.spacing.xxl,
         gap: t.spacing.sm,
     },
     mapActions: {

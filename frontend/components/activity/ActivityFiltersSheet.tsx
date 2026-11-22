@@ -1,5 +1,5 @@
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import Chip from "../ui/Chip";
 import IconButton from "../ui/IconButton";
 import RangeSlider from "../ui/RangeSlider";
@@ -40,15 +40,16 @@ type Props = {
 const TYPES: (ActivityType | null)[] = [null, "HIKING", "TRAIL_RUNNING", "CYCLING"];
 
 // Con la letra a partir de este tamaño, "Quitar filtros" y "Ver N actividades" van uno debajo del
-// otro, como en el marco de letra grande de Figma.
-const STACK_FONT_SCALE = 1.3;
+// otro, como en el marco de letra grande de Figma. En 1.25 y no en 1.3: Android entrega la escala de
+// 130 % como un poco menos de 1.3 y los botones no se apilaban (T17).
+const STACK_FONT_SCALE = 1.25;
 
 // "Panel de filtros" de Figma (spec 015, CA-1 a CA-7; plan D5): sube desde abajo sobre Mis
 // actividades. Los cambios se aplican al momento, así que "Ver N actividades" siempre dice el número
 // real y solo cierra el panel.
 export default function ActivityFiltersSheet({ visible, onClose, filters, onChange, onClear, limits, months, count }: Props) {
     const styles = useThemedStyles(makeStyles);
-    const insets = useSafeAreaInsets();
+
     const reduced = useReducedMotion();
     const { fontScale, height } = useWindowDimensions();
     const stacked = fontScale >= STACK_FONT_SCALE;
@@ -63,10 +64,14 @@ export default function ActivityFiltersSheet({ visible, onClose, filters, onChan
             visible={visible}
             transparent
             animationType={reduced ? "none" : "slide"}
+            // Sin navigationBarTranslucent: con él el panel quedaba debajo de la barra de gestos de
+            // Android y el área segura de abajo llegaba en 0, así que los botones se encimaban (T17).
             statusBarTranslucent
-            navigationBarTranslucent
             onRequestClose={onClose}
         >
+            {/* Proveedor propio: dentro del Modal, el área segura de la app llega en 0 y los botones
+                quedaban sobre la barra de gestos de Android (T17). */}
+            <SafeAreaProvider>
             <View style={styles.screen}>
                 <Pressable
                     style={styles.scrim}
@@ -74,14 +79,14 @@ export default function ActivityFiltersSheet({ visible, onClose, filters, onChan
                     accessibilityRole="button"
                     accessibilityLabel="Cerrar los filtros"
                 />
-                <View style={[styles.sheet, { maxHeight: height * 0.9, paddingBottom: styles.sheet.padding + insets.bottom }]}>
+                <SafeAreaView edges={["bottom"]} style={[styles.sheet, { maxHeight: height * 0.9 }]}>
                     <View style={styles.handle} />
                     <View style={styles.header}>
                         <Text style={styles.title} accessibilityRole="header">Filtros</Text>
                         <IconButton icon="close" accessibilityLabel="Cerrar los filtros" onPress={onClose} />
                     </View>
 
-                    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+                    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                         <View style={styles.group}>
                             <Text style={styles.label}>Tipo de actividad</Text>
                             <View style={styles.wrap}>
@@ -149,8 +154,9 @@ export default function ActivityFiltersSheet({ visible, onClose, filters, onChan
                             </>
                         )}
                     </View>
-                </View>
+                </SafeAreaView>
             </View>
+            </SafeAreaProvider>
         </Modal>
     );
 }
@@ -228,8 +234,15 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         color: t.colors.text,
         flexShrink: 1,
     },
+    // El ScrollView recorta lo que se sale de él, y las perillas de los controles deslizantes se
+    // salen media perilla por cada lado (T17). Ocupa también el relleno del panel y lo devuelve al
+    // contenido, así las perillas caben completas.
+    scroll: {
+        marginHorizontal: -t.spacing.lg,
+    },
     content: {
         gap: t.spacing.lg,
+        paddingHorizontal: t.spacing.lg,
     },
     group: {
         gap: t.spacing.sm,
