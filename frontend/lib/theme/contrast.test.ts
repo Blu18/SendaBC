@@ -30,6 +30,8 @@ const FIGMA_TABLE: Record<string, [number, number]> = {
   'text / surface + 10 % textMuted': [11.22, 10.26],
   'error / surface + 10 % error': [5.11, 7.05],
   'text / surface + 10 % error': [11.23, 10.01],
+  // Spec 014: etiqueta de logro del resumen.
+  'text / background + 18 % secondary': [9.91, 10.18],
 };
 
 describe('contrastRatio', () => {

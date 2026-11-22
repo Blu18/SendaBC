@@ -44,7 +44,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: t.colors.alert,
-        ...t.shadows.floating,
+        ...t.shadows.medium,
     },
     // Mientras se mantiene presionado, la misma capa del 16 % que los botones rellenos.
     holding: {

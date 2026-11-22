@@ -1,6 +1,6 @@
 # 014 — Resumen, bitácora y estilo con sombras en toda la app
 
-- **Estado:** Aprobada
+- **Estado:** En progreso
 - **Semana:** 10
 - **Autor(es):**
 - **Fecha:** 2026-11-21
@@ -80,7 +80,7 @@ Al aprobar el diseño del resumen y la bitácora (versión 3), el usuario decidi
 
 - RN-1: Esta spec solo cambia cómo se presentan los datos. Duración, distancia, elevación ganada y perdida, ritmo, velocidad y fuente de la elevación siguen siendo los que calcula y guarda la spec 004; no se recalculan.
 - RN-2: El resumen y Mis actividades usan solo actividades terminadas del usuario de la sesión guardadas en el teléfono (spec 004, RN-6).
-- RN-3: Reglas de la línea de contexto, en orden de prioridad: (1) es la primera actividad de ese tipo del usuario ("Tu primera salida en bici"); (2) es la de mayor distancia de ese tipo en su mes ("Tu caminata más larga de octubre"); (3) es la de mayor elevación ganada de ese tipo en su mes ("Tu salida con más subida de octubre"). Las reglas 2 y 3 solo aplican si en ese mes hay al menos otra actividad del mismo tipo para comparar. Se comparan solo actividades terminadas del mismo usuario guardadas en el teléfono (RN-2), incluidas las recuperadas del servidor. En un empate gana la más antigua, para que la línea de una actividad no cambie cuando se graba otra igual.
+- RN-3: Reglas de la línea de contexto, en orden de prioridad: (1) es la primera actividad de ese tipo del usuario ("Tu primera salida en bici"); (2) es la de mayor distancia de ese tipo en su mes ("Tu caminata más larga de octubre"); (3) es la de mayor elevación ganada de ese tipo en su mes ("Tu caminata con más subida de octubre"). Las reglas 2 y 3 solo aplican si en ese mes hay al menos otra actividad del mismo tipo para comparar. Se comparan solo actividades terminadas del mismo usuario guardadas en el teléfono (RN-2), incluidas las recuperadas del servidor. En un empate gana la más antigua, para que la línea de una actividad no cambie cuando se graba otra igual.
 - RN-4: Si una actividad cumple varias reglas de contexto, se muestra una sola línea: la de mayor prioridad (RN-3). La línea se calcula al abrir el resumen, así que puede cambiar si después se graba una actividad que la supera.
 - RN-5: El perfil y el punto más alto usan la misma fuente de elevación que la actividad (barómetro o GPS, spec 004, RN-3), suavizada con los mismos umbrales de ruido que la elevación (spec 004, CA-11), para que un pico aislado no cuente como cumbre. El punto más alto se muestra como altitud sobre el nivel del mar, en metros enteros y marcado como aproximado ("1 412 m aprox."), porque con barómetro depende de la presión del día y con GPS tiene error propio.
 - RN-6: El perfil se dibuja si la actividad tiene al menos 10 lecturas de altitud y 200 m de distancia. Por debajo de eso, el resumen muestra solo las cifras (CA-7).
@@ -148,3 +148,5 @@ Al aprobar el diseño del resumen y la bitácora (versión 3), el usuario decidi
 - 2026-11-21 — Ampliación aprobada por el usuario.
 - 2026-11-21 — Plan de la ampliación aprobado por el usuario. Tareas T16 a T23 y casos M10 a M12 en tasks.md.
 - 2026-11-21 — El usuario aprueba el diseño de Figma de todas las pantallas con el estilo de sombras (CA-27): Mapas sin conexión, Descargar zona y las subpantallas de la cuenta en https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX?node-id=90-6237, y el resto de la página Pantallas. Ya se puede programar.
+- 2026-11-21 — En progreso: T3 (perfil de elevación de la actividad) hecha.
+- 2026-11-21 — Ajuste del diseño aprobado, de acuerdo con el usuario, por contraste (CA-23, CA-28): el texto de la etiqueta de la línea de contexto pasa de ocre a `text`. Medía 3.87:1 en claro y ahora mide 9.91:1. La estrella y el tinte siguen en ocre. T6 hecha.

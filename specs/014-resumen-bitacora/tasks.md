@@ -58,10 +58,21 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
 
 ## Fase B — Lógica pura
 
-- [ ] T3 — `lib/metrics/profile.ts`: `activityProfile` con la distancia acumulada de `createDistanceAccumulator` y la altitud GPS de los puntos precisos o la del barómetro, ubicada por hora y anclada con la mediana del GPS (D2). Agregar el suavizado de `SMOOTHING_WINDOW`, la cumbre, el mínimo de RN-6 (`null` si no se alcanza) y el muestreo a 200 pares. Si la fuente es barómetro pero no hay lecturas, se usa GPS (D3). Pruebas en `profile.test.ts`: GPS; barómetro con ancla; barómetro sin altitudes GPS; barómetro sin lecturas; cumbre conocida; pico aislado; menos de 10 altitudes; menos de 200 m. (CA-4, CA-5, CA-6, CA-7)
-- [ ] T4 — `lib/activity/context.ts`: `contextLine` con las tres reglas de RN-3 en orden, los textos por tipo y los meses en tablas propias (D7). Pruebas en `context.test.ts`: primera de cada tipo; la más larga del mes; la de más subida; sin otra del mismo tipo en el mes; empate (gana la más antigua); prioridad entre reglas; actividad de otro tipo que no cuenta; mes en hora local. (CA-2, CA-3)
-- [ ] T5 — `lib/activity/months.ts`: `groupByMonth` y `monthTotalsText`. Pruebas en `months.test.ts`: orden de meses y dentro del mes; título con año si no es el actual; conteo y distancia; "1 actividad"; actividad a las 23:30 del último día del mes en hora local. (CA-13, CA-14, CA-15)
-- [ ] T6 — Agregar el token `shadow` (claro y oscuro) a `colors.ts`. Mover las sombras a `lib/theme/shadows.ts` con `makeShadows(colors)` y tres niveles (`low`, `medium` y `bar`), armados por modo en `index.ts` (D8, D11, RN-11). Borrar `floating`: sus siete usos pasan a `medium`, salvo `Notice`, que pasa a `low`. Pruebas en `shadows.test.ts`: los tres niveles existen en los dos temas y usan el `colors.shadow` de su modo. Revisar los pares de color nuevos del plan ("Tema y contraste") en `CONTRAST_PAIRS` y en la tabla de contraste de Figma. Agregar los que falten a las dos, para que `contrast.test.ts` siga pasando. (CA-22, CA-23)
+- [x] T3 — `lib/metrics/profile.ts`: `activityProfile` con la distancia acumulada de `createDistanceAccumulator` y la altitud GPS de los puntos precisos o la del barómetro, ubicada por hora y anclada con la mediana del GPS (D2). Agregar el suavizado de `SMOOTHING_WINDOW`, la cumbre, el mínimo de RN-6 (`null` si no se alcanza) y el muestreo a 200 pares. Si la fuente es barómetro pero no hay lecturas, se usa GPS (D3). Pruebas en `profile.test.ts`: GPS; barómetro con ancla; barómetro sin altitudes GPS; barómetro sin lecturas; cumbre conocida; pico aislado; menos de 10 altitudes; menos de 200 m. (CA-4, CA-5, CA-6, CA-7)
+
+  Hecho (2026-11-21): `activityProfile` devuelve el perfil, la cumbre y la fuente que se usó. Las constantes `MIN_PROFILE_READINGS`, `MIN_PROFILE_DISTANCE_M` y `MAX_PROFILE_POINTS` se exportan. Solo cuentan los puntos precisos, para la distancia y para la altitud GPS. Con altitud relativa (iOS) también se ancla a la mediana del GPS. 12 pruebas en `profile.test.ts`, que agregan a la lista del plan la distancia con ruido, el ancla con altitud relativa, la actividad sin puntos y el muestreo. El frontend pasa 848 pruebas y `tsc` no marca errores.
+- [x] T4 — `lib/activity/context.ts`: `contextLine` con las tres reglas de RN-3 en orden, los textos por tipo y los meses en tablas propias (D7). Pruebas en `context.test.ts`: primera de cada tipo; la más larga del mes; la de más subida; sin otra del mismo tipo en el mes; empate (gana la más antigua); prioridad entre reglas; actividad de otro tipo que no cuenta; mes en hora local. (CA-2, CA-3)
+
+  Hecho (2026-11-21): `contextLine(activity, all)` y `localMonthKey`. La firma no lleva `now`, que el plan mencionaba pero no hace falta. Los textos por tipo son "caminata", "carrera" y "salida en bici", y los meses van en `MONTH_NAMES`. Las actividades sin métricas calculadas no cuentan para comparar. 13 pruebas en `context.test.ts`, que pasan también con `TZ=UTC` y `TZ=America/Tijuana`. El ejemplo de la regla 3 en la spec decía "Tu salida con más subida"; se corrigió a "Tu caminata con más subida", que es lo que muestra la app.
+- [x] T5 — `lib/activity/months.ts`: `groupByMonth` y `monthTotalsText`. Pruebas en `months.test.ts`: orden de meses y dentro del mes; título con año si no es el actual; conteo y distancia; "1 actividad"; actividad a las 23:30 del último día del mes en hora local. (CA-13, CA-14, CA-15)
+
+  Hecho (2026-11-21): `groupByMonth` es genérico (`T` con `startedAt` y `distanceMeters`) y ordena dentro de cada mes por hora de inicio, sin depender del orden de entrada. Usa `localMonthKey` y `MONTH_NAMES` de `context.ts`. Una actividad sin distancia calculada cuenta en el mes, pero no suma distancia. `monthTotalsText` usa `formatDistance`, igual que Inicio, y dice "0 km" sin distancia. 8 pruebas en `months.test.ts`, que pasan con la zona horaria local, `UTC` y `America/Tijuana`. El frontend pasa 869 pruebas y `tsc` no marca errores.
+- [x] T6 — Agregar el token `shadow` (claro y oscuro) a `colors.ts`. Mover las sombras a `lib/theme/shadows.ts` con `makeShadows(colors)` y tres niveles (`low`, `medium` y `bar`), armados por modo en `index.ts` (D8, D11, RN-11). Borrar `floating`: sus siete usos pasan a `medium`, salvo `Notice`, que pasa a `low`. Pruebas en `shadows.test.ts`: los tres niveles existen en los dos temas y usan el `colors.shadow` de su modo. Revisar los pares de color nuevos del plan ("Tema y contraste") en `CONTRAST_PAIRS` y en la tabla de contraste de Figma. Agregar los que falten a las dos, para que `contrast.test.ts` siga pasando. (CA-22, CA-23)
+
+  Avance (2026-11-21):
+  - **Hecho.** `colors.shadow` (claro `rgba(43, 41, 33, 0.12)`, oscuro `rgba(0, 0, 0, 0.5)`), `lib/theme/shadows.ts` con `makeShadows` y `SHADOW_LAYERS` (las mismas capas que Figma), y `lightTheme.shadows` y `darkTheme.shadows`. Se borró `floating`: seis usos pasaron a `medium` y `Notice` a `low`. Hay 4 pruebas en `shadows.test.ts`. El frontend pasa 873 pruebas y `tsc` no marca errores.
+  - **Resuelto con el usuario (2026-11-21).** La etiqueta de la línea de contexto del diseño aprobado no cumple AA en modo claro. Es texto `secondaryText` de 12 px sobre `background` con 18 % de `secondary`, y mide 3.87:1 contra 4.5:1 (en oscuro, 5.64:1). Se propuso al usuario cambiar el texto a `text` (9.91:1), dejar la estrella en ocre y agregar el par "text / background + 18 % secondary" a `CONTRAST_PAIRS` y a la tabla de Figma. El ícono en círculo con tinte (14 % de `primary`) cumple: 10.02:1 en claro y 11.02:1 en oscuro.
+  - **Hecho.** El usuario aprobó la propuesta. En Figma, el texto de la etiqueta pasó a `text` en las 8 pantallas de Resumen que la muestran, y la tabla de contraste tiene la fila "text / background + 18 % secondary" (9.91:1 en claro y 10.18:1 en oscuro). El par está también en `CONTRAST_PAIRS` y en `FIGMA_TABLE`. El frontend pasa 875 pruebas.
 
 ## Fase C — Hooks y componentes
 
@@ -142,11 +153,11 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
 | CA-1 | M1, M2 | Manual | Pendiente |
-| CA-2 | `context.test.ts`; M1 | Automatizada + manual | Pendiente |
-| CA-3 | `context.test.ts`; M2 | Automatizada + manual | Pendiente |
+| CA-2 | `context.test.ts` (cumplido 2026-11-21); M1 | Automatizada + manual | Pendiente |
+| CA-3 | `context.test.ts` (cumplido 2026-11-21); M2 | Automatizada + manual | Pendiente |
 | CA-4 | `profile.test.ts` › GPS y barómetro; M1 | Automatizada + manual | Pendiente |
 | CA-5 | `profile.test.ts` › cumbre; M1 | Automatizada + manual | Pendiente |
-| CA-6 | `profile.test.ts` › cumbre conocida y pico aislado | Automatizada | Pendiente |
+| CA-6 | `profile.test.ts` › cumbre conocida y pico aislado | Automatizada | Cumplido (2026-11-21) |
 | CA-7 | `profile.test.ts` › mínimo; M3 | Automatizada + manual | Pendiente |
 | CA-8 | M1, M2 | Manual | Pendiente |
 | CA-9 | M1, M2 | Manual | Pendiente |
@@ -155,7 +166,7 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
 | CA-12 | M4 | Manual | Pendiente |
 | CA-13 | `months.test.ts` › orden; M5 | Automatizada + manual | Pendiente |
 | CA-14 | `months.test.ts` › títulos y totales; M5 | Automatizada + manual | Pendiente |
-| CA-15 | `months.test.ts` › hora local y totales | Automatizada | Pendiente |
+| CA-15 | `months.test.ts` › hora local y totales | Automatizada | Cumplido (2026-11-21) |
 | CA-16 | M5, M3 | Manual | Pendiente |
 | CA-17 | M5 | Manual | Pendiente |
 | CA-18 | M5 | Manual | Pendiente |

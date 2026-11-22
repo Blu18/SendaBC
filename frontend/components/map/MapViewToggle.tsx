@@ -38,7 +38,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: t.colors.surface,
-        ...t.shadows.floating,
+        ...t.shadows.medium,
     },
     pressed: {
         ...StyleSheet.absoluteFill,

@@ -457,7 +457,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         backgroundColor: t.colors.background,
     },
     floating: {
-        ...t.shadows.floating,
+        ...t.shadows.medium,
     },
     top: {
         position: 'absolute',
@@ -527,7 +527,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         gap: t.spacing.sm,
         borderRadius: t.radius.lg,
         backgroundColor: t.colors.surface,
-        ...t.shadows.floating,
+        ...t.shadows.medium,
     },
     cardHeader: {
         flexDirection: 'row',
