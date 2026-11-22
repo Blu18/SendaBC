@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert, PixelRatio, Platform } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert } from "react-native";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import Mapbox from "@rnmapbox/maps";
 import * as Location from "expo-location";
 import Appear from "../../components/ui/Appear";
+import RouteMap from "../../components/map/RouteMap";
 import BgBtn from "../../components/ui/buttons/BgBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Notice from "../../components/ui/Notice";
@@ -17,9 +18,10 @@ import { formatDistance, formatElevation } from "../../lib/format/metrics";
 import type { Coordinates } from "../../lib/metrics/geo";
 import type { RouteDetail } from "../../lib/routes/api";
 import { DETAIL_MESSAGES, DIFFICULTY_LABELS, formatDistanceFromUser } from "../../lib/routes/format";
-import { distanceFromUser, pathToCoordinates, regionForPath } from "../../lib/routes/geo";
+import { boundsForPath, distanceFromUser } from "../../lib/routes/geo";
+import { pointFeature, routeLines } from "../../lib/routes/mapFeatures";
 import { avisoDeGuardado, mensajeDeFallo, type RouteActionFailure } from "../../lib/routes/status";
-import { fontFamilies, lightColors, type Theme } from "../../lib/theme";
+import { fontFamilies, type Theme } from "../../lib/theme";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 
 type Props = StaticScreenProps<{ id: string }>;
@@ -47,63 +49,47 @@ function useUbicacionSiHayPermiso(): Coordinates | null {
     return user;
 }
 
-// Recorrido completo con su inicio y su final. Los elementos son fijos mientras se muestra la
-// ruta (no se insertan en medio), así que no tiene el problema de Android de la spec 006 (M2).
-// Margen alrededor del recorrido, en puntos de pantalla. En Android react-native-maps lo recibe
-// en píxeles físicos; en iOS, en puntos.
-const MARGEN_MAPA_PT = 32;
-const margenMapa = Platform.OS === 'android' ? PixelRatio.getPixelSizeForLayoutSize(MARGEN_MAPA_PT) : MARGEN_MAPA_PT;
-
-function RouteMap({ route }: { route: RouteDetail }) {
+// Recorrido completo con su inicio y su final (spec 007, CA-10), en el mapa de Mapbox con el estilo
+// de la grabación (spec 013, CA-30, CA-32). El encuadre inicial ya trae el margen alrededor del
+// recorrido (boundsForPath), así que no hace falta encuadrar otra vez al cargar.
+function RouteDetailMap({ route }: { route: RouteDetail }) {
     const styles = useThemedStyles(makeStyles);
-    const mapRef = useRef<MapView>(null);
-    const coordenadas = useMemo(() => pathToCoordinates(route.path), [route.path]);
-    const final = coordenadas[coordenadas.length - 1];
-
-    // Igual que en Explorar: con tracksViewChanges={false} desde el inicio, Android toma la imagen
-    // antes de dibujar el punto dentro del área de 48 dp. Se sigue la vista un momento y se congela.
-    const [dibujandoMarcadores, setDibujandoMarcadores] = useState(true);
-    useEffect(() => {
-        const t = setTimeout(() => setDibujandoMarcadores(false), 1000);
-        return () => clearTimeout(t);
-    }, []);
-
-    // initialRegion solo da el primer cuadro: en Android no respeta su margen y el extremo de un
-    // recorrido largo quedaba en el borde (M4). Con el mapa listo se encuadra el recorrido completo
-    // con un margen fijo en pantalla.
-    const encuadrar = () => {
-        if (coordenadas.length < 2) return;
-        mapRef.current?.fitToCoordinates(coordenadas, {
-            edgePadding: { top: margenMapa, right: margenMapa, bottom: margenMapa, left: margenMapa },
-            animated: false,
-        });
-    };
+    const { colors } = useTheme();
+    const linea = useMemo(() => routeLines([{ id: route.id, path: route.path }]), [route.id, route.path]);
+    const ultimo = route.path[route.path.length - 1];
+    const inicio = useMemo(() => pointFeature("inicio", route.start), [route.start]);
+    const final = useMemo(
+        () => (route.path.length >= 2 ? pointFeature("final", { latitude: ultimo[1], longitude: ultimo[0] }) : null),
+        [route.path, ultimo]
+    );
 
     return (
-        <MapView
-            ref={mapRef}
+        <RouteMap
             style={styles.map}
-            initialRegion={regionForPath(route.path, route.start)}
-            onMapReady={encuadrar}
-            toolbarEnabled={false}
-            showsMyLocationButton={false}
+            initialBounds={boundsForPath(route.path, route.start)}
+            accessibilityLabel={`Mapa del recorrido de ${route.name}`}
         >
-            {coordenadas.length >= 2 && (
-                <Polyline coordinates={coordenadas} strokeColor={MAPA.data} strokeWidth={5} zIndex={1} />
+            <Mapbox.ShapeSource id="recorrido" shape={linea}>
+                <Mapbox.LineLayer
+                    id="recorrido-linea"
+                    style={{ lineColor: colors.data, lineWidth: 5, lineCap: "round", lineJoin: "round" }}
+                />
+            </Mapbox.ShapeSource>
+            {final && (
+                <Mapbox.ShapeSource id="final" shape={final}>
+                    <Mapbox.CircleLayer
+                        id="final-punto"
+                        style={{ circleRadius: 8, circleColor: colors.secondary, circleStrokeWidth: 3, circleStrokeColor: colors.surface }}
+                    />
+                </Mapbox.ShapeSource>
             )}
-            <Marker coordinate={route.start} anchor={{ x: 0.5, y: 0.5 }} zIndex={3} tracksViewChanges={dibujandoMarcadores} title="Inicio">
-                <View style={styles.markerHit}>
-                    <View style={styles.startDot} />
-                </View>
-            </Marker>
-            {final && coordenadas.length >= 2 && (
-                <Marker coordinate={final} anchor={{ x: 0.5, y: 0.5 }} zIndex={2} tracksViewChanges={dibujandoMarcadores} title="Final">
-                    <View style={styles.markerHit}>
-                        <View style={styles.endDot} />
-                    </View>
-                </Marker>
-            )}
-        </MapView>
+            <Mapbox.ShapeSource id="inicio" shape={inicio}>
+                <Mapbox.CircleLayer
+                    id="inicio-punto"
+                    style={{ circleRadius: 8, circleColor: colors.primary, circleStrokeWidth: 3, circleStrokeColor: colors.surface }}
+                />
+            </Mapbox.ShapeSource>
+        </RouteMap>
     );
 }
 
@@ -280,7 +266,7 @@ export default function RouteDetailPage({ route: navRoute }: Props) {
         <View style={styles.container}>
             {header}
             <ScrollView contentContainerStyle={styles.content}>
-                <RouteMap route={route} />
+                <RouteDetailMap route={route} />
 
                 <View style={styles.body}>
                     {status === 'saved' && savedAt && (
@@ -340,10 +326,6 @@ export default function RouteDetailPage({ route: navRoute }: Props) {
     );
 }
 
-// El mapa no cambia de estilo con el modo (fuera de alcance, plan R6): sus marcas usan siempre
-// los colores del modo claro.
-const MAPA = lightColors;
-
 const makeStyles = (t: Theme) => StyleSheet.create({
     container: {
         flex: 1,
@@ -360,34 +342,11 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     content: {
         paddingBottom: t.spacing.lg,
     },
-    // Figma pide 200, pero con el margen fijo del encuadre (MARGEN_MAPA_PT) el mapa de Android no
-    // encuadraba el recorrido y se quedaba en una vista muy lejana. A 280 sí (spec 009, T16).
+    // Figma pide 200; con el mapa anterior (Google) el encuadre en Android necesitaba 280 (spec 009, T16).
+    // Se conserva con Mapbox para no cambiar el diseño ya probado (spec 013, T10).
     map: {
         height: 280,
         alignSelf: 'stretch',
-    },
-    // Al tocar un marcador sale su etiqueta, así que el marcador entero mide 48 × 48 (CA-13).
-    markerHit: {
-        width: t.touchMin,
-        height: t.touchMin,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    startDot: {
-        width: 16,
-        height: 16,
-        borderRadius: 8,
-        backgroundColor: MAPA.primary,
-        borderWidth: 3,
-        borderColor: MAPA.surface,
-    },
-    endDot: {
-        width: 16,
-        height: 16,
-        borderRadius: 3,
-        backgroundColor: MAPA.secondary,
-        borderWidth: 3,
-        borderColor: MAPA.surface,
     },
     body: {
         padding: t.spacing.lg,

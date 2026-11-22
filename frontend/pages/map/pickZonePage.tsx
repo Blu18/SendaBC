@@ -19,12 +19,12 @@ import {
     type ZoneBounds,
 } from "../../lib/map/offlineZones";
 import { mapStyle } from "../../lib/map/style";
-import { BAJA_CALIFORNIA_REGION } from "../../lib/routes/constants";
+import { BAJA_CALIFORNIA_CENTER } from "../../lib/routes/constants";
 import type { Theme } from "../../lib/theme";
 
 // Fracción del lado más corto del mapa que ocupa el marco: deja ver lo que lo rodea.
 const FRAME_FRACTION = 0.8;
-const INICIO: [number, number] = [BAJA_CALIFORNIA_REGION.longitude, BAJA_CALIFORNIA_REGION.latitude];
+const INICIO: [number, number] = BAJA_CALIFORNIA_CENTER;
 
 type Camara = { center: [number, number]; zoom: number };
 

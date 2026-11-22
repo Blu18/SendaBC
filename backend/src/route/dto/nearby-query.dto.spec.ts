@@ -63,4 +63,29 @@ describe('NearbyQueryDto (spec 006)', () => {
       type: ['El tipo debe ser HIKING, TRAIL_RUNNING o CYCLING'],
     });
   });
+
+  describe('limit (spec 013, CA-9)', () => {
+    it('es opcional', async () => {
+      const result = await pipe.transform({ lat: '32', lng: '-116' }, meta);
+      expect(result.limit).toBeUndefined();
+    });
+
+    it('convierte el texto a número y acepta los extremos 1 y 50', async () => {
+      for (const limit of ['1', '5', '50']) {
+        const result = await pipe.transform(
+          { lat: '32', lng: '-116', limit },
+          meta,
+        );
+        expect(result.limit).toBe(Number(limit));
+      }
+    });
+
+    it('rechaza 0, 51, decimales y texto', async () => {
+      for (const limit of ['0', '51', '2.5', 'cinco']) {
+        expect(await erroresDe({ lat: '32', lng: '-116', limit })).toEqual({
+          limit: ['El límite debe ser un entero entre 1 y 50'],
+        });
+      }
+    });
+  });
 });

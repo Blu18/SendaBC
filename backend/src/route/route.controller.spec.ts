@@ -11,6 +11,7 @@ const req = { user: { id: USUARIO } } as never;
 function montar() {
   const service = {
     nearby: vi.fn().mockResolvedValue([{ id: 'r-1' }]),
+    popular: vi.fn().mockResolvedValue([{ id: RUTA, favoritesCount: 3 }]),
     publish: vi.fn().mockResolvedValue(RUTA),
     detail: vi.fn().mockResolvedValue({ id: RUTA }),
     update: vi.fn().mockResolvedValue({ id: RUTA, name: 'Nuevo' }),
@@ -129,5 +130,19 @@ describe('RouteController (spec 007)', () => {
     await expect(
       routeId.transform(RUTA, { type: 'param', data: 'id' }),
     ).resolves.toBe(RUTA);
+  });
+});
+
+describe('RouteController (spec 013)', () => {
+  it('popular usa el usuario del token y hereda el JwtAuthGuard de la clase', async () => {
+    const { controller, service } = montar();
+
+    const result = await controller.popular(req);
+
+    expect(service.popular).toHaveBeenCalledWith(USUARIO);
+    expect(result).toEqual([{ id: RUTA, favoritesCount: 3 }]);
+    expect(
+      Reflect.getMetadata(GUARDS_METADATA, RouteController.prototype.popular),
+    ).toBeUndefined();
   });
 });

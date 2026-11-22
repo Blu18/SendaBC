@@ -10,6 +10,8 @@ type Props = {
     children: ReactNode;
     // Lo que debe seguir visible sin mapa: la alerta activa.
     overlay?: ReactNode;
+    // Texto del aviso sin mapa. Por defecto, el de la grabación (spec 013, T8).
+    notice?: { title: string; description: string };
 };
 
 // Si el mapa falla al dibujarse, se queda sin mapa y nada más: la grabación, las métricas y los
@@ -26,17 +28,21 @@ export default class MapErrorBoundary extends Component<Props, { failed: boolean
     }
 
     render() {
-        return this.state.failed ? <MapUnavailable overlay={this.props.overlay} /> : this.props.children;
+        return this.state.failed ? (
+            <MapUnavailable overlay={this.props.overlay} notice={this.props.notice ?? MAP_UNAVAILABLE} />
+        ) : (
+            this.props.children
+        );
     }
 }
 
-function MapUnavailable({ overlay }: { overlay?: ReactNode }) {
+function MapUnavailable({ overlay, notice }: { overlay?: ReactNode; notice: { title: string; description: string } }) {
     const styles = useThemedStyles(makeStyles);
     return (
         <View style={styles.area}>
             {overlay}
             <Appear>
-                <Notice title={MAP_UNAVAILABLE.title} description={MAP_UNAVAILABLE.description} />
+                <Notice title={notice.title} description={notice.description} />
             </Appear>
         </View>
     );

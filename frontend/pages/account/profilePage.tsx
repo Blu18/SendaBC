@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert } from "re
 import { useNavigation } from "@react-navigation/native";
 import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
+import BgBtn from "../../components/ui/buttons/BgBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Notice from "../../components/ui/Notice";
 import TextField from "../../components/ui/TextField";
@@ -11,6 +12,7 @@ import Avatar from "../../components/account/Avatar";
 import Card from "../../components/ui/Card";
 import { useProfile } from "../../hooks/auth/auth.hooks";
 import { useAccount } from "../../hooks/account/useAccount";
+import { useLogout } from "../../hooks/auth/useLogout";
 import { AVATAR_POR_DEFECTO, AVATARS, type AvatarId } from "../../lib/account/avatars";
 import { erroresDeCuenta, mensajeDeCuenta, type Profile } from "../../lib/account/api";
 import { cambiosDePerfil, validarNombre } from "../../lib/account/profile";
@@ -22,7 +24,8 @@ const OPCIONES = [...AVATARS, AVATAR_POR_DEFECTO];
 
 // Perfil (spec 011, CA-41, CA-42, CA-45): nombre visible y avatar, y acceso a cambiar el correo,
 // la contraseña y borrar la cuenta. Se abre desde Inicio. Sin conexión no se guarda nada y se avisa; lo escrito se
-// conserva si falla. "Guardar" solo guarda el nombre y el avatar.
+// conserva si falla. "Guardar" solo guarda el nombre y el avatar. "Cerrar sesión" vive aquí desde la
+// spec 013 (CA-24, CA-25) y está también cuando el perfil no carga: sin red se puede cerrar sesión.
 export default function ProfilePage() {
     const navigation = useNavigation();
     const profile = useProfile();
@@ -30,6 +33,8 @@ export default function ProfilePage() {
     const theme = useTheme();
     const styles = useThemedStyles(makeStyles);
     const header = <ScreenHeader title="Tu perfil" onBack={() => navigation.goBack()} />;
+    const cerrarSesion = useLogout();
+    const botonCerrarSesion = <BgBtn text="Cerrar sesión" onPress={() => void cerrarSesion()} />;
 
     const perfil = profile.data as Profile | undefined;
     const [nombre, setNombre] = useState("");
@@ -54,9 +59,13 @@ export default function ProfilePage() {
                     <View style={styles.content}>
                         <Notice type="error" title="No se pudo cargar tu perfil" description="Revisa tu conexión e inténtalo de nuevo." />
                         <PrimaryButton text="Reintentar" onPress={() => void profile.refetch()} />
+                        {botonCerrarSesion}
                     </View>
                 ) : (
-                    <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loading} />
+                    <View style={styles.content}>
+                        <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loading} />
+                        {botonCerrarSesion}
+                    </View>
                 )}
             </View>
         );
@@ -157,6 +166,9 @@ export default function ProfilePage() {
                     description="Borra tus datos del servidor y de este teléfono."
                     onPress={() => navigation.navigate("DeleteAccount")}
                 />
+
+                {botonCerrarSesion}
+                <Text style={styles.hint}>Si tienes actividades sin subir, te avisaremos antes de salir.</Text>
             </ScrollView>
             <View style={styles.actions}>
                 <PrimaryButton
@@ -187,6 +199,10 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         gap: t.spacing.sm,
     },
     email: {
+        ...t.typography.bodySmall,
+        color: t.colors.textMuted,
+    },
+    hint: {
         ...t.typography.bodySmall,
         color: t.colors.textMuted,
     },

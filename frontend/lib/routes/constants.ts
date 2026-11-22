@@ -21,10 +21,9 @@ export const MOVE_THRESHOLD = 0.2;
 
 // Todo el estado de Baja California, para abrir el mapa sin permiso de ubicación (CA-14).
 // Latitud 28.0–32.72 y longitud -117.13 a -112.7 (hasta la Isla Ángel de la Guarda), con un
-// poco de margen.
-export const BAJA_CALIFORNIA_REGION = {
-  latitude: 30.36,
-  longitude: -114.92,
-  latitudeDelta: 5.2,
-  longitudeDelta: 4.8,
+// poco de margen. Esquinas en [longitud, latitud], como las usa Mapbox (spec 013, T7).
+export const BAJA_CALIFORNIA_BOUNDS = {
+  ne: [-112.52, 32.96] as [number, number],
+  sw: [-117.32, 27.76] as [number, number],
 };
+export const BAJA_CALIFORNIA_CENTER: [number, number] = [-114.92, 30.36];

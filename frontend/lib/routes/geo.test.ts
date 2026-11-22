@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { haversineMeters } from '../metrics/geo';
-import { BAJA_CALIFORNIA_REGION, DEFAULT_RADIUS_KM, RADIUS_OPTIONS_KM } from './constants';
-import { distanceFromUser, hasMovedEnough, pathToCoordinates, regionAround, regionForPath } from './geo';
+import {
+  BAJA_CALIFORNIA_BOUNDS,
+  BAJA_CALIFORNIA_CENTER,
+  DEFAULT_RADIUS_KM,
+  RADIUS_OPTIONS_KM,
+} from './constants';
+import {
+  boundsAround,
+  boundsForPath,
+  distanceFromUser,
+  hasMovedEnough,
+} from './geo';
 
 const ENSENADA = { latitude: 31.8667, longitude: -116.5964 };
 const TECATE = { latitude: 32.5725, longitude: -116.6264 };
@@ -10,24 +20,6 @@ const TECATE = { latitude: 32.5725, longitude: -116.6264 };
 const alNorte = (p: typeof ENSENADA, km: number) => ({
   latitude: p.latitude + km / 111.195,
   longitude: p.longitude,
-});
-
-describe('pathToCoordinates (CA-2)', () => {
-  it('convierte [longitud, latitud] a { latitude, longitude } en el mismo orden', () => {
-    expect(
-      pathToCoordinates([
-        [-116.5964, 31.8667],
-        [-116.59, 31.87],
-      ])
-    ).toEqual([
-      { latitude: 31.8667, longitude: -116.5964 },
-      { latitude: 31.87, longitude: -116.59 },
-    ]);
-  });
-
-  it('un recorrido vacío da una lista vacía', () => {
-    expect(pathToCoordinates([])).toEqual([]);
-  });
 });
 
 describe('distanceFromUser (CA-7, RN-2)', () => {
@@ -63,17 +55,6 @@ describe('hasMovedEnough (CA-9)', () => {
   });
 });
 
-describe('regionAround (CA-1, CA-10)', () => {
-  it('centra en el punto y su alto cubre el diámetro del radio', () => {
-    const r = regionAround(ENSENADA, 25);
-    expect(r.latitude).toBe(ENSENADA.latitude);
-    expect(r.longitude).toBe(ENSENADA.longitude);
-    expect(r.latitudeDelta * 111.2).toBeCloseTo(50, 5);
-    // En longitud los grados son más cortos: el delta crece con 1 / cos(latitud).
-    expect(r.longitudeDelta).toBeGreaterThan(r.latitudeDelta);
-  });
-});
-
 describe('constantes (CA-11, CA-14)', () => {
   it('radios de 5 a 100 km y 25 km por defecto', () => {
     expect(RADIUS_OPTIONS_KM).toEqual([5, 10, 25, 50, 100]);
@@ -81,10 +62,9 @@ describe('constantes (CA-11, CA-14)', () => {
     expect(DEFAULT_RADIUS_KM).toBe(25);
   });
 
-  it('la región de Baja California cubre Tijuana, Mexicali, el paralelo 28 y la costa del Golfo', () => {
-    const { latitude, longitude, latitudeDelta, longitudeDelta } = BAJA_CALIFORNIA_REGION;
-    const dentro = (lat: number, lng: number) =>
-      Math.abs(lat - latitude) <= latitudeDelta / 2 && Math.abs(lng - longitude) <= longitudeDelta / 2;
+  it('el encuadre de Baja California cubre Tijuana, Mexicali, el paralelo 28 y la costa del Golfo', () => {
+    const { ne, sw } = BAJA_CALIFORNIA_BOUNDS;
+    const dentro = (lat: number, lng: number) => lng >= sw[0] && lng <= ne[0] && lat >= sw[1] && lat <= ne[1];
     expect(dentro(32.5149, -117.0382)).toBe(true); // Tijuana
     expect(dentro(32.6245, -115.4523)).toBe(true); // Mexicali
     expect(dentro(28.0, -114.8)).toBe(true); // límite con Baja California Sur
@@ -94,42 +74,56 @@ describe('constantes (CA-11, CA-14)', () => {
   });
 });
 
-describe('regionForPath (spec 007, CA-10)', () => {
+describe('boundsForPath (spec 013, CA-32)', () => {
   const start = { latitude: 31.8, longitude: -116.6 };
 
-  it('centra el recorrido y deja un margen de 25 % por lado', () => {
-    const region = regionForPath(
+  it('esquinas [lng, lat] con el recorrido en el centro y 25 % de margen por lado', () => {
+    const { ne, sw } = boundsForPath(
       [
         [-116.6, 31.8],
         [-116.5, 31.9],
-        [-116.55, 31.85],
       ],
       start
     );
-    expect(region.latitude).toBeCloseTo(31.85);
-    expect(region.longitude).toBeCloseTo(-116.55);
-    expect(region.latitudeDelta).toBeCloseTo(0.15);
-    expect(region.longitudeDelta).toBeCloseTo(0.15);
+    expect(ne[0]).toBeCloseTo(-116.475);
+    expect(ne[1]).toBeCloseTo(31.925);
+    expect(sw[0]).toBeCloseTo(-116.625);
+    expect(sw[1]).toBeCloseTo(31.775);
   });
 
-  it('una ruta recta o muy corta tiene una región mínima', () => {
-    const region = regionForPath(
+  it('una ruta muy corta queda dentro de un encuadre mínimo de 0.005°', () => {
+    const { ne, sw } = boundsForPath(
       [
         [-116.6, 31.8],
         [-116.6, 31.8001],
       ],
       start
     );
-    expect(region.latitudeDelta).toBe(0.005);
-    expect(region.longitudeDelta).toBe(0.005);
+    expect(ne[0] - sw[0]).toBeCloseTo(0.005);
+    expect(ne[1] - sw[1]).toBeCloseTo(0.005);
   });
 
-  it('sin recorrido, la región mínima alrededor del inicio', () => {
-    expect(regionForPath([], start)).toEqual({
-      latitude: 31.8,
-      longitude: -116.6,
-      latitudeDelta: 0.005,
-      longitudeDelta: 0.005,
-    });
+  it('sin recorrido, alrededor del inicio', () => {
+    const { ne, sw } = boundsForPath([], start);
+    expect((ne[0] + sw[0]) / 2).toBeCloseTo(-116.6);
+    expect((ne[1] + sw[1]) / 2).toBeCloseTo(31.8);
+  });
+});
+
+describe('boundsAround (spec 013, CA-31)', () => {
+  it('centra en el punto y su alto cubre el diámetro del radio', () => {
+    const { ne, sw } = boundsAround(ENSENADA, 25);
+    expect((ne[0] + sw[0]) / 2).toBeCloseTo(ENSENADA.longitude);
+    expect((ne[1] + sw[1]) / 2).toBeCloseTo(ENSENADA.latitude);
+    expect((ne[1] - sw[1]) * 111.2).toBeCloseTo(50, 5);
+    expect(ne[0] - sw[0]).toBeGreaterThan(ne[1] - sw[1]);
+  });
+});
+
+describe('BAJA_CALIFORNIA_CENTER (spec 013, T7)', () => {
+  it('es el centro del encuadre de Baja California', () => {
+    const { ne, sw } = BAJA_CALIFORNIA_BOUNDS;
+    expect(BAJA_CALIFORNIA_CENTER[0]).toBeCloseTo((ne[0] + sw[0]) / 2);
+    expect(BAJA_CALIFORNIA_CENTER[1]).toBeCloseTo((ne[1] + sw[1]) / 2);
   });
 });

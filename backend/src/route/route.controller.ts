@@ -48,7 +48,13 @@ export class RouteController {
     return this.routeService.detail(req.user.id, id);
   }
 
-  // 'mine' y 'favorites' van antes de ':id' para que no se lean como un id.
+  // 'popular', 'mine' y 'favorites' van antes de ':id' para que no se lean como un id.
+  // Rutas populares de Inicio (spec 013, CA-13).
+  @Get('popular')
+  popular(@Req() req: RequestConUsuario) {
+    return this.routeService.popular(req.user.id);
+  }
+
   @Get('mine')
   mine(@Req() req: RequestConUsuario) {
     return this.routeService.listMine(req.user.id);

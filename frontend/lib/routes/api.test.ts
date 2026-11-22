@@ -4,6 +4,7 @@ import {
   addFavorite,
   deleteRoute,
   fetchNearbyRoutes,
+  fetchPopularRoutes,
   getRoute,
   listFavorites,
   listMyRoutes,
@@ -11,6 +12,7 @@ import {
   removeFavorite,
   updateRoute,
   type NearbyRoute,
+  type PopularRoute,
   type RouteDetail,
 } from './api';
 import { NEARBY_TIMEOUT_MS, ROUTE_REQUEST_TIMEOUT_MS } from './constants';
@@ -375,5 +377,58 @@ describe('Publicar rutas, detalle y favoritas (spec 007)', () => {
 
     fetchQueResponde(json([detalle]));
     expect((await getRoute('tok', 'r-1')).ok).toBe(false);
+  });
+});
+
+describe('Inicio (spec 013)', () => {
+  it('fetchNearbyRoutes agrega limit solo cuando se pide (CA-9)', async () => {
+    const fetchMock = fetchQueResponde(json([ruta]));
+
+    await fetchNearbyRoutes('tok', busqueda, { limit: 5 });
+    await fetchNearbyRoutes('tok', busqueda);
+
+    const conLimite = new URL(fetchMock.mock.calls[0][0], 'http://x').searchParams;
+    const sinLimite = new URL(fetchMock.mock.calls[1][0], 'http://x').searchParams;
+    expect(conLimite.get('limit')).toBe('5');
+    expect(conLimite.get('radiusKm')).toBe('25');
+    expect(sinLimite.has('limit')).toBe(false);
+  });
+
+  const popular: PopularRoute = {
+    id: 'r-1',
+    name: 'La Bufadora',
+    type: 'HIKING',
+    difficulty: 'MODERATE',
+    region: 'Ensenada',
+    distanceMeters: 7300,
+    elevationGainMeters: 410,
+    favoritesCount: 128,
+    isMine: false,
+  };
+
+  it('fetchPopularRoutes pide /routes/popular con el token y devuelve la lista (CA-13)', async () => {
+    const fetchMock = fetchQueResponde(json([popular]));
+
+    expect(await fetchPopularRoutes('tok')).toEqual({ ok: true, data: [popular] });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(new URL(url, 'http://x').pathname).toMatch(/\/routes\/popular$/);
+    expect(init.headers.Authorization).toBe('Bearer tok');
+    expect(init.signal).toBeDefined();
+  });
+
+  it('sin rutas con favoritas, una lista vacía es éxito (CA-15)', async () => {
+    fetchQueResponde(json([]));
+    expect(await fetchPopularRoutes('tok')).toEqual({ ok: true, data: [] });
+  });
+
+  it('sin red devuelve el error en lugar de lanzar (CA-22)', async () => {
+    const sinRed = new TypeError('Network request failed');
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(sinRed));
+    expect(await fetchPopularRoutes('tok')).toEqual({ ok: false, failure: { error: sinRed } });
+  });
+
+  it('un cuerpo que no es lista es un fallo', async () => {
+    fetchQueResponde(json({ no: 'lista' }));
+    expect((await fetchPopularRoutes('tok')).ok).toBe(false);
   });
 });

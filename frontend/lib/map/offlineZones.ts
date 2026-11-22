@@ -290,7 +290,7 @@ export function describirZona(z: ZoneItem): { title: string; detail: string } {
 }
 
 export const ZONES_LIST_MESSAGES = {
-  intro: 'Descarga el mapa de la zona a la que vas. Lo verás al grabar aunque no tengas señal.',
+  intro: 'Descarga el mapa de la zona a la que vas. Lo verás al grabar y al consultar rutas aunque no tengas señal.',
   empty: 'Aún no descargas ninguna zona.',
   deleteTitle: '¿Borrar esta zona?',
   // CA-33: el espacio no se libera al momento (plan, R1).

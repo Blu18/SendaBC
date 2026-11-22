@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
-import MapView, { Marker, Polyline, type MapPressEvent, type Region } from "react-native-maps";
+import Mapbox from "@rnmapbox/maps";
 import * as Location from "expo-location";
 import { useNavigation, type ParamListBase } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import Appear from "../../components/ui/Appear";
+import RouteMap, { type RouteMapHandle } from "../../components/map/RouteMap";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import IconButton from "../../components/ui/IconButton";
@@ -17,17 +18,18 @@ import { ACTIVITY_TYPE_LABELS } from "../../lib/format/activity";
 import { formatDistance, formatElevation } from "../../lib/format/metrics";
 import type { Coordinates } from "../../lib/metrics/geo";
 import type { NearbyRoute } from "../../lib/routes/api";
-import { BAJA_CALIFORNIA_REGION, DEFAULT_RADIUS_KM, RADIUS_OPTIONS_KM } from "../../lib/routes/constants";
+import { BAJA_CALIFORNIA_BOUNDS, BAJA_CALIFORNIA_CENTER, DEFAULT_RADIUS_KM, RADIUS_OPTIONS_KM } from "../../lib/routes/constants";
 import {
     DIFFICULTY_LABELS,
     formatDistanceFromUser,
     NEARBY_MESSAGES,
     TYPE_FILTER_OPTIONS,
 } from "../../lib/routes/format";
-import { distanceFromUser, hasMovedEnough, pathToCoordinates, regionAround, regionForPath } from "../../lib/routes/geo";
+import { boundsAround, boundsForPath, distanceFromUser, hasMovedEnough } from "../../lib/routes/geo";
+import { pointFeature, routeLines, routeStarts, touchedRouteId } from "../../lib/routes/mapFeatures";
 import { guardadasFueraDeVista } from "../../lib/routes/offline";
 import { avisoDeGuardado } from "../../lib/routes/status";
-import { fontFamilies, lightColors, type Theme } from "../../lib/theme";
+import { fontFamilies, type Theme } from "../../lib/theme";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 
 // Ubicación del permiso: 'pending' mientras se pide y se obtiene la posición al abrir.
@@ -37,10 +39,9 @@ type LocationState = { kind: 'pending' } | { kind: 'denied' } | { kind: 'granted
 // margen evita que la selección se quite justo después de hacerla (CA-8).
 const OVERLAY_PRESS_GRACE_MS = 300;
 
-const centerOf = (region: Region): Coordinates => ({
-    latitude: region.latitude,
-    longitude: region.longitude,
-});
+// Área de toque de recorridos y marcadores: 48 × 48 dp (spec 009, CA-13).
+const HITBOX = { width: 48, height: 48 };
+const INICIO_MAPA: Coordinates = { latitude: BAJA_CALIFORNIA_CENTER[1], longitude: BAJA_CALIFORNIA_CENTER[0] };
 
 // Una posición reciente basta para centrar el mapa y es casi inmediata; pedir una nueva al GPS
 // tardaba más de 10 s (M4).
@@ -52,10 +53,6 @@ async function currentPosition(): Promise<Coordinates> {
         reciente ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
     return { latitude: coords.latitude, longitude: coords.longitude };
 }
-
-// El mapa no cambia de estilo con el modo (fuera de alcance, plan R6): sus marcas usan siempre
-// los colores del modo claro.
-const MAPA = lightColors;
 
 // Tarjeta de la ruta seleccionada (CA-6, CA-7, CA-19). Sin ubicación no hay "A X km de ti" (CA-14).
 // "Ver detalle" abre el recorrido completo y el perfil (spec 007, CA-10).
@@ -127,7 +124,7 @@ export default function ExploreRoutesPage() {
 // Catálogo de rutas cercanas en un mapa (spec 006).
 function ExploreRoutes() {
     const navigation = useNavigation();
-    const mapRef = useRef<MapView>(null);
+    const mapRef = useRef<RouteMapHandle>(null);
     const lastOverlayPress = useRef(0);
     const { request } = useLocationPermission();
     const { routes, status, savedAt, lastSearch, search, retry } = useNearbyRoutes();
@@ -136,11 +133,13 @@ function ExploreRoutes() {
 
     const [mapReady, setMapReady] = useState(false);
     const [location, setLocation] = useState<LocationState>({ kind: 'pending' });
-    const [mapCenter, setMapCenter] = useState<Coordinates>(centerOf(BAJA_CALIFORNIA_REGION));
+    const [mapCenter, setMapCenter] = useState<Coordinates>(INICIO_MAPA);
     // Cada vez que se abre la pantalla el radio vuelve a 25 km y se muestran todas (CA-11, CA-12).
     const [radiusKm, setRadiusKm] = useState<number>(DEFAULT_RADIUS_KM);
     const [type, setType] = useState<ActivityType | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    // Alto del aviso o de la tarjeta de abajo, para subir el logo de Mapbox por encima (T24, P-D).
+    const [altoAbajo, setAltoAbajo] = useState(0);
 
     const user = location.kind === 'granted' ? location.user : null;
 
@@ -153,7 +152,7 @@ function ExploreRoutes() {
     );
 
     // Al abrir: con permiso, centrar en el usuario y buscar (CA-1); sin permiso, todo Baja
-    // California sin buscar (CA-14). Se espera al mapa para que animateToRegion no se pierda.
+    // California sin buscar (CA-14). Se espera al mapa para que el encuadre no se pierda.
     useEffect(() => {
         if (!mapReady) return;
         let cancelado = false;
@@ -167,7 +166,7 @@ function ExploreRoutes() {
                 const posicion = await currentPosition();
                 if (cancelado) return;
                 setLocation({ kind: 'granted', user: posicion });
-                mapRef.current?.animateToRegion(regionAround(posicion, DEFAULT_RADIUS_KM), 600);
+                mapRef.current?.fitBounds(boundsAround(posicion, DEFAULT_RADIUS_KM));
                 setMapCenter(posicion);
                 buscarEn(posicion, { radiusKm: DEFAULT_RADIUS_KM, type: null });
             } catch (e) {
@@ -188,8 +187,12 @@ function ExploreRoutes() {
     }, [routes, selectedId]);
 
     const selected = useMemo(() => routes.find((r) => r.id === selectedId) ?? null, [routes, selectedId]);
-    // Número de la búsqueda actual: cambia las keys de todo lo dibujado en cada búsqueda nueva.
+    // Número de la búsqueda actual (para mover el mapa una vez por búsqueda guardada).
     const busqueda = lastSearch?.n ?? 0;
+    const lineas = useMemo(() => routeLines(routes), [routes]);
+    const marcadores = useMemo(() => routeStarts(routes), [routes]);
+    const lineaSeleccionada = useMemo(() => routeLines(selected ? [selected] : []), [selected]);
+    const inicioSeleccionado = useMemo(() => routeStarts(selected ? [selected] : []), [selected]);
 
     // Sin conexión, la búsqueda guardada puede ser de otro lugar: si ninguna de sus rutas queda
     // dentro de la búsqueda actual, el mapa se mueve hacia ellas para que se vean (spec 011, CA-53).
@@ -197,29 +200,20 @@ function ExploreRoutes() {
         if (status !== 'saved' || !lastSearch) return;
         if (!guardadasFueraDeVista(routes, lastSearch.center, lastSearch.radiusKm)) return;
         const inicios = routes.map((r): [number, number] => [r.start.longitude, r.start.latitude]);
-        mapRef.current?.animateToRegion(regionForPath(inicios, routes[0].start), 600);
+        mapRef.current?.fitBounds(boundsForPath(inicios, routes[0].start));
         // Una vez por búsqueda.
     }, [status, busqueda]);
 
-    // En Android, un marcador con vista propia y tracksViewChanges={false} se queda con la imagen
-    // tomada antes de dibujar sus hijos, y el punto dentro del área de 48 dp no se veía. Los
-    // marcadores siguen su vista mientras se dibujan y se congelan después, para no redibujarlos
-    // en cada cuadro del mapa.
-    const [dibujandoMarcadores, setDibujandoMarcadores] = useState(true);
-    useEffect(() => {
-        setDibujandoMarcadores(true);
-        const t = setTimeout(() => setDibujandoMarcadores(false), 1000);
-        return () => clearTimeout(t);
-    }, [routes]);
-
-    const seleccionar = (id: string) => {
+    // Tocar un recorrido o un marcador lo selecciona (CA-8).
+    const onRoutePress = (e: { features?: { properties?: unknown }[] }) => {
+        const id = touchedRouteId(e.features);
+        if (!id) return;
         lastOverlayPress.current = Date.now();
         setSelectedId(id);
     };
 
     // Tocar una zona vacía del mapa quita la selección (CA-8).
-    const onMapPress = (e: MapPressEvent) => {
-        if (e.nativeEvent.action === 'marker-press') return;
+    const onMapPress = () => {
         if (Date.now() - lastOverlayPress.current < OVERLAY_PRESS_GRACE_MS) return;
         setSelectedId(null);
     };
@@ -229,7 +223,7 @@ function ExploreRoutes() {
     const cambiarRadio = (km: number) => {
         setRadiusKm(km);
         if (!lastSearch) return;
-        mapRef.current?.animateToRegion(regionAround(mapCenter, km), 400);
+        mapRef.current?.fitBounds(boundsAround(mapCenter, km));
         buscarEn(mapCenter, { radiusKm: km, type });
     };
 
@@ -251,7 +245,7 @@ function ExploreRoutes() {
             console.log('Error actualizando la ubicación:', e);
         }
         if (!posicion) return;
-        mapRef.current?.animateToRegion(regionAround(posicion, radiusKm), 600);
+        mapRef.current?.fitBounds(boundsAround(posicion, radiusKm));
         setMapCenter(posicion);
         buscarEn(posicion, { radiusKm, type });
     };
@@ -305,83 +299,67 @@ function ExploreRoutes() {
                 }
             />
             <View style={styles.container}>
-                <MapView
+                <RouteMap
                     ref={mapRef}
                     style={StyleSheet.absoluteFill}
-                    initialRegion={BAJA_CALIFORNIA_REGION}
-                    showsUserLocation={user !== null}
-                    showsMyLocationButton={false}
-                    toolbarEnabled={false}
-                    // Seleccionar una ruta no mueve la cámara: si no, aparecía "Buscar en esta zona"
-                    // sin que el usuario moviera el mapa (CA-9).
-                    moveOnMarkerPress={false}
-                    onMapReady={() => setMapReady(true)}
-                    onRegionChangeComplete={(region) => setMapCenter(centerOf(region))}
+                    initialBounds={BAJA_CALIFORNIA_BOUNDS}
+                    accessibilityLabel="Mapa de rutas cercanas"
+                    onReady={() => setMapReady(true)}
+                    onCenterChanged={setMapCenter}
                     onPress={onMapPress}
+                    ornamentsBottom={altoAbajo}
                 >
-                    {/* react-native-maps 1.27 en Android guarda cada elemento nuevo con
-                        features.set(index): si se inserta en medio de la lista, el que estaba ahí queda
-                        dibujado pero ya nadie lo borra (M2, M8). Por eso solo se agrega al final:
-                        - los recorridos y puntos de una búsqueda no cambian mientras dura (su key lleva
-                          el número de búsqueda; una búsqueda nueva quita todos y agrega los nuevos);
-                        - la selección es un recorrido y un punto extra, siempre los últimos (CA-8). */}
-                    {routes
-                        .filter((route) => route.path.length >= 2)
-                        .map((route) => (
-                            <Polyline
-                                key={`${busqueda}-${route.id}-path`}
-                                coordinates={pathToCoordinates(route.path)}
-                                strokeColor={MAPA.primary}
-                                strokeWidth={3}
-                                zIndex={1}
-                                tappable
-                                onPress={() => seleccionar(route.id)}
-                            />
-                        ))}
-                    {routes.map((route) => (
-                        <Marker
-                            key={`${busqueda}-${route.id}-start`}
-                            coordinate={route.start}
-                            anchor={{ x: 0.5, y: 0.5 }}
-                            zIndex={3}
-                            // Vista propia y no pinColor: en Android pinColor solo toma el tono y el
-                            // verde de la paleta salía claro.
-                            tracksViewChanges={dibujandoMarcadores}
-                            onPress={() => seleccionar(route.id)}
-                        >
-                            <View style={styles.markerHit}>
-                                <View style={styles.startDot} />
-                            </View>
-                        </Marker>
-                    ))}
-                    {selected && selected.path.length >= 2 && (
-                        <Polyline
-                            key={`${busqueda}-${selected.id}-path-sel`}
-                            coordinates={pathToCoordinates(selected.path)}
-                            strokeColor={MAPA.data}
-                            strokeWidth={6}
-                            zIndex={2}
-                            tappable
-                            onPress={() => seleccionar(selected.id)}
+                    {/* El orden de las capas es el de dibujo: recorridos, la selección encima, los
+                        inicios y al final mi posición. Seleccionar no mueve la cámara (CA-9). */}
+                    <Mapbox.ShapeSource id="rutas" shape={lineas} hitbox={HITBOX} onPress={onRoutePress}>
+                        <Mapbox.LineLayer
+                            id="rutas-linea"
+                            style={{ lineColor: theme.colors.primary, lineWidth: 3, lineCap: "round", lineJoin: "round" }}
                         />
+                    </Mapbox.ShapeSource>
+                    <Mapbox.ShapeSource id="seleccion" shape={lineaSeleccionada}>
+                        <Mapbox.LineLayer
+                            id="seleccion-linea"
+                            style={{ lineColor: theme.colors.data, lineWidth: 6, lineCap: "round", lineJoin: "round" }}
+                        />
+                    </Mapbox.ShapeSource>
+                    <Mapbox.ShapeSource id="inicios" shape={marcadores} hitbox={HITBOX} onPress={onRoutePress}>
+                        <Mapbox.CircleLayer
+                            id="inicios-punto"
+                            style={{
+                                circleRadius: 9,
+                                circleColor: theme.colors.primary,
+                                circleStrokeWidth: 3,
+                                circleStrokeColor: theme.colors.surface,
+                            }}
+                        />
+                    </Mapbox.ShapeSource>
+                    <Mapbox.ShapeSource id="seleccion-inicio" shape={inicioSeleccionado}>
+                        <Mapbox.CircleLayer
+                            id="seleccion-anillo"
+                            style={{
+                                circleRadius: 16,
+                                circleOpacity: 0,
+                                circleStrokeWidth: 5,
+                                circleStrokeColor: theme.colors.data,
+                            }}
+                        />
+                    </Mapbox.ShapeSource>
+                    {/* Mi posición, con la ubicación que ya obtuvo la pantalla (plan D4). */}
+                    {user && (
+                        <Mapbox.ShapeSource id="yo" shape={pointFeature("yo", user)}>
+                            <Mapbox.CircleLayer
+                                id="yo-punto"
+                                style={{
+                                    circleRadius: 8,
+                                    circleColor: theme.colors.data,
+                                    circleStrokeWidth: 3,
+                                    circleStrokeColor: theme.colors.surface,
+                                }}
+                            />
+                        </Mapbox.ShapeSource>
                     )}
-                    {selected && (
-                        <Marker
-                            key={`${busqueda}-${selected.id}-start-sel`}
-                            coordinate={selected.start}
-                            anchor={{ x: 0.5, y: 0.5 }}
-                            zIndex={4}
-                            // Es uno solo: puede seguir los cambios de su vista sin costo apreciable, y
-                            // así Android no se queda con una imagen tomada antes de dibujarla.
-                            tracksViewChanges
-                            onPress={() => seleccionar(selected.id)}
-                        >
-                            <View style={styles.markerHit}>
-                                <View style={styles.startRing} />
-                            </View>
-                        </Marker>
-                    )}
-                </MapView>
+                </RouteMap>
 
                 {/* Filtros arriba: tipo (CA-12) y radio (CA-11) */}
                 <View style={styles.top} pointerEvents="box-none">
@@ -437,7 +415,15 @@ function ExploreRoutes() {
                 )}
 
                 {/* Abajo: el aviso o la tarjeta de la ruta seleccionada */}
-                <View style={styles.bottom} pointerEvents="box-none">
+                <View
+                    style={styles.bottom}
+                    pointerEvents="box-none"
+                    // Sin aviso ni tarjeta solo queda el relleno: el logo se queda abajo.
+                    onLayout={(e) => {
+                        const alto = e.nativeEvent.layout.height;
+                        setAltoAbajo(alto > 2 * theme.spacing.lg + 1 ? alto - theme.spacing.lg : 0);
+                    }}
+                >
                     <Appear style={styles.avisoGroup}>
                         {aviso && (
                             <>
@@ -535,33 +521,6 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         bottom: 0,
         padding: t.spacing.lg,
         gap: t.spacing.sm,
-    },
-    // Área de toque de los marcadores: el punto mide 18 dp, pero el marcador entero (esta vista
-    // transparente) se puede tocar, y debe medir 48 × 48 (spec 009, CA-13).
-    markerHit: {
-        width: t.touchMin,
-        height: t.touchMin,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    // Marcador del inicio de cada ruta (CA-2): punto con el color de la paleta.
-    startDot: {
-        width: 18,
-        height: 18,
-        borderRadius: 9,
-        borderWidth: 3,
-        borderColor: MAPA.surface,
-        backgroundColor: MAPA.primary,
-    },
-    // Anillo alrededor del punto de la ruta seleccionada: se ve igual quede encima o debajo del
-    // punto normal (en Android el zIndex entre marcadores no siempre se respeta).
-    startRing: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        borderWidth: 5,
-        borderColor: MAPA.data,
-        backgroundColor: 'transparent',
     },
     card: {
         padding: t.spacing.lg,
