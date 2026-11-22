@@ -114,6 +114,18 @@ describe('activityProfile', () => {
     expect(activityProfile({ points, barometerReadings: [], source: 'GPS' })).toBeNull();
   });
 
+  it('la altitud GPS de exactamente 0 cuenta como desconocida (RN-6)', () => {
+    // Una actividad recuperada sin barómetro y con todos sus puntos en 0: no hay perfil (CA-7).
+    const ceros = walk(() => 0);
+    expect(activityProfile({ points: ceros, barometerReadings: [], source: 'BAROMETER' })).toBeNull();
+    expect(activityProfile({ points: ceros, barometerReadings: [], source: 'GPS' })).toBeNull();
+    // Unos cuantos ceros sueltos no bajan la cumbre ni el resto del perfil.
+    const algunos = walk((east, i) => (i % 10 === 3 ? 0 : trueAltitude(east)));
+    const profile = activityProfile({ points: algunos, barometerReadings: [], source: 'GPS' })!;
+    expect(profile.cumbre.altitudM).toBeGreaterThan(598);
+    expect(Math.min(...profile.perfil.map(([, a]) => a))).toBeGreaterThan(450);
+  });
+
   it('con menos de 200 m devuelve null (RN-6, CA-7)', () => {
     const points = path([[0, 0], [150, 0]], 5).map((p) => ({ ...p, altitude: 500 }));
     expect(activityProfile({ points, barometerReadings: [], source: 'GPS' })).toBeNull();

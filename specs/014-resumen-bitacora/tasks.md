@@ -228,40 +228,45 @@ Mientras tanto pueden avanzar la lógica pura, los hooks y los componentes (T3 a
   - **Corrección:** la primera corrida dejó distancias muy parecidas, porque las semillas consecutivas daban el mismo primer valor. Se mezcló la semilla y se volvió a correr, lo que reemplazó las actividades.
   - El script compila con `tsc` en modo estricto, sin errores.
 - [ ] T14 — Development build en el S9+ (y el emulador para lo que lo necesite). Correr M1 a M12 y anotar los resultados abajo.
+
+  Preparación (2026-11-21):
+  - La 014 no agrega dependencias nativas, así que basta el APK de desarrollo de la 013 (con `react-native-svg` y `@rnmapbox/maps`) y Metro con el código nuevo.
+  - El backend local corre en el puerto 3000. Metro corre desde `C:\dev\SendaBC\frontend` en el **8082**, con `EXPO_PUBLIC_BACKEND_IP=http://localhost:3000`, porque el 8081 lo ocupa un Metro viejo de `C:\dev\sbc13`. El bundle de Android compila (1706 módulos).
+  - En el teléfono: `adb reverse tcp:8082 tcp:8082` y `tcp:3000 tcp:3000`, y abrir `exp+frontend://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8082`.
 - [ ] T15 — Si D1 o D4 no alcanzan sus límites en el S9+, actualizar el plan antes de cambiar el código. Cerrar la spec, actualizar su estado y `specs/roadmap.md`.
 
 ## Verificación
 
 | CA | Cómo se verifica | Tipo | Estado |
 |---|---|---|---|
-| CA-1 | M1, M2 | Manual | Pendiente |
-| CA-2 | `context.test.ts` (cumplido 2026-11-21); M1 | Automatizada + manual | Pendiente |
-| CA-3 | `context.test.ts` (cumplido 2026-11-21); M2 | Automatizada + manual | Pendiente |
-| CA-4 | `profile.test.ts` › GPS y barómetro; M1 | Automatizada + manual | Pendiente |
-| CA-5 | `profile.test.ts` › cumbre; M1 | Automatizada + manual | Pendiente |
+| CA-1 | M1, M2 | Manual | M1 y M2 aprobados (S9+, 2026-11-21) |
+| CA-2 | `context.test.ts` (cumplido 2026-11-21); M1 | Automatizada + manual | M1 aprobado (S9+, 2026-11-21) |
+| CA-3 | `context.test.ts` (cumplido 2026-11-21); M2 | Automatizada + manual | M2 aprobado (S9+, 2026-11-21) |
+| CA-4 | `profile.test.ts` › GPS y barómetro; M1 | Automatizada + manual | M1 aprobado (S9+, 2026-11-21) |
+| CA-5 | `profile.test.ts` › cumbre; M1 | Automatizada + manual | M1 aprobado (S9+, 2026-11-21) |
 | CA-6 | `profile.test.ts` › cumbre conocida y pico aislado | Automatizada | Cumplido (2026-11-21) |
 | CA-7 | `profile.test.ts` › mínimo; M3 | Automatizada + manual | Pendiente |
-| CA-8 | M1, M2 | Manual | Pendiente |
-| CA-9 | M1, M2 | Manual | Pendiente |
-| CA-10 | M1, M6 | Manual | Pendiente |
-| CA-11 | M3 | Manual | Pendiente |
-| CA-12 | M4 | Manual | Pendiente |
-| CA-13 | `months.test.ts` › orden; M5 | Automatizada + manual | Pendiente |
-| CA-14 | `months.test.ts` › títulos y totales; M5 | Automatizada + manual | Pendiente |
+| CA-8 | M1, M2 | Manual | M1 y M2 aprobados (S9+, 2026-11-21) |
+| CA-9 | M1, M2 | Manual | M1 y M2 aprobados (S9+, 2026-11-21) |
+| CA-10 | M1, M6 | Manual | M1 y M6 aprobados (S9+) |
+| CA-11 | M3 | Manual | M3: corregido el caso de distancia 0; falta repetirlo |
+| CA-12 | M4 | Manual | M4: se cumple (ver resultados) |
+| CA-13 | `months.test.ts` › orden; M5 | Automatizada + manual | M5 aprobado (S9+, 2026-11-21) |
+| CA-14 | `months.test.ts` › títulos y totales; M5 | Automatizada + manual | M5 aprobado (S9+, 2026-11-21) |
 | CA-15 | `months.test.ts` › hora local y totales | Automatizada | Cumplido (2026-11-21) |
-| CA-16 | M5, M3 | Manual | Pendiente |
-| CA-17 | M5 | Manual | Pendiente |
-| CA-18 | M5 | Manual | Pendiente |
-| CA-19 | M6 | Manual | Pendiente |
-| CA-20 | M7 | Manual | Pendiente |
+| CA-16 | M5, M3 | Manual | M5 aprobado y M3 corregido (S9+, 2026-11-21) |
+| CA-17 | M5 | Manual | Pendiente: sin actividades pendientes o rechazadas en la cuenta |
+| CA-18 | M5 | Manual | M5 aprobado (S9+, 2026-11-21) |
+| CA-19 | M6 | Manual | M6 aprobado (S9+, 2026-11-21) |
+| CA-20 | M7 | Manual | M7 aprobado con build de entrega (S9+, 2026-11-22): lista en menos de 1 s |
 | CA-21 | T2: aprobación anotada en el historial de la spec | Manual | Cumplido (2026-11-21) |
 | CA-22 | M1, M5, M8 (comparación con Figma en los dos modos); `contrast.test.ts` | Automatizada + manual | Pendiente |
 | CA-23 | M8; `contrast.test.ts` | Automatizada + manual | Pendiente |
-| CA-24 | M9 | Manual | Pendiente |
-| CA-25 | `shadows.test.ts`; M10 | Automatizada + manual | Pendiente |
-| CA-26 | M11 | Manual | Pendiente |
+| CA-24 | M9 | Manual | M9 aprobado (S9+, 2026-11-21) |
+| CA-25 | `shadows.test.ts`; M10 | Automatizada + manual | M10 aprobado (S9+, 2026-11-21) |
+| CA-26 | M11 | Manual | M11 aprobado (S9+, 2026-11-21) |
 | CA-27 | T17: aprobación anotada en el historial de la spec | Manual | Cumplido (2026-11-21) |
-| CA-28 | `contrast.test.ts`; M10 | Automatizada + manual | Pendiente |
+| CA-28 | `contrast.test.ts`; M10 | Automatizada + manual | M10 aprobado (S9+, 2026-11-21) |
 | CA-29 | M12 | Manual | Pendiente |
 
 Todos los CA de la spec están cubiertos por al menos una tarea y una forma de verificarse.
@@ -368,6 +373,39 @@ Mínimo 3 en la semana (constitución 8.3):
 7. `feat(014): sombras por modo y piezas compartidas` — T6 (si no entró en el 2) y T18.
 8. `feat(014): estilo con sombras en componentes y pantallas` — T19 a T23. Si sale muy grande, se parte por sección: Inicio, Rutas, Cuenta y Seguridad.
 9. `test(014)` o `fix(014)` según los resultados de M1 a M12 (T14), y `docs(014): cierre de la spec` (T15).
+
+## Resultado de los casos manuales
+
+Primera corrida en el S9+ (Android 10), 2026-11-21, con el APK de desarrollo de la 013, el backend local y Metro en el 8082 desde `C:\dev\SendaBC\frontend`. Corrió el usuario, salvo donde se indica.
+
+- **M1, M2, M9, M10 y M11:** aprobados por el usuario.
+- **M3:** se cumplía para una actividad sin puntos. Con puntos pero con distancia 0 (sin moverse), el resumen y la fila mostraban la miniatura de un recorrido que no existe. Se corrigió primero la spec (CA-11 y CA-16, con nota en su historial) y después el código: sin distancia no hay miniatura en el resumen, y la fila muestra el ícono sin leer los puntos. Falta repetir el caso.
+- **M4:** después de publicar, la app regresa al resumen. Es lo que ya hacía la spec 007: el aviso de "publicada" y "Aceptar" vuelven a la pantalla anterior. La 014 no lo cambió. Al volver, el resumen debe ofrecer "Ver ruta publicada" (spec 007, CA-8).
+- **M5:** aprobado por Claude por adb, en la cuenta del usuario (44 actividades en noviembre y octubre de 2026). Resultados:
+  - Los meses van del más reciente al más antiguo, y dentro de cada mes de la más nueva a la más vieja.
+  - Los totales del encabezado coinciden con la base del teléfono: noviembre, "22 actividades, 18.81 km"; octubre, "22 actividades, 7.10 km".
+  - Las filas de 0 m muestran el ícono (corrección de M3) y las demás, su miniatura.
+  - Los nombres accesibles son los esperados (por ejemplo, "Octubre: 22 actividades, 7.10 km").
+  - Tocar una fila abre su resumen sin "Listo", con las cifras de elevación en lugar del perfil y el motivo para no publicar. Atrás regresa a la lista.
+  - Deslizar hacia abajo muestra el indicador de sincronización.
+
+  No se vieron las insignias de pendiente ni de "no se pudo subir", porque la cuenta no tiene actividades en esos estados. Tampoco la lista vacía, porque el código de ese estado no cambió.
+- **M6:** aprobado por Claude por adb, con el S9+ en modo avión (lo activó el usuario). Resultados:
+  - Mis actividades se ve completa y agrupada por mes. Al deslizar aparece el aviso "Sin conexión. Se sincronizará cuando vuelva la señal."
+  - El resumen de la caminata de 5.70 km muestra la línea "Tu caminata más larga de octubre", el perfil, el ritmo, la duración y la miniatura del recorrido sobre fondo liso, porque no tiene el mapa en caché.
+
+  **Hallazgo:** esa caminata se recuperó del servidor sin lecturas del barómetro, y sus 510 puntos tienen altitud exactamente 0. En Android, una ubicación sin altitud llega como 0. El resumen dibuja un perfil plano con "0 m aprox." y la cumbre pegada al inicio, en lugar de las cifras de CA-7. El usuario aprobó la propuesta (2026-11-22). Primero se anotó en la spec (RN-6, con nota en su historial) y después se cambió `activityProfile`: la altitud GPS de exactamente 0 se descarta, también para el ancla del barómetro. Esa caminata ya no alcanza las 10 altitudes y muestra las cifras de CA-7. Hay una prueba nueva en `profile.test.ts` (todo en 0 da `null`, y unos cuantos ceros sueltos no bajan la cumbre). El frontend pasa 876 pruebas y `tsc` no marca errores. Falta repetir el caso en el S9+.
+- **M7:** corrido por Claude por adb (2026-11-22) en el S9+, con la cuenta `prueba-bitacora@senda.bc`. El build es de **desarrollo**: JS sin minificar, servido por Metro.
+  - **Recuperación (RN-10):** las 200 actividades y 89 426 puntos llegaron en unos 75 s. Las recuperadas tienen perfil, cumbre, línea de contexto y miniatura. Ejemplo: la salida en bici de 54.55 km del 16 de diciembre de 2025 muestra "Tu salida en bici más larga de diciembre", cumbre de 1176 m, subida 349 m y bajada 358 m. Los encabezados de meses de otro año llevan el año ("Noviembre 2025").
+  - **Apertura de Mis actividades, con la app recién abierta (CA-20, < 1 s):** la lista con sus encabezados aparece **entre 1.1 y 1.6 s** después de tocar la pestaña, contando su transición. En el cuadro de 1.1 s todavía se ve el indicador de carga. Las miniaturas aparecen entre 2.6 y 4 s; mientras, las filas muestran el ícono. **No se cumple en el build de desarrollo.**
+  - **Desplazamiento rápido:** no hay huecos en blanco ni filas sin datos. `gfxinfo` marca 30 % de cuadros lentos (percentil 50: 11 ms, 90: 21 ms, 99: 93 ms). Las miniaturas tardan en llegar a las filas nuevas.
+  - **Resumen de la más larga (D1, perfil < 300 ms):** a 1.24 s del toque ya estaba completo, con el perfil; a 0.7 s seguía la transición. El cálculo del perfil no se nota por separado.
+  - **Repetido con build de entrega (2026-11-22), por decisión del usuario.** APK `assembleRelease` para arm64, compilado desde `C:\dev\SendaBC\frontend` con `expo prebuild` (la carpeta `android/` está ignorada por git) y `EXPO_PUBLIC_BACKEND_IP=http://localhost:3000`. Tiene firma de depuración, así que se instaló encima del build de desarrollo conservando los datos; Play Protect pidió confirmar y respondió el usuario. Resultados:
+    - **Apertura de Mis actividades con la app recién abierta, dos corridas:** en el cuadro de 0.5 s sigue la transición con el indicador de carga. En el de 1.0 s ya están la lista, el encabezado "Noviembre: 10 actividades, 179.17 km" y, en la primera corrida, las miniaturas. **CA-20 se cumple** (la lista aparece antes de 1 s).
+    - **Desplazamiento rápido hasta el final (septiembre de 2025):** 15 % de cuadros lentos (percentil 50: 8 ms, 90: 21 ms, 99: 77 ms), contra 30 % en desarrollo. Las miniaturas llegan al pasar, sin huecos en blanco.
+    - **Arranque en frío de la app** (`am start -W`): de 0.29 a 0.33 s.
+    - El S9+ queda con el build de entrega instalado. Para volver a probar con Metro hay que instalar otra vez un APK de desarrollo.
+- **M8 y M12:** pendientes.
 
 ## Pendientes conocidos
 

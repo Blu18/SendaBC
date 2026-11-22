@@ -23,6 +23,10 @@ type TimedDistance = { time: number; distance: number };
 
 const accurate = (p: { accuracy: number | null }) => p.accuracy === null || p.accuracy <= MAX_ACCURACY_M;
 
+// Android entrega 0 cuando la ubicación no trae altitud: una altitud GPS de exactamente 0 cuenta
+// como desconocida (spec 014, RN-6). Una caminata real junto al mar no da 0.0 en todos sus puntos.
+const knownAltitude = (altitude: number | null): altitude is number => altitude !== null && altitude !== 0;
+
 function median(values: number[]) {
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
@@ -64,7 +68,8 @@ function smooth(samples: Sample[]): Sample[] {
  *
  * - El eje X es la distancia acumulada de `createDistanceAccumulator`, así que coincide con la
  *   distancia del resumen (sin puntos imprecisos ni saltos).
- * - Con GPS, la altitud es la de los puntos precisos que la tienen.
+ * - Con GPS, la altitud es la de los puntos precisos que la tienen. Una altitud de exactamente 0
+ *   cuenta como desconocida (RN-6).
  * - Con barómetro, cada lectura se ubica en el eje X por su hora y se ancla a la altitud real:
  *   se desplaza para que su mediana coincida con la de la altitud GPS de los puntos precisos
  *   (plan, D2). Sin altitudes GPS suficientes, queda la altitud de la atmósfera estándar.
@@ -85,7 +90,7 @@ export function activityProfile(input: {
     if (!accurate(p)) continue;
     distance.add(p);
     track.push({ time: Date.parse(p.recordedAt), distance: distance.value });
-    if (p.altitude !== null) gps.push({ distance: distance.value, altitude: p.altitude });
+    if (knownAltitude(p.altitude)) gps.push({ distance: distance.value, altitude: p.altitude });
   }
   if (track.length === 0 || distance.value < MIN_PROFILE_DISTANCE_M) return null;
 

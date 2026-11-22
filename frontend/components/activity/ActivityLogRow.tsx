@@ -29,14 +29,16 @@ type Props = {
 /**
  * Fila de la bitácora de Mis actividades (spec 014, CA-16, CA-17, CA-23). No lleva fondo propio:
  * va dentro de la lista agrupada de su mes.
- * - A la izquierda, la miniatura del recorrido; sin puntos válidos (o mientras se lee), el ícono
- *   del deporte.
+ * - A la izquierda, la miniatura del recorrido; sin puntos válidos o con distancia 0 (o mientras
+ *   se lee), el ícono del deporte.
  * - La insignia de sincronización solo aparece si la actividad no está sincronizada.
  * - Tipo, fecha, distancia y duración con los formatos de la spec 004 (CA-20).
  */
 export default function ActivityLogRow({ activity, onPress }: Props) {
     const styles = useThemedStyles(makeStyles);
-    const path = useTrackPath(activity.localId);
+    // Sin distancia no hay recorrido que mostrar, aunque haya puntos: ícono del deporte (CA-16).
+    const moved = (activity.distanceMeters ?? 0) > 0;
+    const path = useTrackPath(activity.localId, moved);
     const status = syncStatusOf(activity);
     const type = ACTIVITY_TYPE_LABELS[activity.type];
     const date = formatStartedAt(activity.startedAt);

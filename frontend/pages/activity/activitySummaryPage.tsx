@@ -195,7 +195,8 @@ export default function ActivitySummaryPage({ route }: Props) {
                     <Text style={styles.note}>{note}</Text>
                 </View>
 
-                {details && details.path.length > 0 ? (
+                {/* Sin puntos válidos o con distancia 0 no hay recorrido que mostrar (CA-11). */}
+                {details && details.path.length > 0 && (activity.distanceMeters ?? 0) > 0 ? (
                     <View style={styles.route} onLayout={onThumbLayout}>
                         <Text style={styles.routeTitle} accessibilityRole="header">Recorrido</Text>
                         {thumbWidth > 0 && (

@@ -21,14 +21,19 @@ export function clearTrackPathCache() {
 
 /**
  * Recorrido de la miniatura de una actividad, leído de SQLite solo cuando su fila se muestra
- * (plan, D4). null mientras carga o si la actividad no tiene puntos: la fila muestra el ícono
- * del deporte (CA-16).
+ * (plan, D4). null mientras carga, si la actividad no tiene puntos o si `enabled` es false (sin
+ * distancia): la fila muestra el ícono del deporte (CA-16).
  */
-export function useTrackPath(localId: number): LngLat[] | null {
-  const cached = cache.get(localId);
+export function useTrackPath(localId: number, enabled = true): LngLat[] | null {
+  const cached = enabled ? cache.get(localId) : undefined;
   const [path, setPath] = useState<LngLat[] | null>(cached && cached.length > 0 ? cached : null);
 
   useEffect(() => {
+    // Sin distancia no se lee nada: la fila muestra el ícono (spec 014, CA-16).
+    if (!enabled) {
+      setPath(null);
+      return;
+    }
     const known = cache.get(localId);
     if (known) {
       remember(localId, known);
@@ -46,7 +51,7 @@ export function useTrackPath(localId: number): LngLat[] | null {
     return () => {
       vigente = false;
     };
-  }, [localId]);
+  }, [localId, enabled]);
 
   return path;
 }
