@@ -6,14 +6,14 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
 **T2 detiene el trabajo:** nada visual (T8 a T16) se programa antes de que el usuario apruebe el diseño en Figma (CA-22). Mientras tanto pueden avanzar la lógica pura, la base local y el estado (T3 a T7).
 
-## Antes de empezar (lo hace el usuario)
+## Antes de empezar
 
-- Fusionar `014-resumen-bitacora` en `master`, actualizar el `master` local y crear la rama `015-filtros-y-ajustes`.
+- Hecho (2026-11-22): la rama `015-filtros-y-ajustes` sale del final de `014-resumen-bitacora`, que todavía no está fusionada en `master`. Al fusionar la 014, esta rama solo agrega lo de la 015.
 - Tener la sesión de Figma conectada al MCP.
 
 ## Fase A — Figma
 
-- [ ] T1 — En "SendaBC — Diseño", página Pantallas, crear la sección "Filtros y ajustes (spec 015)", en claro y oscuro (plan, Fase A):
+- [x] T1 — En "SendaBC — Diseño", página Pantallas, crear la sección "Filtros y ajustes (spec 015)", en claro y oscuro (plan, Fase A):
   - **Mis actividades:**
     - sin filtros y con el botón fijo;
     - con filtros activos (chips y "Quitar filtros");
@@ -25,7 +25,37 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
   - **Inicio:** con la tarjeta de "Últimos 7 días".
 
   Agregar al Sistema de diseño "Control deslizante de rango" y "Panel de filtros". Usar los textos y formatos de la app. Revisar el contraste de los pares de color nuevos en la tabla de Figma. (CA-22)
-- [ ] T2 — Compartir el enlace y las capturas, y anotar en el historial de la spec la aprobación del usuario o los cambios que pida. **Detiene T8 a T16.** (CA-22)
+
+  Hecho (2026-11-22): sección [Filtros y ajustes (spec 015)](https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX?node-id=99-6901) de la página Pantallas. Son 11 marcos por modo (22 en total):
+  - **Mis actividades:** sin filtros, con filtros, panel de filtros, sin resultados, vacía, y el panel con letra grande.
+  - **Explorar rutas:** en 3D y en 2D.
+  - **Detalle de ruta:** en 3D y en 2D.
+  - **Inicio:** con la tarjeta de la semana.
+
+  En el Sistema de diseño, la sección "Filtros y ajustes (spec 015)" tiene cinco componentes:
+  - `Icono/filter-variant`;
+  - `Control deslizante de rango`, con las variantes "Con rango" y "Sin filtro";
+  - `Chip de filtro activo`;
+  - `Filtro de rango`;
+  - `Panel de filtros`.
+
+  Decisiones de diseño, pendientes de aprobación:
+  - **Botón "Filtros":** en el encabezado de Mis actividades, con un contador de filtros activos. No aparece en la lista vacía.
+  - **Fila de filtros activos:** debajo del encabezado. Cada chip lleva una "×" para quitar ese filtro, y la fila termina en "Quitar filtros" (botón de texto).
+  - **Panel:** tipo de actividad (chips que bajan de renglón), mes (chips que se deslizan de lado), distancia y altura más alta. Abajo, "Quitar filtros" y "Ver N actividades" lado a lado; con letra grande van uno debajo del otro, primero "Ver N actividades".
+  - **Filtro sin elegir:** un control deslizante en sus límites dice "Cualquiera" (RN-8).
+  - **Sin resultados:** aviso "Ninguna actividad coincide" / "Prueba con otros filtros o quítalos para ver todas tus actividades." y el botón "Quitar filtros".
+  - **Lista vacía:** "Toca "Empezar actividad" para grabar la primera.", como en Inicio (D8).
+  - **Botón de vista:** dice la vista a la que se cambia, como en la grabación. En Explorar va arriba del botón de centrar; en el detalle, en la esquina del mapa.
+  - **Chips de Explorar:** cada uno con su sombra media, sin recorte (en el Figma anterior, las filas también recortaban).
+
+  Notas:
+  - El 3D usa la ilustración del relieve de "Mapa de grabación", sin la posición ni el rumbo. El 2D en oscuro sigue con el mapa claro, porque "Mapa (referencia)" no tiene variante oscura, como en Rutas.
+  - No hay pares de color nuevos: los chips y el contador usan `onPrimary / primary`, el valor del rango `primary / surface`, el riel `border / surface` y la tarjeta de la semana los de texto sobre `surface`. Todos están ya en `CONTRAST_PAIRS` y en la tabla de Figma.
+  - Para la letra grande, los componentes del marco se desligaron y el texto se agrandó al 130 %. Es una ilustración: el resto de la app no cambia.
+- [x] T2 — Compartir el enlace y las capturas, y anotar en el historial de la spec la aprobación del usuario o los cambios que pida. **Detiene T8 a T16.** (CA-22)
+
+  Hecho (2026-11-22): el usuario aprobó el diseño de T1 sin cambios. Ya se pueden programar T8 a T16.
 
 ## Fase B — Lógica pura y base local
 
@@ -126,7 +156,7 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 | CA-19 | M10 | Manual (emulador) | Pendiente |
 | CA-20 | M10 | Manual (emulador) | Pendiente |
 | CA-21 | M11; `contrast.test.ts` | Automatizada + manual | Pendiente |
-| CA-22 | T2: aprobación anotada en el historial de la spec | Manual | Pendiente |
+| CA-22 | T2: aprobación anotada en el historial de la spec | Manual | Cumplido (2026-11-22) |
 | CA-23 | M12; `contrast.test.ts` | Automatizada + manual | Pendiente |
 
 Los 23 CA de la spec están cubiertos por al menos una tarea y una forma de verificarse. Los requisitos no funcionales se verifican en M8 (accesibilidad), M4 (offline) y M7 y M13 (3D y tiempos).

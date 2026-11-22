@@ -1,6 +1,6 @@
 # 015 — Filtros de actividades, mapa 3D en rutas y ajustes de diseño
 
-- **Estado:** Aprobada
+- **Estado:** En progreso
 - **Semana:** 10
 - **Autor(es):**
 - **Fecha:** 2026-11-22
@@ -112,3 +112,5 @@ Como en las specs 009, 013 y 014, todo cambio visual se diseña primero en Figma
 - 2026-11-22 — Al escribir el plan: CA-20 decía "pasa exactamente lo mismo que con el de Inicio", pero "Listo" regresa a la pantalla anterior. El usuario eligió que, desde Mis actividades, "Listo" regrese a Mis actividades. Se actualizó también la spec 004 (CA-2).
 - 2026-11-22 — Plan aprobado por el usuario, con los casos manuales en el emulador salvo lo que solo mide un teléfono real.
 - 2026-11-22 — Tareas T1 a T19 y casos M1 a M13 en tasks.md.
+- 2026-11-22 — En progreso: T1 (diseño en Figma) hecha; falta la aprobación del usuario (T2).
+- 2026-11-22 — El usuario aprueba el diseño de Figma (CA-22), sin cambios: sección https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX?node-id=99-6901 de la página Pantallas y los componentes de la sección "Filtros y ajustes (spec 015)" del Sistema de diseño. Ya se puede programar la interfaz.

@@ -20,7 +20,7 @@ Cada objetivo semanal del plan de desarrollo se convierte en una o más specs. L
 | 9 | Pulido, prueba de campo, pruebas unitarias, bugs | [011-estabilidad](011-estabilidad/spec.md) | Implementada con pendientes (CA-2 y CA-5 por F5, pasado a la 012; CA-58 en parte) |
 | 10 | Rediseño de la pantalla de inicio y mapa de rutas con Mapbox | [013-inicio-rediseno](013-inicio-rediseno/spec.md) | Implementada |
 | 10 | Rediseño del resumen y Mis actividades, y estilo con sombras en toda la app | [014-resumen-bitacora](014-resumen-bitacora/spec.md) | Implementada con pendientes (M8, M12 y parte de M5, pasados a la 012) |
-| 10 | Filtros de Mis actividades, mapa 2D y 3D en Explorar y ajustes de diseño | [015-filtros-y-ajustes](015-filtros-y-ajustes/spec.md) | Aprobada |
+| 10 | Filtros de Mis actividades, mapa 2D y 3D en Explorar y ajustes de diseño | [015-filtros-y-ajustes](015-filtros-y-ajustes/spec.md) | En progreso |
 | 10 | Cierre: README, manual, EAS Build, despliegue, demo | 012-entrega | Por escribir |
 
 ## Notas
