@@ -27,7 +27,7 @@ Estas métricas corresponden a los campos de actividad del modelo de datos del s
 ### Resumen
 
 - **CA-1 (HU-1):** Dada una actividad en curso, cuando presiono "Detener actividad", entonces veo una pantalla de resumen con el tipo de actividad, la fecha y hora de inicio, la duración, la distancia, la elevación ganada, la elevación perdida y el ritmo o la velocidad promedio.
-- **CA-2 (HU-1):** Dado el resumen que aparece al detener, cuando presiono "Listo", entonces regreso a la pantalla principal y el botón atrás no me devuelve al resumen ni a la actividad terminada.
+- **CA-2 (HU-1):** Dado el resumen que aparece al detener, cuando presiono "Listo", entonces regreso a la pantalla desde la que empecé la actividad (la pestaña Inicio, o Mis actividades desde la spec 015) y el botón atrás no me devuelve al resumen ni a la actividad terminada.
 - **CA-3 (HU-3):** Con el teléfono en modo avión, el resumen se muestra completo igual que con conexión.
 
 ### Duración, ritmo y velocidad
@@ -114,6 +114,7 @@ Resueltas el 2026-10-05:
 
 ## Historial
 
+- 2026-11-22 — CA-2: "Listo" regresa a la pantalla desde la que se empezó la actividad. La spec 015 agrega "Empezar actividad" en Mis actividades; desde ahí, "Listo" vuelve a Mis actividades. Desde Inicio no cambia nada. Aprobado por el usuario.
 - 2026-11-12 — CA-12 pide las lecturas también con la pantalla apagada; CA-13 y RN-7 nuevos: si las lecturas no cubren la actividad, se usa GPS. La spec 011 (prueba de campo, F3) encontró que con la pantalla apagada no llegaba ninguna lectura y la actividad quedaba con 0 m y fuente "barómetro". Aprobado por el usuario.
 - 2026-11-05 — Referencias actualizadas por la nueva numeración del roadmap: 010-mapa-3d-animaciones, 011-estabilidad y 012-entrega. Sin cambios de comportamiento.
 - 2026-11-01 — Pasos de navegación de los casos manuales actualizados a la barra de pestañas de la spec 009 (T19, CA-15). CA-20: "Mis actividades" se abre desde la pestaña Actividades, no desde un botón de la pantalla principal (spec 009, RN-2). La "pantalla principal" de CA-2 es la pestaña Inicio. Casos M1, M2 y M6 a M8.
