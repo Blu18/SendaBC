@@ -5,6 +5,7 @@ App móvil para registrar actividades al aire libre (senderismo, trail running y
 - **Manual de uso:** [docs/manual.md](docs/manual.md)
 - **Guion de la demo:** [docs/demo.md](docs/demo.md)
 - **Especificaciones:** [specs/](specs/) (empieza por [roadmap.md](specs/roadmap.md))
+- **Bitácora de IA:** [docs/bitacora-ia.md](docs/bitacora-ia.md) · **Diario de decisiones:** [docs/diario-de-decisiones.md](docs/diario-de-decisiones.md)
 
 ## Contenido
 
