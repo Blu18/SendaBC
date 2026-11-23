@@ -1,6 +1,6 @@
 # 015 — Filtros de actividades, mapa 3D en rutas y ajustes de diseño
 
-- **Estado:** En progreso
+- **Estado:** Implementada con pendientes (aprobada 2026-11-22; cerrada 2026-11-22)
 - **Semana:** 10
 - **Autor(es):**
 - **Fecha:** 2026-11-22
@@ -116,3 +116,4 @@ Como en las specs 009, 013 y 014, todo cambio visual se diseña primero en Figma
 - 2026-11-22 — El usuario aprueba el diseño de Figma (CA-22), sin cambios: sección https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX?node-id=99-6901 de la página Pantallas y los componentes de la sección "Filtros y ajustes (spec 015)" del Sistema de diseño. Ya se puede programar la interfaz.
 - 2026-11-22 — Al programar T3: RN-4 pedía los formatos de la spec 004, que dan "5.00 km". El diseño aprobado usa "5 – 20 km" y "3 km". RN-4 ahora dice las unidades de la 004 y los valores sin ceros de relleno, como en el diseño.
 - 2026-11-22 — Por las pruebas de casos límite en el emulador: sin conexión, Explorar parecía plano con el botón diciendo "2D". Al compararlo con la vista 2D, el mapa sí estaba inclinado (3D), solo sin relieve, porque el relieve no se guarda para usarse sin red; el botón estaba bien. CA-16 ahora lo dice, y agrega lo que hace la grabación cuando ni el estilo carga: mapa plano y sin botón de vista. Aprobado por el usuario.
+- 2026-11-22 — Implementada con pendientes, por decisión del usuario. Todas las tareas hechas. M1, M2, M4 a M7, M9 y M11 a M13 aprobados (M7 y M13 en el S9+). Pasan a la 012 el recorrido con TalkBack de M8 (CA-17), el paso 4 de M3 (CA-10) y el paso 5 de M10 (CA-19), además de dos hallazgos. Detalle en tasks.md, "Pendientes conocidos".

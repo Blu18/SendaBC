@@ -282,7 +282,9 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 - [x] T18 — S9+: M7 y M13 (relieve real y tiempos), con Metro y el APK de desarrollo arm64 que ya tiene. Si algún tiempo no cumple, se anota y se propone el ajuste antes de cambiar el código (plan, "Riesgos").
 
   Hecho (2026-11-22): los tiempos cumplen y no hubo que ajustar el 3D. Hubo dos correcciones (4, el botón fijo mientras carga; 5, "Buscar en esta zona" al abrir en 3D) y quedan dos hallazgos (ver "Resultado de los casos manuales").
-- [ ] T19 — Cerrar la spec: estado, historial y `specs/roadmap.md`.
+- [x] T19 — Cerrar la spec: estado, historial y `specs/roadmap.md`.
+
+  Hecho (2026-11-22): implementada con pendientes, por decisión del usuario. Los casos sin correr y los hallazgos pasan a la 012 (ver "Pendientes conocidos").
 
 ## Verificación
 
@@ -297,16 +299,16 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 | CA-7 | M2 | Manual (emulador) | M2 aprobado (emulador, 2026-11-22) |
 | CA-8 | `filters.test.ts` › sin resultados; M2 | Automatizada + manual | Vitest y manual cumplidos (2026-11-22) |
 | CA-9 | `filters.test.ts` › totales de las filtradas; M2 | Automatizada + manual | Vitest y manual cumplidos (2026-11-22) |
-| CA-10 | M3 | Manual (emulador) | M3 aprobado, salvo el paso 4 (cambio de cuenta) |
+| CA-10 | M3 | Manual (emulador) | M3 aprobado, salvo el paso 4 (cambio de cuenta), que pasa a la 012 |
 | CA-11 | M4 | Manual (emulador) | M4 aprobado (emulador, 2026-11-22) |
 | CA-12 | `viewMode.test.ts`; M5 | Automatizada + manual | Vitest y manual cumplidos (2026-11-22) |
 | CA-13 | M5 | Manual (emulador) | M5 aprobado (emulador, 2026-11-22) |
 | CA-14 | M7 | Manual (S9+) | M7 aprobado (S9+, 2026-11-22) |
 | CA-15 | M5; `idle.test.ts` | Automatizada + manual | M5 aprobado (emulador, 2026-11-22); "Buscar en esta zona" corregido en 3D (corrección 5, S9+) |
 | CA-16 | M6 | Manual (emulador) | M6 aprobado (emulador, 2026-11-22) |
-| CA-17 | M8 | Manual (emulador o S9+) | Nombres accesibles revisados; falta TalkBack encendido |
+| CA-17 | M8 | Manual (emulador o S9+) | Nombres accesibles revisados; el recorrido con TalkBack encendido pasa a la 012 |
 | CA-18 | M9 | Manual (emulador) | M9 aprobado tras la corrección (emulador, 2026-11-22) |
-| CA-19 | M10 | Manual (emulador) | M10 aprobado (emulador, 2026-11-22); botón fijo también mientras carga, tras la corrección 4 (S9+) |
+| CA-19 | M10 | Manual (emulador) | M10 aprobado (emulador, 2026-11-22), salvo el paso 5 (lista vacía), que pasa a la 012; botón fijo también mientras carga, tras la corrección 4 (S9+) |
 | CA-20 | M10 | Manual (emulador) | M10 aprobado (emulador, 2026-11-22) |
 | CA-21 | M11; `contrast.test.ts` | Automatizada + manual | `contrast.test.ts` y M11 cumplidos (2026-11-22) |
 | CA-22 | T2: aprobación anotada en el historial de la spec | Manual | Cumplido (2026-11-22) |
@@ -509,4 +511,13 @@ Después de los cambios, el frontend pasa 914 pruebas y `tsc` no marca errores, 
 
 ## Pendientes conocidos
 
-Ninguno por ahora.
+La spec se cerró el 2026-11-22 con estos casos sin correr. Pasan a la 012 (entrega), para correrlos con el APK de entrega o en la prueba de campo:
+
+- **M8, recorrido con TalkBack encendido (CA-17):** ajustar cada extremo de distancia y altura con los gestos de ajuste, y recorrer la fila de filtros activos, el botón fijo y el botón de vista del mapa. Los nombres accesibles ya se revisaron con el árbol de accesibilidad (T17), pero TalkBack no se puede manejar por adb.
+- **M3, paso 4 (CA-10):** elegir un filtro, cerrar sesión y entrar con otra cuenta; la otra cuenta debe empezar sin filtros. Pide la contraseña de una segunda cuenta. En el código, el contexto se vacía cuando cambia `userId`.
+- **M10, paso 5 (CA-19; plan D8):** abrir la pestaña con una cuenta sin actividades y ver el texto nuevo de la lista vacía con el botón fijo. El texto se revisó en el código.
+
+Hallazgos de T18, sin cambiar el código:
+
+- **"Ver N actividades" en dos renglones:** pasa con la letra del sistema en 110 % (la del S9+). No se corta ni se encima, y los dos botones del panel quedan de la misma altura. Los botones se apilan desde 125 % (corrección 3 de T17). Si se prefiere un solo renglón, se puede bajar el umbral de `STACK_FONT_SCALE` en `ActivityFiltersSheet` y revisar con Figma.
+- **Cierre nativo al arrancar la app:** una vez en unas doce aperturas en el S9+, un SIGSEGV en el hilo de JS, en `MountingCoordinator::pullTransaction` (Fabric, `libreactnative.so`), sin código de la app en la pila. Fue con el build de desarrollo, unos 5 s después de arrancar, en Inicio y sin tocar nada. Revisar si se repite con el build de entrega y en la prueba de campo.
