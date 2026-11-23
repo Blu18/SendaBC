@@ -164,7 +164,24 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
   - el despliegue en Azure: máquina, servicio, Caddy, `actualizar.sh` y webhook.
 
   `backend/README.md`, que era la plantilla de NestJS, ahora es un enlace al de la raíz. Se agregó `frontend/.env.example`, porque la app no tenía uno y CA-1 pide copiar los ejemplos. La búsqueda de secretos de M1 solo da falsos positivos: `sk\.` coincide con "disk." o "task." en textos, y `tasks.md` contiene la propia expresión. Los únicos `.env` versionados son los dos `.env.example`. Los enlaces a `docs/manual.md` y `docs/demo.md` quedan rotos hasta T23 y T24. Seguir el README desde cero es M1.
-- [ ] T23 — `docs/manual.md` con una sección por función y capturas del APK de entrega en `docs/capturas/`. Incluye el uso sin conexión, la regla de las actividades cortas y la limitación de F5. (CA-4, CA-5, CA-16)
+- [x] T23 — `docs/manual.md` con una sección por función y capturas del APK de entrega en `docs/capturas/`. Incluye el uso sin conexión, la regla de las actividades cortas y la limitación de F5. (CA-4, CA-5, CA-16)
+
+  Hecho (2026-11-23). `docs/manual.md` tiene 14 secciones, una por función de CA-4, más el uso sin conexión, la regla de los 3 puntos válidos y la limitación de F5 (CA-5 y CA-16). Tiene 20 capturas en `docs/capturas/` (7.4 MB), tomadas por Claude con `adb exec-out screencap` en el S9+ con el APK 1.0.0 y la cuenta `diego@mail.com`. El texto se revisó contra cada pantalla y se corrigió en varios puntos:
+  - tipos y orden de Inicio;
+  - el registro, que lleva a Iniciar sesión;
+  - los filtros de radio de Rutas, la tarjeta del punto y el 3D/2D del detalle;
+  - el formulario de publicar y el límite de 900 km² de las zonas;
+  - los tiempos configurables de "Si dejo de moverme" (5 a 30 min y 1 a 5 min);
+  - el botón "Detener" y el SOS como escudo rojo.
+
+  Detalles de la toma:
+  - **Ubicación:** 03, 05 y 15 muestran la ubicación real del teléfono. El usuario decidió dejarlas.
+  - **Favoritas y Mis rutas:** se capturan vacías, para no cambiar los datos de la cuenta.
+  - **"¿Estás bien?":** para capturarlo, los umbrales se bajaron a 5 y 5 min y se respondió "Estoy bien" a 4:09 del final. Después se regresaron a 10 y 2 min. Esa actividad tuvo 4 puntos válidos y se guardó (0 m, 06:20). El usuario pidió borrarla: se borró en el servidor (`a915d1e2…`), y del teléfono sale al cerrar sesión y volver a entrar.
+  - **"¿Terminar sin guardar?":** la otra actividad de prueba (1 punto) mostró la pregunta y se descartó (M12 en el S9+).
+  - **Bienvenida y registro:** para capturarlas se cerró sesión; el usuario vuelve a entrar.
+
+  La revisión contra el APK es M2.
 - [ ] T24 — `docs/demo.md`: guion, preparación y plan B sin red. Preparar la cuenta de la demo:
   - **(usuario)** una actividad real grabada antes;
   - actividades de relleno con el GPS simulado del emulador, recuperadas en el S9+;
