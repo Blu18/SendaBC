@@ -62,6 +62,7 @@ Objetivo de la semana 3: **la app registra una ruta con puntos GPS y la guarda l
 
 ## Historial
 
+- 2026-11-22 — CA-10 y CA-15 cambian por la spec 012 (CA-17 a CA-26, RN-2): una actividad con menos de 3 puntos válidos no se guarda al cerrarse. "Detener" y la pregunta al salir avisan que no se guardará; al volver a abrir la app se descarta sin aviso. Las ya guardadas se borran una vez. Aprobado por el usuario.
 - 2026-11-12 — CA-10: el fin nunca queda antes del inicio, y las actividades que ya quedaron así se corrigen al abrir la app. La spec 011 (prueba de campo, F1) encontró una actividad cerrada sin "Detener" con su único punto 95 ms antes de `startedAt`: el servidor la rechazaba y nunca subía. Aprobado por el usuario.
 - 2026-11-09 — Se agrega CA-16. Al implementar la spec 011 (T39, M20) se vio que, si falla el inicio, la pantalla se queda en "Nueva actividad" sin avisar nada. Aprobado por el usuario.
 - 2026-11-06 — "Fuera de alcance": el mapa de grabación quedó en la spec 010, no en las 006 y 007 (spec 010, T25).
