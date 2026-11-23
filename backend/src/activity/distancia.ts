@@ -42,6 +42,18 @@ export function isAccurate(point: Pick<DistancePoint, 'accuracy'>) {
   return point.accuracy === null || point.accuracy <= MAX_ACCURACY_M;
 }
 
+// Una actividad se guarda solo con este mínimo de puntos válidos (spec 012, RN-2, CA-26).
+// Copia de MIN_VALID_POINTS en frontend/lib/metrics/validPoints.ts.
+export const MIN_PUNTOS_VALIDOS = 3;
+
+// Puntos que cuentan para la distancia por su precisión (spec 012, RN-1, plan D1). No mira
+// saltos ni puntos viejos, que dependen del orden de los puntos.
+export function contarPuntosValidos(puntos: Pick<DistancePoint, 'accuracy'>[]) {
+  let n = 0;
+  for (const p of puntos) if (isAccurate(p)) n++;
+  return n;
+}
+
 // ¿Ir de `previous` a `point` exige más velocidad que MAX_SPEED_MS? (spec 004, CA-25)
 export function isJump(previous: DistancePoint, point: DistancePoint) {
   const seconds = Math.max(

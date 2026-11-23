@@ -118,7 +118,7 @@ describe('Sincronización de actividades (e2e, spec 005)', () => {
   });
 
   it('un lote con una válida y una inválida guarda la válida y rechaza la otra (CA-11)', async () => {
-    const invalida = actividad(puntos(2), {
+    const invalida = actividad(puntos(3), {
       endedAt: '2026-10-09T09:00:00.000Z',
     });
 
@@ -142,6 +142,39 @@ describe('Sincronización de actividades (e2e, spec 005)', () => {
         where: { clientGeneratedId: invalida.clientGeneratedId },
       }),
     ).toBe(0);
+  });
+
+  it('una actividad con 2 puntos válidos se rechaza y no guarda actividad ni puntos (spec 012, CA-26)', async () => {
+    // 3 puntos, pero uno con precisión peor que 20 m: cuentan los válidos, no los puntos.
+    const points = puntos(3).map((p, i) =>
+      i === 1 ? { ...p, accuracy: 35 } : p,
+    );
+    const pocos = actividad(points);
+    const puntosAntes = await prisma.activityPoint.count({
+      where: { activity: { userId: userA } },
+    });
+
+    const res = await sync(tokenA, [pocos]).expect(200);
+
+    expect(res.body.results).toEqual([
+      {
+        clientGeneratedId: pocos.clientGeneratedId,
+        status: 'REJECTED',
+        errors: [
+          'La actividad necesita al menos 3 puntos con buena precisión para guardarse',
+        ],
+      },
+    ]);
+    expect(
+      await prisma.activity.count({
+        where: { clientGeneratedId: pocos.clientGeneratedId },
+      }),
+    ).toBe(0);
+    expect(
+      await prisma.activityPoint.count({
+        where: { activity: { userId: userA } },
+      }),
+    ).toBe(puntosAntes);
   });
 
   it('un reenvío responde ALREADY_EXISTS con el mismo id y no duplica (CA-10)', async () => {
@@ -228,7 +261,7 @@ describe('Sincronización de actividades (e2e, spec 005)', () => {
   }, 30_000);
 
   it('un userId en el body no cambia el dueño (CA-18)', async () => {
-    const conUserId = actividad(puntos(2), { userId: userB });
+    const conUserId = actividad(puntos(3), { userId: userB });
 
     const res = await sync(tokenA, [conUserId]).expect(200);
     expect(res.body.results[0].status).toBe('CREATED');

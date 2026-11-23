@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   computeDistance,
+  contarPuntosValidos,
   createDistanceAccumulator,
+  MIN_PUNTOS_VALIDOS,
   EARTH_RADIUS_M,
   type DistancePoint,
 } from './distancia.js';
@@ -335,6 +337,43 @@ describe('computeDistance — casos límite (CA-17)', () => {
 
   it('1 punto → 0', () => {
     expect(computeDistance([at(0, 0)])).toBe(0);
+  });
+});
+
+describe('contarPuntosValidos (spec 012, CA-26)', () => {
+  it('el mínimo para guardar es 3', () => {
+    expect(MIN_PUNTOS_VALIDOS).toBe(3);
+  });
+
+  it('0 puntos → 0', () => {
+    expect(contarPuntosValidos([])).toBe(0);
+  });
+
+  it('2 puntos válidos → 2, por debajo del mínimo', () => {
+    const n = contarPuntosValidos([at(0, 0), at(0, 10)]);
+    expect(n).toBe(2);
+    expect(n).toBeLessThan(MIN_PUNTOS_VALIDOS);
+  });
+
+  it('3 puntos válidos → 3, alcanza el mínimo', () => {
+    const n = contarPuntosValidos([at(0, 0), at(0, 10), at(0, 20, 20)]);
+    expect(n).toBe(3);
+    expect(n).toBeGreaterThanOrEqual(MIN_PUNTOS_VALIDOS);
+  });
+
+  it('3 puntos con 1 impreciso → 2', () => {
+    expect(contarPuntosValidos([at(0, 0), at(0, 10, 25), at(0, 20)])).toBe(2);
+  });
+
+  it('los puntos sin precisión cuentan como válidos', () => {
+    expect(
+      contarPuntosValidos([at(0, 0, null), at(0, 10, null), at(0, 20, null)]),
+    ).toBe(3);
+  });
+
+  it('no depende del orden ni de los saltos de ubicación', () => {
+    const lejos = { ...at(0, 0), latitude: 37.422, longitude: -122.0841 };
+    expect(contarPuntosValidos([at(0, 20), lejos, at(0, 0)])).toBe(3);
   });
 });
 

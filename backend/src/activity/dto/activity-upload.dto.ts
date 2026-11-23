@@ -57,7 +57,8 @@ export class ActivityUploadDto {
   })
   elevationSource!: ElevationSource;
 
-  // Puede estar vacío: una actividad sin puntos válidos también se sube (spec 004, CA-17).
+  // Sin ArrayMinSize: el mínimo cuenta puntos válidos, no puntos, y lo revisa reglasExtra
+  // (spec 012, CA-26, plan D1).
   @IsArray({ message: 'Los puntos deben ser una lista' })
   @ValidateNested({ each: true, message: 'Cada punto debe ser un objeto' })
   @Type(() => ActivityPointDto)

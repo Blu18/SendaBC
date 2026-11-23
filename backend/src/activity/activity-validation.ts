@@ -1,9 +1,14 @@
 import { plainToInstance } from 'class-transformer';
 import { validate, type ValidationError } from 'class-validator';
+import { contarPuntosValidos, MIN_PUNTOS_VALIDOS } from './distancia.js';
 import { ActivityUploadDto } from './dto/activity-upload.dto.js';
 
 // Una actividad con miles de puntos inválidos no debe producir una respuesta enorme.
 export const MAX_ERRORES = 10;
+
+// Spec 012, CA-26: una actividad con menos de MIN_PUNTOS_VALIDOS puntos válidos no se guarda.
+export const ERROR_POCOS_PUNTOS =
+  'La actividad necesita al menos 3 puntos con buena precisión para guardarse';
 
 export type ResultadoValidacion =
   { ok: true; actividad: ActivityUploadDto } | { ok: false; errores: string[] };
@@ -44,6 +49,15 @@ export function reglasExtra(actividad: ActivityUploadDto): string[] {
   }
   for (const sequence of repetidas) {
     errores.push(`La secuencia ${sequence} está repetida`);
+  }
+
+  // Sin precisión se guarda como NULL (activity.service.ts), así que aquí cuenta igual:
+  // la migración de actividades cortas y el recálculo de distancia ven lo mismo.
+  const validos = contarPuntosValidos(
+    actividad.points.map((p) => ({ accuracy: p.accuracy ?? null })),
+  );
+  if (validos < MIN_PUNTOS_VALIDOS) {
+    errores.push(ERROR_POCOS_PUNTOS);
   }
 
   return errores;

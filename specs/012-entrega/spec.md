@@ -1,6 +1,6 @@
 # 012 — Entrega: README, manual, build, despliegue, demo y descarte de actividades cortas
 
-- **Estado:** Aprobada (2026-11-22)
+- **Estado:** En progreso (2026-11-22)
 - **Semana:** 10
 - **Autor(es):** Diego Manzo Escalante
 - **Fecha:** 2026-11-22

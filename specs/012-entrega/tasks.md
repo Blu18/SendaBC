@@ -16,10 +16,10 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
 
 ## Fase A — Actividades con menos de 3 puntos válidos
 
-- [ ] T1 — `backend/src/activity/distancia.ts`: `MIN_PUNTOS_VALIDOS = 3` y `contarPuntosValidos(puntos)` con `isAccurate`. Casos en `distancia.spec.ts`: 0, 2 y 3 puntos válidos, 3 puntos con 1 impreciso y precisión `null` (plan D1). (CA-26)
-- [ ] T2 — `backend/src/activity/activity-validation.ts`: `reglasExtra` rechaza con "La actividad necesita al menos 3 puntos con buena precisión para guardarse". Se actualiza el comentario de `activity-upload.dto.ts`. Casos en `activity-validation.spec.ts`. (CA-26)
-- [ ] T3 — e2e de `POST /activities/sync`: una actividad con 2 puntos válidos sale rechazada y no se guarda nada, ni actividad ni puntos. Se ajustan a 3 puntos válidos los e2e que hoy suben actividades sin puntos. (CA-26)
-- [ ] T4 — Migración de datos `backend/prisma/migrations/20261123000000_borrar_actividades_cortas/migration.sql`: borra las actividades con menos de 3 puntos con `"accuracyMeters" IS NULL OR "accuracyMeters" <= 20`. Va acompañada de `backend/prisma/consultas/actividades_cortas.sql`, el mismo criterio como `SELECT` con cuenta y fecha, para T17. Se prueba en local o en la base de pruebas: las actividades cortas se borran, las de 3 puntos válidos quedan y una ruta publicada desde una actividad corta queda con `sourceActivityId` en `NULL`. **No se aplica en Supabase todavía.** (CA-25)
+- [x] T1 — `backend/src/activity/distancia.ts`: `MIN_PUNTOS_VALIDOS = 3` y `contarPuntosValidos(puntos)` con `isAccurate`. Casos en `distancia.spec.ts`: 0, 2 y 3 puntos válidos, 3 puntos con 1 impreciso y precisión `null` (plan D1). (CA-26)
+- [x] T2 — `backend/src/activity/activity-validation.ts`: `reglasExtra` rechaza con "La actividad necesita al menos 3 puntos con buena precisión para guardarse". Se actualiza el comentario de `activity-upload.dto.ts`. Casos en `activity-validation.spec.ts`. (CA-26)
+- [x] T3 — e2e de `POST /activities/sync`: una actividad con 2 puntos válidos sale rechazada y no se guarda nada, ni actividad ni puntos. Se ajustan a 3 puntos válidos los e2e que hoy suben actividades sin puntos. (CA-26)
+- [x] T4 — Migración de datos `backend/prisma/migrations/20261123000000_borrar_actividades_cortas/migration.sql`: borra las actividades con menos de 3 puntos con `"accuracyMeters" IS NULL OR "accuracyMeters" <= 20`. Va acompañada de `backend/prisma/consultas/actividades_cortas.sql`, el mismo criterio como `SELECT` con cuenta y fecha, para T17. Se prueba en local o en la base de pruebas: las actividades cortas se borran, las de 3 puntos válidos quedan y una ruta publicada desde una actividad corta queda con `sourceActivityId` en `NULL`. **No se aplica en Supabase todavía.** (CA-25)
 - [ ] T5 — `frontend/lib/metrics/validPoints.ts`: `MIN_VALID_POINTS`, `countValidPoints(points)` y `debeGuardarse(n)`, con `validPoints.test.ts`. Repite los casos de T1, como `oldPoints.test.ts` (plan D1). (CA-17, CA-20, CA-22)
 - [ ] T6 — `frontend/lib/db/activities.ts`:
   - `countValidPoints(localId)`: un `COUNT` con `MAX_ACCURACY_M`.
@@ -135,7 +135,7 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
 | CA-22 | M15; `sessionActions.test.ts` › huérfanas cortas | Manual + automatizada | Pendiente |
 | CA-23 | `sessionActions.test.ts` › `finish` antes del descarte; M12 paso 5 | Automatizada + manual | Pendiente |
 | CA-24 | `sessionActions.test.ts` › fallo al detener | Automatizada | Pendiente |
-| CA-25 | `schema.test.ts` › v8; T4 en la base de pruebas; M16 | Automatizada + manual | Pendiente |
+| CA-25 | `schema.test.ts` › v8; `migracion-actividades-cortas.e2e-spec.ts` (T4, tablas de prueba en una transacción revertida); M16 | Automatizada + manual | Pendiente |
 | CA-26 | `distancia.spec.ts`, `activity-validation.spec.ts` y e2e de sync | Automatizada | Pendiente |
 | CA-27 | M7 | Manual (S9+) | Pendiente |
 | CA-28 | M18 | Manual (S9+) | Pendiente |

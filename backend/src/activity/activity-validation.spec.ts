@@ -1,4 +1,8 @@
-import { MAX_ERRORES, validarActividad } from './activity-validation.js';
+import {
+  ERROR_POCOS_PUNTOS,
+  MAX_ERRORES,
+  validarActividad,
+} from './activity-validation.js';
 
 function punto(sequence: number, extra: object = {}) {
   return {
@@ -36,12 +40,10 @@ describe('validarActividad (spec 005, CA-11, RN-5)', () => {
     expect(resultado.ok).toBe(true);
   });
 
-  it('acepta una actividad sin puntos (spec 004, CA-17)', async () => {
-    expect(await erroresDe({ ...valida, points: [] })).toEqual([]);
-  });
-
   it('acepta altitud y precisión nulas', async () => {
-    const points = [punto(1, { altitude: null, accuracy: null })];
+    const points = [1, 2, 3].map((s) =>
+      punto(s, { altitude: null, accuracy: null }),
+    );
     expect(await erroresDe({ ...valida, points })).toEqual([]);
   });
 
@@ -60,7 +62,7 @@ describe('validarActividad (spec 005, CA-11, RN-5)', () => {
     ).toEqual(['El fin de la actividad no puede ser anterior al inicio']);
   });
 
-  it('acepta un fin igual al inicio: actividad cerrada sin puntos (spec 003, CA-10)', async () => {
+  it('acepta un fin igual al inicio', async () => {
     expect(
       await erroresDe({
         ...valida,
@@ -69,7 +71,6 @@ describe('validarActividad (spec 005, CA-11, RN-5)', () => {
         distanceMeters: 0,
         elevationGainMeters: 0,
         elevationLossMeters: 0,
-        points: [],
       }),
     ).toEqual([]);
   });
@@ -156,6 +157,63 @@ describe('validarActividad (spec 005, CA-11, RN-5)', () => {
     expect(await erroresDe([valida])).toEqual([
       'La actividad debe ser un objeto',
     ]);
+  });
+
+  describe('mínimo de 3 puntos válidos (spec 012, CA-26)', () => {
+    it('rechaza una actividad sin puntos', async () => {
+      expect(await erroresDe({ ...valida, points: [] })).toEqual([
+        ERROR_POCOS_PUNTOS,
+      ]);
+    });
+
+    it('rechaza una actividad con 2 puntos válidos', async () => {
+      expect(
+        await erroresDe({ ...valida, points: [punto(1), punto(2)] }),
+      ).toEqual([ERROR_POCOS_PUNTOS]);
+    });
+
+    it('acepta una actividad con exactamente 3 puntos válidos', async () => {
+      const points = [punto(1), punto(2), punto(3, { accuracy: 20 })];
+      expect(await erroresDe({ ...valida, points })).toEqual([]);
+    });
+
+    it('rechaza 3 puntos con 1 impreciso, aunque haya más puntos', async () => {
+      const points = [
+        punto(1),
+        punto(2, { accuracy: 25 }),
+        punto(3),
+        punto(4, { accuracy: 80 }),
+      ];
+      expect(await erroresDe({ ...valida, points })).toEqual([
+        ERROR_POCOS_PUNTOS,
+      ]);
+    });
+
+    it('cuenta como válidos los puntos sin precisión, nula u omitida', async () => {
+      const omitida: Record<string, unknown> = punto(2);
+      delete omitida.accuracy;
+      const points = [punto(1, { accuracy: null }), omitida, punto(3)];
+      expect(await erroresDe({ ...valida, points })).toEqual([]);
+    });
+
+    it('el mensaje está en español y sin términos técnicos (RN-6)', () => {
+      expect(ERROR_POCOS_PUNTOS).toBe(
+        'La actividad necesita al menos 3 puntos con buena precisión para guardarse',
+      );
+    });
+
+    it('junta el error con los demás de reglasExtra', async () => {
+      expect(
+        await erroresDe({
+          ...valida,
+          endedAt: '2026-10-09T09:00:00.000Z',
+          points: [punto(1)],
+        }),
+      ).toEqual([
+        'El fin de la actividad no puede ser anterior al inicio',
+        ERROR_POCOS_PUNTOS,
+      ]);
+    });
   });
 
   it('limita la cantidad de errores en la respuesta', async () => {
