@@ -87,7 +87,7 @@ describe('Login y perfil (e2e, spec 002)', () => {
       .send(body())
       .expect(401);
 
-    expect(res.body.message).toBe('Credenciales invalidas');
+    expect(res.body.message).toBe('Credenciales inválidas');
   });
 
   it('GET /user/profile con el token devuelve mis datos sin passwordHash (CA-7)', async () => {

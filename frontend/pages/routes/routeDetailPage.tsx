@@ -5,6 +5,7 @@ import Mapbox from "@rnmapbox/maps";
 import * as Location from "expo-location";
 import BottomBar from "../../components/ui/BottomBar";
 import Appear from "../../components/ui/Appear";
+import MapViewToggle from "../../components/map/MapViewToggle";
 import RouteMap from "../../components/map/RouteMap";
 import BgBtn from "../../components/ui/buttons/BgBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
@@ -64,11 +65,19 @@ function RouteDetailMap({ route }: { route: RouteDetail }) {
         [route.path, ultimo]
     );
 
+    // Empieza en 3D cada vez que se abre el detalle y no recuerda la vista (spec 015, CA-13).
+    const [view, setView] = useState<"3D" | "2D">("3D");
+    // Sin relieve disponible (sin red y sin zona descargada) el botón de vista no aparece (CA-16).
+    const [relieve, setRelieve] = useState(true);
+
     return (
+        <View style={styles.map}>
         <RouteMap
-            style={styles.map}
+            style={StyleSheet.absoluteFill}
             initialBounds={boundsForPath(route.path, route.start)}
             accessibilityLabel={`Mapa del recorrido de ${route.name}`}
+            view={view}
+            onReliefAvailable={setRelieve}
         >
             <Mapbox.ShapeSource id="recorrido" shape={linea}>
                 <Mapbox.LineLayer
@@ -91,6 +100,16 @@ function RouteDetailMap({ route }: { route: RouteDetail }) {
                 />
             </Mapbox.ShapeSource>
         </RouteMap>
+            {/* Vista del mapa en la esquina, fuera del mapa para que TalkBack la encuentre (CA-12, CA-17).
+                Sin relieve disponible no aparece (CA-16). */}
+            {relieve && (
+                <MapViewToggle
+                    view={view}
+                    onChange={(v) => setView(v === "2D" ? "2D" : "3D")}
+                    allowNone={false}
+                />
+            )}
+        </View>
     );
 }
 
@@ -348,6 +367,9 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     map: {
         height: 280,
         alignSelf: 'stretch',
+        // El botón de vista va arriba a la derecha, como en Figma.
+        alignItems: 'flex-end',
+        padding: t.spacing.md,
     },
     body: {
         padding: t.spacing.lg,

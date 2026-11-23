@@ -13,6 +13,7 @@ import PressableScale from "../../components/ui/PressableScale";
 import Avatar from "../../components/account/Avatar";
 import SafetyCard from "../../components/safety/SafetyCard";
 import WeekSummary from "../../components/home/WeekSummary";
+import Card from "../../components/ui/Card";
 import ActivityCard from "../../components/home/ActivityCard";
 import RouteCard from "../../components/home/RouteCard";
 import PopularRouteRow from "../../components/home/PopularRouteRow";
@@ -70,8 +71,13 @@ export default function MainPage() {
                 }
             />
             <ScrollView contentContainerStyle={styles.content}>
-                {/* Totales de los últimos 7 días (CA-6). */}
-                {totals && <WeekSummary summary={weekSummaryText(totals)} />}
+                {/* Totales de los últimos 7 días (CA-6), en una tarjeta con sombra baja como las demás
+                    (spec 015, CA-21, plan D9). */}
+                {totals && (
+                    <Card>
+                        <WeekSummary summary={weekSummaryText(totals)} />
+                    </Card>
+                )}
 
                 {/* Rutas cerca de ti (CA-9 a CA-12). */}
                 <Section

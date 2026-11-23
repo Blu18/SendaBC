@@ -1,13 +1,22 @@
 import { useState } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import ActiveFilterChip from "../../components/activity/ActiveFilterChip";
+import ActivityFiltersSheet from "../../components/activity/ActivityFiltersSheet";
 import ActivityLogRow from "../../components/activity/ActivityLogRow";
+import FiltersButton from "../../components/activity/FiltersButton";
 import Appear from "../../components/ui/Appear";
 import GroupedList from "../../components/ui/GroupedList";
 import Notice from "../../components/ui/Notice";
 import ScreenHeader from "../../components/ui/ScreenHeader";
+import BottomBar from "../../components/ui/BottomBar";
+import BgBtn from "../../components/ui/buttons/BgBtn";
+import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
+import TextBtn from "../../components/ui/buttons/TextBtn";
 import { useActivityHistory } from "../../hooks/activity/activityHistory.hook";
+import { useActivityFilters } from "../../context/ActivityFiltersContext";
 import { useSync } from "../../context/SyncContext";
+import { activeFilterLabels } from "../../lib/activity/filters";
 import { monthTotalsText } from "../../lib/activity/months";
 import type { Activity } from "../../lib/db/activities";
 import type { Theme } from "../../lib/theme";
@@ -38,10 +47,18 @@ const DIVIDER_INSET = 92;
 // montarse (plan, D4).
 export default function ActivityHistoryPage() {
     const navigation = useNavigation();
-    const { activities, sections, loading, reload } = useActivityHistory();
+    const { activities, filtered, sections, filters, limits, months, loading, reload } = useActivityHistory();
+    const { setFilters, clearFilters } = useActivityFilters();
     const { syncNow } = useSync();
     const [refreshing, setRefreshing] = useState(false);
     const [aviso, setAviso] = useState<Aviso | null>(null);
+    const [filtersOpen, setFiltersOpen] = useState(false);
+
+    // Spec 015: filtros activos como chips (CA-7). Sin actividades no hay nada que filtrar: el
+    // botón no aparece (Figma, lista vacía).
+    const activeLabels = activeFilterLabels(filters, new Date());
+    const hasActivities = activities.length > 0;
+    const noResults = hasActivities && filtered.length === 0;
     const theme = useTheme();
     const styles = useThemedStyles(makeStyles);
 
@@ -64,10 +81,32 @@ export default function ActivityHistoryPage() {
 
     return (
         <View style={styles.container}>
-            <ScreenHeader title="Mis actividades" />
+            <ScreenHeader
+                title="Mis actividades"
+                actions={
+                    hasActivities ? <FiltersButton count={activeLabels.length} onPress={() => setFiltersOpen(true)} /> : null
+                }
+            />
+
+            {/* Filtros activos y "Quitar filtros" (CA-7). Tocar un chip quita solo ese filtro. */}
+            {activeLabels.length > 0 && (
+                <View style={styles.activeFilters}>
+                    {activeLabels.map(({ kind, label }) => (
+                        <ActiveFilterChip
+                            key={kind}
+                            label={label}
+                            onRemove={() => setFilters((current) => ({ ...current, [kind]: null }))}
+                        />
+                    ))}
+                    <TextBtn text="Quitar filtros" onPress={clearFilters} />
+                </View>
+            )}
 
             {loading ? (
-                <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loading} />
+                // Ocupa el alto de la lista para que el botón siga fijo abajo mientras carga (CA-19).
+                <View style={styles.loadingArea}>
+                    <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loading} />
+                </View>
             ) : (
                 <FlatList
                     data={sections}
@@ -91,17 +130,28 @@ export default function ActivityHistoryPage() {
                         </Appear>
                     }
                     ListEmptyComponent={
-                        // Sin actividades terminadas: invitar a iniciar una (CA-22). Sin botón propio:
-                        // grabar desde aquí haría que "Listo" regresara a esta lista y no al Inicio (CA-2)
+                        noResults ? (
+                            // Hay actividades, pero ninguna pasa los filtros (spec 015, CA-8).
+                            <View style={styles.noResults}>
+                                <Notice
+                                    title="Ninguna actividad coincide"
+                                    description="Prueba con otros filtros o quítalos para ver todas tus actividades."
+                                />
+                                <BgBtn text="Quitar filtros" onPress={clearFilters} />
+                            </View>
+                        ) : (
+                        // Sin actividades terminadas: invitar a iniciar una con el botón de abajo (CA-22;
+                        // spec 015, plan D8). Desde aquí, "Listo" regresa a esta lista (spec 004, CA-2).
                         <Appear>
                             <Notice
                                 title="Aún no tienes actividades"
-                                description="Inicia una desde la pestaña Inicio y aquí verás su resumen."
+                                description='Toca "Empezar actividad" para grabar la primera.'
                             />
                         </Appear>
+                        )
                     }
                     ListFooterComponent={
-                        activities.length > 0 ? (
+                        filtered.length > 0 ? (
                             <Text style={styles.hint}>Desliza hacia abajo para sincronizar.</Text>
                         ) : null
                     }
@@ -128,6 +178,23 @@ export default function ActivityHistoryPage() {
                     }}
                 />
             )}
+
+            {/* Fijo abajo, como en Inicio (spec 015, CA-19, CA-20, RN-6). La grabación se reemplaza
+                por el resumen al detener, así que "Listo" (goBack) regresa a esta pestaña. */}
+            <BottomBar style={styles.startBar}>
+                <PrimaryButton text="Empezar actividad" onPress={() => navigation.navigate("Activity")} />
+            </BottomBar>
+
+            <ActivityFiltersSheet
+                visible={filtersOpen}
+                onClose={() => setFiltersOpen(false)}
+                filters={filters}
+                onChange={setFilters}
+                onClear={clearFilters}
+                limits={limits}
+                months={months}
+                count={filtered.length}
+            />
         </View>
     );
 }
@@ -136,6 +203,9 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: t.colors.background,
+    },
+    loadingArea: {
+        flex: 1,
     },
     loading: {
         marginTop: t.spacing.xxl,
@@ -148,6 +218,23 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     },
     month: {
         gap: t.spacing.sm,
+    },
+    // Chips de filtros activos debajo del encabezado; bajan de renglón si no caben (Figma).
+    activeFilters: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        alignItems: "center",
+        gap: t.spacing.sm,
+        paddingHorizontal: t.spacing.lg,
+        paddingTop: t.spacing.xs,
+        paddingBottom: t.spacing.md,
+    },
+    noResults: {
+        gap: t.spacing.md,
+    },
+    // Como la "Barra de empezar" de Inicio: fondo de la pantalla y sombra hacia arriba.
+    startBar: {
+        backgroundColor: t.colors.background,
     },
     // Con letra grande el total baja de renglón en lugar de encimarse (CA-24).
     monthHeader: {

@@ -10,10 +10,12 @@ import RouteForm from "../../components/routes/RouteForm";
 import { useRouteDetail } from "../../hooks/routes/useRouteDetail";
 import { useRouteMutations } from "../../hooks/routes/useRouteMutations";
 import { DETAIL_MESSAGES } from "../../lib/routes/format";
-import { validarRuta, type RouteFormErrors, type RouteFormValues } from "../../lib/routes/publish";
+import { hayCambios, validarRuta, type RouteFormErrors, type RouteFormValues } from "../../lib/routes/publish";
+import { useConfirmDiscard } from "../../hooks/routes/useConfirmDiscard";
 import { erroresDeCampo, mensajeDeFallo } from "../../lib/routes/status";
 import type { Theme } from "../../lib/theme";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
+import KeyboardScreen from "../../components/ui/KeyboardScreen";
 
 type Props = StaticScreenProps<{ id: string }>;
 
@@ -35,15 +37,22 @@ export default function EditRoutePage({ route: navRoute }: Props) {
     const [serverError, setServerError] = useState<string | null>(null);
     // El formulario se llena una sola vez: un refresco del detalle no borra lo que se escribió.
     const llenado = useRef(false);
+    // Lo que tenía la ruta al abrir, para saber si hay cambios sin guardar (spec 007, RN-12).
+    const [original, setOriginal] = useState<RouteFormValues | null>(null);
+    useConfirmDiscard(
+        !!values && !!original && hayCambios(values, original) && !update.isSuccess && !update.isPending
+    );
 
     useEffect(() => {
         if (!route || llenado.current) return;
         llenado.current = true;
-        setValues({
+        const inicial = {
             name: route.name,
             description: route.description ?? '',
             region: route.region ?? '',
-        });
+        };
+        setValues(inicial);
+        setOriginal(inicial);
     }, [route]);
 
     if (!values) {
@@ -111,7 +120,7 @@ export default function EditRoutePage({ route: navRoute }: Props) {
     };
 
     return (
-        <View style={styles.container}>
+        <KeyboardScreen style={styles.container}>
             {header}
             <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
                 <Appear>
@@ -132,7 +141,7 @@ export default function EditRoutePage({ route: navRoute }: Props) {
                     disabled={update.isPending}
                 />
             </BottomBar>
-        </View>
+        </KeyboardScreen>
     );
 }
 

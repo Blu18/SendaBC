@@ -13,6 +13,7 @@ import { erroresDeCuenta, esContrasenaIncorrecta, mensajeDeCuenta } from "../../
 import { validarCambioCorreo, type EmailFormErrors } from "../../lib/account/credentials";
 import type { Theme } from "../../lib/theme";
 import { useThemedStyles } from "../../hooks/theme/useTheme";
+import KeyboardScreen from "../../components/ui/KeyboardScreen";
 
 // Cambiar el correo (spec 011, CA-43, CA-45). Pide la contraseña actual. Con la contraseña
 // incorrecta (403) no cierra la sesión (plan, D11): el error va junto al campo. Un correo usado
@@ -59,7 +60,7 @@ export default function ChangeEmailPage() {
     };
 
     return (
-        <View style={styles.container}>
+        <KeyboardScreen style={styles.container}>
             <ScreenHeader title="Cambiar correo" onBack={() => navigation.goBack()} />
             <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
                 <Appear>
@@ -107,7 +108,7 @@ export default function ChangeEmailPage() {
                     disabled={cambiar.isPending}
                 />
             </BottomBar>
-        </View>
+        </KeyboardScreen>
     );
 }
 

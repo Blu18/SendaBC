@@ -97,6 +97,7 @@ Con la spec 006, el catálogo muestra rutas cercanas, pero solo tiene las rutas 
 - RN-9: Las rutas de ejemplo de SendaBC se pueden ver a detalle y guardar en favoritas igual que cualquier otra ruta.
 - RN-10: Al publicar se quitan los puntos del principio con hora de más de 30 s antes del inicio de la actividad. Si quedaran menos de 2 puntos, se conserva el recorrido completo, porque significa que el reloj del teléfono estaba desfasado. La actividad no cambia al publicar. Su distancia guardada solo cambia con la corrección única de la spec 011 (RN-11).
 - RN-11: Una ruta publicada de una cuenta borrada sigue en el catálogo, con el autor "Cuenta eliminada", y nadie puede editarla, archivarla ni borrarla desde la app (spec 011, RN-16).
+- RN-12: Si salgo de "Publicar como ruta" o de "Editar ruta" (botón atrás o volver) con cambios sin guardar, la app pregunta si descartarlos ("Seguir editando" o "Descartar"). Sin cambios, o después de publicar o guardar, sale sin preguntar.
 
 ## Requisitos no funcionales
 
@@ -156,3 +157,4 @@ No quedan preguntas abiertas.
 - 2026-10-20 — Se resuelven P10–P12: una ruta archivada se puede volver a publicar (CA-24), una actividad con su ruta borrada se puede publicar de nuevo (RN-2) y la regla de dificultad queda en RN-6, con umbrales propios para ciclismo pendientes de confirmar (P13). Se renumeran CA-24 a CA-27.
 - 2026-10-20 — Se resuelven P1–P9: dificultad calculada, una publicación por actividad, nombre de 40 y descripción de 200 caracteres, editar, archivar y borrar con "Ya no disponible" en favoritas, perfil de elevación también en las rutas de ejemplo, recorrido completo con aviso, mínimo de 1.5 km, botones en la pantalla principal y zona deducida y editable. Surgen P10–P12.
 - 2026-10-20 — Creación.
+- 2026-11-22 — Por las pruebas de casos límite en el emulador: RN-12 nueva (salir de "Publicar como ruta" o "Editar ruta" con cambios sin guardar pide confirmación) y los botones de esos formularios quedan a la vista con el teclado abierto. Aprobado por el usuario.

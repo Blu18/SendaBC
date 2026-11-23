@@ -16,7 +16,9 @@ import { ACTIVITY_TYPE_LABELS } from "../../lib/format/activity";
 import { formatDistance, formatElevation } from "../../lib/format/metrics";
 import { dificultadDe } from "../../lib/routes/difficulty";
 import { DIFFICULTY_LABELS } from "../../lib/routes/format";
+import { useConfirmDiscard } from "../../hooks/routes/useConfirmDiscard";
 import {
+    hayCambios,
     inicioDelRecorrido,
     motivoNoPublicable,
     validarRuta,
@@ -27,6 +29,7 @@ import { zonaDe } from "../../lib/routes/region";
 import { erroresDeCampo, mensajeDeFallo } from "../../lib/routes/status";
 import { fontFamilies, type Theme } from "../../lib/theme";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
+import KeyboardScreen from "../../components/ui/KeyboardScreen";
 
 type Props = StaticScreenProps<{ localId: number }>;
 
@@ -81,6 +84,13 @@ export default function PublishRoutePage({ route }: Props) {
     const [buscandoZona, setBuscandoZona] = useState(true);
     // Si el usuario ya escribió la zona, la propuesta que llegue tarde no la reemplaza.
     const zonaEditada = useRef(false);
+    // Lo que había al abrir: la zona propuesta no cuenta como cambio del usuario (spec 007, RN-12).
+    const [zonaSugerida, setZonaSugerida] = useState('');
+    useConfirmDiscard(
+        hayCambios(values, { ...VACIO, region: zonaEditada.current ? '' : zonaSugerida }) &&
+            !publish.isSuccess &&
+            !publish.isPending
+    );
 
     const startedAt = activity?.startedAt;
     useEffect(() => {
@@ -93,7 +103,10 @@ export default function PublishRoutePage({ route }: Props) {
             })
             .then((zona) => {
                 if (!vigente) return;
-                if (zona && !zonaEditada.current) setValues((v) => ({ ...v, region: zona }));
+                if (zona && !zonaEditada.current) {
+                    setValues((v) => ({ ...v, region: zona }));
+                    setZonaSugerida(zona);
+                }
                 setBuscandoZona(false);
             });
         return () => {
@@ -169,7 +182,7 @@ export default function PublishRoutePage({ route }: Props) {
     };
 
     return (
-        <View style={styles.container}>
+        <KeyboardScreen style={styles.container}>
             {header}
             <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
                 <Appear>
@@ -212,7 +225,7 @@ export default function PublishRoutePage({ route }: Props) {
                     disabled={publish.isPending}
                 />
             </BottomBar>
-        </View>
+        </KeyboardScreen>
     );
 }
 

@@ -2,6 +2,10 @@
 
 // Con más inclinación, las lomas tapan el trazo con frecuencia.
 export const PITCH_3D = 55;
+
+// Exageración del relieve en 3D, probada en la Sierra de Juárez (spec 010, T4). La comparten la grabación y los mapas de rutas, para que el
+// terreno se vea igual en los dos (spec 015, plan D6).
+export const TERRAIN_EXAGGERATION = 1.5;
 export const ZOOM_FOLLOWING = 14;
 export const ZOOM_OVERVIEW = 5.5;
 

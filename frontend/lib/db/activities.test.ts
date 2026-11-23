@@ -26,6 +26,8 @@ const {
   markSyncError,
   repararFinAntesDelInicio,
   saveMetrics,
+  savePeak,
+  listActivityIdsMissingPeak,
   summarizeSince,
   PUNTOS_POR_LOTE,
 } = await import('./activities');
@@ -189,6 +191,7 @@ describe('Recuperar actividades (spec 005, CA-20 a CA-22)', () => {
       elevationLossMeters: 205,
       serverId: 'srv-9',
       syncError: null,
+      peakAltitudeMeters: null, // se calcula después (spec 015, plan D1)
     });
     expect(await getActivityPoints(id)).toEqual(descargada.points);
     // Aparece en el historial y no se vuelve a subir.
@@ -412,5 +415,55 @@ describe('Inicio: listRecentActivities y summarizeSince (spec 013, CA-3, CA-6, R
       durationSeconds: 0,
       elevationGainMeters: 0,
     });
+  });
+});
+
+describe('Cumbre para el filtro de altura (spec 015, CA-5, RN-5; plan, D1)', () => {
+  it('una actividad terminada empieza sin cumbre y con la cumbre por calcular', async () => {
+    const id = await terminada(A, '2026-11-12T10:00:00.000Z');
+    await createActivity(A, 'HIKING', 'GPS', '2026-11-13T10:00:00.000Z'); // grabando: no cuenta
+
+    expect((await getActivity(id))?.peakAltitudeMeters).toBeNull();
+    expect(await listActivityIdsMissingPeak()).toEqual([id]);
+  });
+
+  it('savePeak guarda la cumbre y la saca de las pendientes, sin tocar el estado ni las métricas', async () => {
+    const id = await terminada(A, '2026-11-12T10:00:00.000Z');
+    const antes = await getActivity(id);
+
+    await savePeak(id, 1176.4);
+
+    expect(await getActivity(id)).toEqual({ ...antes, peakAltitudeMeters: 1176.4 });
+    expect(await listActivityIdsMissingPeak()).toEqual([]);
+  });
+
+  it('una actividad sin perfil queda calculada con cumbre null', async () => {
+    const id = await terminada(A, '2026-11-12T10:00:00.000Z');
+
+    await savePeak(id, null);
+
+    expect((await getActivity(id))?.peakAltitudeMeters).toBeNull();
+    expect(await listActivityIdsMissingPeak()).toEqual([]);
+  });
+
+  it('una actividad recuperada del servidor queda por calcular', async () => {
+    const id = await insertDownloadedActivity(
+      {
+        serverId: 'srv-15',
+        clientGeneratedId: randomUUID(),
+        type: 'HIKING',
+        startedAt: '2026-11-01T10:00:00.000Z',
+        endedAt: '2026-11-01T11:00:00.000Z',
+        distanceMeters: 5000,
+        durationSeconds: 3600,
+        elevationGainMeters: 100,
+        elevationLossMeters: 100,
+        elevationSource: 'GPS',
+        points: [],
+      },
+      A
+    );
+
+    expect(await listActivityIdsMissingPeak()).toEqual([id]);
   });
 });

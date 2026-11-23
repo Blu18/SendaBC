@@ -12,6 +12,7 @@ import { erroresDeCuenta, esContrasenaIncorrecta, mensajeDeCuenta } from "../../
 import { validarCambioContrasena, type PasswordFormErrors } from "../../lib/account/credentials";
 import type { Theme } from "../../lib/theme";
 import { useThemedStyles } from "../../hooks/theme/useTheme";
+import KeyboardScreen from "../../components/ui/KeyboardScreen";
 
 // Cambiar la contraseña (spec 011, CA-44, CA-45). La nueva se confirma, como en el registro.
 // Con la actual incorrecta (403) no cambia nada ni cierra la sesión (plan, D11). La sesión de
@@ -62,7 +63,7 @@ export default function ChangePasswordPage() {
     };
 
     return (
-        <View style={styles.container}>
+        <KeyboardScreen style={styles.container}>
             <ScreenHeader title="Cambiar contraseña" onBack={() => navigation.goBack()} />
             <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
                 <Appear>
@@ -117,7 +118,7 @@ export default function ChangePasswordPage() {
                     disabled={cambiar.isPending}
                 />
             </BottomBar>
-        </View>
+        </KeyboardScreen>
     );
 }
 

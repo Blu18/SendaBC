@@ -30,22 +30,27 @@ export function groupByMonth<T extends Pick<Activity, 'startedAt' | 'distanceMet
     else groups.set(key, [a]);
   }
 
-  const currentYear = now.getFullYear();
   return [...groups.entries()]
     .sort(([a], [b]) => (a < b ? 1 : a > b ? -1 : 0))
     .map(([key, list]) => {
       const data = [...list].sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt));
-      const [year, month] = key.split('-').map(Number);
-      const name = MONTH_NAMES[month - 1];
-      const capitalized = name[0].toUpperCase() + name.slice(1);
       return {
         key,
-        title: year === currentYear ? capitalized : `${capitalized} ${year}`,
+        title: monthTitle(key, now),
         count: data.length,
         distanceMeters: data.reduce((sum, a) => sum + (a.distanceMeters ?? 0), 0),
         data,
       };
     });
+}
+
+// Título de un mes "2026-10": "Octubre", o "Diciembre 2025" si no es el año en curso (CA-14).
+// También lo usan los filtros de la spec 015 (chips de mes).
+export function monthTitle(key: string, now: Date): string {
+  const [year, month] = key.split('-').map(Number);
+  const name = MONTH_NAMES[month - 1];
+  const capitalized = name[0].toUpperCase() + name.slice(1);
+  return year === now.getFullYear() ? capitalized : `${capitalized} ${year}`;
 }
 
 // "3 actividades, 24.60 km" (CA-14). La distancia usa el formato de la spec 004, como el total de

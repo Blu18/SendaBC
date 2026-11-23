@@ -9,14 +9,11 @@ import { useActivityMap } from "../../hooks/activity/activityMap.hook";
 import { useMapConnection } from "../../hooks/map/useMapConnection";
 import { useReducedMotion } from "../../hooks/theme/useReducedMotion";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
-import { CAMERA_MOVE_MS, LOOK_AHEAD_PADDING, PITCH_3D, ZOOM_FOLLOWING, ZOOM_OVERVIEW } from "../../lib/map/camera";
+import { CAMERA_MOVE_MS, LOOK_AHEAD_PADDING, PITCH_3D, TERRAIN_EXAGGERATION, ZOOM_FOLLOWING, ZOOM_OVERVIEW } from "../../lib/map/camera";
 import { MAP_OFFLINE, MAP_UNAVAILABLE, MAP_WAITING_GPS } from "../../lib/map/messages";
 import { TERRAIN_URL, localMapStyle, mapStyle } from "../../lib/map/style";
 import { BAJA_CALIFORNIA_CENTER } from "../../lib/routes/constants";
 import type { Theme } from "../../lib/theme";
-
-// Datos de relieve de Mapbox, probados en la Sierra de Juárez (spec 010, T4).
-const TERRAIN_EXAGGERATION = 1.5;
 
 const ICONS = {
     "position-arrow": { image: require("../../assets/map/position-arrow.png"), sdf: true },

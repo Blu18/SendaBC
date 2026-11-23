@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, type Ref } from "react";
 import { View, Text, TextInput, StyleSheet, StyleProp, ViewStyle, TextInputProps } from "react-native";
 import { fontFamilies, type Theme } from "../../lib/theme";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 import Icon from "./Icon";
 
 interface TextFieldProps extends Omit<TextInputProps, "style"> {
+    // React 19 pasa ref como prop: llega al TextInput para mover el foco de un campo al siguiente.
+    ref?: Ref<TextInput>;
     label: string;
     // Mensaje de ayuda bajo el campo. Si hay error, se muestra el error en su lugar.
     helper?: string;

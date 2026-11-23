@@ -11,11 +11,11 @@ export class AuthService {
 
     async validateUser(email: string, password: string) {
         const user = await this.userService.findByEmail(email)
-        if(!user) throw new UnauthorizedException("Credenciales invalidas")
+        if(!user) throw new UnauthorizedException("Credenciales inválidas")
 
         const passwordMatch: boolean = await compare(password, user.passwordHash)
 
-        if(!passwordMatch) throw new UnauthorizedException("Credenciales invalidas")
+        if(!passwordMatch) throw new UnauthorizedException("Credenciales inválidas")
 
         return { id: user.id }
     }
