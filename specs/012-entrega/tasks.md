@@ -106,9 +106,29 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
   - **Comprobado desde fuera:** `https://158-23-177-65.sslip.io/` responde 200 con certificado válido de Let's Encrypt; `/activities` sin token y `/telegram/webhook` sin secreto responden 401; el puerto 3000 no responde desde fuera.
   - **Pendiente:** el reinicio de la máquina se prueba en M6. En el registro aparece un error de telemetría de `ObserveAgentWorker` (429, sin créditos), que no afecta la API.
 - [ ] T16 — **(usuario)** Registrar el webhook del bot de producción con `setWebhook` y `TELEGRAM_WEBHOOK_SECRET`. Vincular a un contacto del equipo con una invitación desde la app (spec 008). (CA-10, CA-27)
-- [ ] T17 — **Detenerse antes:** correr en Supabase `consultas/actividades_cortas.sql` y mostrar al usuario cuántas actividades se borran y de qué cuentas. **(usuario)** Respaldar la base desde el panel de Supabase y confirmar. Después, `npx prisma migrate deploy` aplica T4 (plan R1). (CA-25)
+
+  Avance (2026-11-23): webhook registrado desde la máquina, sin mostrar el token ni el secreto. Se usaron `allowed_updates: ["message"]`, como el polling, y `drop_pending_updates`. `getWebhookInfo` apunta a `https://158-23-177-65.sslip.io/telegram/webhook`, sin `last_error_message` y con 0 pendientes. El bot es `@senda_bc_bot` y coincide con `TELEGRAM_BOT_USERNAME`.
+  - **Falta (usuario):** vincular a un contacto con una invitación desde la app conectada al backend publicado. Los contactos vinculados antes con el bot de desarrollo tienen un `telegramChatId` de ese bot. El bot de producción solo puede escribirles si le mandan `/start`, así que el contacto de la demo se vincula de nuevo con `@senda_bc_bot`. Por decisión del usuario, se hace con el APK de entrega, después de T21. T16 queda abierta hasta entonces.
+- [x] T17 — **Detenerse antes:** correr en Supabase `consultas/actividades_cortas.sql` y mostrar al usuario cuántas actividades se borran y de qué cuentas. **(usuario)** Respaldar la base desde el panel de Supabase y confirmar. Después, `npx prisma migrate deploy` aplica T4 (plan R1). (CA-25)
+
+  Hecho (2026-11-23). La consulta se corrió desde la máquina en una transacción de solo lectura: 75 de 366 actividades en 4 cuentas de prueba (`postman@senda.bc` 54, `diego@mail.com` 15, `prueba-bitacora@senda.bc` 4 y `t37-zonas-9164@prueba.test` 2). Tenían 0, 1 o 2 puntos válidos (10, 45 y 20), y ninguna era origen de una ruta. El usuario respaldó la base y confirmó. Antes de aplicar se volvió a contar (75) y luego `prisma migrate deploy` aplicó `20261123000000_borrar_actividades_cortas`. Después quedan 291 actividades, 0 cortas y las mismas 32 rutas. `migrate status` dice "Database schema is up to date!" y la API responde 200. Desde ahora `actualizar.sh` se corre sin `SIN_MIGRAR`.
 - [ ] T18 — Base recreable: **(usuario)** crear un proyecto vacío de Supabase. Luego `prisma migrate deploy` y `npm run test:e2e` contra él (en serie, por el fallo intermitente en paralelo de la 011). Anotar el resultado y borrar el proyecto. (CA-11)
-- [ ] T19 — `backend/postman/SendaBC.produccion.postman_environment.json` con `baseUrl` del backend publicado y sin secretos. Correr la colección completa contra producción y anotar el resultado. (CA-12)
+
+  Resultado (2026-11-23): proyecto vacío `gneqbrtnbihurhkacxiu` (`aws-1-us-west-2`). Antes de empezar se comprobó que no era el de producción y que tenía 0 tablas en `public`. Las conexiones van en `backend/.env.test.local` (en `.gitignore`), cargado con `dotenv` encima de `.env`.
+  - **Migraciones:** `prisma migrate deploy` aplicó las 9 sin error, incluidos PostGIS, `pgcrypto`, el trigger del hash y el módulo de seguridad.
+  - **Primera corrida de e2e:** 8 de 9 archivos. `route-publish` necesita las rutas de ejemplo; una base nueva no las tiene. Con `npm run seed:rutas` se cargaron 17.
+  - **Segunda corrida:** 101 de 102. `safety` se pasó del límite de 5 s en una prueba (latencia con la base nueva). Ese archivo solo se corrió dos veces más y pasó las dos (16 de 16).
+  - **Para T22:** el README debe decir que una base nueva necesita `npm run seed:rutas` antes de los e2e.
+  - **Falta (usuario):** borrar el proyecto de Supabase y `backend/.env.test.local`.
+- [x] T19 — `backend/postman/SendaBC.produccion.postman_environment.json` con `baseUrl` del backend publicado y sin secretos. Correr la colección completa contra producción y anotar el resultado. (CA-12)
+
+  Hecho (2026-11-23). El entorno tiene `baseUrl` del backend publicado, `telegramReal=true` y `webhookSecret` vacío, de tipo secreto: se llena al correr la colección y no va al repositorio (CA-3). Cambios en la colección:
+  - "Reenviar la misma actividad" manda los mismos 3 puntos que "Subir lote". Con `points: []`, la regla de T2 la rechazaba antes de revisar si ya existía. Un reenvío real lleva sus puntos.
+  - "Enviar mensaje de prueba": con `telegramReal=true` espera `FAILED` con "chat not found", porque el chat simulado no existe en el bot real. En local sigue esperando `SENT`.
+
+  **Resultado contra producción** (newman 6.2.1): 82 peticiones y 141 de 141 aserciones, con 446 ms de respuesta promedio. La primera corrida tuvo 1 fallo, el reenvío, que se corrigió.
+
+  **Incidente:** al correrla con `npx newman … --env-var webhookSecret=…`, npm imprimió la línea del comando con el secreto del webhook. Se cambió enseguida: secreto nuevo con `openssl rand -hex 32` en la máquina, reinicio del servicio y `setWebhook` otra vez. El secreto filtrado ahora recibe 401. En adelante, el secreto se escribe en Postman, o se corre newman sin `npx` ni `--env-var` en la línea de comandos.
 
 ## Fase D — Build de entrega
 
@@ -157,8 +177,8 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
 | CA-8 | M5 | Manual (S9+) | Pendiente |
 | CA-9 | M6 | Manual | Pendiente |
 | CA-10 | M7 | Manual (S9+) | Pendiente |
-| CA-11 | M8 (`npm run test:e2e` contra la base nueva) | Manual + automatizada | Pendiente |
-| CA-12 | M9 (colección de Postman) | Manual | Pendiente |
+| CA-11 | M8 (`npm run test:e2e` contra la base nueva) | Manual + automatizada | Cumplido (2026-11-23): 9 migraciones y e2e completos, con `seed:rutas` |
+| CA-12 | M9 (colección de Postman) | Manual | Cumplido (2026-11-23): 141 de 141 contra producción |
 | CA-13 | M5 | Manual (S9+) | Pendiente |
 | CA-14 | M10 | Manual (S9+) | Pendiente |
 | CA-15 | M11 | Manual (S9+) | Pendiente |

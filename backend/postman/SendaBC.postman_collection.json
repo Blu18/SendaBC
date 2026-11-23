@@ -170,7 +170,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"activities\": [\n    {\n      \"clientGeneratedId\": \"{{clientGeneratedId}}\",\n      \"type\": \"HIKING\",\n      \"startedAt\": \"2026-10-09T10:00:00.000Z\",\n      \"endedAt\": \"2026-10-09T10:00:06.000Z\",\n      \"distanceMeters\": 24.6,\n      \"durationSeconds\": 6,\n      \"elevationGainMeters\": 0,\n      \"elevationLossMeters\": 0,\n      \"elevationSource\": \"GPS\",\n      \"points\": []\n    }\n  ]\n}"
+              "raw": "{\n  \"activities\": [\n    {\n      \"clientGeneratedId\": \"{{clientGeneratedId}}\",\n      \"type\": \"HIKING\",\n      \"startedAt\": \"2026-10-09T10:00:00.000Z\",\n      \"endedAt\": \"2026-10-09T10:00:06.000Z\",\n      \"distanceMeters\": 24.6,\n      \"durationSeconds\": 6,\n      \"elevationGainMeters\": 0,\n      \"elevationLossMeters\": 0,\n      \"elevationSource\": \"GPS\",\n      \"points\": [\n        { \"sequence\": 1, \"latitude\": 31.8667, \"longitude\": -116.5964, \"altitude\": 20.5, \"accuracy\": 4.2, \"recordedAt\": \"2026-10-09T10:00:00.000Z\" },\n        { \"sequence\": 2, \"latitude\": 31.8668, \"longitude\": -116.5965, \"altitude\": 21.1, \"accuracy\": 3.9, \"recordedAt\": \"2026-10-09T10:00:03.000Z\" },\n        { \"sequence\": 3, \"latitude\": 31.8669, \"longitude\": -116.5966, \"altitude\": null, \"accuracy\": null, \"recordedAt\": \"2026-10-09T10:00:06.000Z\" }\n      ]\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/activities/sync"
           }
@@ -1170,7 +1170,18 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('200 (CA-6)', () => pm.response.to.have.status(200));",
-                  "pm.test('se envió', () => pm.expect(pm.response.json()).to.eql({ status: 'SENT', error: null }));"
+                  "// Con el bot real (entorno de producción, telegramReal=true) el chat simulado no existe en",
+                  "// Telegram: el backend llama a la Bot API y guarda el fallo (spec 012, T19). En local, con",
+                  "// TELEGRAM_MODE=log, se envía.",
+                  "if (pm.variables.get('telegramReal') === 'true') {",
+                  "  pm.test('Telegram rechaza el chat simulado', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('FAILED');",
+                  "    pm.expect(body.error).to.include('chat not found');",
+                  "  });",
+                  "} else {",
+                  "  pm.test('se envió', () => pm.expect(pm.response.json()).to.eql({ status: 'SENT', error: null }));",
+                  "}"
                 ]
               }
             }
