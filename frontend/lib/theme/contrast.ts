@@ -89,6 +89,9 @@ export const CONTRAST_PAIRS: ContrastPair[] = [
   },
   { fg: 'error', bg: 'surface', tint: { token: 'error', alpha: AVISO_TINT }, min: 4.5, use: 'Aviso Error: título' },
   { fg: 'text', bg: 'surface', tint: { token: 'error', alpha: AVISO_TINT }, min: 4.5, use: 'Aviso Error: descripción' },
+  // Etiqueta de la línea de contexto del resumen (spec 014): texto normal sobre el fondo con
+  // ocre al 18 %. En ocre (secondaryText) medía 3.87:1 en claro y no cumplía.
+  { fg: 'text', bg: 'background', tint: { token: 'secondary', alpha: 0.18 }, min: 4.5, use: 'Etiqueta de logro del resumen' },
 ];
 
 /** Nombre del par como en la tabla de Figma, p. ej. "data / surface + 10 % data". */

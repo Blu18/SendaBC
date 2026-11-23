@@ -40,6 +40,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         padding: t.spacing.md,
         borderRadius: t.radius.md,
         backgroundColor: t.colors.surface,
+        ...t.shadows.low,
         overflow: "hidden",
     },
     texts: {

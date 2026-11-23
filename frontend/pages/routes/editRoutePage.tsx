@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert } from "react-native";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
+import BottomBar from "../../components/ui/BottomBar";
 import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
@@ -68,13 +69,13 @@ export default function EditRoutePage({ route: navRoute }: Props) {
                         <Notice {...aviso} />
                     </Appear>
                 </View>
-                <View style={styles.actions}>
+                <BottomBar>
                     {status === 'unavailable' ? (
                         <PrimaryButton text="Volver" onPress={() => navigation.goBack()} />
                     ) : (
                         <PrimaryButton text="Reintentar" onPress={retry} />
                     )}
-                </View>
+                </BottomBar>
             </View>
         );
     }
@@ -124,13 +125,13 @@ export default function EditRoutePage({ route: navRoute }: Props) {
                     no se pueden cambiar.
                 </Text>
             </ScrollView>
-            <View style={styles.actions}>
+            <BottomBar>
                 <PrimaryButton
                     text={update.isPending ? 'Guardando...' : 'Guardar cambios'}
                     onPress={guardar}
                     disabled={update.isPending}
                 />
-            </View>
+            </BottomBar>
         </View>
     );
 }
@@ -156,12 +157,5 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     nota: {
         ...t.typography.caption,
         color: t.colors.textMuted,
-    },
-    actions: {
-        paddingHorizontal: t.spacing.lg,
-        paddingVertical: t.spacing.md,
-        backgroundColor: t.colors.surface,
-        borderTopWidth: 1,
-        borderTopColor: t.colors.border,
     },
 });

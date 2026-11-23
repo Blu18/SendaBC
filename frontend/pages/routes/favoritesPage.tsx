@@ -1,9 +1,10 @@
-import { View, Text, FlatList, StyleSheet } from "react-native";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Appear from "../../components/ui/Appear";
 import RouteListNotice from "../../components/routes/RouteListNotice";
 import ScreenHeader from "../../components/ui/ScreenHeader";
 import Card from "../../components/ui/Card";
+import GroupedList from "../../components/ui/GroupedList";
 import Notice from "../../components/ui/Notice";
 import TextBtn from "../../components/ui/buttons/TextBtn";
 import BgBtn from "../../components/ui/buttons/BgBtn";
@@ -46,53 +47,54 @@ export default function FavoritesPage() {
                 )}
             </Appear>
             {status === 'success' || status === 'saved' ? (
-                <FlatList
-                    data={rows}
-                    keyExtractor={(row) => row.item.id}
-                    contentContainerStyle={styles.list}
-                    ListHeaderComponent={
-                        status === 'saved' && savedAt ? (
-                            <Appear style={styles.saved}>
-                                <Notice type="offline" title="Datos guardados" description={avisoDeGuardado(savedAt)} />
-                                <BgBtn text="Reintentar" onPress={retry} />
-                            </Appear>
-                        ) : null
-                    }
-                    // Solo con la lista guardada vacía: con red, la lista vacía es status 'empty'.
-                    ListEmptyComponent={
+                // Una sola lista agrupada (spec 014, RN-13). Al quitar una, su fila sale con la misma
+                // animación de antes (useLeavingItems) y el grupo se ajusta.
+                <ScrollView contentContainerStyle={styles.list}>
+                    {status === 'saved' && savedAt ? (
+                        <Appear style={styles.saved}>
+                            <Notice type="offline" title="Datos guardados" description={avisoDeGuardado(savedAt)} />
+                            <BgBtn text="Reintentar" onPress={retry} />
+                        </Appear>
+                    ) : null}
+                    {rows.length === 0 ? (
+                        // Solo con la lista guardada vacía: con red, la lista vacía es status 'empty'.
                         <Notice type="info" title="Nada por aquí todavía" description={FAVORITES_MESSAGES.empty} />
-                    }
-                    renderItem={({ item: { item, leaving } }) => (
-                        <Appear>{!leaving && (
-                            <Card
-                                onPress={() => navigation.navigate('RouteDetail', { id: item.id })}
-                                accessibilityLabel={item.name}
-                            >
-                                <View style={styles.row}>
-                                    <View style={styles.texts}>
-                                        <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
-                                        <Text style={styles.description}>
-                                            {item.available
-                                                ? [
-                                                      formatDistance(item.distanceMeters),
-                                                      ACTIVITY_TYPE_LABELS[item.type],
-                                                      `+${formatElevation(item.elevationGainMeters)}`,
-                                                  ].join(' · ')
-                                                : `${UNAVAILABLE_LABEL} · ${ACTIVITY_TYPE_LABELS[item.type]}`}
-                                        </Text>
-                                    </View>
-                                    <TextBtn
-                                        text={quitando === item.id ? 'Quitando...' : 'Quitar'}
-                                        style={styles.remove}
-                                        onPress={() => {
-                                            if (!favorite.isPending) favorite.mutate({ id: item.id, save: false });
-                                        }}
-                                    />
-                                </View>
-                            </Card>
-                        )}</Appear>
+                    ) : (
+                        <GroupedList>
+                            {rows.map(({ item, leaving }) => (
+                                <Appear key={item.id}>{!leaving && (
+                                    <Card
+                                        grouped
+                                        onPress={() => navigation.navigate('RouteDetail', { id: item.id })}
+                                        accessibilityLabel={item.name}
+                                    >
+                                        <View style={styles.row}>
+                                            <View style={styles.texts}>
+                                                <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+                                                <Text style={styles.description}>
+                                                    {item.available
+                                                        ? [
+                                                              formatDistance(item.distanceMeters),
+                                                              ACTIVITY_TYPE_LABELS[item.type],
+                                                              `+${formatElevation(item.elevationGainMeters)}`,
+                                                          ].join(' · ')
+                                                        : `${UNAVAILABLE_LABEL} · ${ACTIVITY_TYPE_LABELS[item.type]}`}
+                                                </Text>
+                                            </View>
+                                            <TextBtn
+                                                text={quitando === item.id ? 'Quitando...' : 'Quitar'}
+                                                style={styles.remove}
+                                                onPress={() => {
+                                                    if (!favorite.isPending) favorite.mutate({ id: item.id, save: false });
+                                                }}
+                                            />
+                                        </View>
+                                    </Card>
+                                    )}</Appear>
+                            ))}
+                        </GroupedList>
                     )}
-                />
+                </ScrollView>
             ) : (
                 <RouteListNotice status={status} messages={FAVORITES_MESSAGES} onRetry={retry} />
             )}

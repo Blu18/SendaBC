@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Alert, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Mapbox from "@rnmapbox/maps";
+import BottomBar from "../../components/ui/BottomBar";
 import Appear from "../../components/ui/Appear";
 import Notice from "../../components/ui/Notice";
 import ScreenHeader from "../../components/ui/ScreenHeader";
@@ -108,7 +109,7 @@ export default function PickZonePage() {
                     </View>
                 )}
             </View>
-            <View style={styles.panel}>
+            <BottomBar style={styles.panel}>
                 <Appear>
                     {estado.kind === "offline" && (
                         <Notice type="offline" title="Sin conexión" description={ZONE_MESSAGES.offline} />
@@ -132,7 +133,7 @@ export default function PickZonePage() {
                     disabled={estado.kind !== "ok" || descargar.isPending}
                 />
                 <TextBtn text="Cancelar" onPress={() => navigation.goBack()} />
-            </View>
+            </BottomBar>
         </View>
     );
 }
@@ -154,14 +155,12 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         borderWidth: 3,
         borderColor: t.colors.primary,
         borderRadius: t.radius.sm,
+        // Flota sobre el mapa (spec 014, RN-13).
+        ...t.shadows.medium,
     },
+    // Barra fija de abajo (spec 014): BottomBar, con más separación entre el tamaño y los botones.
     panel: {
         gap: t.spacing.md,
-        paddingHorizontal: t.spacing.lg,
-        paddingVertical: t.spacing.md,
-        backgroundColor: t.colors.surface,
-        borderTopWidth: 1,
-        borderTopColor: t.colors.border,
     },
     size: {
         ...t.typography.title,

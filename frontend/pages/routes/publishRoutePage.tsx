@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert, Platform } from "react-native";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import * as Location from "expo-location";
+import BottomBar from "../../components/ui/BottomBar";
 import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import ScreenHeader from "../../components/ui/ScreenHeader";
@@ -68,9 +69,9 @@ export default function PublishRoutePage({ route }: Props) {
                     <Notice {...aviso} />
                 </Appear>
             </View>
-            <View style={styles.actions}>
+            <BottomBar>
                 <PrimaryButton text="Volver" onPress={() => navigation.goBack()} />
-            </View>
+            </BottomBar>
         </View>
     );
 
@@ -204,13 +205,13 @@ export default function PublishRoutePage({ route }: Props) {
                 </Appear>
             </ScrollView>
 
-            <View style={styles.actions}>
+            <BottomBar>
                 <PrimaryButton
                     text={publish.isPending ? 'Publicando...' : 'Publicar'}
                     onPress={publicar}
                     disabled={publish.isPending}
                 />
-            </View>
+            </BottomBar>
         </View>
     );
 }
@@ -257,12 +258,5 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     nota: {
         ...t.typography.caption,
         color: t.colors.textMuted,
-    },
-    actions: {
-        paddingHorizontal: t.spacing.lg,
-        paddingVertical: t.spacing.md,
-        backgroundColor: t.colors.surface,
-        borderTopWidth: 1,
-        borderTopColor: t.colors.border,
     },
 });

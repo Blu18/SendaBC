@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import BottomBar from "../../components/ui/BottomBar";
+import GroupedList from "../../components/ui/GroupedList";
 import Appear from "../../components/ui/Appear";
 import { useProfile } from "../../hooks/auth/auth.hooks";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
@@ -28,6 +30,11 @@ import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
 // de los últimos 7 días, rutas cerca de ti, tus actividades, rutas populares y "Listo para salir".
 // "Empezar actividad" queda fijo sobre la barra de pestañas (CA-1). Lo que viene del teléfono se
 // ve sin conexión (CA-21); las secciones de rutas dicen si falta conexión (CA-22).
+// Divisores de las listas agrupadas de Inicio (spec 014, RN-13): empiezan después del número de
+// la ruta (padding 16 + número 24 + separación 12) o del ícono de la fila (16 + 40 + 12).
+const POPULAR_DIVIDER_INSET = 52;
+const PREP_DIVIDER_INSET = 68;
+
 export default function MainPage() {
     const navigation = useNavigation();
     const profile = useProfile();
@@ -126,17 +133,16 @@ export default function MainPage() {
                     <Section title="Populares">
                         {popular.status === "loading" && cargando}
                         {popular.status === "ready" && (
-                            <View style={styles.list}>
+                            <GroupedList inset={POPULAR_DIVIDER_INSET}>
                                 {popular.items.map((route, i) => (
                                     <PopularRouteRow
                                         key={route.id}
                                         route={route}
                                         position={i + 1}
-                                        divider={i > 0}
                                         onPress={() => abrirRuta(route.id)}
                                     />
                                 ))}
-                            </View>
+                            </GroupedList>
                         )}
                         <Appear style={styles.group}>
                             {popular.status === "offline" && <Notice type="offline" {...HOME_MESSAGES.popularOffline} />}
@@ -156,7 +162,7 @@ export default function MainPage() {
                     {contactsStatus === "success" && (
                         <SafetyCard nombres={nombresActivos} onConfigurar={() => navigation.navigate("Home", { screen: "Safety" })} />
                     )}
-                    <View style={styles.list}>
+                    <GroupedList inset={PREP_DIVIDER_INSET}>
                         {pendientes && (
                             <PrepRow
                                 icon="cloud-upload-outline"
@@ -171,9 +177,8 @@ export default function MainPage() {
                             title={HOME_MESSAGES.offlineMaps.title}
                             description={HOME_MESSAGES.offlineMaps.description}
                             onPress={() => navigation.navigate("OfflineZones")}
-                            divider={pendientes !== null}
                         />
-                    </View>
+                    </GroupedList>
                 </Section>
 
                 {/* Las miniaturas no llevan logo ni atribución dentro de la imagen (spec 013, T15). */}
@@ -181,9 +186,9 @@ export default function MainPage() {
             </ScrollView>
 
             {/* Fijo sobre la barra de pestañas, visible sin desplazarse (CA-1, CA-2). */}
-            <View style={styles.startBar}>
+            <BottomBar style={styles.startBar}>
                 <PrimaryButton text="Empezar actividad" onPress={() => navigation.navigate("Activity")} />
-            </View>
+            </BottomBar>
         </View>
     );
 }
@@ -246,22 +251,14 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         paddingRight: t.spacing.lg,
         alignItems: "flex-start",
     },
-    list: {
-        borderRadius: t.radius.md,
-        backgroundColor: t.colors.surface,
-        overflow: "hidden",
+    // Como el componente "Barra de empezar" de Figma: fondo de la pantalla y sombra hacia arriba.
+    startBar: {
+        backgroundColor: t.colors.background,
     },
     attribution: {
         ...t.typography.caption,
         color: t.colors.textMuted,
         textAlign: "center",
-    },
-    startBar: {
-        paddingHorizontal: t.spacing.lg,
-        paddingVertical: t.spacing.md,
-        backgroundColor: t.colors.background,
-        borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: t.colors.border,
     },
     // Área de toque de 48 dp (touchMin) alrededor del avatar de 40.
     avatarBtn: {

@@ -52,6 +52,8 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         borderRadius: t.radius.lg,
         borderWidth: 1,
         backgroundColor: t.colors.surface,
+        // El borde de color dice el estado; la sombra la separa del fondo (spec 014, RN-13).
+        ...t.shadows.low,
     },
     active: {
         borderColor: t.colors.primary,

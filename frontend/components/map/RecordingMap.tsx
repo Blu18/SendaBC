@@ -201,7 +201,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     control: {
         backgroundColor: t.colors.surface,
         overflow: "visible",
-        ...t.shadows.floating,
+        ...t.shadows.medium,
     },
     top: {
         position: "absolute",

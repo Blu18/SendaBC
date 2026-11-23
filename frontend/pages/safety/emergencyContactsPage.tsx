@@ -292,6 +292,8 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         padding: t.spacing.lg,
         borderRadius: t.radius.lg,
         backgroundColor: t.colors.surface,
+        // Tarjeta con acciones propias: separada y con sombra baja (spec 014, RN-13).
+        ...t.shadows.low,
     },
     cardHeader: {
         flexDirection: 'row',

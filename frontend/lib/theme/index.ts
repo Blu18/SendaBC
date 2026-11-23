@@ -1,14 +1,7 @@
 import { darkColors, lightColors, type ColorTokens } from './colors';
 import { motion, type MotionTokens } from './motion';
-import {
-  radius,
-  shadows,
-  spacing,
-  touchMin,
-  type RadiusTokens,
-  type ShadowTokens,
-  type SpacingTokens,
-} from './spacing';
+import { makeShadows, type ShadowTokens } from './shadows';
+import { radius, spacing, touchMin, type RadiusTokens, type SpacingTokens } from './spacing';
 import { typography, type TypographyTokens } from './typography';
 
 export type ColorScheme = 'light' | 'dark';
@@ -30,7 +23,7 @@ export const lightTheme: Theme = {
   typography,
   spacing,
   radius,
-  shadows,
+  shadows: makeShadows(lightColors),
   touchMin,
   motion,
 };
@@ -39,9 +32,11 @@ export const darkTheme: Theme = {
   ...lightTheme,
   scheme: 'dark',
   colors: darkColors,
+  shadows: makeShadows(darkColors),
 };
 
 export { darkColors, lightColors, type ColorTokens } from './colors';
 export { MAX_MOTION_MS, motion, type MotionTokens } from './motion';
 export { fontFamilies, typography, type TypographyTokens } from './typography';
-export { radius, shadows, spacing, touchMin } from './spacing';
+export { radius, spacing, touchMin } from './spacing';
+export { makeShadows, type ShadowTokens } from './shadows';

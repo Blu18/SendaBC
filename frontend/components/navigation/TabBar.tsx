@@ -85,8 +85,8 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     bar: {
         flexDirection: "row",
         backgroundColor: t.colors.surface,
-        borderTopWidth: 1,
-        borderTopColor: t.colors.border,
+        // Sombra hacia arriba en lugar del borde (spec 014, RN-13).
+        ...t.shadows.bar,
         paddingBottom: t.spacing.xs,
     },
     tab: {

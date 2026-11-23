@@ -67,7 +67,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         paddingVertical: t.spacing.md,
         borderRadius: t.radius.md,
         backgroundColor: t.colors.surface,
-        ...t.shadows.floating,
+        ...t.shadows.low,
     },
     // Con cerrar, el botón de 48 dp ya deja aire a la derecha.
     closable: {

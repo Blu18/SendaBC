@@ -13,11 +13,13 @@ interface CardProps {
     // Con onPress toda la tarjeta es tocable y lleva chevron.
     onPress?: (event: GestureResponderEvent) => void;
     accessibilityLabel?: string;
+    // Dentro de una GroupedList: sin fondo, radio ni sombra propios; los pone el grupo (spec 014).
+    grouped?: boolean;
     style?: StyleProp<ViewStyle>;
 }
 
-// Tarjeta de Figma: surface con borde sobre background, radio lg.
-export default function Card({ title, description, children, onPress, accessibilityLabel, style }: CardProps) {
+// Tarjeta de Figma: surface sobre background, radio lg y sombra baja, sin borde (spec 014, RN-13).
+export default function Card({ title, description, children, onPress, accessibilityLabel, grouped = false, style }: CardProps) {
     const styles = useThemedStyles(makeStyles);
     const content = (
         <>
@@ -33,14 +35,15 @@ export default function Card({ title, description, children, onPress, accessibil
         </>
     );
 
-    if (!onPress) return <View style={[styles.card, style]}>{content}</View>;
+    const cardStyle = [styles.card, !grouped && styles.surface, style];
+    if (!onPress) return <View style={cardStyle}>{content}</View>;
 
     return (
         <PressableScale
             onPress={onPress}
             accessibilityRole="button"
             accessibilityLabel={accessibilityLabel}
-            style={[styles.card, style]}
+            style={cardStyle}
             pressedStyle={styles.pressed}
         >
             {content}
@@ -54,11 +57,12 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         alignItems: "center",
         gap: t.spacing.md,
         padding: t.spacing.lg,
-        backgroundColor: t.colors.surface,
-        borderWidth: 1,
-        borderColor: t.colors.border,
-        borderRadius: t.radius.lg,
         overflow: "hidden",
+    },
+    surface: {
+        backgroundColor: t.colors.surface,
+        borderRadius: t.radius.lg,
+        ...t.shadows.low,
     },
     content: {
         flex: 1,

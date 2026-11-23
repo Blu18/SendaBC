@@ -96,6 +96,7 @@ export default function OfflineZonesPage() {
                                             accessibilityRole="progressbar"
                                             accessibilityValue={{ min: 0, max: 100, now: Math.floor(item.percentage) }}
                                         >
+                                            <View style={styles.trackTint} />
                                             <View style={[styles.fill, { width: `${Math.min(100, item.percentage)}%` }]} />
                                         </View>
                                     )}
@@ -152,8 +153,13 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     track: {
         height: 6,
         borderRadius: t.radius.pill,
-        backgroundColor: t.colors.border,
         overflow: "hidden",
+    },
+    // Riel de la barra: border al 30 %, como en Figma (spec 014).
+    trackTint: {
+        ...StyleSheet.absoluteFill,
+        backgroundColor: t.colors.border,
+        opacity: 0.3,
     },
     fill: {
         height: "100%",
@@ -161,7 +167,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     },
     actions: {
         flexDirection: "row",
-        justifyContent: "flex-end",
+        alignItems: "center",
         gap: t.spacing.sm,
     },
 });

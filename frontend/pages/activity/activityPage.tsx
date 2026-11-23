@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Linking, Alert, Vibration } from "react-native";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import BottomBar from "../../components/ui/BottomBar";
 import Appear from "../../components/ui/Appear";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
 import BgBtn from "../../components/ui/buttons/BgBtn";
@@ -380,14 +381,14 @@ export default function ActivityPage() {
             {/* Abajo, al alcance del pulgar (spec 009, CA-13). Al grabar, los controles flotan sobre
                 el mapa (spec 011, CA-40) */}
             {!recording && (
-                <View style={styles.actions}>
+                <BottomBar>
                     {/* Con una actividad sin cerrar no se ofrece iniciar otra (spec 003, CA-12, RN-1) */}
                     {stopFailed ? (
                         <PrimaryButton text="Volver" onPress={() => navigation.goBack()} />
                     ) : (
                         <PrimaryButton text="Iniciar actividad" onPress={handleStart} />
                     )}
-                </View>
+                </BottomBar>
             )}
 
             {/* "¿Estás bien?" (spec 008, CA-11, CA-12) */}
@@ -454,13 +455,5 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     points: {
         ...t.typography.bodySmall,
         color: t.colors.textMuted,
-    },
-    actions: {
-        gap: t.spacing.sm,
-        paddingHorizontal: t.spacing.lg,
-        paddingVertical: t.spacing.md,
-        backgroundColor: t.colors.surface,
-        borderTopWidth: 1,
-        borderTopColor: t.colors.border,
     },
 });

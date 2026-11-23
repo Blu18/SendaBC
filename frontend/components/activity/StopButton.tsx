@@ -33,7 +33,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         paddingRight: t.spacing.lg + t.spacing.xs,
         borderRadius: t.radius.pill,
         backgroundColor: t.colors.primary,
-        ...t.shadows.floating,
+        ...t.shadows.medium,
     },
     // La misma capa del 16 % que los botones rellenos.
     pressed: {

@@ -50,6 +50,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
         width: ROUTE_CARD_WIDTH,
         borderRadius: t.radius.md,
         backgroundColor: t.colors.surface,
+        ...t.shadows.low,
         overflow: "hidden",
     },
     // La miniatura ocupa el ancho de la tarjeta: sin esquinas propias, las recorta la tarjeta.
