@@ -105,10 +105,11 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
   - **Primer despliegue:** `SIN_MIGRAR=1 actualizar.sh`. `npm ci` (28 s), compilación y arranque sin errores. `prisma migrate status` muestra pendiente solo `20261123000000_borrar_actividades_cortas`, que se aplica en T17.
   - **Comprobado desde fuera:** `https://158-23-177-65.sslip.io/` responde 200 con certificado válido de Let's Encrypt; `/activities` sin token y `/telegram/webhook` sin secreto responden 401; el puerto 3000 no responde desde fuera.
   - **Pendiente:** el reinicio de la máquina se prueba en M6. En el registro aparece un error de telemetría de `ObserveAgentWorker` (429, sin créditos), que no afecta la API.
-- [ ] T16 — **(usuario)** Registrar el webhook del bot de producción con `setWebhook` y `TELEGRAM_WEBHOOK_SECRET`. Vincular a un contacto del equipo con una invitación desde la app (spec 008). (CA-10, CA-27)
+- [x] T16 — **(usuario)** Registrar el webhook del bot de producción con `setWebhook` y `TELEGRAM_WEBHOOK_SECRET`. Vincular a un contacto del equipo con una invitación desde la app (spec 008). (CA-10, CA-27)
 
   Avance (2026-11-23): webhook registrado desde la máquina, sin mostrar el token ni el secreto. Se usaron `allowed_updates: ["message"]`, como el polling, y `drop_pending_updates`. `getWebhookInfo` apunta a `https://158-23-177-65.sslip.io/telegram/webhook`, sin `last_error_message` y con 0 pendientes. El bot es `@senda_bc_bot` y coincide con `TELEGRAM_BOT_USERNAME`.
   - **Falta (usuario):** vincular a un contacto con una invitación desde la app conectada al backend publicado. Los contactos vinculados antes con el bot de desarrollo tienen un `telegramChatId` de ese bot. El bot de producción solo puede escribirles si le mandan `/start`, así que el contacto de la demo se vincula de nuevo con `@senda_bc_bot`. Por decisión del usuario, se hace con el APK de entrega, después de T21. T16 queda abierta hasta entonces.
+  - **Vínculo (2026-11-23, con el APK en el S9+):** la cuenta `diego@mail.com` invitó al contacto "Diego", que tocó Iniciar en `@senda_bc_bot` (nombre de Telegram "Blu CN"). El webhook recibió el `/start`; el contacto quedó `ACTIVE` a las 06:55 UTC y el bot le mandó el mensaje de bienvenida (`WELCOME`, `SENT`, sin error). La alerta con el bot real se prueba en M7 (CA-10, CA-27).
 - [x] T17 — **Detenerse antes:** correr en Supabase `consultas/actividades_cortas.sql` y mostrar al usuario cuántas actividades se borran y de qué cuentas. **(usuario)** Respaldar la base desde el panel de Supabase y confirmar. Después, `npx prisma migrate deploy` aplica T4 (plan R1). (CA-25)
 
   Hecho (2026-11-23). La consulta se corrió desde la máquina en una transacción de solo lectura: 75 de 366 actividades en 4 cuentas de prueba (`postman@senda.bc` 54, `diego@mail.com` 15, `prueba-bitacora@senda.bc` 4 y `t37-zonas-9164@prueba.test` 2). Tenían 0, 1 o 2 puntos válidos (10, 45 y 20), y ninguna era origen de una ruta. El usuario respaldó la base y confirmó. Antes de aplicar se volvió a contar (75) y luego `prisma migrate deploy` aplicó `20261123000000_borrar_actividades_cortas`. Después quedan 291 actividades, 0 cortas y las mismas 32 rutas. `migrate status` dice "Database schema is up to date!" y la API responde 200. Desde ahora `actualizar.sh` se corre sin `SIN_MIGRAR`.
@@ -141,7 +142,14 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
 
   `.env` y `.env.local` están en `.gitignore`, así que EAS no los sube: el build no lleva `localhost`, `EXPO_PUBLIC_BATTERY_TEST` ni `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES`. `expo config` se resuelve sin errores.
   - **Hecho por el usuario:** `eas login` con la cuenta `blucn`; `eas init` agregó a `app.json` `extra.eas.projectId` (`ffa6fe87-f712-469e-ba35-8576ab048225`) y `owner: "blucn"`; y `eas env:set` creó `EXPO_PUBLIC_MAPBOX_TOKEN` en `production` con visibilidad `plaintext`, porque el token de Mapbox es público y va en el JS. Se comprobó que es el mismo token `pk.` de `.env.local`, sin mostrarlo. eas-cli 27.11.0.
-- [ ] T21 — `eas build -p android --profile entrega`. Descargar el APK como `SendaBC-1.0.0.apk` e instalarlo en el S9+ después de desinstalar el development build (plan R7, R8). (CA-6, CA-7, CA-8)
+- [x] T21 — `eas build -p android --profile entrega`. Descargar el APK como `SendaBC-1.0.0.apk` e instalarlo en el S9+ después de desinstalar el development build (plan R7, R8). (CA-6, CA-7, CA-8)
+
+  Avance (2026-11-23):
+  - **Build:** `eas build -p android --profile entrega --non-interactive` ([`b0ee6965`](https://expo.dev/accounts/blucn/projects/sendabc/builds/b0ee6965-1ce6-474d-b9c4-290d436d535c)) tardó unos 15 minutos y terminó en `FINISHED`. EAS creó en la nube el keystore administrado. Se subieron 75.7 MB. Antes se agregó `respaldo-*.sql` a `backend/.gitignore`, para que el respaldo de T17 no se subiera.
+  - **Descarga:** `entrega/SendaBC-1.0.0.apk`, de 194 MB. La carpeta está ignorada en el `.gitignore` de la raíz.
+  - **Revisión con `aapt2`:** `com.sendabc.app`, `versionCode 1`, `versionName 1.0.0`, etiqueta `SendaBC` y `targetSdk 36`.
+  - **Revisión del bundle:** tiene `158-23-177-65.sslip.io` y el token público de Mapbox. No tiene `localhost:3000`, `10.0.2.2` ni las variables de batería y de depuración de seguridad (CA-7).
+  - **Instalación (usuario, 2026-11-23):** el development build se desinstaló y el APK se instaló en el S9+. Lo que se ve en el teléfono (nombre, ícono y arranque) se anota en M3.
 
 ## Fase E — Documentación y demo
 
