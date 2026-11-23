@@ -2,6 +2,7 @@ import type { Activity } from '../db/activities';
 import type { LocalSafetySession } from '../db/safety';
 import type { SafetyAlert } from './api';
 import type { OutboxEntry } from './outbox';
+import { debeGuardarse } from '../metrics/validPoints';
 import { aSesion, type EleccionUmbrales } from './thresholds';
 import { hayAlertaActiva } from './recording';
 import { validarRegreso } from './returnTime';
@@ -26,6 +27,9 @@ export type SessionActionsDeps = {
   setReturnBy(clientId: string, returnBy: string | null): Promise<void>;
   // Actividades en RECORDING que tienen sesión de seguridad (para cerrar las huérfanas).
   listRecordingSessionIds(): Promise<number[]>;
+  // Para descartar las huérfanas con menos de 3 puntos válidos (spec 012, CA-22).
+  countValidPoints(localId: number): Promise<number>;
+  discardActivity(localId: number): Promise<boolean>;
   setAlert(clientId: string, clientAlertId: string, triggeredAt: string): Promise<void>;
   markAlertSent(clientAlertId: string, serverId: string): Promise<void>;
   enqueueOutbox(userId: string, entry: OutboxEntry): Promise<number>;
@@ -118,13 +122,32 @@ export function createSessionActions(deps: SessionActionsDeps) {
   // Al abrir la app se cierran las actividades que quedaron grabando (spec 003, CA-10). Sus
   // sesiones también se terminan, con la misma hora de fin, para que el servidor no avise por la
   // hora de regreso de una actividad que ya no sigue.
-  async function cerrarHuerfanas(cerrarActividades: () => Promise<unknown>) {
-    const ids = await deps.listRecordingSessionIds();
-    await cerrarActividades();
-    for (const id of ids) {
-      const actividad = await deps.getActivity(id);
-      if (actividad?.endedAt) await terminar(id, actividad.endedAt);
+  //
+  // Después, sin aviso, descarta las que cerró con menos de 3 puntos válidos (spec 012, CA-22,
+  // CA-24). Siempre en este orden: cerrar, encolar el fin de la sesión y luego borrar, porque
+  // borrar la actividad borra su sesión y sin el fin encolado el servidor avisaría a los contactos
+  // (CA-23, plan D3). Si el fin no se pudo encolar, esa actividad no se borra. Un error no detiene
+  // a las demás: se lanza el primero al final.
+  async function cerrarHuerfanas(cerrarActividades: () => Promise<number[]>) {
+    const conSesion = await deps.listRecordingSessionIds();
+    const cerradas = await cerrarActividades();
+    let error: unknown = null;
+
+    for (const id of new Set([...conSesion, ...cerradas])) {
+      try {
+        if (conSesion.includes(id)) {
+          const actividad = await deps.getActivity(id);
+          if (actividad?.endedAt) await terminar(id, actividad.endedAt);
+        }
+        if (cerradas.includes(id) && !debeGuardarse(await deps.countValidPoints(id))) {
+          await deps.discardActivity(id);
+        }
+      } catch (e) {
+        error ??= e;
+      }
     }
+
+    if (error) throw error;
   }
 
   // Guarda en el teléfono la alerta que creó el servidor, para verla y cancelarla como las demás

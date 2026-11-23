@@ -1,0 +1,19 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "entrega": {
+      "distribution": "internal",
+      "developmentClient": false,
+      "environment": "production",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_IP": "https://158-23-177-65.sslip.io"
+      }
+    }
+  }
+}

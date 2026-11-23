@@ -64,6 +64,7 @@ Estas métricas corresponden a los campos de actividad del modelo de datos del s
 
 ### Historial
 
+- 2026-11-22 — CA-17 cambia por la spec 012 (RN-2): una actividad con menos de 3 puntos válidos ya no se guarda, así que ninguna actividad guardada llega a tener 0 o 1 punto válido. CA-17 se conserva solo como protección: el resumen no falla si por algún motivo se abre una así. Aprobado por el usuario.
 - 2026-11-20 — Pasa a Implementada por la spec 011 (CA-6, M29). M3 se hizo en el S9+ con un piso, 3.8 m con barómetro, aceptado por el usuario. M4 se hizo en el Nothing Phone 2 y M5 en el S9+, con 0 m. La elevación con GPS en segundo plano (011, F5) pasa a la 012.
 - 2026-10-08 — Implementada con pendientes: T1–T20 hechas, 71 pruebas Vitest pasan y la mayoría de los CA se verificaron en el emulador. Faltan los casos M2, M3, M4, M5, M7 (paso 1) y M8 (ver `tasks.md`).
 - 2026-10-06 — Se agrega CA-25 (saltos de ubicación imposibles), hallado al probar en el emulador: el primer punto fue la ubicación por defecto del emulador y la distancia sumó ~789 km. Aprobado por el usuario.

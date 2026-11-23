@@ -1,4 +1,5 @@
 import * as Crypto from 'expo-crypto';
+import { MAX_ACCURACY_M } from '../metrics/constants';
 import type { ActivityMetrics, BarometerReading, ElevationSource } from '../metrics/summary';
 import { transaccionExclusiva } from './espera';
 import { getDb } from './sqlite';
@@ -128,10 +129,11 @@ export async function countPoints(localId: number) {
 // Cierra las actividades que quedaron en RECORDING (app cerrada o pantalla abandonada).
 // endedAt = hora del último punto, o startedAt si no tiene puntos o si el último punto es
 // anterior al inicio (CA-10, F1 de la spec 011). Las horas son ISO 8601 en UTC con el mismo
-// formato, así que MAX compara bien como texto. Devuelve cuántas cerró.
+// formato, así que MAX compara bien como texto. Devuelve los local_id que cerró, para descartar
+// después las que tengan menos de 3 puntos válidos (spec 012, CA-22, plan D3).
 export async function closeOrphanActivities() {
   const db = await getDb();
-  const result = await db.runAsync(
+  const rows = await db.getAllAsync<{ localId: number }>(
     `UPDATE activities
      SET status = 'PENDING_SYNC',
          endedAt = MAX(
@@ -143,9 +145,37 @@ export async function closeOrphanActivities() {
            ),
            startedAt
          )
-     WHERE status = 'RECORDING'`
+     WHERE status = 'RECORDING'
+     RETURNING local_id AS localId`
   );
-  return result.changes;
+  return rows.map((r) => r.localId);
+}
+
+// Puntos que cuentan para la distancia por su precisión: la regla isAccurate de
+// lib/metrics/validPoints.ts, contada en SQL (spec 012, RN-1, plan D1, D2).
+export async function countValidPoints(localId: number) {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM activity_points
+     WHERE activity_id = ? AND (accuracy IS NULL OR accuracy <= ?)`,
+    [localId, MAX_ACCURACY_M]
+  );
+  return row?.n ?? 0;
+}
+
+// Borra una actividad cerrada con menos de 3 puntos válidos y, en cascada, sus puntos, sus
+// lecturas del barómetro y su sesión de seguridad (spec 012, RN-4). El aviso de fin de la sesión
+// tiene que estar ya en safety_outbox, que no depende de la actividad (plan D3).
+// No borra una que el servidor ya guardó (server_id, plan R3) ni una que se está grabando:
+// esas primero se cierran. Devuelve si la borró.
+export async function discardActivity(localId: number) {
+  const db = await getDb();
+  const result = await db.runAsync(
+    `DELETE FROM activities
+     WHERE local_id = ? AND server_id IS NULL AND status != 'RECORDING'`,
+    [localId]
+  );
+  return result.changes > 0;
 }
 
 // Corrige las actividades pendientes que ya quedaron con el fin antes del inicio, como cerraba

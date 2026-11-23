@@ -6,6 +6,7 @@ import {
   NO_ENCONTRADA,
 } from './activity.service.js';
 import type { PrismaService } from '../prisma.service.js';
+import { ERROR_POCOS_PUNTOS } from './activity-validation.js';
 
 const USUARIO = '11111111-1111-4111-8111-111111111111';
 const OTRO = '22222222-2222-4222-8222-222222222222';
@@ -133,25 +134,27 @@ describe('ActivityService.syncBatch (spec 005)', () => {
     expect(valores(path)).toEqual(['srv-1', 'srv-1']);
   });
 
-  it('sin puntos no inserta puntos ni recorrido (spec 004, CA-17)', async () => {
-    const { service, tx } = montar();
+  it.each([
+    ['sin puntos', []],
+    ['con un solo punto', [punto(1)]],
+    ['con 2 puntos', [punto(1), punto(2)]],
+  ])(
+    '%s la rechaza sin guardar actividad ni puntos (spec 012, CA-26)',
+    async (_caso, points) => {
+      const { service, prisma } = montar();
 
-    const [result] = await service.syncBatch(USUARIO, [actividad(A1, [])]);
+      const results = await service.syncBatch(USUARIO, [actividad(A1, points)]);
 
-    expect(result.status).toBe('CREATED');
-    expect(tx.$executeRaw).not.toHaveBeenCalled();
-  });
-
-  it('con un solo punto lo inserta pero no arma recorrido', async () => {
-    const { service, tx } = montar();
-
-    await service.syncBatch(USUARIO, [actividad(A1, [punto(1)])]);
-
-    expect(tx.$executeRaw).toHaveBeenCalledTimes(1);
-    expect(tx.$executeRaw.mock.calls[0][0].join('?')).toContain(
-      'INSERT INTO activity_points',
-    );
-  });
+      expect(results).toEqual([
+        {
+          clientGeneratedId: A1,
+          status: 'REJECTED',
+          errors: [ERROR_POCOS_PUNTOS],
+        },
+      ]);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    },
+  );
 
   it('un reenvío del mismo usuario responde ALREADY_EXISTS sin guardar de nuevo (CA-10)', async () => {
     const { service, prisma } = montar();
