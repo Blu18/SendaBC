@@ -77,6 +77,12 @@
           ]
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ffa6fe87-f712-469e-ba35-8576ab048225"
+      }
+    },
+    "owner": "blucn"
   }
 }

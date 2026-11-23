@@ -132,7 +132,15 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
 
 ## Fase D — Build de entrega
 
-- [ ] T20 — `frontend/eas.json` con el perfil `entrega`: `buildType: "apk"`, `distribution: "internal"` y `EXPO_PUBLIC_BACKEND_IP` del dominio publicado, sin `EXPO_PUBLIC_BATTERY_TEST` ni `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES`. **(usuario)** `eas login`, `eas init` (agrega `projectId` a `app.json`) y `EXPO_PUBLIC_MAPBOX_TOKEN` como variable de entorno del proyecto en EAS (plan D7). (CA-7)
+- [x] T20 — `frontend/eas.json` con el perfil `entrega`: `buildType: "apk"`, `distribution: "internal"` y `EXPO_PUBLIC_BACKEND_IP` del dominio publicado, sin `EXPO_PUBLIC_BATTERY_TEST` ni `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES`. **(usuario)** `eas login`, `eas init` (agrega `projectId` a `app.json`) y `EXPO_PUBLIC_MAPBOX_TOKEN` como variable de entorno del proyecto en EAS (plan D7). (CA-7)
+
+  Avance (2026-11-23): se creó `frontend/eas.json` con `cli.appVersionSource: "local"` (el `versionCode` sale de `app.json`) y el perfil `entrega`:
+  - `distribution: "internal"`, `developmentClient: false`, `android.buildType: "apk"`;
+  - `environment: "production"`, del que EAS toma sus variables. Sin ese campo, un perfil `internal` usaría `preview`;
+  - `env.EXPO_PUBLIC_BACKEND_IP` con el dominio publicado.
+
+  `.env` y `.env.local` están en `.gitignore`, así que EAS no los sube: el build no lleva `localhost`, `EXPO_PUBLIC_BATTERY_TEST` ni `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES`. `expo config` se resuelve sin errores.
+  - **Hecho por el usuario:** `eas login` con la cuenta `blucn`; `eas init` agregó a `app.json` `extra.eas.projectId` (`ffa6fe87-f712-469e-ba35-8576ab048225`) y `owner: "blucn"`; y `eas env:set` creó `EXPO_PUBLIC_MAPBOX_TOKEN` en `production` con visibilidad `plaintext`, porque el token de Mapbox es público y va en el JS. Se comprobó que es el mismo token `pk.` de `.env.local`, sin mostrarlo. eas-cli 27.11.0.
 - [ ] T21 — `eas build -p android --profile entrega`. Descargar el APK como `SendaBC-1.0.0.apk` e instalarlo en el S9+ después de desinstalar el development build (plan R7, R8). (CA-6, CA-7, CA-8)
 
 ## Fase E — Documentación y demo
