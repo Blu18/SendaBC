@@ -40,9 +40,10 @@ type Props = {
 const TYPES: (ActivityType | null)[] = [null, "HIKING", "TRAIL_RUNNING", "CYCLING"];
 
 // Con la letra a partir de este tamaño, "Quitar filtros" y "Ver N actividades" van uno debajo del
-// otro, como en el marco de letra grande de Figma. En 1.25 y no en 1.3: Android entrega la escala de
-// 130 % como un poco menos de 1.3 y los botones no se apilaban (T17).
-const STACK_FONT_SCALE = 1.25;
+// otro, como en el marco de letra grande de Figma. Desde 110 % "Ver N actividades" ya no cabía junto
+// a "Quitar filtros" en el S9+ (spec 012, CA-28). El umbral es 1.05 y no 1.1 porque Android entrega la
+// escala un poco por debajo de su valor (con 130 % pasó en la 015, T17).
+const STACK_FONT_SCALE = 1.05;
 
 // "Panel de filtros" de Figma (spec 015, CA-1 a CA-7; plan D5): sube desde abajo sobre Mis
 // actividades. Los cambios se aplican al momento, así que "Ver N actividades" siempre dice el número

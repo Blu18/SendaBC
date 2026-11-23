@@ -74,7 +74,9 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
   - el arranque usa `splashscreen_logo` con `splashscreen_background` en `values` y `values-night`.
 
   El development build instalado en el emulador usa el esquema viejo y hay que compilarlo de nuevo antes de los casos manuales (R8).
-- [ ] T13 — `frontend/components/activity/ActivityFiltersSheet.tsx`: `STACK_FONT_SCALE` pasa a 1.1. Hay que medir a 100 % con "Ver 202 actividades" en el S9+. Si se parte, se cambia a medir el texto (plan D11, R5). (CA-28)
+- [x] T13 — `frontend/components/activity/ActivityFiltersSheet.tsx`: `STACK_FONT_SCALE` pasa a 1.05 (ver el historial de la spec, 2026-11-23). Hay que medir a 100 % con "Ver 202 actividades" en el S9+. Si se parte, se cambia a medir el texto (plan D11, R5). (CA-28)
+
+  Hecho: el umbral es 1.05 y no 1.1, porque Android entrega la escala un poco por debajo de su valor (spec 015, T17). Lo decidió el usuario, y se actualizaron el plan y el historial de la spec. Vitest (957) y `tsc` pasan. La medición a 100 % y a 110 % en el S9+ se hace en M18 con el APK de entrega. Si a 100 % se parte, se aplica la alternativa de D11.
 
 ## Fase C — Despliegue
 

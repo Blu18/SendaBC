@@ -138,3 +138,4 @@ Hoy la app aparece en el teléfono como "frontend" y con el ícono genérico de 
 - 2026-11-22 — Resuelta P10: el ícono es la versión cuadrada del logo de la spec 009, por decisión del usuario.
 - 2026-11-22 — Aprobada por el usuario. P9 (duración y fecha de la demo) queda abierta, sin bloquear el plan. Se anota el cambio de la regla de los 3 puntos en los historiales de las specs 003 y 004 (RN-7).
 - 2026-11-22 — Plan aprobado por el usuario, junto con la constitución v1.11.
+- 2026-11-23 — Plan, D11 y T13: el umbral para apilar los botones del panel de filtros es 1.05 y no 1.1. Android puede entregar el 110 % un poco por debajo de 1.1, como pasó con el 130 % en la spec 015 (T17). Decisión del usuario. CA-28 no cambia.

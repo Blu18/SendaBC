@@ -77,7 +77,7 @@ Antes de aplicarla en Supabase se corre la misma consulta como `SELECT`, para ve
   - "Detener", título: "¿Terminar sin guardar?". Cuerpo: "La actividad tiene muy poco recorrido y no se guardará."
   - Al salir, cuerpo: "Si sales, la grabación termina. La actividad tiene muy poco recorrido y no se guardará."
   - El texto final se puede ajustar en la implementación.
-- `frontend/components/activity/ActivityFiltersSheet.tsx`: `STACK_FONT_SCALE` pasa de 1.25 a 1.1 (CA-28, D11).
+- `frontend/components/activity/ActivityFiltersSheet.tsx`: `STACK_FONT_SCALE` pasa de 1.25 a 1.05, para que los botones se apilen desde 110 % (CA-28, D11). Se usa 1.05 y no 1.1 porque Android puede entregar la escala un poco por debajo de su valor, como pasó con 1.3 en la 015 (T17).
 
 ### Hooks / estado / almacenamiento local
 
@@ -156,7 +156,7 @@ Antes de aplicarla en Supabase se corre la misma consulta como `SELECT`, para ve
 | **D8.** Oracle Cloud Always Free con systemd | Render Free con `pg_cron`; Docker; pm2 | Es la única opción gratis que no se duerme (P1). systemd ya viene en Ubuntu y reinicia el proceso: no se agregan dependencias. |
 | **D9.** Caddy como proxy con HTTPS automático | Nginx con certbot; Node con el certificado directo | Caddy saca y renueva el certificado solo, con un `Caddyfile` de pocas líneas. Android exige HTTPS en release, y el webhook de Telegram también. |
 | **D10.** Dominio `<ip>.sslip.io` | DuckDNS; un dominio comprado | No necesita cuenta ni costo, y Let's Encrypt lo acepta. Si la IP cambia, solo cambian el dominio, `eas.json` y el webhook. La IP pública reservada de Oracle es gratis y evita ese cambio. |
-| **D11.** Apilar los botones del panel desde 110 % de letra | Medir el texto con `onTextLayout`; `adjustsFontSizeToFit` | Es el cambio más chico y usa el diseño de letra grande ya aprobado en Figma. Achicar la letra va contra la accesibilidad. Si a 100 % "Ver 202 actividades" no cabe en el S9+, se cambia a medir el texto (R5). |
+| **D11.** Apilar los botones del panel desde 110 % de letra (umbral 1.05) | Medir el texto con `onTextLayout`; `adjustsFontSizeToFit` | Es el cambio más chico y usa el diseño de letra grande ya aprobado en Figma. Achicar la letra va contra la accesibilidad. Si a 100 % "Ver 202 actividades" no cabe en el S9+, se cambia a medir el texto (R5). |
 
 ## Riesgos
 
