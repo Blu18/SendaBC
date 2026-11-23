@@ -1,0 +1,12 @@
+# Proxy HTTPS del backend de SendaBC (spec 012, plan D9 y D10).
+# Caddy saca y renueva solo el certificado de Let's Encrypt.
+#
+# Antes de copiarlo, cambia el dominio por la IP pública reservada de la máquina, con guiones:
+# 203.0.113.10 -> 203-0-113-10.sslip.io (esta IP es de ejemplo). El puerto es el PORT de api.env.
+#   sudo cp backend/deploy/Caddyfile /etc/caddy/Caddyfile
+#   sudo systemctl reload caddy
+
+203-0-113-10.sslip.io {
+	encode gzip
+	reverse_proxy localhost:3000
+}

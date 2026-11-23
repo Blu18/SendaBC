@@ -1,0 +1,31 @@
+# Servicio systemd del backend de SendaBC (spec 012, plan D8).
+# Instalar:
+#   sudo cp backend/deploy/sendabc-api.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now sendabc-api
+# Registro: journalctl -u sendabc-api -f
+
+[Unit]
+Description=SendaBC API (NestJS)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sendabc
+Group=sendabc
+WorkingDirectory=/opt/sendabc/backend
+# Secretos fuera del repositorio (constitución 3.6). Modelo: backend/deploy/api.env.ejemplo.
+EnvironmentFile=/etc/sendabc/api.env
+ExecStart=/usr/bin/node dist/main.js
+# Siempre arriba: así no se duerme y la tarea de la hora de regreso corre cada minuto (CA-9, CA-10).
+Restart=always
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

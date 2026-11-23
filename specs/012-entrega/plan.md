@@ -60,7 +60,7 @@ Antes de aplicarla en Supabase se corre la misma consulta como `SELECT`, para ve
 ### Despliegue (D8, D9, D10)
 
 - **Máquina virtual:** Oracle Cloud Always Free, Ampere A1 (Arm) con Ubuntu LTS, 1 OCPU y 6 GB, dentro del límite gratis. Node 24 LTS, la versión de desarrollo.
-- **Proceso:** `backend/deploy/sendabc-api.service` (systemd) corre `node dist/main` con `Restart=always` y lee `/etc/sendabc/api.env`. Este archivo no está en el repositorio y tiene `NODE_ENV=production`, `PORT`, `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRE_IN`, `TELEGRAM_MODE=webhook` y las variables del bot. Arranca solo al reiniciar la máquina. Así no se duerme y la tarea `hora-de-regreso` corre cada minuto (CA-9, CA-10).
+- **Proceso:** `backend/deploy/sendabc-api.service` (systemd) corre `node dist/main` con `Restart=always` y lee `/etc/sendabc/api.env`. Este archivo no está en el repositorio y tiene `NODE_ENV=production`, `PORT`, `DATABASE_URL`, `DIRECT_URL` (para `prisma migrate deploy`), `JWT_SECRET`, `JWT_EXPIRE_IN`, `TELEGRAM_MODE=webhook` y las variables del bot. Arranca solo al reiniciar la máquina. Así no se duerme y la tarea `hora-de-regreso` corre cada minuto (CA-9, CA-10).
 - **HTTPS:** `backend/deploy/Caddyfile` con un proxy inverso de `https://<dominio>` a `localhost:PORT`. Caddy saca y renueva solo el certificado de Let's Encrypt. El dominio es `<ip-con-guiones>.sslip.io`, que es gratis y no necesita cuenta (D10).
 - **Red:** en la lista de seguridad de Oracle y en el `iptables` de la imagen se abren solo los puertos 80 y 443, además del 22 para SSH. El puerto de Node no queda expuesto.
 - **Actualizar:** `backend/deploy/actualizar.sh` hace `git pull`, `npm ci`, `npm run build`, `npx prisma migrate deploy` y `systemctl restart sendabc-api`.

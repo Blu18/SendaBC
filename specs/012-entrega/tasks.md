@@ -80,11 +80,20 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
 
 ## Fase C — Despliegue
 
-- [ ] T14 — En `backend/deploy/`:
+- [x] T14 — En `backend/deploy/`:
   - `sendabc-api.service` (systemd, `Restart=always`, `EnvironmentFile=/etc/sendabc/api.env`);
   - `Caddyfile` (proxy de `https://<dominio>` a `localhost:PORT`);
   - `actualizar.sh` (`git pull`, `npm ci`, `npm run build`, `npx prisma migrate deploy`, reinicio);
   - `api.env.ejemplo` con los nombres de las variables y valores falsos (plan D8, D9). (CA-3, CA-9)
+
+  Hecho. Detalles que el plan no fijaba:
+  - El repositorio va en `/opt/sendabc` y el servicio corre como el usuario `sendabc`, con `ProtectSystem=full`, `ProtectHome` y `NoNewPrivileges`. `api.env` queda `640 root:sendabc`.
+  - `api.env.ejemplo` también lleva `DIRECT_URL`: `prisma.config.ts` la usa para `prisma generate` y `migrate deploy`. Los valores van entre comillas simples para que systemd y `.` los lean igual.
+  - `actualizar.sh` carga `api.env` antes de `npm ci`. Usa `npm ci --include=dev`, porque con `NODE_ENV=production` se omiten Nest CLI y Prisma. Todo va dentro de `main()`, porque `git pull` puede cambiar el script mientras corre. Al final espera hasta 30 s a que `GET /` responda. Reinicia el servicio con una regla de sudoers solo para `systemctl restart sendabc-api`. En git es ejecutable (`100755`).
+  - El `Caddyfile` trae un dominio de ejemplo (`203-0-113-10.sslip.io`) que se cambia en T15 por la IP reservada.
+  - Node escucha en todas las interfaces. El puerto 3000 queda cerrado por la lista de seguridad y `iptables` (T15).
+
+  Revisión: `bash -n` sin errores; el ejemplo se carga con `set -a; .`; la búsqueda de secretos de M1 no encuentra nada en `backend/deploy/`. systemd y Caddy se prueban en la máquina en T15.
 - [ ] T15 — **(usuario, con Claude guiando)** Crear la máquina A1 de Oracle (Ubuntu LTS, 1 OCPU, 6 GB) y reservar su IP pública. Abrir 80 y 443 en la lista de seguridad y en `iptables`. Instalar Node 24 y Caddy, clonar el repositorio, crear `/etc/sendabc/api.env` y hacer el primer despliegue con `actualizar.sh`. Comprobar `https://<ip-con-guiones>.sslip.io` desde fuera (plan D10, R4). (CA-9)
 - [ ] T16 — **(usuario)** Registrar el webhook del bot de producción con `setWebhook` y `TELEGRAM_WEBHOOK_SECRET`. Vincular a un contacto del equipo con una invitación desde la app (spec 008). (CA-10, CA-27)
 - [ ] T17 — **Detenerse antes:** correr en Supabase `consultas/actividades_cortas.sql` y mostrar al usuario cuántas actividades se borran y de qué cuentas. **(usuario)** Respaldar la base desde el panel de Supabase y confirmar. Después, `npx prisma migrate deploy` aplica T4 (plan R1). (CA-25)
