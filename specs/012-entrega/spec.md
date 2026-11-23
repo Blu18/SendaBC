@@ -118,7 +118,7 @@ Hoy la app aparece en el teléfono como "frontend" y con el ícono genérico de 
 
 ## Preguntas abiertas
 
-- [x] **P1:** Hospedaje del backend → **Oracle Cloud Always Free** (máquina virtual siempre encendida, gratis). Es la única opción gratis que no se duerme (CA-9, CA-10). Render Free, Railway Free y Koyeb Free se duermen por falta de uso. La constitución hoy dice "Railway o Render", así que el plan lo justifica y propone el cambio en la tabla del stack (constitución 7.1).
+- [x] **P1:** Hospedaje del backend → **máquina virtual de Azure for Students** (siempre encendida, sin tarjeta; antes Oracle Cloud Always Free, ver historial). Es la única opción gratis que no se duerme (CA-9, CA-10). Render Free, Railway Free y Koyeb Free se duermen por falta de uso. La constitución hoy dice "Railway o Render", así que el plan lo justifica y propone el cambio en la tabla del stack (constitución 7.1).
 - [x] **P2:** Entrega del APK → **archivo adjunto**. CA-6.
 - [x] **P3:** Formato del manual → **Markdown en el repositorio**. CA-4.
 - [x] **P4:** Demo → **en vivo**; la actividad que se muestra se graba antes. CA-13 y CA-14.
@@ -138,4 +138,5 @@ Hoy la app aparece en el teléfono como "frontend" y con el ícono genérico de 
 - 2026-11-22 — Resuelta P10: el ícono es la versión cuadrada del logo de la spec 009, por decisión del usuario.
 - 2026-11-22 — Aprobada por el usuario. P9 (duración y fecha de la demo) queda abierta, sin bloquear el plan. Se anota el cambio de la regla de los 3 puntos en los historiales de las specs 003 y 004 (RN-7).
 - 2026-11-22 — Plan aprobado por el usuario, junto con la constitución v1.11.
+- 2026-11-23 — P1 cambia de Oracle Cloud Always Free a Azure for Students: Oracle rechazó los datos de pago al crear la cuenta. Azure for Students no pide tarjeta y la máquina queda siempre encendida, así que CA-9 y CA-10 no cambian. Decisión del usuario; constitución v1.12.
 - 2026-11-23 — Plan, D11 y T13: el umbral para apilar los botones del panel de filtros es 1.05 y no 1.1. Android puede entregar el 110 % un poco por debajo de 1.1, como pasó con el 130 % en la spec 015 (T17). Decisión del usuario. CA-28 no cambia.

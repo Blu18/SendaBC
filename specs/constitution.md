@@ -1,6 +1,6 @@
 # Constitución de SendaBC
 
-Versión 1.11 · 2026-11-22 · **Aprobada**
+Versión 1.12 · 2026-11-23 · **Aprobada**
 
 Principios que toda spec, plan y línea de código debe respetar. Cambiar la constitución requiere acuerdo explícito del equipo y una entrada en el historial al final de este archivo.
 
@@ -68,7 +68,7 @@ Principios que toda spec, plan y línea de código debe respetar. Cambiar la con
 | Mensajería | Bot API de Telegram, llamada con `fetch` (avisos a los contactos de emergencia) |
 | Datos | Prisma 7 con `@prisma/adapter-pg`, PostgreSQL + PostGIS en Supabase |
 | Calidad | Vitest + supertest (backend), Vitest para lógica pura (frontend), oxlint, Prettier, Postman |
-| Despliegue | Oracle Cloud Always Free (API, con systemd y Caddy para HTTPS), Supabase (BD), Expo EAS Build (app) |
+| Despliegue | Máquina virtual de Azure for Students (API, con systemd y Caddy para HTTPS), Supabase (BD), Expo EAS Build (app) |
 
 Diferencias respecto al plan original: se usa **Vitest** en lugar de Jest y **oxlint** en lugar de ESLint en el backend (ya venían configurados con la plantilla de NestJS 12).
 
@@ -82,6 +82,7 @@ Diferencias respecto al plan original: se usa **Vitest** en lugar de Jest y **ox
 
 ## Historial
 
+- 2026-11-23 — v1.12. La API se despliega en una máquina virtual de Azure for Students en lugar de Oracle Cloud Always Free: Oracle rechazó los datos de pago al crear la cuenta, y Azure for Students no pide tarjeta. Siguen systemd y Caddy (spec 012, plan D8). Decisión del usuario.
 - 2026-11-22 — v1.11. Se agrega `expo-splash-screen` al stack (spec 012, plan D6). La API se despliega en Oracle Cloud Always Free con systemd y Caddy en lugar de Railway o Render, porque es la única opción gratis que no se duerme (spec 012, plan D8 y D9). Aprobada junto con el plan de la spec 012.
 - 2026-11-20 — v1.10. Se quita `react-native-maps`: Explorar y el detalle de ruta usan `@rnmapbox/maps`, como la grabación (spec 013, plan D1). Se agrega `react-native-svg` para las miniaturas de recorridos de Inicio (spec 013, plan D2). Aprobada junto con el plan de la spec 013.
 - 2026-11-06 — v1.9. 3.1: el trigger también genera el hash al cambiar la contraseña. 4.2: se agrega `503` (spec 011, plan D5 y D9). Aprobada junto con el plan de la spec 011.

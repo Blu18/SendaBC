@@ -9,7 +9,7 @@ La spec tiene dos partes. La primera cambia código y la segunda casi todo es co
 - **Actividades con menos de 3 puntos válidos.** Un punto es válido si su precisión es de 20 m o mejor, o si no trae precisión: es la misma regla `isAccurate` que usa la distancia en la app y en el servidor (D1). La app cuenta los puntos válidos en SQLite al cerrar la actividad, por cualquiera de los tres caminos. Si son menos de 3, termina la sesión de seguridad y borra la actividad (D2, D3). "Detener" y la pregunta al salir avisan antes. El servidor rechaza esas actividades con una regla más de RN-5 de la spec 005. Las actividades cortas que ya están guardadas se borran una sola vez: en el teléfono con la versión 8 de SQLite y en el servidor con una migración de Prisma (D4).
 - **Nombre, ícono y pantalla de arranque.** La app se configura en `app.json` con el nombre "SendaBC", el logo cuadrado de la spec 009 como ícono adaptable y de notificación, y `expo-splash-screen` en modo claro y oscuro (D5, D6).
 - **Build de entrega.** El APK se compila con EAS Build, con un perfil `entrega` que apunta al backend publicado por HTTPS (D7).
-- **Despliegue.** El backend corre en una máquina virtual de Oracle Cloud Always Free, con systemd y Caddy para el HTTPS. La base sigue en Supabase (D8, D9, D10).
+- **Despliegue.** El backend corre en una máquina virtual de Azure for Students, con systemd y Caddy para el HTTPS. La base sigue en Supabase (D8, D9, D10).
 - **Documentación y demo.** El README va en la raíz del repositorio. El manual y el guion de la demo van en Markdown en `docs/`.
 - **Pendientes de specs anteriores.** Se corren con el APK de entrega y se anotan en el `tasks.md` de cada spec de origen. "Ver N actividades" se corrige apilando los botones desde 110 % de letra (D11).
 
@@ -21,13 +21,13 @@ La spec tiene dos partes. La primera cambia código y la segunda casi todo es co
 - [x] **Art. 4 Contratos de API:** no hay endpoints nuevos. `POST /activities/sync` gana una regla más de validación por actividad, con su mensaje en español (4.3). La actividad se rechaza dentro de la respuesta `200`, como las demás reglas de RN-5 (spec 005, D1).
 - [x] **Art. 5 Datos:** sin cambios de modelo en Prisma. La migración `20261123000000_borrar_actividades_cortas` solo borra datos (5.1). SQLite pasa a la **versión 8**, que solo borra datos y no cambia el esquema (5.3).
 - [x] **Art. 6 Verificación:** con Vitest se prueban la regla nueva del servidor, la decisión de guardar o descartar, el conteo de puntos válidos, el descarte al cerrar y la migración v8. Las pantallas, el build, el despliegue y la demo se verifican con casos manuales en `tasks.md`. La colección de Postman se corre contra el backend publicado (6.3, CA-12).
-- [x] **Art. 7 Simplicidad y stack:** hay dos cambios en la tabla del stack (D6, D8). `expo-splash-screen` es un módulo del SDK de Expo, y Oracle Cloud Always Free con Caddy reemplaza a "Railway o Render". No hay otras dependencias de npm.
+- [x] **Art. 7 Simplicidad y stack:** hay dos cambios en la tabla del stack (D6, D8). `expo-splash-screen` es un módulo del SDK de Expo, y una máquina virtual de Azure for Students con Caddy reemplaza a "Railway o Render" (v1.11 decía Oracle Cloud Always Free; v1.12 lo cambia, D8). No hay otras dependencias de npm.
 - [x] **Art. 8 Ritmo:** rama `012-entrega` desde `master` con la 015 fusionada. Commits `feat(012)`, `fix(012)` y `docs(012)`.
 
 ### Cambios a la constitución (v1.11, se aprueban con este plan)
 
 - Tabla, fila **Interfaz:** se agrega `expo-splash-screen` (pantalla de arranque en modo claro y oscuro, D6).
-- Tabla, fila **Despliegue:** "Railway o Render (API)" pasa a "Oracle Cloud Always Free (API, con systemd y Caddy para HTTPS)" (D8).
+- Tabla, fila **Despliegue:** "Railway o Render (API)" pasa a "Oracle Cloud Always Free (API, con systemd y Caddy para HTTPS)" (D8). En v1.12 pasa a la máquina virtual de Azure for Students.
 - Historial: entrada v1.11 que cita la spec 012, plan D6 y D8.
 
 ## Backend
@@ -59,10 +59,10 @@ Antes de aplicarla en Supabase se corre la misma consulta como `SELECT`, para ve
 
 ### Despliegue (D8, D9, D10)
 
-- **Máquina virtual:** Oracle Cloud Always Free, Ampere A1 (Arm) con Ubuntu LTS, 1 OCPU y 6 GB, dentro del límite gratis. Node 24 LTS, la versión de desarrollo.
+- **Máquina virtual:** Azure for Students, `Standard_B2ats_v2` (2 vCPU, 1 GB) con Ubuntu 24.04 LTS en `mexicocentral`. Se pidió primero `Standard_B1s`, pero no tenía capacidad en esa región (R4). La suscripción solo permite `centralus`, `mexicocentral`, `canadacentral`, `brazilsouth` y `chilecentral`;  la suscripción solo permite `centralus`, `mexicocentral`, `canadacentral`, `brazilsouth` y `chilecentral`. Disco de 64 GB P6 e IP pública estática. La máquina y el disco P6 entran en los servicios gratis de 12 meses y lo demás se cubre con el crédito de USD 100. Un archivo de intercambio de 2 GB para que `npm ci` y `nest build` no se queden sin memoria. Node 24 LTS, la versión de desarrollo.
 - **Proceso:** `backend/deploy/sendabc-api.service` (systemd) corre `node dist/main` con `Restart=always` y lee `/etc/sendabc/api.env`. Este archivo no está en el repositorio y tiene `NODE_ENV=production`, `PORT`, `DATABASE_URL`, `DIRECT_URL` (para `prisma migrate deploy`), `JWT_SECRET`, `JWT_EXPIRE_IN`, `TELEGRAM_MODE=webhook` y las variables del bot. Arranca solo al reiniciar la máquina. Así no se duerme y la tarea `hora-de-regreso` corre cada minuto (CA-9, CA-10).
 - **HTTPS:** `backend/deploy/Caddyfile` con un proxy inverso de `https://<dominio>` a `localhost:PORT`. Caddy saca y renueva solo el certificado de Let's Encrypt. El dominio es `<ip-con-guiones>.sslip.io`, que es gratis y no necesita cuenta (D10).
-- **Red:** en la lista de seguridad de Oracle y en el `iptables` de la imagen se abren solo los puertos 80 y 443, además del 22 para SSH. El puerto de Node no queda expuesto.
+- **Red:** el grupo de seguridad de red de Azure abre solo los puertos 80 y 443, además del 22 para SSH. La imagen de Ubuntu de Azure no trae reglas de `iptables`. El puerto de Node no queda expuesto.
 - **Actualizar:** `backend/deploy/actualizar.sh` hace `git pull`, `npm ci`, `npm run build`, `npx prisma migrate deploy` y `systemctl restart sendabc-api`.
 - **Base recreable (CA-11):** se crea un proyecto vacío de Supabase (el plan gratis permite dos). Se aplican las migraciones con `prisma migrate deploy` y se corren los e2e contra él. Después ese proyecto se borra.
 
@@ -122,7 +122,7 @@ Antes de aplicarla en Supabase se corre la misma consulta como `SELECT`, para ve
   - variables de entorno del backend y de la app, con valores de ejemplo;
   - desarrollo: migraciones, `start:dev`, `expo start` y development build;
   - pruebas y linter;
-  - despliegue en Oracle, registro del webhook y build con EAS;
+  - despliegue en Azure, registro del webhook y build con EAS;
   - instalación del APK y enlace al manual.
 - `docs/manual.md` (CA-4, CA-5): una sección por función, con capturas del APK de entrega en `docs/capturas/`, tomadas con `adb exec-out screencap` en el S9+. Incluye el uso sin conexión, la regla de las actividades cortas y la limitación de F5 (CA-16).
 - `docs/demo.md` (CA-13, CA-14, CA-27): el guion paso a paso, qué se prepara antes y un plan B si falla la red del lugar (la grabación y Mis actividades funcionan sin red).
@@ -153,9 +153,9 @@ Antes de aplicarla en Supabase se corre la misma consulta como `SELECT`, para ve
 | **D5.** `name` "SendaBC" y `slug` "sendabc" | Cambiar solo `name` | Con `slug` "frontend" el proyecto de EAS y el esquema del development build seguirían diciendo "frontend". El paquete de Android no cambia, así que la app instalada se actualiza en lugar de duplicarse. |
 | **D6.** `expo-splash-screen` (módulo del SDK) | La clave `splash` de nivel superior | La documentación de SDK 57 marca los otros métodos como heredados, y la clave no tiene variante oscura (CA-32). |
 | **D7.** EAS Build en la nube, con el perfil `entrega` | `./gradlew assembleRelease` local; `eas build --local` | Ya está en el stack. Firma con un keystore administrado y es repetible desde el README. `--local` no corre en Windows, y el build local obligaría a guardar y respaldar el keystore. |
-| **D8.** Oracle Cloud Always Free con systemd | Render Free con `pg_cron`; Docker; pm2 | Es la única opción gratis que no se duerme (P1). systemd ya viene en Ubuntu y reinicia el proceso: no se agregan dependencias. |
+| **D8.** Máquina virtual de Azure for Students con systemd | Oracle Cloud Always Free (rechazó los datos de pago); túnel de VS Code (depende de una computadora encendida, no cumple CA-7, CA-9 ni CA-10); Render Free con `pg_cron`; Docker; pm2 | Es gratis para estudiantes, no pide tarjeta y no se duerme (P1). systemd ya viene en Ubuntu y reinicia el proceso: no se agregan dependencias. |
 | **D9.** Caddy como proxy con HTTPS automático | Nginx con certbot; Node con el certificado directo | Caddy saca y renueva el certificado solo, con un `Caddyfile` de pocas líneas. Android exige HTTPS en release, y el webhook de Telegram también. |
-| **D10.** Dominio `<ip>.sslip.io` | DuckDNS; un dominio comprado | No necesita cuenta ni costo, y Let's Encrypt lo acepta. Si la IP cambia, solo cambian el dominio, `eas.json` y el webhook. La IP pública reservada de Oracle es gratis y evita ese cambio. |
+| **D10.** Dominio `<ip>.sslip.io` | DuckDNS; un dominio comprado | No necesita cuenta ni costo, y Let's Encrypt lo acepta. Si la IP cambia, solo cambian el dominio, `eas.json` y el webhook. La IP pública estática de Azure es gratis y evita ese cambio. |
 | **D11.** Apilar los botones del panel desde 110 % de letra (umbral 1.05) | Medir el texto con `onTextLayout`; `adjustsFontSizeToFit` | Es el cambio más chico y usa el diseño de letra grande ya aprobado en Figma. Achicar la letra va contra la accesibilidad. Si a 100 % "Ver 202 actividades" no cabe en el S9+, se cambia a medir el texto (R5). |
 
 ## Riesgos
@@ -163,7 +163,7 @@ Antes de aplicarla en Supabase se corre la misma consulta como `SELECT`, para ve
 - **R1. Borrado en producción.** La migración del servidor borra datos reales. Mitigación: se cuenta con un `SELECT` antes, el usuario confirma, y se respalda la base desde el panel de Supabase.
 - **R2. Alerta ya enviada.** Una actividad con GPS impreciso durante mucho tiempo puede disparar la alerta de inactividad antes de descartarse. Al descartarla, `finish` sale como hoy y los contactos reciben "ya terminó" (spec 008, CA-22). CA-23 se cumple para avisos posteriores al descarte. Se anota como caso en `tasks.md`.
 - **R3. Borrar algo ya subido.** Si una actividad se subió entre el cierre y el descarte, no debe borrarse solo en el teléfono. `discardActivity` no borra si tiene `server_id`. Además, una actividad corta no se sube, porque el servidor la rechaza.
-- **R4. Capacidad de Oracle.** Las máquinas A1 a veces no tienen capacidad en la región ("Out of capacity"), y la imagen de Ubuntu de Oracle trae reglas de `iptables` que bloquean el 80 y el 443. Mitigación: se prueba otra zona de disponibilidad o la máquina `E2.1.Micro` (1 GB, también gratis), y el README documenta las reglas.
+- **R4. Crédito y regiones de Azure.** La suscripción solo permite cinco regiones y puede no tener `Standard_B1s` en la elegida. Mitigación: se usa la otra región permitida o `Standard_B2ats_v2`, también gratis. Si el crédito o los 12 meses se acaban antes de la demo, la suscripción se desactiva: se revisa el saldo en el portal antes de la entrega.
 - **R5. "Ver N actividades" a 100 %.** Puede seguir partiéndose con números de tres cifras. Se mide en el S9+ y, si pasa, se aplica la alternativa de D11.
 - **R6. Logo cuadrado.** Si el logo cuadrado no está en Figma o no sirve como silueta para la notificación, se pide al usuario antes de improvisar un diseño (P10).
 - **R7. Cola gratis de EAS.** El plan gratis de EAS pone los builds en una cola que puede tardar. Se compila con tiempo antes de la demo.

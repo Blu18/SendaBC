@@ -4,14 +4,14 @@ Spec: [spec.md](spec.md) · Plan: [plan.md](plan.md)
 
 Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al terminar. Las tareas de `frontend/lib/` sin imports de React Native incluyen sus pruebas Vitest (constitución 6.1).
 
-Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tiene el usuario: Oracle Cloud, Expo, el respaldo de Supabase y el Telegram del contacto. Claude prepara los archivos y los comandos y el usuario los ejecuta o los aprueba.
+Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tiene el usuario: Azure, Expo, el respaldo de Supabase y el Telegram del contacto. Claude prepara los archivos y los comandos y el usuario los ejecuta o los aprueba.
 
 **Antes de borrar datos reales (T17) se detiene el trabajo:** se muestra el resultado del `SELECT` y el usuario confirma (plan, R1).
 
 ## Antes de empezar
 
 - Rama `012-entrega` desde `master`, con la 015 fusionada (constitución 8.2). Si la 015 todavía no está en `master`, la rama sale del final de `015-filtros-y-ajustes`.
-- **(usuario)** Tener cuentas en Oracle Cloud (pide tarjeta, no cobra) y en Expo, y el bot de Telegram de producción con su token. El bot de producción es distinto del de desarrollo (spec 008, plan D12).
+- **(usuario)** Tener cuentas en Azure for Students (sin tarjeta, con el correo de la universidad) y en Expo, y el bot de Telegram de producción con su token. El bot de producción es distinto del de desarrollo (spec 008, plan D12).
 - Sesión de Figma conectada al MCP, para T11.
 
 ## Fase A — Actividades con menos de 3 puntos válidos
@@ -91,10 +91,10 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
   - `api.env.ejemplo` también lleva `DIRECT_URL`: `prisma.config.ts` la usa para `prisma generate` y `migrate deploy`. Los valores van entre comillas simples para que systemd y `.` los lean igual.
   - `actualizar.sh` carga `api.env` antes de `npm ci`. Usa `npm ci --include=dev`, porque con `NODE_ENV=production` se omiten Nest CLI y Prisma. Todo va dentro de `main()`, porque `git pull` puede cambiar el script mientras corre. Al final espera hasta 30 s a que `GET /` responda. Reinicia el servicio con una regla de sudoers solo para `systemctl restart sendabc-api`. En git es ejecutable (`100755`).
   - El `Caddyfile` trae un dominio de ejemplo (`203-0-113-10.sslip.io`) que se cambia en T15 por la IP reservada.
-  - Node escucha en todas las interfaces. El puerto 3000 queda cerrado por la lista de seguridad y `iptables` (T15).
+  - Node escucha en todas las interfaces. El puerto 3000 queda cerrado por el grupo de seguridad de red de Azure (T15).
 
   Revisión: `bash -n` sin errores; el ejemplo se carga con `set -a; .`; la búsqueda de secretos de M1 no encuentra nada en `backend/deploy/`. systemd y Caddy se prueban en la máquina en T15.
-- [ ] T15 — **(usuario, con Claude guiando)** Crear la máquina A1 de Oracle (Ubuntu LTS, 1 OCPU, 6 GB) y reservar su IP pública. Abrir 80 y 443 en la lista de seguridad y en `iptables`. Instalar Node 24 y Caddy, clonar el repositorio, crear `/etc/sendabc/api.env` y hacer el primer despliegue con `actualizar.sh`. Comprobar `https://<ip-con-guiones>.sslip.io` desde fuera (plan D10, R4). (CA-9)
+- [ ] T15 — **(usuario, con Claude guiando)** Con la CLI de Azure (sesión del usuario), crear en `mexicocentral` un grupo de recursos y una máquina `Standard_B2ats_v2` con Ubuntu 24.04 (la `Standard_B1s` no tenía capacidad, R4), disco de 64 GB P6 e IP pública estática. Abrir 80 y 443 en el grupo de seguridad de red. Crear un archivo de intercambio de 2 GB, instalar Node 24 y Caddy, clonar el repositorio, crear `/etc/sendabc/api.env` y hacer el primer despliegue con `SIN_MIGRAR=1 actualizar.sh`, que compila y reinicia sin aplicar la migración de T4: esa va en T17, después del respaldo (R1). Comprobar `https://<ip-con-guiones>.sslip.io` desde fuera (plan D8, D10, R4). (CA-9)
 - [ ] T16 — **(usuario)** Registrar el webhook del bot de producción con `setWebhook` y `TELEGRAM_WEBHOOK_SECRET`. Vincular a un contacto del equipo con una invitación desde la app (spec 008). (CA-10, CA-27)
 - [ ] T17 — **Detenerse antes:** correr en Supabase `consultas/actividades_cortas.sql` y mostrar al usuario cuántas actividades se borran y de qué cuentas. **(usuario)** Respaldar la base desde el panel de Supabase y confirmar. Después, `npx prisma migrate deploy` aplica T4 (plan R1). (CA-25)
 - [ ] T18 — Base recreable: **(usuario)** crear un proyecto vacío de Supabase. Luego `prisma migrate deploy` y `npm run test:e2e` contra él (en serie, por el fallo intermitente en paralelo de la 011). Anotar el resultado y borrar el proyecto. (CA-11)
@@ -281,7 +281,7 @@ Todos los `CA-x` de la spec están cubiertos por al menos una tarea y una forma 
 2. `test(012): pruebas e2e de la regla de 3 puntos válidos`: T3.
 3. `feat(012): nombre SendaBC, ícono y pantalla de arranque`: T11 y T12.
 4. `fix(012): apilar los botones del panel de filtros desde 110 %`: T13.
-5. `chore(012): despliegue en Oracle y perfil de EAS para el APK`: T14, T19 y T20.
+5. `chore(012): despliegue en Azure y perfil de EAS para el APK`: T14, T19 y T20.
 6. `docs(012): README, manual y guion de la demo`: T22 a T24.
 7. `docs(012): resultados de los casos y cierre de la spec`: T25 a T28, más las notas en los `tasks.md` de las specs 011, 013, 014 y 015.
 
