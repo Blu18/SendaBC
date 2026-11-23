@@ -153,7 +153,17 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
 
 ## Fase E — Documentación y demo
 
-- [ ] T22 — `README.md` en la raíz con el contenido del plan, y `backend/README.md` pasa a ser un enlace a él. (CA-1, CA-2, CA-3)
+- [x] T22 — `README.md` en la raíz con el contenido del plan, y `backend/README.md` pasa a ser un enlace a él. (CA-1, CA-2, CA-3)
+
+  Hecho (2026-11-23). El `README.md` de la raíz tiene las secciones del plan:
+  - qué es la app y su arquitectura, con un diagrama en Mermaid;
+  - el stack de la constitución v1.12, la estructura de carpetas y SDD;
+  - requisitos, variables de entorno (nombre, uso y ejemplo falso) y el desarrollo con Supabase (`migrate deploy` y `seed:rutas`), `start:dev` y el development build;
+  - pruebas, linter y Postman;
+  - instalar y volver a compilar el APK con EAS;
+  - el despliegue en Azure: máquina, servicio, Caddy, `actualizar.sh` y webhook.
+
+  `backend/README.md`, que era la plantilla de NestJS, ahora es un enlace al de la raíz. Se agregó `frontend/.env.example`, porque la app no tenía uno y CA-1 pide copiar los ejemplos. La búsqueda de secretos de M1 solo da falsos positivos: `sk\.` coincide con "disk." o "task." en textos, y `tasks.md` contiene la propia expresión. Los únicos `.env` versionados son los dos `.env.example`. Los enlaces a `docs/manual.md` y `docs/demo.md` quedan rotos hasta T23 y T24. Seguir el README desde cero es M1.
 - [ ] T23 — `docs/manual.md` con una sección por función y capturas del APK de entrega en `docs/capturas/`. Incluye el uso sin conexión, la regla de las actividades cortas y la limitación de F5. (CA-4, CA-5, CA-16)
 - [ ] T24 — `docs/demo.md`: guion, preparación y plan B sin red. Preparar la cuenta de la demo:
   - **(usuario)** una actividad real grabada antes;
