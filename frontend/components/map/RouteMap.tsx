@@ -7,6 +7,7 @@ import { useReducedMotion } from "../../hooks/theme/useReducedMotion";
 import { useTheme } from "../../hooks/theme/useTheme";
 import { ROUTE_MAP_UNAVAILABLE } from "../../lib/map/messages";
 import { PITCH_3D, TERRAIN_EXAGGERATION } from "../../lib/map/camera";
+import { esReposoViejo } from "../../lib/map/idle";
 import { TERRAIN_URL, localMapStyle, mapStyle } from "../../lib/map/style";
 import type { LngLat } from "../../lib/map/track";
 import type { Coordinates } from "../../lib/metrics/geo";
@@ -97,13 +98,17 @@ const RouteMapView = forwardRef<RouteMapHandle, Props>(function RouteMapView(
     // Encuadre con la inclinación de la vista: fitBounds deja la cámara sin inclinar, así que se
     // pide todo junto con setCamera (plan, "Riesgos"). La inclinación se lee de una referencia
     // porque el handle se crea una vez.
-    const aplicar = (bounds: Bounds, padding: number) =>
+    // Cuándo se pidió el último encuadre, para ignorar el reposo de la vista anterior (lib/map/idle).
+    const encuadreEn = useRef<number | null>(null);
+    const aplicar = (bounds: Bounds, padding: number) => {
+        encuadreEn.current = Date.now();
         camera.current?.setCamera({
             bounds: { ne: bounds.ne, sw: bounds.sw },
             padding: { paddingTop: padding, paddingBottom: padding, paddingLeft: padding, paddingRight: padding },
             pitch: pitchRef.current,
             animationDuration: reducedMotion ? 0 : CAMERA_MOVE_MS,
         });
+    };
     const aplicarPendiente = () => {
         if (!pendiente.current || !cargado.current || !conTamano.current) return;
         const { bounds, padding } = pendiente.current;
@@ -167,6 +172,9 @@ const RouteMapView = forwardRef<RouteMapHandle, Props>(function RouteMapView(
                     onReady?.();
                 }}
                 onMapIdle={(state) => {
+                    // Un reposo durante la animación del encuadre es de la vista anterior: no cuenta
+                    // como un movimiento del usuario (spec 006, CA-9; spec 015, T18).
+                    if (esReposoViejo(Date.now(), encuadreEn.current, reducedMotion ? 0 : CAMERA_MOVE_MS)) return;
                     const [longitude, latitude] = state.properties.center as LngLat;
                     onCenterChanged?.({ latitude, longitude });
                 }}

@@ -103,7 +103,10 @@ export default function ActivityHistoryPage() {
             )}
 
             {loading ? (
-                <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loading} />
+                // Ocupa el alto de la lista para que el botón siga fijo abajo mientras carga (CA-19).
+                <View style={styles.loadingArea}>
+                    <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loading} />
+                </View>
             ) : (
                 <FlatList
                     data={sections}
@@ -200,6 +203,9 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: t.colors.background,
+    },
+    loadingArea: {
+        flex: 1,
     },
     loading: {
         marginTop: t.spacing.xxl,

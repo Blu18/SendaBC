@@ -279,7 +279,9 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 
   Hecho (2026-11-22), con tres correcciones y tres pasos pendientes (ver "Resultado de los casos manuales"):
   - **APK:** se compiló desde `C:\dev\SendaBC\frontend`, que también es una ruta corta. El APK arm64 del S9+ se guardó aparte antes, para T18.
-- [ ] T18 — S9+: M7 y M13 (relieve real y tiempos), con Metro y el APK de desarrollo arm64 que ya tiene. Si algún tiempo no cumple, se anota y se propone el ajuste antes de cambiar el código (plan, "Riesgos").
+- [x] T18 — S9+: M7 y M13 (relieve real y tiempos), con Metro y el APK de desarrollo arm64 que ya tiene. Si algún tiempo no cumple, se anota y se propone el ajuste antes de cambiar el código (plan, "Riesgos").
+
+  Hecho (2026-11-22): los tiempos cumplen y no hubo que ajustar el 3D. Hubo dos correcciones (4, el botón fijo mientras carga; 5, "Buscar en esta zona" al abrir en 3D) y quedan dos hallazgos (ver "Resultado de los casos manuales").
 - [ ] T19 — Cerrar la spec: estado, historial y `specs/roadmap.md`.
 
 ## Verificación
@@ -299,12 +301,12 @@ Cada tarea indica los criterios de aceptación que cubre. Marca `[x]` al termina
 | CA-11 | M4 | Manual (emulador) | M4 aprobado (emulador, 2026-11-22) |
 | CA-12 | `viewMode.test.ts`; M5 | Automatizada + manual | Vitest y manual cumplidos (2026-11-22) |
 | CA-13 | M5 | Manual (emulador) | M5 aprobado (emulador, 2026-11-22) |
-| CA-14 | M7 | Manual (S9+) | Relieve visto en el emulador (M5); falta M7 en el S9+ |
-| CA-15 | M5 | Manual (emulador) | M5 aprobado (emulador, 2026-11-22) |
+| CA-14 | M7 | Manual (S9+) | M7 aprobado (S9+, 2026-11-22) |
+| CA-15 | M5; `idle.test.ts` | Automatizada + manual | M5 aprobado (emulador, 2026-11-22); "Buscar en esta zona" corregido en 3D (corrección 5, S9+) |
 | CA-16 | M6 | Manual (emulador) | M6 aprobado (emulador, 2026-11-22) |
 | CA-17 | M8 | Manual (emulador o S9+) | Nombres accesibles revisados; falta TalkBack encendido |
 | CA-18 | M9 | Manual (emulador) | M9 aprobado tras la corrección (emulador, 2026-11-22) |
-| CA-19 | M10 | Manual (emulador) | M10 aprobado (emulador, 2026-11-22) |
+| CA-19 | M10 | Manual (emulador) | M10 aprobado (emulador, 2026-11-22); botón fijo también mientras carga, tras la corrección 4 (S9+) |
 | CA-20 | M10 | Manual (emulador) | M10 aprobado (emulador, 2026-11-22) |
 | CA-21 | M11; `contrast.test.ts` | Automatizada + manual | `contrast.test.ts` y M11 cumplidos (2026-11-22) |
 | CA-22 | T2: aprobación anotada en el historial de la spec | Manual | Cumplido (2026-11-22) |
@@ -470,6 +472,39 @@ Mínimo 3 en la semana (constitución 8.3):
 5. **Explorar sin conexión:** era una mala lectura. El 3D seguía inclinado, solo sin relieve, porque el relieve no se guarda para usarse sin red; el botón estaba bien. Aun así, el botón ahora no aparece cuando ni el estilo del mapa carga, como en la grabación, y CA-16 lo dice.
 
 Después de los cambios, el frontend pasa 914 pruebas y `tsc` no marca errores, y el backend pasa 479 pruebas unitarias y las 10 e2e de inicio de sesión.
+**T18, S9+ (Android 10), 2026-11-22, corrido por Claude por adb.** APK de desarrollo arm64 ya instalado, Metro en el 8081 y backend local, los dos por `adb reverse`. Cuenta `prueba-bitacora@senda.bc`. En el teléfono hay 360 actividades de tres cuentas (202 de la de prueba). Letra del sistema en 110 % y navegación por gestos. Para medir se usó un registro temporal en `App.tsx` y, en 2D, Explorar empezando en `'2D'`; los dos cambios ya se quitaron.
+
+- **M13, aprobado.**
+  - **Cumbres (paso 1):** la base estaba en la v6 (sin el código de la 015). `computeMissingPeaks` recorre las actividades de todas las cuentas del teléfono:
+    - 356 cumbres en 46 s, con la pantalla apagada;
+    - 360 en 15.8 s, con la pantalla encendida;
+    - 360 en 20.6 s, mientras se usaba la app.
+
+    Para repetirlo se marcaron las cumbres como pendientes en una copia de la base. Mientras corre, Inicio se ve completo y Mis actividades abre y se desplaza.
+  - **Abrir Mis actividades con la app recién abierta (paso 2):** el indicador de carga aparece a 1.1 s del toque y la lista completa a 1.7 s, igual en tres corridas. En 014 M7 el build de desarrollo dio entre 1.1 y 1.6 s; el límite de 1 s se mide con el de entrega en la 012.
+  - **Filtros (paso 3):** al tocar "Ciclismo", el chip aparece en la fila de filtros activos antes de 250 ms, y "Quitar filtros" devuelve las 206 de inmediato. Arrastrar los cuatro extremos: percentil 50 de 9 ms por cuadro, 90 de 27 ms y 99 de 38 ms, con 22 % de cuadros lentos (build de desarrollo). Sin pausas visibles. Al cerrar el panel y desplazar la lista, el percentil 99 sube a 350 ms.
+  - **Con navegación por gestos,** arrastrar un extremo que está pegado al borde de la pantalla toma el gesto de atrás de Android y cierra el panel. Empezando el arrastre unos milímetros adentro, dentro de su área táctil, funciona. No se cambió.
+- **M7, aprobado.** Con conexión, en El Sauzal.
+  - **Explorar:** abre en 3D, inclinado, con las rutas de Ensenada encuadradas. A esa escala (25 km) el relieve se nota poco.
+  - **Detalle de "Cañón de Doña Petra – San Antonio de las Minas" (545 m de subida):** en 3D se ven el cañón y las lomas, y la ruta va sobre el relieve sin quedar oculta.
+  - **Tiempo hasta ver las rutas encuadradas, con la app recién abierta, tres corridas cada una:**
+    - en 3D, entre 2.5 y 2.6 s, y la imagen queda quieta entre 3.2 y 3.9 s;
+    - en 2D, entre 2.3 y 2.8 s, y la imagen queda quieta a 2.9 s.
+
+    Las dos vistas pasan por "Buscando tu ubicación…" y "Buscando rutas…". La diferencia no se nota a simple vista, así que no hace falta el ajuste del plan ("Riesgos").
+
+**Correcciones durante T18** (`tsc` sin errores y 918 pruebas):
+
+4. **Botón fijo mientras carga (CA-19):** mientras Mis actividades cargaba, "Empezar actividad" quedaba arriba, justo debajo del indicador, y bajaba al aparecer la lista. El indicador no ocupaba el alto de la lista. Ahora va dentro de una vista con `flex: 1`. Verificado en el S9+: el botón está abajo desde el primer cuadro.
+5. **"Buscar en esta zona" al abrir Explorar en 3D (spec 006, CA-9; CA-15):** en una de tres corridas, con las rutas ya encuadradas y sin tocar el mapa, el botón aparecía a los 2.6 s y se iba cerca de los 3.9 s. Un registro temporal mostró la causa en 3 de 4 aperturas: el reposo (`onMapIdle`) de la vista inicial, con el centro de Baja California, llega de 3 a 5 ms **después** de pedir el encuadre hacia el usuario. Para entonces el centro guardado ya es el del usuario, y `hasMovedEnough` lo tomaba como un movimiento hasta el reposo siguiente, 1.5 s después.
+   - **Cambio:** `RouteMap` guarda cuándo pide cada encuadre e ignora los reposos que llegan durante su animación (600 ms, o 250 ms con movimiento reducido), porque mientras la cámara se mueve no hay reposo real. La regla es `esReposoViejo` en `lib/map/idle.ts`, con pruebas en `idle.test.ts`. La spec no cambia: CA-9 ya pide el botón solo cuando el usuario mueve el mapa.
+   - **Verificado en el S9+:** en cinco aperturas en 3D el botón no apareció. Sigue apareciendo al arrastrar el mapa, se va al tocarlo, vuelve al arrastrar otra vez y se va al centrar en mi ubicación.
+
+**Hallazgos de T18, sin cambiar el código (para decidir):**
+
+- **"Ver N actividades" se parte en dos renglones** con la letra del S9+ en 110 %. No se corta ni se encima, y los dos botones del panel quedan de la misma altura. Los botones se apilan desde 125 % (corrección 3 de T17).
+- **Cierre nativo al abrir la app:** una vez en unas doce aperturas, la app se cerró unos 5 s después de arrancar, en Inicio y sin tocar nada. Fue un SIGSEGV en el hilo de JS, en `MountingCoordinator::pullTransaction` (Fabric, `libreactnative.so`), sin código de la app en la pila. No se repitió. Se revisa con el build de entrega en la 012.
+
 **Observación fuera de la 015:** en Inicio, las tarjetas de "Tus actividades" de 0 m muestran la miniatura de un mapa (spec 013). La 014 lo corrigió solo en el resumen y en Mis actividades.
 
 ## Pendientes conocidos
