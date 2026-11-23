@@ -44,7 +44,7 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
 
 ## Fase B — Nombre, ícono, arranque y ajuste del panel
 
-- [ ] T11 — Exportar de Figma ("SendaBC — Diseño", página de identidad de la 009) el logo cuadrado. Salen estos archivos:
+- [x] T11 — Exportar de Figma ("SendaBC — Diseño", página de identidad de la 009) el logo cuadrado. Salen estos archivos:
   - `frontend/assets/icon.png` (1024 px);
   - `adaptive-icon.png` (logo dentro del 66 % central);
   - `adaptive-icon-monochrome.png`;
@@ -52,13 +52,28 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
   - `splash-icon.png` y `splash-icon-dark.png`.
 
   **Si el logo cuadrado no existe o no sirve como silueta, se detiene y se pregunta al usuario** (plan R6). (CA-30, CA-31, CA-32)
-- [ ] T12 — `frontend/app.json`:
+
+  Hecho: el componente `Logo/Ícono` (nodo `4:14`) existe y sirve como silueta: montañas y sol de un solo color, y el sendero es un trazo. Se exportó su SVG y los PNG se generaron con `@resvg/resvg-js` fuera del repositorio, sin dependencias nuevas. En todas las variantes, salvo `icon.png`, el sendero se recorta del dibujo (transparente), así se lee sobre cualquier fondo.
+  - `icon.png`: igual que en Figma, fondo `primary` claro (`#5C6B49`) y dibujo en `background`.
+  - `adaptive-icon.png` y `adaptive-icon-monochrome.png`: transparentes, dibujo centrado a escala 4.2; su punto más lejano queda a 323 px del centro, dentro del círculo seguro de 338 px (66 %). El primero en `background` (`#EDEAE1`), para el `backgroundColor` `#5C6B49` de T12; el segundo en blanco.
+  - `notification-icon.png`: 96 px, blanco, dibujo de 80 px de ancho.
+  - `splash-icon.png` y `splash-icon-dark.png`: transparentes, con los colores de `Logo/Símbolo` en los modos Claro (`#5C6B49`, sol `#A9762F`, para fondo `#EDEAE1`) y Oscuro (`#A7B98C`, sol `#D9A75E`, para fondo `#1A1B17`).
+- [x] T12 — `frontend/app.json`:
   - `name` "SendaBC", `slug` "sendabc" y `android.versionCode` 1;
   - `adaptiveIcon` con `monochromeImage` y el `backgroundColor` de marca;
   - opción `icon` del plugin `expo-notifications`;
   - `npx expo install expo-splash-screen` y su plugin con la variante `dark`, y se quita la clave `splash`.
 
   Antes se revisan las opciones en la documentación de SDK 57. Después: `npx expo prebuild --platform android --clean` y comprobar que `strings.xml` dice `SendaBC` y que no queda "frontend" visible (plan D5, D6, R8). (CA-29, CA-30, CA-31, CA-32)
+
+  Hecho: `expo-splash-screen` `~57.0.11`. Según la documentación de SDK 57, el plugin recibe `image`, `imageWidth` (por defecto 100; se usa 200), `resizeMode`, `backgroundColor` y `dark` con `image` y `backgroundColor`; `adaptiveIcon` acepta `monochromeImage`; y el `icon` de `expo-notifications` debe ser un PNG blanco de 96 px con transparencia. Fondos: `#5C6B49` en el ícono adaptable, y `#EDEAE1` / `#1A1B17` en el arranque. Tras el `prebuild`:
+  - `strings.xml` tiene `app_name` "SendaBC", y "frontend" no aparece en el proyecto Android (solo queda como `name` de `package.json`, que no se ve en el teléfono);
+  - el esquema es `exp+sendabc` y `build.gradle` tiene `versionCode 1`;
+  - `ic_launcher.xml` usa fondo `iconBackground`, `foreground` y `monochrome`;
+  - el manifiesto apunta a `@drawable/notification_icon` con el color `#C1432A`;
+  - el arranque usa `splashscreen_logo` con `splashscreen_background` en `values` y `values-night`.
+
+  El development build instalado en el emulador usa el esquema viejo y hay que compilarlo de nuevo antes de los casos manuales (R8).
 - [ ] T13 — `frontend/components/activity/ActivityFiltersSheet.tsx`: `STACK_FONT_SCALE` pasa a 1.1. Hay que medir a 100 % con "Ver 202 actividades" en el S9+. Si se parte, se cambia a medir el texto (plan D11, R5). (CA-28)
 
 ## Fase C — Despliegue
