@@ -18,13 +18,15 @@ Una persona con cuenta debe poder entrar a la app y no tener que volver a escrib
 ## Criterios de aceptación
 
 - **CA-1 (HU-1):** Dadas credenciales válidas, cuando inicio sesión, la API responde `200 { id, token }` y la app me lleva a la pantalla principal sin poder regresar a Login con el botón "atrás".
-- **CA-2 (HU-1):** Dadas credenciales inválidas (correo inexistente o contraseña incorrecta), la API responde `401` con el mismo mensaje en ambos casos ("Credenciales invalidas") y la app lo muestra en pantalla.
+- **CA-2 (HU-1):** Dadas credenciales inválidas (correo inexistente o contraseña incorrecta), la API responde `401` con el mismo mensaje en ambos casos ("Credenciales inválidas") y la app lo muestra en pantalla.
 - **CA-3 (HU-1):** La app valida formato de correo y contraseña ≥ 8 caracteres antes de llamar a la API.
 - **CA-4 (HU-2):** Dada una sesión iniciada, cuando cierro y abro la app, entro directo a la pantalla principal (con un indicador de carga mientras se lee el token).
 - **CA-5 (HU-2):** Dado un token expirado o inválido, cuando la API responde `401`, la app cierra la sesión local y me regresa a la pantalla de inicio.
 - **CA-6 (HU-3):** Cuando presiono "Cerrar sesión", el token se borra del dispositivo y regreso a la pantalla de inicio sin poder volver atrás.
 - **CA-7 (HU-4):** `GET /user/profile` con token válido devuelve mis datos sin `passwordHash`; sin token responde `401`.
 - **CA-8 (HU-4):** Ningún endpoint permite leer, modificar o borrar a **otro** usuario. Las operaciones sobre "mi usuario" toman el id del token.
+- **CA-9 (HU-1):** Dado el teléfono sin conexión, cuando intento iniciar sesión, la app dice que iniciar sesión necesita conexión a internet. Si hay conexión pero el servidor no responde, muestra el mensaje genérico ("Error al iniciar sesión. Inténtalo más tarde.").
+- **CA-10 (HU-1):** Con el teclado abierto, el botón "Iniciar sesión" queda a la vista, arriba del teclado. Desde el correo, la tecla de acción del teclado pasa a la contraseña; desde la contraseña, inicia sesión.
 
 ## Reglas de negocio
 
@@ -47,3 +49,4 @@ Una persona con cuenta debe poder entrar a la app y no tener que volver a escrib
 - 2026-10-08 — Tareas de backend T1–T4 completadas, con pruebas Vitest y e2e. Quedan las de frontend (T5–T7).
 - 2026-10-08 — Tareas de frontend T5–T7 completadas. El login también usa el límite de 10 s y el mensaje genérico sin conexión (como el registro, spec 001), con su caso manual M6. Quedan los casos manuales en dispositivo.
 - 2026-10-08 — Casos manuales M1–M6 aprobados en dispositivo. Todos los CA verificados; la spec pasa a Implementada.
+- 2026-11-22 — Por las pruebas de casos límite en el emulador: el mensaje de CA-2 lleva acento ("Credenciales inválidas"); CA-9 nuevo (sin conexión, la app lo dice en lugar del mensaje genérico); CA-10 nuevo (el teclado no tapa el botón y su tecla de acción avanza o inicia sesión). Aprobado por el usuario.

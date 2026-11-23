@@ -142,6 +142,8 @@ function ExploreRoutes() {
     // La pantalla se monta de nuevo en cada apertura (key), así que siempre empieza en 3D y no
     // recuerda la vista anterior (spec 015, CA-13).
     const [view, setView] = useState<"3D" | "2D">("3D");
+    // Sin relieve disponible (sin red y sin zona descargada) el botón de vista no aparece (CA-16).
+    const [relieve, setRelieve] = useState(true);
     // Alto del aviso o de la tarjeta de abajo, para subir el logo de Mapbox por encima (T24, P-D).
     const [altoAbajo, setAltoAbajo] = useState(0);
 
@@ -313,6 +315,7 @@ function ExploreRoutes() {
                     onPress={onMapPress}
                     ornamentsBottom={altoAbajo}
                     view={view}
+                    onReliefAvailable={setRelieve}
                 >
                     {/* El orden de las capas es el de dibujo: recorridos, la selección encima, los
                         inicios y al final mi posición. Seleccionar no mueve la cámara (CA-9). */}
@@ -402,7 +405,7 @@ function ExploreRoutes() {
                             )}
                         </View>
                         <View style={[styles.mapActionsSide, styles.mapActionsColumn]} pointerEvents="box-none">
-                            <MapViewToggle view={view} onChange={(v) => setView(v === "2D" ? "2D" : "3D")} allowNone={false} />
+                            {relieve && <MapViewToggle view={view} onChange={(v) => setView(v === "2D" ? "2D" : "3D")} allowNone={false} />}
                             {user && (
                                 <IconButton
                                     icon="crosshairs-gps"

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { View, ScrollView, StyleSheet, Text } from "react-native";
+import { useRef, useState } from "react";
+import { View, ScrollView, StyleSheet, Text, type TextInput } from "react-native";
 import Appear from "../../components/ui/Appear";
 import { LoginFieldErrors, useLogin } from "../../hooks/auth/auth.hooks";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
@@ -11,6 +11,7 @@ import TextField from "../../components/ui/TextField";
 import Notice from "../../components/ui/Notice";
 import type { Theme } from "../../lib/theme";
 import { useThemedStyles } from "../../hooks/theme/useTheme";
+import KeyboardScreen from "../../components/ui/KeyboardScreen";
 
 type LoginFieldError = Record<LoginFieldErrors["field"], string>;
 
@@ -56,6 +57,8 @@ export default function Login({ route }: Props) {
     const navigation = useNavigation();
     const { login: guardarSesion } = useAuth();
     const styles = useThemedStyles(makeStyles);
+    // CA-10: la tecla de acción del teclado pasa del correo a la contraseña y desde ahí inicia sesión.
+    const passwordRef = useRef<TextInput>(null);
 
     const handleSubmit = () => {
       const errors = validarCampos({ email, password });
@@ -72,14 +75,14 @@ export default function Login({ route }: Props) {
           onSuccess: (payload) => guardarSesion(payload.token, payload.id).then(() =>
             navigation.reset({ index: 0, routes: [{ name: 'Home' }] })
           ),
-          // CA-2: "Credenciales invalidas" (o el error genérico sin conexión) visible en pantalla.
+          // CA-2: "Credenciales inválidas" (o el error genérico sin conexión) visible en pantalla.
           onError: (error) => setServerError(error.message)
         }
       )
     }
 
     return (
-      <View style={styles.container}>
+      <KeyboardScreen style={styles.container}>
         <ScreenHeader title="" onBack={() => navigation.goBack()} />
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.content}>
@@ -100,6 +103,9 @@ export default function Login({ route }: Props) {
               autoCapitalize="none"
               autoComplete="email"
               keyboardType="email-address"
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => passwordRef.current?.focus()}
               error={fieldErrors.email}
             />
             <TextField
@@ -108,6 +114,9 @@ export default function Login({ route }: Props) {
               value={password}
               secureTextEntry={true}
               autoComplete="current-password"
+              ref={passwordRef}
+              returnKeyType="go"
+              onSubmitEditing={handleSubmit}
               error={fieldErrors.password}
             />
             {/* CA-2: el mensaje del servidor, como descripción del aviso */}
@@ -129,7 +138,7 @@ export default function Login({ route }: Props) {
             />
           </View>
         </ScrollView>
-      </View>
+      </KeyboardScreen>
     )
 }
 

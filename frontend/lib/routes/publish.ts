@@ -70,3 +70,13 @@ export function inicioDelRecorrido<T extends { recordedAt: string }>(puntos: T[]
   if (primero === -1 || puntos.length - primero < 2) return puntos[0];
   return puntos[primero];
 }
+
+// ¿El formulario de "Publicar como ruta" o "Editar ruta" cambió respecto a cómo se abrió? Si sí, salir
+// pide confirmación (spec 007, RN-12). Se compara sin espacios al inicio ni al final, como se guarda.
+export function hayCambios(actual: RouteFormValues, original: RouteFormValues): boolean {
+  return (
+    actual.name.trim() !== original.name.trim() ||
+    actual.description.trim() !== original.description.trim() ||
+    actual.region.trim() !== original.region.trim()
+  );
+}

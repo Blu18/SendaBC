@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { View, ScrollView, StyleSheet, Text } from "react-native";
+import { useRef, useState } from "react";
+import { View, ScrollView, StyleSheet, Text, type TextInput } from "react-native";
 import Appear from "../../components/ui/Appear";
 import { type RegistroFieldErrors, useRegistrar } from "../../hooks/auth/auth.hooks";
 import PrimaryButton from "../../components/ui/buttons/PrimaryBtn";
@@ -10,6 +10,7 @@ import TextField from "../../components/ui/TextField";
 import Notice from "../../components/ui/Notice";
 import type { Theme } from "../../lib/theme";
 import { useThemedStyles } from "../../hooks/theme/useTheme";
+import KeyboardScreen from "../../components/ui/KeyboardScreen";
 
 type RegistroFieldError = Record<RegistroFieldErrors["field"], string>;
 
@@ -72,6 +73,11 @@ export default function Register() {
     const navigation = useNavigation();
     const styles = useThemedStyles(makeStyles);
 
+    // La tecla de acción del teclado pasa al campo siguiente y, en el último, crea la cuenta (spec 001).
+    const displayNameRef = useRef<TextInput>(null);
+    const passwordRef = useRef<TextInput>(null);
+    const confirmRef = useRef<TextInput>(null);
+
     const handleSubmit = () => {
       const errors = validarCampos({ displayName, email, password, confirmPassword });
       setFieldErrors(errors);
@@ -98,7 +104,7 @@ export default function Register() {
     }
 
     return (
-      <View style={styles.container}>
+      <KeyboardScreen style={styles.container}>
         <ScreenHeader title="" onBack={() => navigation.goBack()} />
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.content}>
@@ -110,6 +116,9 @@ export default function Register() {
               autoCapitalize="none"
               autoComplete="email"
               keyboardType="email-address"
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => displayNameRef.current?.focus()}
               error={fieldErrors.email}
             />
             <TextField
@@ -117,6 +126,10 @@ export default function Register() {
               onChangeText={setDisplayName}
               value={displayName}
               helper="Así te verán en las rutas que publiques."
+              ref={displayNameRef}
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => passwordRef.current?.focus()}
               error={fieldErrors.displayName}
             />
             <TextField
@@ -125,6 +138,10 @@ export default function Register() {
               value={password}
               secureTextEntry={true}
               autoComplete="new-password"
+              ref={passwordRef}
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => confirmRef.current?.focus()}
               error={fieldErrors.password}
             />
             <TextField
@@ -133,6 +150,9 @@ export default function Register() {
               value={confirmPassword}
               secureTextEntry={true}
               autoComplete="new-password"
+              ref={confirmRef}
+              returnKeyType="go"
+              onSubmitEditing={handleSubmit}
               error={fieldErrors.confirmPassword}
             />
             {/* CA-4: el mensaje del servidor (p. ej. el 409), como descripción del aviso */}
@@ -151,7 +171,7 @@ export default function Register() {
             <TextBtn text="Ya tengo una cuenta" onPress={() => navigation.navigate('Login')}/>
           </View>
         </ScrollView>
-      </View>
+      </KeyboardScreen>
     )
 }
 

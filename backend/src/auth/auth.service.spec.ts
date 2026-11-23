@@ -38,7 +38,7 @@ describe('AuthService.validateUser (spec 002)', () => {
 
     expect(error).toBeInstanceOf(UnauthorizedException);
     expect((error as UnauthorizedException).message).toBe(
-      'Credenciales invalidas',
+      'Credenciales inválidas',
     );
   });
 
@@ -51,7 +51,7 @@ describe('AuthService.validateUser (spec 002)', () => {
 
     expect(error).toBeInstanceOf(UnauthorizedException);
     expect((error as UnauthorizedException).message).toBe(
-      'Credenciales invalidas',
+      'Credenciales inválidas',
     );
   });
 

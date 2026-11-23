@@ -42,7 +42,7 @@ Como en las specs 009, 013 y 014, todo cambio visual se diseña primero en Figma
 - **CA-13 (HU-2):** Dado que abro Explorar o el detalle de una ruta, cuando aparece el mapa, entonces empieza en 3D. La vista elegida no se recuerda: cada vez que se abre la pantalla vuelve a 3D.
 - **CA-14 (HU-2):** Dado el mapa en 3D con conexión, cuando lo miro, entonces se ve en perspectiva y las montañas y cañones se distinguen por su relieve real, como al grabar (spec 010, CA-1). La ruta se dibuja sobre el relieve, sin quedar oculta por él.
 - **CA-15 (HU-2):** Dado el mapa en 3D, cuando busco rutas, toco una, uso "Buscar en esta zona" o "centrar en mi ubicación", o abro el detalle, entonces todo funciona igual que en 2D (specs 006, 007 y 013).
-- **CA-16 (HU-2):** Dado el teléfono sin conexión, cuando el mapa está en 3D, entonces la app no falla y se comporta como el mapa de grabación sin conexión (spec 010).
+- **CA-16 (HU-2):** Dado el teléfono sin conexión, cuando el mapa está en 3D, entonces la app no falla y se comporta como el mapa de grabación sin conexión (spec 010). Con el mapa guardado en el teléfono, la vista 3D sigue inclinada, aunque sin relieve, porque el relieve no se guarda. Si el estilo del mapa no carga (sin red y sin mapa guardado), el mapa queda plano y el botón de vista no aparece hasta que vuelve el mapa.
 - **CA-17 (HU-2):** El control de vista tiene nombre accesible y anuncia la vista actual.
 
 ### Sombra de los filtros de Explorar
@@ -115,3 +115,4 @@ Como en las specs 009, 013 y 014, todo cambio visual se diseña primero en Figma
 - 2026-11-22 — En progreso: T1 (diseño en Figma) hecha; falta la aprobación del usuario (T2).
 - 2026-11-22 — El usuario aprueba el diseño de Figma (CA-22), sin cambios: sección https://www.figma.com/design/ewpz0FqktgWwKh7IZUXUnX?node-id=99-6901 de la página Pantallas y los componentes de la sección "Filtros y ajustes (spec 015)" del Sistema de diseño. Ya se puede programar la interfaz.
 - 2026-11-22 — Al programar T3: RN-4 pedía los formatos de la spec 004, que dan "5.00 km". El diseño aprobado usa "5 – 20 km" y "3 km". RN-4 ahora dice las unidades de la 004 y los valores sin ceros de relleno, como en el diseño.
+- 2026-11-22 — Por las pruebas de casos límite en el emulador: sin conexión, Explorar parecía plano con el botón diciendo "2D". Al compararlo con la vista 2D, el mapa sí estaba inclinado (3D), solo sin relieve, porque el relieve no se guarda para usarse sin red; el botón estaba bien. CA-16 ahora lo dice, y agrega lo que hace la grabación cuando ni el estilo carga: mapa plano y sin botón de vista. Aprobado por el usuario.

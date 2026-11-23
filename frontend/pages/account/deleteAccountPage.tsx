@@ -21,6 +21,7 @@ import { queryClient } from "../../lib/api/queryClient";
 import { deleteLocalAccount, getEstadoLocalDeCuenta, type EstadoLocalDeCuenta } from "../../lib/db/account";
 import type { Theme } from "../../lib/theme";
 import { useTheme, useThemedStyles } from "../../hooks/theme/useTheme";
+import KeyboardScreen from "../../components/ui/KeyboardScreen";
 
 // Borrar la cuenta (spec 011, CA-46 a CA-48). Explica qué se borra, cuántas actividades sin subir
 // se pierden y que las rutas publicadas siguen sin autor. Con una actividad en curso o una alerta
@@ -108,7 +109,7 @@ export default function DeleteAccountPage() {
     };
 
     return (
-        <View style={styles.container}>
+        <KeyboardScreen style={styles.container}>
             <ScreenHeader title="Borrar cuenta" onBack={() => navigation.goBack()} />
             {!estado ? (
                 <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loading} />
@@ -156,7 +157,7 @@ export default function DeleteAccountPage() {
                     disabled={!estado || !!bloqueo || remove.isPending}
                 />
             </BottomBar>
-        </View>
+        </KeyboardScreen>
     );
 }
 

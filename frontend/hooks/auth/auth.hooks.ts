@@ -3,6 +3,8 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { apiFetch } from "../../lib/api/client";
 import { type ApiError, parseApiError } from "../../lib/api/errors";
 import { useAuth } from "../../context/AuthContext";
+import { AUTH_ERROR_GENERICO, sinRespuesta } from "../../lib/auth/messages";
+import { isOnline } from "../../lib/sync";
 
 export interface Registrar {
     displayName: string;
@@ -31,7 +33,7 @@ export interface LoginFieldErrors {
 }
 
 const REGISTRO_TIMEOUT_MS = 10_000;
-const REGISTRO_ERROR_GENERICO = "Error al registrar usuario. Inténtalo más tarde.";
+const REGISTRO_ERROR_GENERICO = AUTH_ERROR_GENERICO.registro;
 
 export const useRegistrar  = () => {
     return useMutation<unknown, ApiError, Registrar>({
@@ -40,8 +42,10 @@ export const useRegistrar  = () => {
             const response = await apiFetch("/user", null, {
                 method: "POST",
                 body: JSON.stringify(registrar),
-            }, REGISTRO_TIMEOUT_MS).catch(() => {
-                throw { message: REGISTRO_ERROR_GENERICO, fieldErrors: {} } satisfies ApiError;
+            }, REGISTRO_TIMEOUT_MS).catch(async () => {
+                // Sin conexión lo dice; con conexión, el servidor no respondió (spec 001).
+                const online = await isOnline().catch(() => true);
+                throw { message: sinRespuesta("registro", online), fieldErrors: {} } satisfies ApiError;
             })
 
             const payload = await response.json().catch(() => null)
@@ -63,7 +67,7 @@ export const useRegistrar  = () => {
 }
 
 const LOGIN_TIMEOUT_MS = 10_000;
-const LOGIN_ERROR_GENERICO = "Error al iniciar sesión. Inténtalo más tarde.";
+const LOGIN_ERROR_GENERICO = AUTH_ERROR_GENERICO.login;
 
 export const useLogin  = () => {
     return useMutation<LoginResponse, ApiError, Login>({
@@ -72,8 +76,10 @@ export const useLogin  = () => {
             const response = await apiFetch("/auth/login", null, {
                 method: "POST",
                 body: JSON.stringify(login),
-            }, LOGIN_TIMEOUT_MS).catch(() => {
-                throw { message: LOGIN_ERROR_GENERICO, fieldErrors: {} } satisfies ApiError;
+            }, LOGIN_TIMEOUT_MS).catch(async () => {
+                // CA-9: sin conexión lo dice; con conexión, el servidor no respondió.
+                const online = await isOnline().catch(() => true);
+                throw { message: sinRespuesta("login", online), fieldErrors: {} } satisfies ApiError;
             })
 
             const payload = await response.json().catch(() => null)
@@ -81,7 +87,7 @@ export const useLogin  = () => {
             if (response.status >= 500) {
                 throw { message: LOGIN_ERROR_GENERICO, fieldErrors: {} } satisfies ApiError;
             }
-            // CA-2: el 401 trae "Credenciales invalidas".
+            // CA-2: el 401 trae "Credenciales inválidas".
             if (!response.ok) {
                 throw parseApiError(payload, LOGIN_ERROR_GENERICO);
             }

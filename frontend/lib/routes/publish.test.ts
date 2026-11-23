@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inicioDelRecorrido, MIN_PUBLISH_DISTANCE_M, motivoNoPublicable, validarRuta } from './publish';
+import { hayCambios, inicioDelRecorrido, MIN_PUBLISH_DISTANCE_M, motivoNoPublicable, validarRuta } from './publish';
 
 const valido = { name: 'Cañón de Doña Petra', description: '', region: 'Ensenada' };
 
@@ -120,5 +120,20 @@ describe('inicioDelRecorrido (spec 007, CA-28, RN-10)', () => {
 
   it('sin puntos no hay inicio', () => {
     expect(inicioDelRecorrido([], INICIO)).toBeUndefined();
+  });
+});
+
+describe('hayCambios (spec 007, RN-12)', () => {
+  const original = { name: 'Cañón de Doña Petra', description: '', region: 'Ensenada' };
+
+  it('sin cambios, o solo con espacios de más, no hay cambios', () => {
+    expect(hayCambios(original, original)).toBe(false);
+    expect(hayCambios({ ...original, name: '  Cañón de Doña Petra ' }, original)).toBe(false);
+  });
+
+  it('cualquier campo distinto cuenta como cambio', () => {
+    expect(hayCambios({ ...original, name: 'Otro nombre' }, original)).toBe(true);
+    expect(hayCambios({ ...original, description: 'Con sombra' }, original)).toBe(true);
+    expect(hayCambios({ ...original, region: '' }, original)).toBe(true);
   });
 });

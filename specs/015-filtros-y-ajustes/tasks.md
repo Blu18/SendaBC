@@ -459,6 +459,17 @@ Mínimo 3 en la semana (constitución 8.3):
 2. **Chips de Explorar:** los 32 dp de espacio bajo la segunda fila tomaban los toques del mapa; arrastrar desde ahí no lo movía. Se cambió a `overflow: 'visible'` en cada fila (plan, D7, actualizado). La sombra sigue completa y el mapa responde justo debajo de los chips.
 3. **Letra grande:** el umbral para apilar los botones del panel bajó de 1.3 a 1.25, porque Android entrega 130 % como un poco menos de 1.3.
 
+**Casos límite (2026-11-22), emulador, a pedido del usuario.** Modo avión, campos vacíos, texto muy largo, doble toque, girar el teléfono, salir y volver, permiso negado y listas vacías. La app nunca se cerró, ni se congeló, ni mostró la pantalla roja. Se corrigieron cinco puntos, primero en sus specs (001, 002, 007, 009 y 015):
+1. **Teclado:** tapaba "Iniciar sesión" y la tecla de acción no enviaba.
+   - `KeyboardScreen` (un `KeyboardAvoidingView` con el alto de la barra de estado como `keyboardVerticalOffset`) envuelve las siete pantallas con formulario y botones abajo.
+   - En inicio de sesión y registro, la tecla de acción pasa al campo siguiente y en el último envía. `TextField` acepta `ref`.
+   - Verificado: "Iniciar sesión" y "Publicar" quedan arriba del teclado; con Enter se entra.
+2. **"Credenciales inválidas"** ahora lleva acento en el backend y en sus pruebas (unitarias y e2e).
+3. **Sin conexión,** el inicio de sesión y el registro dicen que necesitan conexión a internet (`lib/auth/messages.ts`, con pruebas). El mensaje genérico queda para cuando el servidor no responde. Verificado en modo avión, sin el `adb reverse` del backend.
+4. **Publicar y editar ruta** piden confirmación al salir con cambios ("¿Descartar los cambios?"), con `hayCambios` (con pruebas) y `useConfirmDiscard`. Verificado: "Seguir editando" conserva lo escrito, "Descartar" sale y sin cambios sale sin preguntar.
+5. **Explorar sin conexión:** era una mala lectura. El 3D seguía inclinado, solo sin relieve, porque el relieve no se guarda para usarse sin red; el botón estaba bien. Aun así, el botón ahora no aparece cuando ni el estilo del mapa carga, como en la grabación, y CA-16 lo dice.
+
+Después de los cambios, el frontend pasa 914 pruebas y `tsc` no marca errores, y el backend pasa 479 pruebas unitarias y las 10 e2e de inicio de sesión.
 **Observación fuera de la 015:** en Inicio, las tarjetas de "Tus actividades" de 0 m muestran la miniatura de un mapa (spec 013). La 014 lo corrigió solo en el resumen y en Mis actividades.
 
 ## Pendientes conocidos

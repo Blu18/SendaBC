@@ -37,6 +37,10 @@ type Props = {
     // Vista del mapa (spec 015, CA-12 a CA-14). La pantalla guarda la vista y pone el botón.
     // Por defecto 2D, como antes de la 015.
     view?: "3D" | "2D";
+    // Avisa si el mapa puede mostrar el relieve. Sin el estilo de Mapbox (sin red y sin zona
+    // descargada) queda plano, y la pantalla esconde el botón de vista, como la grabación
+    // (spec 015, CA-16).
+    onReliefAvailable?: (available: boolean) => void;
     // Capas y fuentes de Mapbox: recorridos, marcadores y la posición.
     children?: ReactNode;
     style?: StyleProp<ViewStyle>;
@@ -59,7 +63,7 @@ const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(props, ref)
 export default RouteMap;
 
 const RouteMapView = forwardRef<RouteMapHandle, Props>(function RouteMapView(
-    { initialBounds, accessibilityLabel, onCenterChanged, onPress, onReady, ornamentsBottom = 0, view = "2D", children, style },
+    { initialBounds, accessibilityLabel, onCenterChanged, onPress, onReady, ornamentsBottom = 0, view = "2D", onReliefAvailable, children, style },
     ref
 ) {
     const { colors, scheme } = useTheme();
@@ -76,6 +80,10 @@ const RouteMapView = forwardRef<RouteMapHandle, Props>(function RouteMapView(
     // 3D solo con el estilo de Mapbox: con el estilo local no hay relieve que mostrar (spec 015,
     // CA-16; como la grabación, spec 010).
     const is3D = view === "3D" && !styleFailed;
+    useEffect(() => {
+        onReliefAvailable?.(!styleFailed);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [styleFailed]);
     const pitch = is3D ? PITCH_3D : 0;
     const pitchRef = useRef(pitch);
     pitchRef.current = pitch;

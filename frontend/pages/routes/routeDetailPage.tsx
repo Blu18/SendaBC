@@ -67,6 +67,8 @@ function RouteDetailMap({ route }: { route: RouteDetail }) {
 
     // Empieza en 3D cada vez que se abre el detalle y no recuerda la vista (spec 015, CA-13).
     const [view, setView] = useState<"3D" | "2D">("3D");
+    // Sin relieve disponible (sin red y sin zona descargada) el botón de vista no aparece (CA-16).
+    const [relieve, setRelieve] = useState(true);
 
     return (
         <View style={styles.map}>
@@ -75,6 +77,7 @@ function RouteDetailMap({ route }: { route: RouteDetail }) {
             initialBounds={boundsForPath(route.path, route.start)}
             accessibilityLabel={`Mapa del recorrido de ${route.name}`}
             view={view}
+            onReliefAvailable={setRelieve}
         >
             <Mapbox.ShapeSource id="recorrido" shape={linea}>
                 <Mapbox.LineLayer
@@ -97,12 +100,15 @@ function RouteDetailMap({ route }: { route: RouteDetail }) {
                 />
             </Mapbox.ShapeSource>
         </RouteMap>
-            {/* Vista del mapa en la esquina, fuera del mapa para que TalkBack la encuentre (CA-12, CA-17) */}
-            <MapViewToggle
-                view={view}
-                onChange={(v) => setView(v === "2D" ? "2D" : "3D")}
-                allowNone={false}
-            />
+            {/* Vista del mapa en la esquina, fuera del mapa para que TalkBack la encuentre (CA-12, CA-17).
+                Sin relieve disponible no aparece (CA-16). */}
+            {relieve && (
+                <MapViewToggle
+                    view={view}
+                    onChange={(v) => setView(v === "2D" ? "2D" : "3D")}
+                    allowNone={false}
+                />
+            )}
         </View>
     );
 }
