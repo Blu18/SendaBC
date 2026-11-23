@@ -25,6 +25,11 @@ import SosButton from "../../components/safety/SosButton";
 import StopButton from "../../components/activity/StopButton";
 import { countValidPoints, type ActivityType } from "../../lib/db/activities";
 import { CLOSING_MESSAGES, preguntaAlSalir } from "../../lib/activity/closingMessages";
+import {
+    LOCATION_PERMISSION_MESSAGES,
+    avisoSinUbicacion,
+    type MotivoSinUbicacion,
+} from "../../lib/activity/locationPermissionMessages";
 import { debeGuardarse } from "../../lib/metrics/validPoints";
 import { ACTIVITY_TYPE_LABELS } from "../../lib/format/activity";
 import { formatDuration } from "../../lib/format/duration";
@@ -67,6 +72,24 @@ function avisarSinPermisoSegundoPlano() {
                 },
             },
         ], { cancelable: true, onDismiss: () => resolve(false) })
+    );
+}
+
+// Sin el permiso de ubicación no se inicia: un diálogo explica por qué y cómo darlo. El aviso en
+// línea queda debajo de la hora de regreso, fuera de la vista (spec 003, CA-3).
+function avisarSinUbicacion(motivo: MotivoSinUbicacion) {
+    const aviso = avisoSinUbicacion(motivo);
+    const m = LOCATION_PERMISSION_MESSAGES;
+    Alert.alert(
+        aviso.titulo,
+        aviso.cuerpo,
+        aviso.ofreceAjustes
+            ? [
+                  { text: m.ahoraNo, style: 'cancel' },
+                  { text: m.abrirAjustes, onPress: () => void Linking.openSettings() },
+              ]
+            : [{ text: m.entendido }],
+        { cancelable: true },
     );
 }
 
@@ -204,12 +227,13 @@ export default function ActivityPage() {
     // start() atrapa sus errores y los muestra con startFailed (spec 003, CA-16).
     const handleStart = async () => {
         try {
-            if (!hayContactos) return await start(type);
+            if (!hayContactos) return await start(type, { avisarSinUbicacion });
             // Se pide junto con el de ubicación (plan): también muestra la notificación del servicio
             // que graba con la pantalla bloqueada (Android 13+).
             setSinNotificaciones(!(await pedirPermisoNotificaciones()));
             // La sesión de seguridad se crea con la actividad y se encola para el servidor (T18).
             await start(type, {
+                avisarSinUbicacion,
                 explicarSegundoPlano,
                 avisarSinPermisoSegundoPlano,
                 alCrear: (localId) => sessionActions.iniciar(localId, userId!, regreso),

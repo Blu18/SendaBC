@@ -194,7 +194,8 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
 - [ ] T26 — Correr con el APK de entrega los casos que pasaron a esta spec y anotar el resultado en el `tasks.md` de cada spec de origen:
   - 014: M8, M12 y los pasos 3 y 5 de M5;
   - 015: el recorrido con TalkBack de M8, el paso 4 de M3 y el paso 5 de M10;
-  - 011: la prueba de batería. (CA-15)
+  - 011: la prueba de batería;
+  - 003: M3 (permiso negado y bloqueado), con el diálogo nuevo que explica para qué se usa la ubicación y cómo activarla (corrección del 2026-11-23). Necesita un APK compilado después de esa corrección. (CA-15)
 - [ ] T27 — Observar y anotar:
   - el cierre de Fabric al arrancar (015);
   - P-B y P-E en la prueba de campo (013);

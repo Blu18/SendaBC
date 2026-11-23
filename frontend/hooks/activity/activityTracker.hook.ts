@@ -50,6 +50,9 @@ export type StartOptions = {
   // seguridad: el detector solo corre si existe (spec 008, T18). Un fallo no impide grabar
   // (constitución 2.1).
   alCrear?: (localId: number) => Promise<unknown>;
+  // Sin el permiso de ubicación la actividad no inicia: explica por qué y cómo darlo, en un
+  // diálogo que siempre se ve (spec 003, CA-3).
+  avisarSinUbicacion?: (motivo: 'denied' | 'blocked') => void;
 };
 
 export type StopOptions = {
@@ -150,7 +153,9 @@ export function useActivityTracker() {
       startedAtRef.current = null;
       const permiso = await request();
       if (!permiso.granted) {
-        setPermissionError(permiso.canAskAgain ? 'denied' : 'blocked');
+        const motivo = permiso.canAskAgain ? 'denied' : 'blocked';
+        setPermissionError(motivo);
+        opciones.avisarSinUbicacion?.(motivo);
         return;
       }
       setPermissionError(null);
