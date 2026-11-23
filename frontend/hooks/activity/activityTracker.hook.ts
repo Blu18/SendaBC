@@ -2,13 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Location from 'expo-location';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import {
+  countValidPoints,
   createActivity,
+  discardActivity,
   finishActivity,
   insertBarometerReading,
   type ActivityType,
 } from '../../lib/db/activities';
 import { finalizeMetrics } from '../../lib/db/activityMetrics';
 import { cierrePendiente, iniciarOLimpiar } from '../../lib/activity/inicio';
+import { guardarODescartar, type DecisionCierre } from '../../lib/activity/cierre';
 import { decidirSegundoPlano, type ModoGrabacion } from '../../lib/activity/segundoPlano';
 import { getDetectorState, saveDetectorState } from '../../lib/db/safety';
 import { syncEngine } from '../../lib/sync';
@@ -48,6 +51,28 @@ export type StartOptions = {
   // (constitución 2.1).
   alCrear?: (localId: number) => Promise<unknown>;
 };
+
+export type StopOptions = {
+  // El usuario eligió "Terminar sin guardar": la actividad tiene menos de 3 puntos válidos
+  // (spec 012, CA-17, CA-18). La pantalla cuenta y pregunta antes de llamar a stop().
+  descartar?: boolean;
+};
+
+// guardada: se abre su resumen (spec 004, CA-1) · descartada: vuelve a "Nueva actividad" (spec 012,
+// CA-18). null si no había una grabación en curso o no se pudo cerrar (spec 003, CA-12).
+export type StopResult = { kind: 'guardada'; localId: number } | { kind: 'descartada' } | null;
+
+// Después de cerrar la actividad en SQLite: termina su sesión de seguridad y la guarda o la
+// descarta (spec 012, plan D3).
+const cerrarYDecidir = (id: number, fin: string, decision: DecisionCierre) =>
+  guardarODescartar(id, fin, decision, {
+    terminar: (localId, endedAt) => sessionActions.terminar(localId, endedAt),
+    contarValidos: countValidPoints,
+    descartar: discardActivity,
+    finalizar: finalizeMetrics,
+    sincronizar: () => void syncEngine.requestSync(),
+    registrar: console.log,
+  });
 
 // Tag propio para no interferir con otros usos de keep-awake (CA-11)
 const KEEP_AWAKE_TAG = 'sendabc-activity';
@@ -260,9 +285,10 @@ export function useActivityTracker() {
     return modo !== null;
   };
 
-  // Detiene la grabación y devuelve el local_id de la actividad para abrir su resumen
-  // (spec 004, CA-1, CA-18), o null si no había una grabación en curso.
-  const stop = useCallback(async () => {
+  // Detiene la grabación. Con 3 puntos válidos o más la guarda y devuelve su local_id para abrir
+  // su resumen (spec 004, CA-1, CA-18); con `descartar` la borra y la pantalla vuelve a "Nueva
+  // actividad" (spec 012, CA-18, CA-19).
+  const stop = useCallback(async ({ descartar = false }: StopOptions = {}): Promise<StopResult> => {
     if (!modeRef.current) return null;
     const id = activityId.current!;
 
@@ -276,7 +302,8 @@ export function useActivityTracker() {
     await detenerDetector(id);
 
     // 3. Cerrar la actividad. Si falla, la grabación ya se detuvo: se avisa en pantalla en lugar
-    //    de dejarla en "Detener", y closeOrphanActivities() la cierra al abrir la app (CA-12, O3)
+    //    de dejarla en "Detener", y closeOrphanActivities() la cierra al abrir la app, donde
+    //    también se descarta si es corta (CA-12, O3; spec 012, CA-24)
     const fin = new Date().toISOString();
     try {
       await finishActivity(id, fin);
@@ -287,26 +314,29 @@ export function useActivityTracker() {
       return null;
     }
 
-    // La sesión de seguridad también termina: el servidor ya no avisa por la hora de regreso
-    // (spec 008, CA-19, CA-22). Sin conexión queda en la bandeja.
-    await sessionActions
-      .terminar(id, fin)
-      .catch((e) => console.log('Error terminando la sesión de seguridad:', e));
+    // 4. Terminar la sesión de seguridad: el servidor ya no avisa por la hora de regreso (spec 008,
+    //    CA-19, CA-22; sin conexión queda en la bandeja). Después, descartarla, o calcular sus
+    //    métricas con lo guardado en SQLite (RN-4) y subirla en cuanto haya conexión (spec 005,
+    //    CA-1). La subida corre aparte: el resumen se muestra de inmediato (CA-4).
+    const resultado = await cerrarYDecidir(id, fin, descartar ? 'descartar' : 'guardar');
 
-    // 4. Calcular y guardar sus métricas con lo guardado en SQLite (RN-4). Si falla,
-    //    computeMissingMetrics() las calcula al volver a abrir la app (CA-19)
-    try {
-      await finalizeMetrics(id);
-    } catch (e) {
-      console.log('Error calculando métricas al detener:', e);
+    if (resultado === 'descartada') {
+      // Sin actividad: la pantalla queda en "Nueva actividad", lista para iniciar otra (CA-18).
+      activityId.current = null;
+      startedAtRef.current = null;
+      lastPointAt.current = null;
+      setActivityLocalId(null);
+      setStartedAt(null);
+      setPointCount(0);
+      setLiveDistance(0);
+      setLiveElevationGain(0);
+      setMode(null);
+      setStatus('idle');
+      return { kind: 'descartada' };
     }
 
-    // 5. Subirla en cuanto haya conexión (spec 005, CA-1). Sin await: el resumen se muestra
-    //    de inmediato y la subida corre aparte (CA-4). Sin métricas no se sube (CA-3).
-    void syncEngine.requestSync();
-
     setStatus('stopped');
-    return id;
+    return { kind: 'guardada', localId: id };
   }, []);
 
   // Registra un guardado en curso hasta que termine. Las tareas atrapan sus errores.
@@ -332,17 +362,17 @@ export function useActivityTracker() {
     if (cierre) void cerrarActividad(cierre.id, cierre.endedAt);
   };
 
-  // Cierra una actividad que dejó de grabarse sin "Detener" (al salir o al fallar el inicio)
+  // Cierra una actividad que dejó de grabarse sin "Detener" (al salir o al fallar el inicio). Con
+  // menos de 3 puntos válidos se descarta después de terminar su sesión; si no, se calculan sus
+  // métricas y se sube como al detener (spec 012, CA-21; spec 003, CA-16).
   const cerrarActividad = (id: number, endedAt: string) => {
     void detenerDetector(id);
     return finishActivity(id, endedAt)
-      .then(() => sessionActions.terminar(id, endedAt))
-      // Como al detener: sin esto se vería sin métricas y sin subir hasta reabrir la app.
-      .then(() => finalizeMetrics(id))
-      .then(() => void syncEngine.requestSync())
+      .then(() => cerrarYDecidir(id, endedAt, 'contar'))
       .catch((e) => {
         // Si falla, closeOrphanActivities la cierra al volver a abrir la app (T12), junto con su
-        // sesión de seguridad, y computeMissingMetrics calcula lo que falte (spec 004, CA-19)
+        // sesión de seguridad, y la descarta si es corta (spec 012, CA-22); computeMissingMetrics
+        // calcula lo que falte (spec 004, CA-19)
         console.log('Error cerrando actividad al salir:', e);
       });
   };

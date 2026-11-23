@@ -20,8 +20,8 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
 - [x] T2 — `backend/src/activity/activity-validation.ts`: `reglasExtra` rechaza con "La actividad necesita al menos 3 puntos con buena precisión para guardarse". Se actualiza el comentario de `activity-upload.dto.ts`. Casos en `activity-validation.spec.ts`. (CA-26)
 - [x] T3 — e2e de `POST /activities/sync`: una actividad con 2 puntos válidos sale rechazada y no se guarda nada, ni actividad ni puntos. Se ajustan a 3 puntos válidos los e2e que hoy suben actividades sin puntos. (CA-26)
 - [x] T4 — Migración de datos `backend/prisma/migrations/20261123000000_borrar_actividades_cortas/migration.sql`: borra las actividades con menos de 3 puntos con `"accuracyMeters" IS NULL OR "accuracyMeters" <= 20`. Va acompañada de `backend/prisma/consultas/actividades_cortas.sql`, el mismo criterio como `SELECT` con cuenta y fecha, para T17. Se prueba en local o en la base de pruebas: las actividades cortas se borran, las de 3 puntos válidos quedan y una ruta publicada desde una actividad corta queda con `sourceActivityId` en `NULL`. **No se aplica en Supabase todavía.** (CA-25)
-- [ ] T5 — `frontend/lib/metrics/validPoints.ts`: `MIN_VALID_POINTS`, `countValidPoints(points)` y `debeGuardarse(n)`, con `validPoints.test.ts`. Repite los casos de T1, como `oldPoints.test.ts` (plan D1). (CA-17, CA-20, CA-22)
-- [ ] T6 — `frontend/lib/db/activities.ts`:
+- [x] T5 — `frontend/lib/metrics/validPoints.ts`: `MIN_VALID_POINTS`, `countValidPoints(points)` y `debeGuardarse(n)`, con `validPoints.test.ts`. Repite los casos de T1, como `oldPoints.test.ts` (plan D1). (CA-17, CA-20, CA-22)
+- [x] T6 — `frontend/lib/db/activities.ts`:
   - `countValidPoints(localId)`: un `COUNT` con `MAX_ACCURACY_M`.
   - `discardActivity(localId)`: no borra si la actividad tiene `server_id` (plan R3).
   - `closeOrphanActivities()`: también devuelve los `local_id` que cerró.
@@ -30,15 +30,15 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
   - el conteo con puntos imprecisos y con precisión `null`;
   - el descarte borra puntos, lecturas del barómetro y sesión de seguridad, pero no `safety_outbox`;
   - con `server_id` no borra. (CA-19, CA-22)
-- [ ] T7 — SQLite **v8** en `frontend/lib/db/schema.ts`: borra una vez las actividades con `status != 'RECORDING'` y menos de 3 puntos válidos, incluidas las `SYNCED`. Pruebas en `schema.test.ts`: borra las cortas, conserva las de 3 válidos y las que están grabando, y no vuelve a correr en v8 (plan D4). (CA-25)
-- [ ] T8 — `frontend/hooks/activity/activityTracker.hook.ts`:
+- [x] T7 — SQLite **v8** en `frontend/lib/db/schema.ts`: borra una vez las actividades con `status != 'RECORDING'` y menos de 3 puntos válidos, incluidas las `SYNCED`. Pruebas en `schema.test.ts`: borra las cortas, conserva las de 3 válidos y las que están grabando, y no vuelve a correr en v8 (plan D4). (CA-25)
+- [x] T8 — `frontend/hooks/activity/activityTracker.hook.ts`:
   - `stop({ descartar })`: cierra, encola el fin de la sesión con `sessionActions.terminar`, descarta y vuelve a `idle`, sin métricas ni sincronización.
   - `cerrarActividad`: si la actividad tiene menos de 3 puntos válidos, descarta después de `terminar`. Si no, sigue como hoy (plan D3). (CA-18, CA-19, CA-21, CA-23)
-- [ ] T9 — `frontend/lib/safety/sessionActions.ts`, `cerrarHuerfanas`: cerrar, terminar las sesiones y después descartar las cortas, sin aviso. Pruebas en `sessionActions.test.ts`:
+- [x] T9 — `frontend/lib/safety/sessionActions.ts`, `cerrarHuerfanas`: cerrar, terminar las sesiones y después descartar las cortas, sin aviso. Pruebas en `sessionActions.test.ts`:
   - una huérfana corta se descarta **después** de encolar `finish` (D3);
   - una huérfana de 3 puntos válidos queda en `PENDING_SYNC`;
   - el caso del fallo al detener: la actividad queda en `RECORDING` y se resuelve al abrir la app. (CA-22, CA-23, CA-24)
-- [ ] T10 — `frontend/lib/activity/closingMessages.ts` y `frontend/pages/activity/activityPage.tsx`:
+- [x] T10 — `frontend/lib/activity/closingMessages.ts` y `frontend/pages/activity/activityPage.tsx`:
   - `handleStop` cuenta los puntos válidos. Con menos de 3 pregunta "Seguir grabando" o "Terminar sin guardar"; si se elige terminar, la pantalla queda en "Nueva actividad". La pregunta de la alerta activa va primero, como hoy.
   - `usePreventRemove` usa el texto que avisa que la actividad no se guardará cuando tiene menos de 3 puntos válidos. (CA-17, CA-18, CA-20, CA-21)
 
@@ -142,16 +142,16 @@ Las tareas marcadas **(usuario)** necesitan una cuenta o un acceso que solo tien
 | CA-14 | M10 | Manual (S9+) | Pendiente |
 | CA-15 | M11 | Manual (S9+) | Pendiente |
 | CA-16 | M11 | Manual (S9+) | Pendiente |
-| CA-17 | M12; `validPoints.test.ts` | Manual + automatizada | Pendiente |
-| CA-18 | M12 | Manual (emulador) | Pendiente |
-| CA-19 | M12; `activities.test.ts` › descarte | Manual + automatizada | Pendiente |
-| CA-20 | M13 | Manual (emulador) | Pendiente |
-| CA-21 | M14 | Manual (emulador) | Pendiente |
-| CA-22 | M15; `sessionActions.test.ts` › huérfanas cortas | Manual + automatizada | Pendiente |
-| CA-23 | `sessionActions.test.ts` › `finish` antes del descarte; M12 paso 5 | Automatizada + manual | Pendiente |
-| CA-24 | `sessionActions.test.ts` › fallo al detener | Automatizada | Pendiente |
-| CA-25 | `schema.test.ts` › v8; `migracion-actividades-cortas.e2e-spec.ts` (T4, tablas de prueba en una transacción revertida); M16 | Automatizada + manual | Pendiente |
-| CA-26 | `distancia.spec.ts`, `activity-validation.spec.ts` y e2e de sync | Automatizada | Pendiente |
+| CA-17 | M12; `validPoints.test.ts` | Manual + automatizada | Vitest cumplido; M12 cumplido en el emulador (2026-11-23), falta el paso 6 con TalkBack |
+| CA-18 | M12 | Manual (emulador) | Cumplido (2026-11-23) |
+| CA-19 | M12; `activities.test.ts` › descarte | Manual + automatizada | Cumplido (2026-11-23) |
+| CA-20 | M13 | Manual (emulador) | Cumplido (2026-11-23) |
+| CA-21 | M14 | Manual (emulador) | Cumplido (2026-11-23) |
+| CA-22 | M15; `sessionActions.test.ts` › huérfanas cortas | Manual + automatizada | Cumplido (2026-11-23) |
+| CA-23 | `sessionActions.test.ts` › `finish` antes del descarte; M12 paso 5 | Automatizada + manual | Vitest cumplido; M12 paso 5 cumplido por la sesión terminada en el servidor (2026-11-23) |
+| CA-24 | `sessionActions.test.ts` › fallo al detener | Automatizada | Vitest cumplido |
+| CA-25 | `schema.test.ts` › v8; `migracion-actividades-cortas.e2e-spec.ts` (T4, tablas de prueba en una transacción revertida); M16 | Automatizada + manual | Vitest y T4 cumplidos; falta M16 |
+| CA-26 | `distancia.spec.ts`, `activity-validation.spec.ts` y e2e de sync | Automatizada | Vitest y e2e cumplidos |
 | CA-27 | M7 | Manual (S9+) | Pendiente |
 | CA-28 | M18 | Manual (S9+) | Pendiente |
 | CA-29 | M3 | Manual (S9+) | Pendiente |
@@ -278,7 +278,24 @@ T15 a T18 y T21 se hacen fuera del repositorio. Sus resultados se anotan en este
 
 ## Resultado de los casos manuales
 
-(Se llena al correrlos.)
+**M12 a M15, emulador `Pixel_8_Pro` (2026-11-23), corridos por Claude por adb.** Development build regenerado con `expo prebuild --clean` (el instalado era del 2026-11-07, anterior a los cambios nativos de la 013 a la 015). Metro en el 8082 con `EXPO_PUBLIC_BACKEND_IP=http://localhost:3000` y `EXPO_PUBLIC_SAFETY_DEBUG_MINUTES=1`, y el backend local en modo log. Cuenta `postman@senda.bc`, con un contacto `ACTIVE` y un `telegramChatId` falso que se borró al terminar. El estado del teléfono se revisó copiando su SQLite con `run-as`, y el del servidor con consultas de solo lectura.
+
+- **M12, aprobado salvo el paso 6.**
+  - Con 1 punto, "Detener" pregunta "¿Terminar sin guardar?" / "La actividad tiene muy poco recorrido y no se guardará." con "Seguir grabando" y "Terminar sin guardar".
+  - "Seguir grabando" deja el cronómetro corriendo (de 00:29 a 01:01).
+  - "Terminar sin guardar" deja la pantalla en "Nueva actividad", sin resumen.
+  - En Inicio siguen "4 actividades" en la semana y en Mis actividades no aparece; no hay aviso de pendiente.
+  - **Paso 5:** no se esperó la hora de regreso (1 h). En su lugar se comprobó en el servidor que la sesión quedó con `endedAt` al descartar, sin alertas, y que la actividad no existe. Sin sesión abierta, la tarea de la hora de regreso no la toma (spec 008).
+  - **Paso 6 (TalkBack), pendiente:** activarlo cambia un ajuste del sistema del emulador y lo hace el usuario. La pregunta es un `Alert` nativo y su título, texto y botones salen en el árbol de accesibilidad.
+  - Durante el caso apareció "¿Estás bien?" por el minuto de prueba sin moverse; se respondió "Estoy bien".
+- **M13, aprobado.** Con 3 puntos (precisión 5 m), "Detener" no pregunta y abre el resumen (127 m, "Pendiente de subir").
+- **M14, aprobado.** La flecha de atrás pregunta "¿Terminar la actividad?" con "Si sales, la grabación termina. La actividad tiene muy poco recorrido y no se guardará." y "Terminar sin guardar". Al terminar, Mis actividades cuenta 88 (87 más la de M13) e Inicio 5: la de M14 no está.
+- **M15, aprobado.**
+  - Con 1 punto y `am force-stop`, el teléfono quedó con la actividad en `RECORDING` y su sesión. Al abrir la app no hay aviso, la actividad se borró, no queda ninguna grabando y la sesión quedó con `endedAt` en el servidor.
+  - Con 3 puntos válidos, al abrir la app la actividad se cerró con la hora de su último punto, se guardó y se subió (`SYNCED`).
+  - `closeOrphanActivities` con `UPDATE … RETURNING` funciona en el teléfono.
+
+**Hallazgo: la recuperación vuelve a bajar actividades cortas del servidor.** El emulador nuevo corrió la v8 vacío y después recuperó del servidor actividades de 0 puntos (en Inicio, dos de "0 m"; en SQLite, `SYNCED` con 0 puntos). Es lo esperado mientras no se aplique la migración del servidor: confirma que T17 tiene que ir antes de instalar el APK de entrega (T21), como ya está en el orden de las tareas. No se cambia código.
 
 ## Pendientes conocidos
 

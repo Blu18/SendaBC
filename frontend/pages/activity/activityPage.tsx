@@ -23,7 +23,9 @@ import ReturnTimePicker from "../../components/safety/ReturnTimePicker";
 import RecordingSafety, { ActiveAlert } from "../../components/safety/RecordingSafety";
 import SosButton from "../../components/safety/SosButton";
 import StopButton from "../../components/activity/StopButton";
-import type { ActivityType } from "../../lib/db/activities";
+import { countValidPoints, type ActivityType } from "../../lib/db/activities";
+import { CLOSING_MESSAGES, preguntaAlSalir } from "../../lib/activity/closingMessages";
+import { debeGuardarse } from "../../lib/metrics/validPoints";
 import { ACTIVITY_TYPE_LABELS } from "../../lib/format/activity";
 import { formatDuration } from "../../lib/format/duration";
 import { formatDistance, formatElevation } from "../../lib/format/metrics";
@@ -78,6 +80,29 @@ function preguntarPorAlerta() {
             { text: SAFETY_MESSAGES.terminarCancelando, onPress: () => resolve('cancelar') },
         ], { cancelable: true, onDismiss: () => resolve('seguir') })
     );
+}
+
+// "Detener" con menos de 3 puntos válidos: la actividad no se guardará (spec 012, CA-17, CA-18).
+// true = terminar sin guardar.
+function preguntarSinGuardar() {
+    return new Promise<boolean>((resolve) =>
+        Alert.alert(CLOSING_MESSAGES.sinGuardarTitulo, CLOSING_MESSAGES.sinGuardarCuerpo, [
+            { text: CLOSING_MESSAGES.seguirGrabando, style: 'cancel', onPress: () => resolve(false) },
+            { text: CLOSING_MESSAGES.terminarSinGuardar, style: 'destructive', onPress: () => resolve(true) },
+        ], { cancelable: true, onDismiss: () => resolve(false) })
+    );
+}
+
+// Puntos válidos de la actividad en curso, contados en SQLite (spec 012, plan D2). Si no se pueden
+// contar, se toma como suficiente: sin la pregunta, la actividad se guarda como antes (RN-4).
+async function puntosValidos(localId: number | null) {
+    if (localId === null) return Number.MAX_SAFE_INTEGER;
+    try {
+        return await countValidPoints(localId);
+    } catch (e) {
+        console.log('Error contando los puntos de la actividad:', e);
+        return Number.MAX_SAFE_INTEGER;
+    }
 }
 
 // Aviso de CA-21: se termina sin conexión con hora de regreso.
@@ -148,13 +173,18 @@ export default function ActivityPage() {
 
     // Salir termina la actividad y no se puede reanudar: se pregunta antes (spec 003, CA-15). No se
     // pregunta en lo que no decidió el usuario aquí: replace al detener y reset si la sesión venció.
+    // Con menos de 3 puntos válidos avisa que no se guardará; al desmontar, el tracker la descarta
+    // (spec 012, CA-21).
     usePreventRemove(recording, ({ data }) => {
         const salir = () => navigation.dispatch(data.action);
         if (data.action.type === 'REPLACE' || data.action.type === 'RESET') return salir();
-        Alert.alert('¿Terminar la actividad?', 'Si sales, la grabación termina y no se puede reanudar. Lo grabado queda guardado.', [
-            { text: 'Seguir grabando', style: 'cancel' },
-            { text: 'Terminar', style: 'destructive', onPress: salir },
-        ]);
+        void puntosValidos(activityLocalId).then((n) => {
+            const pregunta = preguntaAlSalir(n);
+            Alert.alert(pregunta.titulo, pregunta.cuerpo, [
+                { text: CLOSING_MESSAGES.seguirGrabando, style: 'cancel' },
+                { text: pregunta.terminar, style: 'destructive', onPress: salir },
+            ]);
+        });
     });
 
     // Con contactos activos hay a quién avisar: vale la pena pedir el permiso en segundo plano
@@ -192,22 +222,30 @@ export default function ActivityPage() {
 
     // Al detener se abre el resumen. replace saca esta pantalla del stack, así que
     // "Listo" y el botón atrás del resumen regresan a la pantalla principal (spec 004, CA-1, CA-2)
+    // Con menos de 3 puntos válidos se pregunta antes; si se termina sin guardar, la pantalla queda
+    // en "Nueva actividad" (spec 012, CA-17, CA-18). Con 3 o más no hay pregunta (CA-20).
     const handleStop = async () => {
         try {
             const sesion = seguridad.sesion;
+            // La pregunta de la alerta va primero (spec 008, CA-26). La alerta se cancela hasta
+            // después de la segunda pregunta, para que "Seguir grabando" no la deje cancelada.
+            let decisionAlerta: DecisionAlerta = 'mantener';
             if (seguridad.alertaActiva) {
-                const decision = await preguntarPorAlerta();
-                if (decision === 'seguir') return;
-                if (decision === 'cancelar') await seguridad.cancelarAlerta();
+                decisionAlerta = await preguntarPorAlerta();
+                if (decisionAlerta === 'seguir') return;
             }
-            const localId = await stop();
+            const descartar = !debeGuardarse(await puntosValidos(activityLocalId));
+            if (descartar && !(await preguntarSinGuardar())) return;
+            if (decisionAlerta === 'cancelar') await seguridad.cancelarAlerta();
+
+            const resultado = await stop({ descartar });
             // Sin conexión, el fin de la sesión espera en la bandeja: si no sale antes de la hora
             // de regreso más el margen, el servidor avisará (CA-21).
-            if (localId !== null && sesion?.returnBy && !(await isOnline())) {
+            if (resultado !== null && sesion?.returnBy && !(await isOnline())) {
                 await avisarSinRed(new Date(sesion.returnBy).getTime());
             }
-            if (localId !== null) {
-                navigation.replace('ActivitySummary', { localId, origin: 'recording' });
+            if (resultado?.kind === 'guardada') {
+                navigation.replace('ActivitySummary', { localId: resultado.localId, origin: 'recording' });
             }
         } catch (e) {
             console.log('Error deteniendo la actividad:', e);

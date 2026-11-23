@@ -45,6 +45,8 @@ function montar(
     getSafetySession: vi.fn().mockResolvedValue(actual),
     setReturnBy: vi.fn().mockResolvedValue(undefined),
     listRecordingSessionIds: vi.fn().mockResolvedValue([]),
+    countValidPoints: vi.fn().mockResolvedValue(3),
+    discardActivity: vi.fn().mockResolvedValue(true),
     setAlert: vi.fn().mockResolvedValue(undefined),
     markAlertSent: vi.fn().mockResolvedValue(undefined),
     enqueueOutbox: vi.fn().mockResolvedValue(1),
@@ -177,7 +179,7 @@ describe('cerrarHuerfanas', () => {
       // Las ids se leen antes de cerrar: después ya no están en RECORDING.
       expect(deps.listRecordingSessionIds).toHaveBeenCalled();
       deps.getActivity.mockResolvedValue({ ...actividad, endedAt: fin });
-      return 1;
+      return [7];
     });
 
     await actions.cerrarHuerfanas(cerrar);
@@ -192,10 +194,90 @@ describe('cerrarHuerfanas', () => {
 
   it('sin sesiones en curso solo cierra las actividades', async () => {
     const { actions, deps } = montar();
-    const cerrar = vi.fn().mockResolvedValue(0);
+    const cerrar = vi.fn().mockResolvedValue([]);
     await actions.cerrarHuerfanas(cerrar);
     expect(cerrar).toHaveBeenCalled();
     expect(deps.enqueueOutbox).not.toHaveBeenCalled();
+    expect(deps.discardActivity).not.toHaveBeenCalled();
+  });
+});
+
+describe('cerrarHuerfanas: actividades con menos de 3 puntos válidos (spec 012)', () => {
+  const fin = new Date(INICIO + HORA).toISOString();
+
+  // Huérfanas: 7 tiene sesión de seguridad, 8 no. `validos` da los puntos válidos de cada una.
+  function huerfanas(validos: Record<number, number>, conSesion = [7]) {
+    const montado = montar();
+    const { deps } = montado;
+    const orden: string[] = [];
+    deps.listRecordingSessionIds.mockResolvedValue(conSesion);
+    deps.getActivity.mockResolvedValue({ ...actividad, endedAt: fin });
+    deps.enqueueOutbox.mockImplementation(async () => {
+      orden.push('finish');
+      return 1;
+    });
+    deps.countValidPoints.mockImplementation(async (id: number) => validos[id]);
+    deps.discardActivity.mockImplementation(async (id: number) => {
+      orden.push(`descartar ${id}`);
+      return true;
+    });
+    const cerrar = vi.fn(async () => {
+      orden.push('cerrar');
+      return Object.keys(validos).map(Number);
+    });
+    return { ...montado, orden, cerrar };
+  }
+
+  it('una huérfana corta se descarta sin aviso, después de encolar finish (CA-22, CA-23, D3)', async () => {
+    const { actions, deps, orden, cerrar } = huerfanas({ 7: 2 });
+
+    await actions.cerrarHuerfanas(cerrar);
+
+    expect(orden).toEqual(['cerrar', 'finish', 'descartar 7']);
+    expect(deps.enqueueOutbox).toHaveBeenCalledWith('u-1', {
+      kind: 'finish',
+      clientId: C,
+      payload: { endedAt: fin },
+    });
+  });
+
+  it('una huérfana de 3 puntos válidos no se descarta: queda en PENDING_SYNC (CA-22)', async () => {
+    const { actions, deps, orden, cerrar } = huerfanas({ 7: 3 });
+
+    await actions.cerrarHuerfanas(cerrar);
+
+    expect(orden).toEqual(['cerrar', 'finish']);
+    expect(deps.discardActivity).not.toHaveBeenCalled();
+  });
+
+  it('también descarta las cortas sin sesión de seguridad, y solo esas', async () => {
+    const { actions, deps, cerrar } = huerfanas({ 7: 5, 8: 0 });
+
+    await actions.cerrarHuerfanas(cerrar);
+
+    expect(deps.discardActivity).toHaveBeenCalledTimes(1);
+    expect(deps.discardActivity).toHaveBeenCalledWith(8);
+  });
+
+  it('el fallo al detener: la actividad quedó en RECORDING y se resuelve al abrir la app (CA-24)', async () => {
+    // "Detener" no pudo cerrarla (spec 003, CA-12): sigue en RECORDING con su sesión. Al abrir la
+    // app, closeOrphanActivities la cierra, la sesión termina y, por ser corta, se descarta.
+    const { actions, orden, cerrar } = huerfanas({ 7: 1 });
+
+    await actions.cerrarHuerfanas(cerrar);
+
+    expect(cerrar).toHaveBeenCalledTimes(1);
+    expect(orden).toEqual(['cerrar', 'finish', 'descartar 7']);
+  });
+
+  it('si el fin de la sesión no se pudo encolar, no la descarta y sigue con las demás', async () => {
+    const { actions, deps, cerrar } = huerfanas({ 7: 0, 8: 0 });
+    deps.enqueueOutbox.mockRejectedValue(new Error('SQLite ocupado'));
+
+    await expect(actions.cerrarHuerfanas(cerrar)).rejects.toThrow('SQLite ocupado');
+
+    expect(deps.discardActivity).toHaveBeenCalledTimes(1);
+    expect(deps.discardActivity).toHaveBeenCalledWith(8);
   });
 });
 

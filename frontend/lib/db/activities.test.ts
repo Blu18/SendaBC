@@ -9,6 +9,9 @@ vi.mock('expo-crypto', () => ({ randomUUID: () => randomUUID() }));
 
 const {
   closeOrphanActivities,
+  countValidPoints,
+  discardActivity,
+  insertBarometerReading,
   countPendingUploads,
   createActivity,
   finishActivity,
@@ -278,7 +281,7 @@ describe('Cerrar sin "Detener" (spec 003, CA-10; spec 011, F1)', () => {
     await insertPoint(conPuntos, punto(2, '2026-11-07T10:02:00.000Z'));
     const sinPuntos = await createActivity(A, 'HIKING', 'GPS', INICIO);
 
-    expect(await closeOrphanActivities()).toBe(2);
+    expect(await closeOrphanActivities()).toEqual([conPuntos, sinPuntos]);
 
     expect(await getActivity(conPuntos)).toMatchObject({
       status: 'PENDING_SYNC',
@@ -318,7 +321,10 @@ describe('Cerrar sin "Detener" (spec 003, CA-10; spec 011, F1)', () => {
       syncError: null,
     });
     // Las demás no cambian.
-    expect(await getActivity(sana)).toMatchObject({ syncError: 'otro motivo', distanceMeters: 1234.5 });
+    expect(await getActivity(sana)).toMatchObject({
+      syncError: 'otro motivo',
+      distanceMeters: 1234.5,
+    });
     expect(await repararFinAntesDelInicio()).toBe(0);
   });
 });
@@ -465,5 +471,129 @@ describe('Cumbre para el filtro de altura (spec 015, CA-5, RN-5; plan, D1)', () 
     );
 
     expect(await listActivityIdsMissingPeak()).toEqual([id]);
+  });
+});
+
+describe('Actividades con menos de 3 puntos válidos (spec 012)', () => {
+  const INICIO = '2026-11-22T10:00:00.000Z';
+  const punto = (sequence: number, accuracy: number | null) => ({
+    sequence,
+    latitude: 31.86 + sequence / 10_000,
+    longitude: -116.59,
+    altitude: 20,
+    accuracy,
+    recordedAt: `2026-11-22T10:00:0${sequence}.000Z`,
+  });
+  const cuenta = (tabla: string, columna: string, id: number) =>
+    (
+      testDb.raw.prepare(`SELECT COUNT(*) AS n FROM ${tabla} WHERE ${columna} = ?`).get(id) as {
+        n: number;
+      }
+    ).n;
+
+  // Actividad con puntos de las precisiones dadas, una lectura del barómetro y su sesión de
+  // seguridad (spec 008), cerrada con "Detener" salvo que se pida dejarla grabando.
+  async function grabada(precisiones: (number | null)[], { cerrar = true } = {}) {
+    const id = await createActivity(A, 'HIKING', 'BAROMETER', INICIO);
+    for (const [i, accuracy] of precisiones.entries())
+      await insertPoint(id, punto(i + 1, accuracy));
+    await insertBarometerReading(id, {
+      recordedAt: INICIO,
+      pressureHpa: 1013,
+      relativeAltitudeM: 0,
+    });
+    testDb.raw
+      .prepare(
+        'INSERT INTO safety_sessions (activity_local_id, client_generated_id, user_id) VALUES (?, ?, ?)'
+      )
+      .run(id, randomUUID(), A);
+    testDb.raw
+      .prepare('INSERT INTO safety_detector (activity_local_id, state) VALUES (?, ?)')
+      .run(id, '{}');
+    if (cerrar) await finishActivity(id, '2026-11-22T10:05:00.000Z');
+    return id;
+  }
+
+  it('countValidPoints cuenta solo los de 20 m o mejor y los que no traen precisión (RN-1)', async () => {
+    expect(await countValidPoints(await grabada([]))).toBe(0);
+    expect(await countValidPoints(await grabada([4, 25, 8]))).toBe(2);
+    expect(await countValidPoints(await grabada([20, null, 21, 80, 3]))).toBe(3);
+  });
+
+  it('countValidPoints solo cuenta los puntos de esa actividad', async () => {
+    const una = await grabada([4, 4, 4, 4]);
+    const otra = await grabada([4]);
+    expect(await countValidPoints(una)).toBe(4);
+    expect(await countValidPoints(otra)).toBe(1);
+  });
+
+  it('discardActivity borra la actividad, sus puntos, el barómetro y la sesión, pero no safety_outbox (CA-19, D3)', async () => {
+    const id = await grabada([4, 30]);
+    const otra = await grabada([4, 4, 4]);
+    // El aviso de fin ya encolado: no depende de la actividad.
+    testDb.raw
+      .prepare(
+        `INSERT INTO safety_outbox (user_id, kind, client_id, payload, created_at)
+         VALUES (?, 'finish', ?, '{}', 0)`
+      )
+      .run(A, randomUUID());
+
+    expect(await discardActivity(id)).toBe(true);
+
+    expect(await getActivity(id)).toBeNull();
+    expect(cuenta('activity_points', 'activity_id', id)).toBe(0);
+    expect(cuenta('barometer_readings', 'activity_id', id)).toBe(0);
+    expect(cuenta('safety_sessions', 'activity_local_id', id)).toBe(0);
+    expect(cuenta('safety_detector', 'activity_local_id', id)).toBe(0);
+    const outbox = testDb.raw.prepare('SELECT COUNT(*) AS n FROM safety_outbox').get() as {
+      n: number;
+    };
+    expect(outbox.n).toBe(1);
+    // La otra actividad no cambia.
+    expect(await getActivity(otra)).not.toBeNull();
+    expect(cuenta('activity_points', 'activity_id', otra)).toBe(3);
+  });
+
+  it('discardActivity deja fuera de Mis actividades, Inicio, los totales y la cola de subida (CA-19)', async () => {
+    const id = await grabada([4]);
+    await saveMetrics(id, metricas);
+    expect(await countPendingUploads(A)).toBe(1);
+
+    await discardActivity(id);
+
+    expect(await listFinishedActivities(A)).toEqual([]);
+    expect(await listRecentActivities(A, 3)).toEqual([]);
+    expect((await summarizeSince(A, '2026-11-01T00:00:00.000Z')).count).toBe(0);
+    expect(await listUploadable(A, { includeRejected: true })).toEqual([]);
+    expect(await countPendingUploads(A)).toBe(0);
+  });
+
+  it('discardActivity no borra una actividad que el servidor ya guardó (plan R3)', async () => {
+    const id = await grabada([4]);
+    await saveMetrics(id, metricas);
+    await markSynced(id, 'srv-1');
+
+    expect(await discardActivity(id)).toBe(false);
+    expect(await getActivity(id)).toMatchObject({ status: 'SYNCED', serverId: 'srv-1' });
+    expect(cuenta('activity_points', 'activity_id', id)).toBe(1);
+  });
+
+  it('discardActivity no borra una actividad que se está grabando: primero se cierra', async () => {
+    const id = await grabada([4], { cerrar: false });
+
+    expect(await discardActivity(id)).toBe(false);
+    expect(await getRecordingActivity()).toMatchObject({ localId: id });
+  });
+
+  it('closeOrphanActivities devuelve solo las que cerró, para descartar las cortas (CA-22)', async () => {
+    const cerrada = await grabada([4]);
+    const corta = await grabada([4], { cerrar: false });
+    const larga = await grabada([4, 4, 4], { cerrar: false });
+
+    const ids = await closeOrphanActivities();
+
+    expect(ids.sort()).toEqual([corta, larga].sort());
+    expect(ids).not.toContain(cerrada);
+    expect(await closeOrphanActivities()).toEqual([]);
   });
 });

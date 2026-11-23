@@ -1,4 +1,4 @@
-import { getActivity } from '../db/activities';
+import { countValidPoints, discardActivity, getActivity } from '../db/activities';
 import {
   createSafetySession,
   deleteOutbox,
@@ -45,6 +45,8 @@ export const sessionActions = createSessionActions({
   getSafetySession,
   setReturnBy,
   listRecordingSessionIds,
+  countValidPoints,
+  discardActivity,
   setAlert,
   markAlertSent,
   enqueueOutbox: (userId, entry) => enqueueOutbox(userId, entry),

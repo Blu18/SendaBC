@@ -12,11 +12,14 @@ function baseEnVersion(version: number) {
 }
 
 // Lo mismo que hace sqlite.ts al abrir la base: los pasos que faltan, en una transacción.
-function migrar(db: DatabaseSync) {
+// `hasta` sirve para probar un paso viejo sin que los posteriores cambien sus datos.
+function migrar(db: DatabaseSync, hasta = DB_VERSION) {
   const { user_version } = db.prepare('PRAGMA user_version').get() as { user_version: number };
   db.exec('BEGIN');
-  for (const paso of pasosPendientes(user_version)) db.exec(paso.sql);
-  db.exec(`PRAGMA user_version = ${DB_VERSION}`);
+  for (const paso of pasosPendientes(user_version).filter((p) => p.version <= hasta)) {
+    db.exec(paso.sql);
+  }
+  db.exec(`PRAGMA user_version = ${hasta}`);
   db.exec('COMMIT');
 }
 
@@ -26,13 +29,13 @@ const columnas = (db: DatabaseSync, tabla: string) =>
 describe('pasosPendientes (constitución 5.3)', () => {
   it('las versiones van de 1 en 1 y la última es DB_VERSION', () => {
     expect(MIGRATIONS.map((p) => p.version)).toEqual(MIGRATIONS.map((_, i) => i + 1));
-    expect(DB_VERSION).toBe(7);
+    expect(DB_VERSION).toBe(8);
   });
 
   it('devuelve solo los pasos que faltan, en orden', () => {
-    expect(pasosPendientes(0).map((p) => p.version)).toEqual([1, 2, 3, 4, 5, 6, 7]);
-    expect(pasosPendientes(5).map((p) => p.version)).toEqual([6, 7]);
-    expect(pasosPendientes(7)).toEqual([]);
+    expect(pasosPendientes(0).map((p) => p.version)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(pasosPendientes(5).map((p) => p.version)).toEqual([6, 7, 8]);
+    expect(pasosPendientes(8)).toEqual([]);
   });
 });
 
@@ -46,9 +49,9 @@ describe('SQLite v6 (spec 011, CA-50, CA-53; constitución 5.3)', () => {
         VALUES (1, 'ses-1', 'usuario-a', '2026-11-01T20:00:00.000Z');
     `);
 
-    migrar(db);
+    migrar(db, 6);
 
-    expect(db.prepare('PRAGMA user_version').get()).toEqual({ user_version: DB_VERSION });
+    expect(db.prepare('PRAGMA user_version').get()).toEqual({ user_version: 6 });
     expect({ ...(db.prepare('SELECT client_generated_id, status FROM activities').get() as object) }).toEqual({
       client_generated_id: 'act-1',
       status: 'PENDING_SYNC',
@@ -127,7 +130,7 @@ describe('SQLite v7 (spec 015, CA-5, RN-5; plan, D1)', () => {
         VALUES ('act-1', 'HIKING', 'SYNCED', '2026-11-01T15:00:00.000Z', 'usuario-a', 5740);
     `);
 
-    migrar(db);
+    migrar(db, 7);
 
     expect(db.prepare('PRAGMA user_version').get()).toEqual({ user_version: 7 });
     expect(columnas(db, 'activities')).toEqual(expect.arrayContaining(['peak_altitude_meters', 'peak_calculated']));
@@ -136,5 +139,109 @@ describe('SQLite v7 (spec 015, CA-5, RN-5; plan, D1)', () => {
         .prepare('SELECT client_generated_id, distance_meters, peak_altitude_meters, peak_calculated FROM activities')
         .get() as object),
     }).toEqual({ client_generated_id: 'act-1', distance_meters: 5740, peak_altitude_meters: null, peak_calculated: 0 });
+  });
+});
+
+describe('SQLite v8 (spec 012, CA-25, RN-5; plan, D4)', () => {
+  // Inserta una actividad con puntos de las precisiones dadas, una lectura del barómetro y una
+  // sesión de seguridad, y devuelve su local_id.
+  function actividad(
+    db: DatabaseSync,
+    id: string,
+    status: 'RECORDING' | 'PENDING_SYNC' | 'SYNCED',
+    precisiones: (number | null)[]
+  ) {
+    const { lastInsertRowid } = db
+      .prepare(
+        `INSERT INTO activities (client_generated_id, type, status, startedAt, user_id, server_id)
+         VALUES (?, 'HIKING', ?, '2026-11-01T15:00:00.000Z', 'usuario-a', ?)`
+      )
+      .run(id, status, status === 'SYNCED' ? `srv-${id}` : null);
+    const localId = Number(lastInsertRowid);
+    const punto = db.prepare(
+      `INSERT INTO activity_points (activity_id, sequence, latitude, longitude, accuracy, recordedAt)
+       VALUES (?, ?, 31.86, -116.59, ?, '2026-11-01T15:00:01.000Z')`
+    );
+    precisiones.forEach((accuracy, i) => punto.run(localId, i + 1, accuracy));
+    db.prepare(
+      `INSERT INTO barometer_readings (activity_id, recorded_at, pressure_hpa, relative_altitude_m)
+       VALUES (?, '2026-11-01T15:00:01.000Z', 1013, 0)`
+    ).run(localId);
+    db.prepare(
+      'INSERT INTO safety_sessions (activity_local_id, client_generated_id, user_id) VALUES (?, ?, ?)'
+    ).run(localId, `ses-${id}`, 'usuario-a');
+    return localId;
+  }
+
+  const ids = (db: DatabaseSync) =>
+    (
+      db.prepare('SELECT client_generated_id AS id FROM activities ORDER BY local_id').all() as {
+        id: string;
+      }[]
+    ).map((r) => r.id);
+  const cuenta = (db: DatabaseSync, tabla: string) =>
+    (db.prepare(`SELECT count(*) AS n FROM ${tabla}`).get() as { n: number }).n;
+
+  function baseV7ConActividades() {
+    const db = baseEnVersion(7);
+    actividad(db, 'pendiente-sin-puntos', 'PENDING_SYNC', []);
+    actividad(db, 'subida-2-validos', 'SYNCED', [4, 8, 30]);
+    actividad(db, 'pendiente-1-impreciso', 'PENDING_SYNC', [4, 25, 8]);
+    actividad(db, 'pendiente-3-validos', 'PENDING_SYNC', [4, 20, null]);
+    actividad(db, 'subida-3-de-5', 'SYNCED', [30, 4, 50, 5, 6]);
+    actividad(db, 'grabando-sin-puntos', 'RECORDING', []);
+    return db;
+  }
+
+  it('borra las terminadas con menos de 3 puntos válidos, subidas o no', () => {
+    const db = baseV7ConActividades();
+
+    migrar(db);
+
+    expect(db.prepare('PRAGMA user_version').get()).toEqual({ user_version: 8 });
+    expect(ids(db)).toEqual(['pendiente-3-validos', 'subida-3-de-5', 'grabando-sin-puntos']);
+  });
+
+  it('borra en cascada sus puntos, lecturas del barómetro y sesiones, y no toca las demás', () => {
+    const db = baseV7ConActividades();
+
+    migrar(db);
+
+    // Quedan los 3 + 5 puntos de las dos que se conservan; la que graba no tiene.
+    expect(cuenta(db, 'activity_points')).toBe(8);
+    expect(cuenta(db, 'barometer_readings')).toBe(3);
+    expect(cuenta(db, 'safety_sessions')).toBe(3);
+  });
+
+  it('no toca la que se está grabando: la resuelve cerrarHuerfanas al abrir la app (CA-22)', () => {
+    const db = baseV7ConActividades();
+
+    migrar(db);
+
+    expect({
+      ...(db
+        .prepare(
+          `SELECT status FROM activities WHERE client_generated_id = 'grabando-sin-puntos'`
+        )
+        .get() as object),
+    }).toEqual({ status: 'RECORDING' });
+  });
+
+  it('corre una sola vez: en v8 no vuelve a borrar (RN-5)', () => {
+    const db = baseV7ConActividades();
+    migrar(db);
+    // Una actividad corta que aparezca después, p. ej. recuperada de un servidor sin migrar.
+    actividad(db, 'despues', 'SYNCED', [4]);
+
+    expect(pasosPendientes(8)).toEqual([]);
+    migrar(db);
+
+    expect(ids(db)).toContain('despues');
+  });
+
+  it('una base nueva llega a v8 sin errores', () => {
+    const db = baseEnVersion(0);
+    migrar(db);
+    expect(db.prepare('PRAGMA user_version').get()).toEqual({ user_version: 8 });
   });
 });

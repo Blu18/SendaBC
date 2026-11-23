@@ -171,6 +171,26 @@ export const MIGRATIONS: { version: number; sql: string }[] = [
       ALTER TABLE activities ADD COLUMN peak_calculated INTEGER NOT NULL DEFAULT 0;
     `,
   },
+  // v8: borra una sola vez las actividades terminadas con menos de 3 puntos válidos (spec 012,
+  // CA-25, RN-5; plan D4). Solo borra datos, el esquema no cambia.
+  // - Punto válido = precisión de 20 m o mejor, o sin precisión (RN-1). El 20 va escrito aquí y no
+  //   como MAX_ACCURACY_M, porque un paso ya publicado no debe cambiar (constitución 5.3).
+  // - Incluye las SYNCED: el servidor también las borra (migración borrar_actividades_cortas).
+  // - No toca las que están en RECORDING: al abrir la app, cerrarHuerfanas las cierra y descarta
+  //   las cortas después de terminar su sesión de seguridad (CA-22, plan D3).
+  // - Sus puntos, lecturas del barómetro y sesiones de seguridad se borran en cascada.
+  {
+    version: 8,
+    sql: `
+      DELETE FROM activities
+      WHERE status != 'RECORDING'
+        AND (
+          SELECT COUNT(*) FROM activity_points p
+          WHERE p.activity_id = activities.local_id
+            AND (p.accuracy IS NULL OR p.accuracy <= 20)
+        ) < 3;
+    `,
+  },
 ];
 
 // Versión del esquema local (PRAGMA user_version): la del último paso.
