@@ -61,3 +61,6 @@ dist/
 tsconfig.build.tsbuildinfo
 # Trazas GPX originales de las rutas de ejemplo (spec 006, D8): son de sus autores, no se redistribuyen
 prisma/seed/gpx/
+
+# Respaldos de la base con datos reales (spec 012, T17). Nunca al repositorio ni a EAS.
+respaldo-*.sql
